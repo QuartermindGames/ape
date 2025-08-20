@@ -2,7 +2,21 @@
 
 #include <acm/acm.h>
 
+#include "qmos/public/qm_os_random.h"
+
 #include "gui_private.h"
+#include "ape/ape_public_game.h"
+#include "editor/editor.h"
+#include "renderer/renderer.h"
+#include "renderer/renderer_font.h"
+#include "renderer/material/material.h"
+#include "renderer/post/post.h"
+#include "yin/core_game.h"
+
+static bool guiDraw = true;
+
+static float profilerWidth  = 512;
+static float profilerHeight = 256;
 
 ApeGUIState ape_guiState_;
 
@@ -15,6 +29,10 @@ void ape_gui_initialize_draw_( void );
 bool ape_gui_initialize_( void )
 {
 	PL_ZERO_( ape_guiState_ );
+
+	PlRegisterConsoleVariable( "gui.draw", "Enable/disable drawing of the GUI.", "true", PL_VAR_BOOL, &guiDraw, nullptr, false );
+	PlRegisterConsoleVariable( "gui.profilerWidth", "Set the width of the on-screen profiler.", "512", PL_VAR_F32, &profilerWidth, nullptr, true );
+	PlRegisterConsoleVariable( "gui.profilerHeight", "Set the width of the on-screen profiler.", "256", PL_VAR_F32, &profilerHeight, nullptr, true );
 
 	ape_gui_initialize_draw_();
 	if ( !ape_gui_initialize_fonts_() )
@@ -48,4 +66,327 @@ void gui_update_mouse_wheel( float x, float y )
 
 void guiUpdateMouseButton( GuiMouseButton button, bool isDown )
 {
+}
+
+static int compare_profiling_group( const void *a, const void *b )
+{
+	double ta = com_profiler_get_time_average( *( ComProfilingGroup ** ) a );
+	double tb = com_profiler_get_time_average( *( ComProfilingGroup ** ) b );
+	return ta < tb;
+}
+
+static PLColour get_profiling_group_colour( const void *p )
+{
+	unsigned int seed = ( intptr_t ) p;
+	return PL_COLOURU8(
+	        100 + qm_os_random_int( &seed ) % 155,
+	        100 + qm_os_random_int( &seed ) % 155,
+	        100 + qm_os_random_int( &seed ) % 155,
+	        255 );
+}
+
+static void draw_debug_window( const char *title, const float x, const float y, const float w, const float h )
+{
+	ApeGuiFont *font      = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
+	float       barHeight = gui_font_get_line_spacing( font );
+
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
+
+	// title bar
+	if ( title != nullptr )
+	{
+		ape_draw_rectangle_( mesh, x, y - barHeight, w, barHeight, &PL_COLOURU8( 255, 255, 255, 200 ) );
+	}
+
+	ape_draw_rectangle_( mesh, x, y, w, h, &PL_COLOURU8( 0, 0, 0, 200 ) );
+
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX_ALPHA );
+	ape_material_draw( material, mesh, nullptr );
+
+	if ( title == nullptr )
+	{
+		return;
+	}
+
+	gui_font_draw_string( font, x + 8.0f, y - barHeight, nullptr, nullptr, 1.0f, &PL_COLOURU8( 0, 0, 0, 255 ), title, strlen( title ), false );
+	gui_font_display( font );
+}
+
+static void draw_profiler( const ApeViewport *viewport )
+{
+	// buildup a list of all the profiling groups
+	static constexpr unsigned int MAX_PROFILING_GROUPS = 256;
+	unsigned int                  numProfilingGroups;
+	const ComProfilingGroup      *groups[ MAX_PROFILING_GROUPS ];
+	const ComProfilingGroup      *group = com_profiler_get_first_group();
+	for ( numProfilingGroups = 0; group != nullptr; ++numProfilingGroups )
+	{
+		if ( numProfilingGroups >= MAX_PROFILING_GROUPS )
+		{
+			ape_warning_( "Hit profiling group limit!\n" );
+			break;
+		}
+
+		groups[ numProfilingGroups ] = group;
+
+		group = com_profiler_get_next_group( group );
+	}
+
+	// now sort them based on whichever is taking the longest
+	qsort( groups, numProfilingGroups, sizeof( ComProfilingGroup * ), compare_profiling_group );
+
+	// setup the areas we'll be drawing to
+	// mmm yes, numbers...
+
+	static constexpr float PADDING = 4.0f;
+
+	float graphW = profilerWidth;
+	float graphH = profilerHeight;
+	float graphX = viewport->width - graphW - PADDING;
+	float graphY = viewport->height - graphH - PADDING;
+
+	float sidebarW = graphW / 3.0f;
+	float sidebarH = graphH - 16.0f - PADDING * 2.0f;
+	float sidebarX = graphX + graphW - sidebarW - PADDING * 2.0f;
+	float sidebarY = graphY + PADDING * 2.0f;
+
+	float profW = graphW - sidebarW - PADDING * 4.0f;
+	float profH = graphH - 16.0f - PADDING * 2.0f;
+	float profX = graphX + PADDING * 2.0f;
+	float profY = graphY + PADDING * 2.0f;
+
+	// draw the background
+	draw_debug_window( "CPU Profiler", graphX, graphY, graphW, graphH );
+
+	//TODO: this clipping API sucks balls... I need to rework it!
+	PlgClipViewport( graphX, viewport->height - graphY - 1.0f - graphH, graphW, graphH );
+
+	float sx = sidebarX + PADDING;
+	float sy = sidebarY + PADDING;
+
+	static float min = 0.0f;
+	static float max = 0.0f;
+
+	// now draw in all the colour coded group names
+	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
+	for ( unsigned int i = 0; i < numProfilingGroups; ++i )
+	{
+		PLColour colour = get_profiling_group_colour( groups[ i ] );
+
+		char tmp[ 64 ];
+		snprintf( tmp, sizeof( tmp ), "%.2f %s\n", com_profiler_get_time_average( groups[ i ] ), com_profiler_get_group_name( groups[ i ] ) );
+		gui_font_draw_string( font, sx, sy, nullptr, &sy, 1.0f, &colour, tmp, strlen( tmp ), false );
+
+		// determine the min and max while we're here
+		unsigned int  numPoints;
+		const double *points = com_profiler_get_samples( groups[ i ], &numPoints );
+		for ( unsigned int j = 0; j < numPoints; ++j )
+		{
+			if ( points[ i ] > max )
+			{
+				max = points[ i ];
+			}
+			if ( points[ i ] < min )
+			{
+				min = points[ i ];
+			}
+		}
+	}
+
+	gui_font_display( font );
+
+	// now let's draw all the graphs
+	for ( unsigned int i = 0; i < numProfilingGroups; ++i )
+	{
+		PLColour colour = get_profiling_group_colour( groups[ i ] );
+
+		unsigned int  numPoints;
+		const double *points = com_profiler_get_samples( groups[ i ], &numPoints );
+
+		PLGMesh *lineMesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+
+		for ( unsigned int j = 1; j < numPoints; ++j )
+		{
+			PLVector2 point;
+			point.x = profX + profW / ( numPoints - 1 ) * ( j - 1 );
+			point.y = profY + profH - 1 - ( points[ j - 1 ] - min ) * ( profH / ( max - min ) );
+
+			PlgPushVertex3f( lineMesh, point.x, point.y, 0.0f );
+			PlgColour4bv( lineMesh, &colour );
+
+			PlgPushVertex3f( lineMesh, point.x, profY + profH, 0.0f );
+			PlgColour4bv( lineMesh, &colour );
+		}
+
+		ape_material_draw( ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX_ALPHA ), lineMesh, nullptr );
+	}
+
+	ape_viewport_set_clip( viewport );
+}
+
+static void draw_debug_overlay( ApeViewport *viewport )
+{
+	PL_GET_CVAR( "debug/overlay", debugOverlay );
+	if ( debugOverlay->i_value <= 0 )
+		return;
+
+	COM_PROFILE_FUNCTION_START();
+
+	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+
+	static constexpr float sy = 4.0f;
+	static constexpr float sx = 4.0f;
+	static constexpr float tx = sx + 4.0f;
+	float                  y  = sy;
+
+	// Draw stats
+	char buf[ 64 ];
+
+	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", ape_viewport_get_framerate( viewport ) );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	snprintf( buf, sizeof( buf ), "---------------------\n" );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
+
+	unsigned int numTasks = apeGetNumScheduledTasks();
+	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
+	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+	for ( unsigned int i = 0; i < numTasks; ++i )
+	{
+		double      taskDelay;
+		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
+		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
+		gui_font_draw_string( font, tx + 8.0f, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
+	}
+
+	// draw the background
+	draw_debug_window( nullptr, sx, sy, 300.0f, y - sy );
+
+	gui_font_display( font );
+
+	if ( debugOverlay->i_value > 1 )
+	{
+		draw_profiler( viewport );
+	}
+
+	COM_PROFILE_FUNCTION_END();
+}
+
+void ape_flare_draw_( const ApeViewport *viewport );
+void ape_gui_draw_( ApeViewport *viewport )
+{
+	if ( !guiDraw )
+	{
+		return;
+	}
+
+	COM_PROFILE_FUNCTION_START();
+
+	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
+
+	// Need to call this again to reset the viewport
+	ape_set_2d_viewport_size_( viewport->width, viewport->height );
+
+	float x = ( float ) viewport->x;
+	float y = ( float ) viewport->y;
+	float w = ( float ) viewport->width;
+	float h = ( float ) viewport->height;
+
+	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
+	if ( renderTarget != nullptr )
+	{
+		PLGTexture *texture = ape_render_target_get_texture( renderTarget );
+		if ( texture != nullptr )
+		{
+			ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
+			PlgSetShaderProgram( program->internal );
+			PlgSetTexture( texture, 0 );
+
+			ape_draw_textured_quad( nullptr, x, y, w, h, &PL_COLOUR_WHITE );
+		}
+	}
+
+	//TODO: whaa... these have nothing to do with the gui!?
+	ape_flare_draw_( viewport );
+
+	if ( !ape_is_editor_active_() )
+	{
+		ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
+	}
+
+	ape_editor_draw_gui_( viewport );
+
+	PL_GET_CVAR( "renderer.showPortalVolumes", showPortalVolumes );
+	if ( showPortalVolumes && showPortalVolumes->b_value )
+	{
+		const ApeCamera *camera = ape_rendererState_.camera;
+		if ( camera != nullptr && camera->pvs.numRooms > 0 )
+		{
+			ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+			const ApeCameraVisibleRoom *room = &camera->pvs.rooms[ 0 ];
+			for ( unsigned int i = 0; i < room->numPortals; ++i )
+			{
+				PLVector4 screenRect = room->portals[ i ].screenRect;
+				screenRect.y         = viewport->height - screenRect.y - screenRect.w;
+				PlgDrawLineRectangle( screenRect.x, screenRect.y, screenRect.z, screenRect.w, PL_COLOUR_GREEN );
+			}
+		}
+	}
+
+	// todo: this should use GUI
+	PL_GET_CVAR( "debug/overlay", debugOverlay );
+	if ( ape_config_.renderer.showFps && debugOverlay->i_value == 0 )
+	{
+		char tmp[ 32 ];
+		snprintf( tmp, sizeof( tmp ), "FPS: %u", ape_viewport_get_framerate( viewport ) );
+
+		ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
+		gui_font_draw_string( font, 10.0f, 10.0f, nullptr, nullptr, 1.0f, &PL_COLOUR_GOLD, tmp, strlen( tmp ), false );
+		gui_font_display( font );
+	}
+
+#if !defined( NDEBUG )
+	if ( !ape_is_editor_active_() )
+	{
+		static const char *buildIdentifier = "DEBUG - VERSION[" ENGINE_VERSION_STR "] BUILD[" GIT_COMMIT_COUNT "] BRANCH[" GIT_BRANCH "]\n";
+		float              sw, sh;
+		ApeGuiFont        *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+		gui_font_get_string_pixel_size( font, 1.0f, buildIdentifier, strlen( buildIdentifier ), &sw, &sh );
+		gui_font_draw_string( font, w / 2 - ( sw / 2 ), h - sh, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, buildIdentifier, strlen( buildIdentifier ), false );
+		gui_font_display( font );
+	}
+#endif
+
+	// todo: this should use GUI
+	ape_console_draw_( viewport );
+
+	draw_debug_overlay( viewport );
+
+	COM_PROFILE_FUNCTION_END();
 }

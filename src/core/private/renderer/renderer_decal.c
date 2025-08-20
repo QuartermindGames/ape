@@ -373,6 +373,8 @@ ComSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, 
 
 void ape_decal_manager_draw_( const ApeDecalManager *self )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	ApeDecal *decal;
 	COM_ITERATE_LINKED_LIST( decal, self->decalList, i )
 	{
@@ -402,4 +404,6 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 
 		ape_material_draw( decal->material, mesh, nullptr );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }

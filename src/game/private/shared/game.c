@@ -2,6 +2,8 @@
 
 #include "game_private.h"
 
+#include "menu/menu.h"
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
@@ -132,6 +134,9 @@ void game_spawn_world( ApeWorld *world, ApeRoom *room )
 	}
 
 	currentWorld = world;
+
+	// a world is being loaded, skip the splash screens!
+	game_menu_splash_cleanup_();
 
 	if ( ape_gameInterface->spawnWorld != nullptr )
 	{

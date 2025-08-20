@@ -193,7 +193,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 				break;
 			}
 
-			model->bones[ i ].parent   = acm_branch_get_child_int( child, "parent", -1 );
+			model->bones[ i ].parent   = acm_get_int( child, "parent", -1 );
 			model->bones[ i ].position = com_acm_get_vector3( child, "position", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
 			model->bones[ i ].rotation = com_acm_get_vector3( child, "rotation", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
 
@@ -444,7 +444,7 @@ ApeWorldNode *deserialize_model_node( ApeWorldNode *parent, AcmBranch *root )
 
 const ApeWorldNodeClass ape_modelClass = {
         .identifier  = "model",
-        .magic       = PL_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
+        .magic       = QM_OS_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
         .destroy     = destroy_model_node,
         .serialize   = serialize_model_node,
         .deserialize = deserialize_model_node,

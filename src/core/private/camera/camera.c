@@ -219,7 +219,7 @@ PLGCamera *ape_camera_get_internal( ApeCamera *camera )
 
 const ApeWorldNodeClass ape_cameraClass = {
         .identifier = "camera",
-        .magic      = PL_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
+        .magic      = QM_OS_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
         .destroy    = ape_camera_destroy_,
 
         .editorIcon = "resources/new_camera.gif",
@@ -232,6 +232,8 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 
 static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera *camera, const ApeViewport *viewport )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	PLMatrix4 view     = camera->internal->internal.view;
 	PLMatrix4 proj     = camera->internal->internal.proj;
 	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
@@ -273,6 +275,8 @@ static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera
 
 	rect.z -= rect.x;
 	rect.w -= rect.y;
+
+	COM_PROFILE_FUNCTION_END();
 
 	return rect;
 }
@@ -514,6 +518,8 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 			{
 				visibleRoom->lights[ visibleRoom->numLights ] = light;
 				visibleRoom->numLights++;
+
+				ape_rendererPerformance_.numLights++;
 			}
 		}
 		else
@@ -562,19 +568,18 @@ void ape_camera_build_pvs_( ApeCamera *self, const ApeViewport *viewport )
 	ApeRoom *room = ape_camera_get_room( self );
 	if ( room == nullptr )
 	{
-		ape_warning_( "Attempted to build PVS for an unattached camera!\n" );
 		return;
 	}
+
+	COM_PROFILE_FUNCTION_START();
 
 	self->pvs.rooms[ 0 ].room       = room;
 	self->pvs.rooms[ 0 ].viewMatrix = self->internal->internal.view;
 	self->pvs.numRooms++;
 
-	COM_PROFILE_FUNCTION_START();
-
 	pvs_navigate_node_tree( self, viewport, APE_WORLD_NODE( room ), &self->pvs.rooms[ 0 ] );
 
-	COM_PROFILE_FUNCTION_END();
-
 	ape_rendererPerformance_.numRooms = self->pvs.numRooms;
+
+	COM_PROFILE_FUNCTION_END();
 }

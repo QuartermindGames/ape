@@ -30,6 +30,22 @@ static void move_action( ApeInputState state, const char *id )
 		return;
 	}
 
+	if ( strcmp( id, "game_turn_left" ) == 0 )
+	{
+		PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+		ang.y += 1.0f;
+		ape_world_node_set_angles( APE_WORLD_NODE( entity ), &ang );
+		return;
+	}
+
+	if ( strcmp( id, "game_turn_right" ) == 0 )
+	{
+		PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+		ang.y -= 1.0f;
+		ape_world_node_set_angles( APE_WORLD_NODE( entity ), &ang );
+		return;
+	}
+
 	GameMovementComponent *movementComponent = ape_entity_get_component( entity, "movement" );
 	if ( movementComponent == nullptr )
 	{
@@ -104,8 +120,10 @@ void game_client_actions_register_()
 
 	ape_client_input_register_action( "game_move_forward", nullptr, 0, ( ApeInputKey[] ) { 'w', APE_INPUT_KEY_UP }, 2, move_action );
 	ape_client_input_register_action( "game_move_backward", nullptr, 0, ( ApeInputKey[] ) { 's', APE_INPUT_KEY_DOWN }, 2, move_action );
-	ape_client_input_register_action( "game_strafe_left", nullptr, 0, ( ApeInputKey[] ) { 'a', APE_INPUT_KEY_LEFT }, 2, move_action );
-	ape_client_input_register_action( "game_strafe_right", nullptr, 0, ( ApeInputKey[] ) { 'd', APE_INPUT_KEY_RIGHT }, 2, move_action );
+	ape_client_input_register_action( "game_strafe_left", nullptr, 0, ( ApeInputKey[] ) { 'a' }, 1, move_action );
+	ape_client_input_register_action( "game_strafe_right", nullptr, 0, ( ApeInputKey[] ) { 'd' }, 1, move_action );
+	ape_client_input_register_action( "game_turn_left", nullptr, 0, ( ApeInputKey[] ) { APE_INPUT_KEY_LEFT }, 1, move_action );
+	ape_client_input_register_action( "game_turn_right", nullptr, 0, ( ApeInputKey[] ) { APE_INPUT_KEY_RIGHT }, 1, move_action );
 
 	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action );
 

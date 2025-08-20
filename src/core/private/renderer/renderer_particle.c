@@ -2,6 +2,8 @@
 
 #include <plcore/pl_linkedlist.h>
 
+#include "qmos/public/qm_os_random.h"
+
 #include "ape_private.h"
 #include "renderer_particle.h"
 #include "material/material.h"
@@ -56,14 +58,14 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	//SG_DS_Transform( root, "transform", &emitter->transform );
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
 
-	emitter->emissionRate = acm_branch_get_child_int( root, "emissionRate", 2 );
-	emitter->emissionVar  = acm_branch_get_child_int( root, "emissionVar", 2 );
+	emitter->emissionRate = acm_get_int( root, "emissionRate", 2 );
+	emitter->emissionVar  = acm_get_int( root, "emissionVar", 2 );
 
-	emitter->particleLife    = acm_branch_get_child_int( root, "particleLife", 10 );
-	emitter->particleLifeVar = acm_branch_get_child_int( root, "particleLifeVar", 5 );
-	emitter->maxParticles    = acm_branch_get_child_int( root, "maxParticles", 100 );
+	emitter->particleLife    = acm_get_int( root, "particleLife", 10 );
+	emitter->particleLifeVar = acm_get_int( root, "particleLifeVar", 5 );
+	emitter->maxParticles    = acm_get_int( root, "maxParticles", 100 );
 
-	emitter->life = acm_branch_get_child_int( root, "life", 0 );
+	emitter->life = acm_get_int( root, "life", 0 );
 
 	emitter->startColour    = com_acm_get_colour_f32( root, "startColour", &PL_COLOURF32_WHITE );
 	emitter->endColour      = com_acm_get_colour_f32( root, "endColour", &PL_COLOURF32_WHITE );

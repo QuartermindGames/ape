@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "ape_public_gui.h"
+
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_mesh.h>
 
@@ -144,10 +146,11 @@ ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderP
 
 typedef enum ApeDefaultMaterial
 {
-	APE_MATERIAL_DEFAULT_FALLBACK,// fallback for missing materials
-	APE_MATERIAL_DEFAULT_VERTEX,  // basic vertex, no texture
-	APE_MATERIAL_DEFAULT_SHADOW,  // material used per shadow volumes
-	APE_MATERIAL_DEFAULT_HIDDEN,  // material to display when a surface is marked hidden
+	APE_MATERIAL_DEFAULT_FALLBACK,    // fallback for missing materials
+	APE_MATERIAL_DEFAULT_VERTEX,      // basic vertex, no texture
+	APE_MATERIAL_DEFAULT_VERTEX_ALPHA,// basic vertex, no texture, blended
+	APE_MATERIAL_DEFAULT_SHADOW,      // material used per shadow volumes
+	APE_MATERIAL_DEFAULT_HIDDEN,      // material to display when a surface is marked hidden
 
 	APE_MATERIAL_DEFAULT_EDITOR,          // default material to use per new brushes
 	APE_MATERIAL_DEFAULT_EDITOR_SELECTION,// used to highlight faces/objects that are selected
@@ -231,7 +234,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColo
 void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const PLColour *colour );
 
 void ape_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
-void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max );
+void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max, ApeGuiFont *font );
 
 // The following are safe to be called during tick, the above are *not*!
 

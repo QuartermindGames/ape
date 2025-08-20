@@ -2,18 +2,19 @@
 // Purpose: Players - we play as 'em!
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_random.h"
+
 #include "../ss1_game.h"
 
 #include <ape/ape_public_model.h>
 
 #include "entity_player.h"
 
-#include "../../shared/components/component_health.h"
-#include "../../shared/components/component_collision.h"
-#include "../../shared/components/component_movement.h"
-
-#include "../../shared/physics/physics.h"
-#include "../../shared/game_entity.h"
+#include "shared/components/component_health.h"
+#include "shared/components/component_collision.h"
+#include "shared/components/component_movement.h"
+#include "shared/physics/physics.h"
+#include "shared/game_entity.h"
 
 static constexpr float PLAYER_CAMERA_HEIGHT   = 45.0f;
 static constexpr float PLAYER_CAMERA_DISTANCE = 50.0f;

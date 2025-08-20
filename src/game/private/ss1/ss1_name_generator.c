@@ -1,5 +1,7 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "qmos/public/qm_os_random.h"
+
 #include "ss1_game.h"
 
 const char *ss1_name_generator_generate( char *buffer, size_t size )

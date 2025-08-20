@@ -8,7 +8,7 @@ PL_EXTERN_C
 
 void ape_initialize_gui_( void );
 void ape_shutdown_gui_( void );
-void ape_draw_gui_( ApeViewport *viewport );
+void ape_gui_draw_( ApeViewport *viewport );
 void ape_tick_gui_( double delta );
 
 PL_EXTERN_C_END

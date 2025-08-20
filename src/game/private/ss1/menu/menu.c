@@ -1,7 +1,10 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "qmos/public/qm_os_random.h"
+
 #include "menu.h"
 
+#include "../../shared/menu/menu.h"
 #include "../../shared/menu/menu_pie.h"
 
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
@@ -269,6 +272,17 @@ void ss1_menu_initialize( void )
 	menu_pie_add_option( interactPie, "testing 3", ape_material_cache( "materials/ui/pie/icon_tape.mat.n", APE_CACHE_GROUP_WORLD, true ), nullptr );
 	//menu_pie_make_active( interactPie, true );
 
+	// setup the splash screens that will get shown on startup
+	static const GameMenuSplash splashes[] = {
+	        {
+             .materialPath = "materials/ui/qm_logo.mat.n",
+             .samplePath   = nullptr,
+             .fadeInTime   = 200.0f,
+             .fadeOutTime  = 200.0f,
+	         },
+	};
+	game_menu_splash_setup_queue_( splashes, PL_ARRAY_ELEMENTS( splashes ) );
+
 	// iterate over and init the menus
 	initialize_menu( &mainMenu );
 	initialize_menu( &debugMenu );
@@ -310,6 +324,7 @@ void ss1_menu_shutdown()
 
 void ss1_menu_tick( double delta )
 {
+	game_menu_splash_tick_( delta );
 	menu_pie_tick( interactPie );
 }
 
@@ -370,6 +385,12 @@ static void draw_hud( const ApeViewport *viewport )
 void ss1_menu_draw( const ApeViewport *viewport )
 {
 	static constexpr float MENU_SCALE = 1.0f;
+
+	if ( !game_menu_splash_is_complete_() )
+	{
+		game_menu_splash_draw_( viewport );
+		return;
+	}
 
 	GameMenu *menu = game_menu_get_active();
 	if ( menu != nullptr )

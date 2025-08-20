@@ -107,8 +107,8 @@ typedef struct ComProfilingGroup ComProfilingGroup;
  */
 ComProfilingGroup *com_profiler_get_group( const char *key );
 
-void com_profiler_start( const char *key );
-void com_profiler_end( const char *key );
+bool com_profiler_start( const char *key );
+bool com_profiler_end( const char *key );
 
 /**
  * @brief Retrieves the name of a profiling group.
@@ -144,9 +144,8 @@ ComProfilingGroup *com_profiler_get_first_group( void );
  * @param group   A pointer to the current ComProfilingGroup from which the next group is retrieved.
  * @return        A pointer to the next ComProfilingGroup, or NULL if there are no more groups.
  */
-ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group );
+ComProfilingGroup *com_profiler_get_next_group( const ComProfilingGroup *group );
 
-double        com_profiler_get_time_taken( const ComProfilingGroup *group );
 double        com_profiler_get_time_average( const ComProfilingGroup *group );
 const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned int *numPoints );
 

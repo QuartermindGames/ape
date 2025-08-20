@@ -916,7 +916,7 @@ static const ApeWorldNodeProperty properties[] = {
 
 const ApeWorldNodeClass ape_brushClass = {
         .identifier = "brush",
-        .magic      = PL_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
+        .magic      = QM_OS_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
 
         .destroy     = destroy_brush,
         .serialize   = serialize_brush,

@@ -30,7 +30,7 @@ void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
  ****************************************/
 
 static SDL_Window   *sdlWindow    = nullptr;
-static SDL_GLContext sdlGLContext = NULL;
+static SDL_GLContext sdlGLContext = nullptr;
 
 static ApeViewport *windowViewport = nullptr;
 
@@ -69,7 +69,7 @@ void shell_display_message( SS_Shell_MessageBoxType messageType, const char *mes
 
 	PlLogWFunction( launcherLog, "%s", buf );
 
-	SDL_ShowSimpleMessageBox( flags, title, buf, NULL );
+	SDL_ShowSimpleMessageBox( flags, title, buf, nullptr );
 
 	PL_DELETE( buf );
 }
@@ -434,8 +434,8 @@ static bool initialize_display( void )
 	if ( shellConfig != NULL )
 	{
 		fullscreen = acm_get_bool( shellConfig, "fullscreen", fullscreen );
-		width      = ( int ) acm_branch_get_child_int( shellConfig, "width", width );
-		height     = ( int ) acm_branch_get_child_int( shellConfig, "height", height );
+		width      = ( int ) acm_get_int( shellConfig, "width", width );
+		height     = ( int ) acm_get_int( shellConfig, "height", height );
 	}
 
 	if ( PlHasCommandLineArgument( "/window" ) )
@@ -604,6 +604,8 @@ int launcher_initialize( int argc, char **argv )
 	{
 		COM_PROFILE_START( "frametime" );
 
+		static bool updateProfiler;
+
 		SDL_Event event;
 		while ( SDL_PollEvent( &event ) )
 		{
@@ -614,7 +616,8 @@ int launcher_initialize( int argc, char **argv )
 
 				case SDL_EVENT_USER:
 					ape_tick_frame();
-					shouldDraw = true;
+					shouldDraw     = true;
+					updateProfiler = true;
 					break;
 
 				case SDL_EVENT_TEXT_INPUT:
@@ -675,20 +678,17 @@ int launcher_initialize( int argc, char **argv )
 
 			SDL_GL_SwapWindow( sdlWindow );
 			shouldDraw = false;
+
+			updateProfiler = true;
 		}
 
 		COM_PROFILE_END( "frametime" );
 
-		static unsigned int refreshTime = 0;
-		if ( refreshTime > ape_get_num_ticks() )
+		if ( updateProfiler )
 		{
-			continue;
+			com_profiler_update_samples();
+			updateProfiler = false;
 		}
-
-		com_profiler_update_samples();
-
-		PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
-		refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
 	}
 
 	SDL_StopTextInput( sdlWindow );

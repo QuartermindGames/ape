@@ -11,8 +11,8 @@ typedef enum GameHealthStatus
 
 typedef struct GameHealthComponent
 {
-	uint16_t health;
-	uint16_t maxHealth;
+	int16_t health;
+	int16_t maxHealth;
 
 	GameHealthStatus status;
 } GameHealthComponent;

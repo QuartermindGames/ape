@@ -2,6 +2,8 @@
 
 #include <pthread.h>
 
+#include "qmos/public/qm_os_time.h"
+
 #include "ape_private.h"
 #include "world/world.h"
 
@@ -160,7 +162,7 @@ void ape_draw_begin_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	double newTime = PlGetCurrentSeconds();
+	double newTime = qm_os_time_get_seconds();
 
 	PL_ZERO_( ape_rendererPerformance_ );
 

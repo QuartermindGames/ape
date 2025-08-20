@@ -5,6 +5,7 @@
 #include "ape_private.h"
 #include "renderer.h"
 #include "renderer_font.h"
+#include "ape/ape_public_gui.h"
 #include "material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +188,7 @@ void ape_draw_number( PLGTexture *numTextureTable[], float x, float y, int numbe
 	ape_draw_digit( numTextureTable, x, y, number % 10 );
 }
 
-void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max )
+void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max, ApeGuiFont *font )
 {
 	if ( numPoints < 2 )
 	{
@@ -195,6 +196,10 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	}
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
+
+	PlgSetBlendMode( PLG_BLEND_DEFAULT );
+	PlgDrawRectangle( x, y, w, h, PLColour( 0, 0, 0, 200 ) );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
 	double oa = min, ob = max;
 	for ( unsigned int i = 0; i < numPoints; ++i )
@@ -209,13 +214,11 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 		}
 	}
 
-#if 0
 	bool outOfBounds = false;
 	if ( oa != min || max != ob )
 	{
 		outOfBounds = true;
 	}
-#endif
 
 	static const PLColour colours[ 3 ] = {
 	        PL_COLOUR_GREEN,
@@ -246,10 +249,6 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 		/* leave z, it'll be initialized as 0 */
 	}
 
-	PlgSetBlendMode( PLG_BLEND_DEFAULT );
-	PlgDrawRectangle( x, y, w, h, PLColour( 0, 0, 0, 200 ) );
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
-
 #if 0
 	PLVector3 border[] = {
 	        { x, y, 0 },
@@ -266,14 +265,12 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	PlgDrawLines( points, numOutPoints, PL_COLOUR_WHITE, 1.0f );
 
-	ApeBitmapFont *font = ape_get_default_small_bitmap_font();
-	ape_bitmap_font_begin_draw( font );
-
+	float sy = y + 4.0f;
 	if ( heading != NULL )
 	{
-		size_t len  = strlen( heading );
-		float  cPos = ( x + w - ( len * font->cw ) ) - 2.0f;
-		ape_bitmap_font_batch_string( font, cPos, y + 2.0f, 1.0f, PL_COLOUR_VIOLET, heading, len, false );
+		float sw, sh;
+		gui_font_get_string_pixel_size( font, 1.0f, heading, strlen( heading ), &sw, &sh );
+		gui_font_draw_string( font, x + w - sw - 2.0f, sy, nullptr, &sy, 1.0f, &PL_COLOUR_VIOLET, heading, strlen( heading ), false );
 	}
 
 	// Calculate the average sum of all the points
@@ -285,24 +282,148 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 
 	avg /= numPoints;
 
+	float ch = gui_font_get_line_spacing( font );
+
 	char buf[ 128 ];
 
-	// Current and average readings
-	snprintf( buf, sizeof( buf ), "CUR %02f", values[ numPoints - 1 ] );
-	ape_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
-	snprintf( buf, sizeof( buf ), "AVG %02f", avg );
-	ape_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, /*outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN*/ PL_COLOUR_VIOLET, buf, strlen( buf ), true );
+	snprintf( buf, sizeof( buf ), "CUR %02f\n", values[ numPoints - 1 ] );
+	gui_font_draw_string( font, x + 2.0f, y + h / 2.0f - ch / 2.0f + ch + 8.0f, nullptr, nullptr, 1.0f, outOfBounds ? &PL_COLOUR_INDIAN_RED : &PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 
-#if 0
-	snprintf( buf, sizeof( buf ), "y+:%02f", max );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "y-:%02f", min );
-	Font_AddBitmapStringToPass( font, x + 2.0f, y + ( h - font->ch ) - 2.0f, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
-#endif
+	snprintf( buf, sizeof( buf ), "AVG %02f\n", avg );
+	gui_font_draw_string( font, x + 2.0f, y + h / 2.0f - ch / 2.0f - ch - 8.0f, nullptr, nullptr, 1.0f, outOfBounds ? &PL_COLOUR_INDIAN_RED : &PL_COLOUR_SEA_GREEN, buf, strlen( buf ), false );
 
-	ape_bitmap_font_draw( font );
+	//gui_font_draw_string( font, x + 2.0f, y + h / 2 - font)
+	//ape_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) + font->ch, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), true );
+	//
+	//ape_bitmap_font_batch_string( font, x + 2.0f, y + ( h / 2 ) - ( font->ch / 2 ) - font->ch, 1.0f, outOfBounds ? PL_COLOUR_INDIAN_RED : PL_COLOUR_SEA_GREEN, buf, strlen( buf ), true );
 
 	PL_DELETE( points );
+}
+
+void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, const PLColour *colour )
+{
+	unsigned int a, b, c, d;
+	a = PlgPushVertex3f( mesh, x, y, 0.0f );
+	PlgColour4bv( mesh, colour );
+	b = PlgPushVertex3f( mesh, x + w, y, 0.0f );
+	PlgColour4bv( mesh, colour );
+	c = PlgPushVertex3f( mesh, x, y + h, 0.0f );
+	PlgColour4bv( mesh, colour );
+	d = PlgPushVertex3f( mesh, x + w, y + h, 0.0f );
+	PlgColour4bv( mesh, colour );
+
+	PlgPushTriangle( mesh, c, b, a );
+	PlgPushTriangle( mesh, c, d, b );
+}
+
+void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, float depth, const PLColour *colour, bool inset )
+{
+	unsigned int a, b, c, d;
+
+	static constexpr int DIFF = 32;
+
+	PLColour ul = *colour;
+	for ( unsigned int i = 0; i < 3; ++i )
+	{
+		uint8_t *v = &( ( uint8_t * ) &ul )[ i ];
+		if ( ( int ) *v + DIFF > 255 )
+		{
+			*v = 255;
+			continue;
+		}
+
+		*v = ( ( uint8_t * ) colour )[ i ] + DIFF;
+	}
+
+	PLColour ll = *colour;
+	for ( unsigned int i = 0; i < 3; ++i )
+	{
+		uint8_t *v = &( ( uint8_t * ) &ll )[ i ];
+		if ( ( int ) *v - DIFF < 0 )
+		{
+			*v = 0;
+			continue;
+		}
+
+		*v = ( ( uint8_t * ) colour )[ i ] - DIFF;
+	}
+
+	if ( inset )
+	{
+		PLColour tmp = ul;
+		ul           = ll;
+		ll           = tmp;
+	}
+
+	// top bit
+
+	a = PlgPushVertex3f( mesh, x, y, 0.0f );
+	PlgColour4bv( mesh, &ul );
+	b = PlgPushVertex3f( mesh, x + w, y, 0.0f );
+	PlgColour4bv( mesh, &ul );
+	c = PlgPushVertex3f( mesh, x + depth, y + depth, 0.0f );
+	PlgColour4bv( mesh, &ul );
+	d = PlgPushVertex3f( mesh, x + w - depth, y + depth, 0.0f );
+	PlgColour4bv( mesh, &ul );
+
+	PlgPushTriangle( mesh, c, b, a );
+	PlgPushTriangle( mesh, c, d, b );
+
+	// bottom bit
+
+	a = PlgPushVertex3f( mesh, x + depth, y + h - depth, 0.0f );
+	PlgColour4bv( mesh, &ll );
+	b = PlgPushVertex3f( mesh, x + w - depth, y + h - depth, 0.0f );
+	PlgColour4bv( mesh, &ll );
+	c = PlgPushVertex3f( mesh, x, y + h, 0.0f );
+	PlgColour4bv( mesh, &ll );
+	d = PlgPushVertex3f( mesh, x + w, y + h, 0.0f );
+	PlgColour4bv( mesh, &ll );
+
+	PlgPushTriangle( mesh, c, b, a );
+	PlgPushTriangle( mesh, c, d, b );
+
+	// left bit
+
+	a = PlgPushVertex3f( mesh, x, y, 0.0f );
+	PlgColour4bv( mesh, &ul );
+	b = PlgPushVertex3f( mesh, x + depth, y + depth, 0.0f );
+	PlgColour4bv( mesh, &ul );
+	c = PlgPushVertex3f( mesh, x, y + h, 0.0f );
+	PlgColour4bv( mesh, &ul );
+	d = PlgPushVertex3f( mesh, x + depth, y + h - depth, 0.0f );
+	PlgColour4bv( mesh, &ul );
+
+	PlgPushTriangle( mesh, c, b, a );
+	PlgPushTriangle( mesh, c, d, b );
+
+	// right bit
+
+	a = PlgPushVertex3f( mesh, x + w - depth, y + depth, 0.0f );
+	PlgColour4bv( mesh, &ll );
+	b = PlgPushVertex3f( mesh, x + w, y, 0.0f );
+	PlgColour4bv( mesh, &ll );
+	c = PlgPushVertex3f( mesh, x + w - depth, y + h - depth, 0.0f );
+	PlgColour4bv( mesh, &ll );
+	d = PlgPushVertex3f( mesh, x + w, y + h, 0.0f );
+	PlgColour4bv( mesh, &ll );
+
+	PlgPushTriangle( mesh, c, b, a );
+	PlgPushTriangle( mesh, c, d, b );
+
+	// middle bit
+
+	a = PlgPushVertex3f( mesh, x + depth, y + depth, 0.0f );
+	PlgColour4bv( mesh, colour );
+	b = PlgPushVertex3f( mesh, x + w - depth, y + depth, 0.0f );
+	PlgColour4bv( mesh, colour );
+	c = PlgPushVertex3f( mesh, x + depth, y + h - depth, 0.0f );
+	PlgColour4bv( mesh, colour );
+	d = PlgPushVertex3f( mesh, x + w - depth, y + h - depth, 0.0f );
+	PlgColour4bv( mesh, colour );
+
+	PlgPushTriangle( mesh, c, b, a );
+	PlgPushTriangle( mesh, c, d, b );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

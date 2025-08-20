@@ -4,9 +4,11 @@
 
 #include <float.h>
 
+#include "qmos/public/qm_os_random.h"
+
 #include "world.h"
 
-#define APE_WORLD_NODE_MAGIC PL_MAGIC_TO_NUM( 'N', 'O', 'D', 'E' )
+#define APE_WORLD_NODE_MAGIC QM_OS_MAGIC_TO_NUM( 'N', 'O', 'D', 'E' )
 
 extern const ApeWorldNodeClass ape_rootClass;
 extern const ApeWorldNodeClass ape_roomClass;

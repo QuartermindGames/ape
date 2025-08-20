@@ -109,10 +109,11 @@ void ape_initialize_materials_( void )
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
 	        {
-	                [APE_MATERIAL_DEFAULT_FALLBACK] = "materials/engine/fallback.mat.n",
-	                [APE_MATERIAL_DEFAULT_VERTEX]   = "materials/engine/vertex.mat.n",
-	                [APE_MATERIAL_DEFAULT_SHADOW]   = "materials/engine/shadow.mat.n",
-	                [APE_MATERIAL_DEFAULT_HIDDEN]   = "materials/editor/hidden.mat.n",
+	                [APE_MATERIAL_DEFAULT_FALLBACK]        = "materials/engine/fallback.mat.n",
+	                [APE_MATERIAL_DEFAULT_VERTEX]          = "materials/engine/vertex.mat.n",
+	                [APE_MATERIAL_DEFAULT_VERTEX_ALPHA] = "materials/engine/vertex_additive.mat.n",
+	                [APE_MATERIAL_DEFAULT_SHADOW]          = "materials/engine/shadow.mat.n",
+	                [APE_MATERIAL_DEFAULT_HIDDEN]          = "materials/editor/hidden.mat.n",
 
 	                [APE_MATERIAL_DEFAULT_EDITOR]           = "materials/world/dev/dev_tile_generic_00.mat.n",//TODO: get rid of and make this configurable
 	                [APE_MATERIAL_DEFAULT_EDITOR_SELECTION] = "materials/engine/selection.mat.n",

@@ -1,70 +1,61 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "qmos/public/qm_os_time.h"
+
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_timer.h>
 
 #include "common_private.h"
-
-/****************************************
- * PRIVATE
- ****************************************/
 
 #define NUM_SAMPLES 32
 
 typedef struct ComProfilingGroup
 {
 	const char *key;
-	const char *description;
 
 	double        startTime;
-	double        timeTaken, oldTimeTaken;
+	double        timeTaken, lastTimeTaken;
 	double        results[ NUM_SAMPLES ];
 	unsigned char resultsPos;
 
 	PLHashTableNode *node;
 } ComProfilingGroup;
-static PLHashTable *profilingGroups = NULL;
-
-/****************************************
- * PUBLIC
- ****************************************/
+static PLHashTable *profilingGroups = nullptr;
 
 ComProfilingGroup *com_profiler_get_group( const char *key )
 {
-	if ( profilingGroups == NULL )
+	if ( profilingGroups == nullptr )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	ComProfilingGroup *group = ( ComProfilingGroup * ) PlLookupHashTableUserData( profilingGroups, key, strlen( key ) );
-	if ( group != NULL )
+	ComProfilingGroup *group = PlLookupHashTableUserData( profilingGroups, key, strlen( key ) );
+	if ( group != nullptr )
 	{
 		// already registered
 		return group;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
-static ComProfilingGroup *RegisterProfilerGroup( const char *key, const char *description )
+static ComProfilingGroup *register_profiler_group( const char *key )
 {
 	ComProfilingGroup *group = com_profiler_get_group( key );
-	if ( group != NULL )
+	if ( group != nullptr )
 	{
 		return group;
 	}
 
-	group              = PL_NEW( ComProfilingGroup );
-	group->key         = key;
-	group->description = description;
+	group      = PL_NEW( ComProfilingGroup );
+	group->key = key;
 
-	if ( profilingGroups == NULL )
+	if ( profilingGroups == nullptr )
 	{
 		profilingGroups = PlCreateHashTable();
-		assert( profilingGroups != NULL );
-		if ( profilingGroups == NULL )
+		if ( profilingGroups == nullptr )
 		{
-			return NULL;
+			return nullptr;
 		}
 	}
 
@@ -73,69 +64,67 @@ static ComProfilingGroup *RegisterProfilerGroup( const char *key, const char *de
 	return group;
 }
 
-void com_profiler_start( const char *key )
+bool com_profiler_start( const char *key )
 {
-	ComProfilingGroup *group = RegisterProfilerGroup( key, NULL );
-	assert( group != NULL );
-	if ( group == NULL )
+	ComProfilingGroup *group = register_profiler_group( key );
+	if ( group == nullptr )
 	{
-		return;
+		return false;
 	}
 
-	group->startTime    = PlGetCurrentSeconds() * 1000.0;
-	group->oldTimeTaken = group->timeTaken;
-	group->timeTaken    = -1.0;
+	assert( group->startTime == 0.0 );
+
+	group->startTime = qm_os_time_get_seconds() * 1000.0;
+
+	//printf( "START %s: %lf\n", group->key, group->timeTaken );
+
+	return true;
 }
 
-void com_profiler_end( const char *key )
+bool com_profiler_end( const char *key )
 {
-	ComProfilingGroup *group = RegisterProfilerGroup( key, NULL );
-	assert( group != NULL );
-	if ( group == NULL )
+	ComProfilingGroup *group = register_profiler_group( key );
+	if ( group == nullptr )
 	{
-		return;
+		return false;
 	}
 
-	if ( group->timeTaken == -1.0 )
-	{
-		group->timeTaken = 0.0;
-	}
+	assert( group->startTime != 0.0 );
 
-	group->timeTaken += ( PlGetCurrentSeconds() * 1000.0 ) - group->startTime;
+	group->lastTimeTaken = group->timeTaken;
+	group->timeTaken += ( qm_os_time_get_seconds() * 1000.0 ) - group->startTime;
+	group->startTime = 0.0;
+
+	return true;
 }
 
 const char *com_profiler_get_group_name( const ComProfilingGroup *group ) { return group->key; }
 
 ComProfilingGroup *com_profiler_get_first_group( void )
 {
-	if ( profilingGroups == NULL )
+	if ( profilingGroups == nullptr )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( profilingGroups );
-	return ( ComProfilingGroup * ) PlGetHashTableNodeUserData( node );
+	return PlGetHashTableNodeUserData( node );
 }
 
-ComProfilingGroup *com_profiler_get_next_group( ComProfilingGroup *group )
+ComProfilingGroup *com_profiler_get_next_group( const ComProfilingGroup *group )
 {
-	if ( profilingGroups == NULL )
+	if ( profilingGroups == nullptr )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	PLHashTableNode *node = PlGetNextHashTableNode( group->node );
-	if ( node != NULL )
+	if ( node != nullptr )
 	{
-		return ( ComProfilingGroup * ) PlGetHashTableNodeUserData( node );
+		return PlGetHashTableNodeUserData( node );
 	}
 
-	return NULL;
-}
-
-double com_profiler_get_time_taken( const ComProfilingGroup *group )
-{
-	return group->timeTaken == -1.0 ? group->oldTimeTaken : group->timeTaken;
+	return nullptr;
 }
 
 double com_profiler_get_time_average( const ComProfilingGroup *group )
@@ -146,7 +135,7 @@ double com_profiler_get_time_average( const ComProfilingGroup *group )
 		samples += group->results[ i ];
 	}
 
-	return ( samples / NUM_SAMPLES );
+	return samples / NUM_SAMPLES;
 }
 
 const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned int *numPoints )
@@ -157,7 +146,7 @@ const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned
 
 unsigned int com_profiler_get_num_groups( void )
 {
-	if ( profilingGroups == NULL )
+	if ( profilingGroups == nullptr )
 	{
 		return 0;
 	}
@@ -167,44 +156,40 @@ unsigned int com_profiler_get_num_groups( void )
 
 void com_profiler_update_samples( void )
 {
-	if ( profilingGroups == NULL )
+	if ( profilingGroups == nullptr )
 	{
 		return;
-	}
-
-	ComProfilingGroup *group = com_profiler_get_first_group();
-	while ( group != NULL )
-	{
-		// Shuffle the list along
-		for ( unsigned int i = 0; i < NUM_SAMPLES - 1; ++i )
-		{
-			group->results[ i ] = group->results[ i + 1 ];
-		}
-
-		group->results[ NUM_SAMPLES - 1 ] = com_profiler_get_time_taken( group );
-		group                             = com_profiler_get_next_group( group );
-	}
-}
-
-#if 0
-
-void apeUpdateProfilerGraphs( void ) {
-	static unsigned int refreshTime = 0;
-	if ( refreshTime > apeGetNumTicks() ) {
-		return;
-	}
-
-	for ( uint8_t i = 0; i < MAX_PROFILER_GROUPS; ++i ) {
-		// Shuffle the list along
-		for ( uint8_t j = 0; j < NUM_SAMPLES - 1; ++j ) {
-			timers[ i ].results[ j ] = timers[ i ].results[ j + 1 ];
-		}
-
-		timers[ i ].results[ NUM_SAMPLES - 1 ] = ( float ) apeGetProfilerMeasure( i );
 	}
 
 	PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
-	refreshTime += ( profilerFrequency != NULL ) ? profilerFrequency->i_value : 16;
-}
+	static uint16_t nextRefresh = 0;
 
-#endif
+	ComProfilingGroup *group = com_profiler_get_first_group();
+	while ( group != nullptr )
+	{
+		assert( group->startTime == 0.0 );
+
+		if ( nextRefresh == 0 )
+		{
+			// Shuffle the list along
+			for ( unsigned int i = 0; i < NUM_SAMPLES - 1; ++i )
+			{
+				group->results[ i ] = group->results[ i + 1 ];
+			}
+
+			group->results[ NUM_SAMPLES - 1 ] = group->timeTaken;
+		}
+
+		group->timeTaken = 0.0;
+
+		group = com_profiler_get_next_group( group );
+	}
+
+	if ( nextRefresh == 0 )
+	{
+		nextRefresh = ( profilerFrequency != nullptr ? profilerFrequency->i_value : 32 );
+		return;
+	}
+
+	nextRefresh--;
+}

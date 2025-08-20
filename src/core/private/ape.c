@@ -1,5 +1,7 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "qmos/public/qm_os_time.h"
+
 #include "ape_private.h"
 
 #include "yin/core_fs.h"
@@ -118,7 +120,7 @@ void ape_warning_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( Console_GetLogLevel( APE_LOG_WARNING ), buf );
+	PlLogMessage( Console_GetLogLevel( APE_LOG_WARNING ), "$cFF0000FFWARNING: $cFFFFFFFF%s", buf );
 }
 
 void ape_error_( bool die, const char *message, ... )
@@ -129,7 +131,7 @@ void ape_error_( bool die, const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( Console_GetLogLevel( APE_LOG_ERROR ), buf );
+	PlLogMessage( Console_GetLogLevel( APE_LOG_ERROR ), "$cFF0000FFERROR: $cFFFFFFFF%s", buf );
 
 	if ( die )
 	{
@@ -189,7 +191,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 	ape_print_( "Initialization complete!\n" );
 
-	lastTime = PlGetCurrentSeconds();
+	lastTime = qm_os_time_get_seconds();
 
 	engineInitialized = true;
 
@@ -238,7 +240,7 @@ void ape_tick_frame()
 
 	COM_PROFILE_FUNCTION_START();
 
-	const double now   = PlGetCurrentSeconds();
+	const double now   = qm_os_time_get_seconds();
 	const double delta = PlClamp( 0.0, now - lastTime, 1.0 );
 	lastTime           = now;
 

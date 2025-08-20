@@ -222,7 +222,7 @@ void ape_register_world_console_variables_( void )
 
 const ApeWorldNodeClass ape_rootClass = {
         .identifier = "root",
-        .magic      = PL_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
+        .magic      = QM_OS_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
 
         .destroy = ape_world_destroy_,
 

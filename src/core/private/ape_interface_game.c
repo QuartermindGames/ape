@@ -88,8 +88,6 @@ void ape_shutdown_game_( void )
 
 static void sync_world_nodes( ApeWorldNode *worldNode )
 {
-	COM_PROFILE_FUNCTION_START();
-
 	ApeWorldNode *childNode;
 	COM_ITERATE_LINKED_LIST( childNode, worldNode->children, i )
 	{
@@ -109,8 +107,6 @@ static void sync_world_nodes( ApeWorldNode *worldNode )
 
 		sync_world_nodes( childNode );
 	}
-
-	COM_PROFILE_FUNCTION_END();
 }
 
 static bool tick_room_decals( ApeWorldNode *node, void *user )

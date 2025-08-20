@@ -2,6 +2,8 @@
 // Purpose: This handles the actions specific to SS1/QM1.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_random.h"
+
 #include "ss1_game.h"
 
 static void fire_decal( ApeInputState state, const char * )

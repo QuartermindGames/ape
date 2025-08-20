@@ -350,7 +350,7 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 
 const ApeWorldNodeClass ape_entityClass = {
         .identifier  = "entity",
-        .magic       = PL_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
+        .magic       = QM_OS_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
         .destroy     = ape_entity_destroy_,
         .serialize   = serialize_entity,
         .deserialize = deserialize_entity,

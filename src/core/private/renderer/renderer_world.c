@@ -1,11 +1,11 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "qmos/public/qm_os_random.h"
+
 #include "ape_private.h"
 #include "renderer.h"
 #include "material/material.h"
-
 #include "camera/camera.h"
-
 #include "world/world.h"
 
 //TODO: eventually we should do away with this
@@ -560,6 +560,8 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 
 static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, float depth )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	PlgPushDebugGroupMarker( "Translucent Room" );
 
 	// and now depth pre-pass
@@ -591,6 +593,8 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 	}
 
 	PlgPopDebugGroupMarker();
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool depth )
@@ -676,7 +680,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 			ApeLight *light = visibleRoom->lights[ i ];
 			if ( ape_config_.renderer.lightJitterSamples > 0 )
 			{
-				srand( ape_config_.renderer.lightJitterSamples );
+				unsigned int seed = ape_config_.renderer.lightJitterSamples;
 
 				PLVector3 storePos   = light->base.position;
 				float     storePower = light->colour.a;
@@ -804,6 +808,8 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 		return;
 	}
 
+	COM_PROFILE_FUNCTION_START();
+
 	ApeBrushFace *portal            = visiblePortal->portalFace;
 	ApeBrushFace *destinationPortal = ape_brush_face_get_portal_destination( portal );
 
@@ -888,6 +894,8 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	ape_viewport_set_clip( viewport );
 
 	PlgPopDebugGroupMarker();
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 //TODO: move into room code
@@ -898,9 +906,9 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 		return;
 	}
 
-	PlgPushDebugGroupMarker( "room_draw" );
-
 	COM_PROFILE_FUNCTION_START();
+
+	PlgPushDebugGroupMarker( "room_draw" );
 
 	// deal with the portals first
 	if ( ape_config_.world.showAllRooms )
@@ -963,7 +971,7 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 		}
 	}
 
-	COM_PROFILE_FUNCTION_END();
-
 	PlgPopDebugGroupMarker();
+
+	COM_PROFILE_FUNCTION_END();
 }

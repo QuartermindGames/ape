@@ -2,6 +2,8 @@
 // Purpose: Test framework for game-specific items.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_random.h"
+
 #include "game_private.h"
 
 void game_test_cylinder_point_collision_( const PLVector3 *pos )

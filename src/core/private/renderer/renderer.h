@@ -126,6 +126,9 @@ void ape_draw_begin_( ApeViewport *viewport );
 void ape_draw_end_( ApeViewport *viewport );
 void ape_draw_menu_( ApeViewport *viewport );
 
+void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, const PLColour *colour );
+void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, float depth, const PLColour *colour, bool inset );
+
 void ape_set_2d_viewport_size_( int w, int h );
 void ape_get_2d_viewport_size_( int *width, int *height );
 

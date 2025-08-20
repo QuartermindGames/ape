@@ -2,6 +2,8 @@
 // Purpose: A large floating airship that floats around the map.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_random.h"
+
 #include "ss1/ss1_game.h"
 
 #include "ape/ape_public_model.h"

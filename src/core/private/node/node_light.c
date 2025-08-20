@@ -175,7 +175,7 @@ static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
 	light->radius   = acm_get_f32( root, "radius", light->radius );
 	light->angle    = acm_get_f32( root, "angle", light->angle );
 	light->flags    = acm_get_uint( root, "flags", light->flags );
-	light->state    = acm_branch_get_child_int( root, "state", light->state );
+	light->state    = acm_get_int( root, "state", light->state );
 	return APE_WORLD_NODE( light );
 }
 
@@ -194,7 +194,7 @@ static ApeWorldNodeProperty properties[] = {
 
 const ApeWorldNodeClass ape_lightClass = {
         .identifier = "light",
-        .magic      = PL_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
+        .magic      = QM_OS_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
 
         .destroy     = destroy_light,
         .serialize   = serialize_light,
