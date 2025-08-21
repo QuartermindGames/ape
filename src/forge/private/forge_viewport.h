@@ -34,6 +34,8 @@ namespace forge
 			ID_TEXTURED,
 			ID_LIT,
 
+			ID_BUTTON_SCREENSHOT,
+
 			ID_BUTTON_CREATE_ROOM,
 			ID_BUTTON_CREATE_BRUSH,
 			ID_BUTTON_CREATE_LIGHT,
@@ -68,6 +70,7 @@ namespace forge
 		virtual long on_middle_click( FXObject *, FXSelector, void * );
 		virtual long on_key( FXObject *, FXSelector, void * );
 		long         on_create( FXObject *, FXSelector, void * );
+		long         on_screenshot( FXObject *, FXSelector, void * );
 		long         on_reset_camera( FXObject *, FXSelector, void * );
 
 	private:

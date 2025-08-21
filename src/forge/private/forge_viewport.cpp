@@ -52,6 +52,7 @@ editorViewportMap[] = {
         FXMAPFUNC( SEL_KEYPRESS, Viewport::ID_CANVAS, Viewport::on_key ),
         FXMAPFUNC( SEL_KEYRELEASE, Viewport::ID_CANVAS, Viewport::on_key ),
 
+        FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_SCREENSHOT, Viewport::on_screenshot ),
         FXMAPFUNC( SEL_COMMAND, Viewport::ID_BUTTON_RESET_CAMERA, Viewport::on_reset_camera ),
 };
 
@@ -79,6 +80,9 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 	drawModeButtons[ APE_CAMERA_DRAW_MODE_TEXTURED ]  = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/textured.gif" ), nullptr, this, ID_TEXTURED, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	drawModeButtons[ APE_CAMERA_DRAW_MODE_SHADED ]    = new FXToggleButton( this->toolBar, FXString::null, FXString::null, load_fx_icon( getApp(), "resources/lit.gif" ), nullptr, this, ID_LIT, TOGGLEBUTTON_KEEPSTATE | TOGGLEBUTTON_TOOLBAR | TOGGLEBUTTON_NORMAL );
 	drawModeButtons[ drawMode_ ]->setState( true );
+
+	new FXVerticalSeparator( this->toolBar );
+	new FXButton( this->toolBar, FXString::null, load_fx_icon( getApp(), "resources/screenshot.gif" ), this, ID_BUTTON_SCREENSHOT );
 
 	new FXVerticalSeparator( this->toolBar );
 	new FXLabel( this->toolBar, FXString::null, load_fx_icon( getApp(), "resources/cam_static.gif" ) );
@@ -564,6 +568,13 @@ long Viewport::on_create( FXObject *object, FXSelector selector, void * )
 	}
 
 	worldEditor->create_new_object( name, type );
+
+	return TRUE;
+}
+
+long Viewport::on_screenshot( FXObject *, FXSelector, void * )
+{
+	PlParseConsoleString( "screenshot" );
 
 	return TRUE;
 }
