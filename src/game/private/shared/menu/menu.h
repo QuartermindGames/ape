@@ -21,6 +21,7 @@ typedef struct GameMenuSplash
 		ApeMaterial    *material;
 		ApeAudioSample *sample;
 		float           lifetime;
+		float           maxLifetime;
 	} p;// private data
 } GameMenuSplash;
 

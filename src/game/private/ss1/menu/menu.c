@@ -277,8 +277,8 @@ void ss1_menu_initialize( void )
 	        {
              .materialPath = "materials/ui/qm_logo.mat.n",
              .samplePath   = nullptr,
-             .fadeInTime   = 200.0f,
-             .fadeOutTime  = 200.0f,
+             .fadeInTime   = 2.0f,
+             .fadeOutTime  = 2.0f,
 	         },
 	};
 	game_menu_splash_setup_queue_( splashes, PL_ARRAY_ELEMENTS( splashes ) );

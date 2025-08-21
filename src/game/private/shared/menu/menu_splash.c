@@ -66,6 +66,8 @@ void game_menu_splash_setup_queue_( const GameMenuSplash *splashes, const unsign
 			}
 		}
 
+		splash->p.maxLifetime = splash->fadeInTime + splash->fadeOutTime;
+
 		splashNum++;
 	}
 
@@ -91,7 +93,7 @@ void game_menu_splash_tick_( const double delta )
 	}
 
 	splash->p.lifetime += 1.0f * delta;
-	if ( splash->p.lifetime > splash->fadeOutTime )
+	if ( splash->p.lifetime > splash->p.maxLifetime )
 	{
 		splashCur++;
 	}
@@ -138,7 +140,17 @@ void game_menu_splash_draw_( const ApeViewport *viewport )
 		h = w;
 	}
 
-	float fade = splash->fadeOutTime - splash->fadeInTime / 1.0f / splash->p.lifetime;
+	float prog = splash->p.lifetime / splash->p.maxLifetime;
+	float fade = 1.0f;
+	if ( splash->p.lifetime < splash->fadeInTime )
+	{
+		fade = splash->p.lifetime / splash->fadeInTime;
+	}
+	else if ( prog > ( 1.0f - splash->fadeOutTime / splash->p.maxLifetime ) )
+	{
+		float fadeOutStart = 1.0f - splash->fadeOutTime / splash->p.maxLifetime;
+		fade               = 1.0f - ( prog - fadeOutStart ) / ( splash->fadeOutTime / splash->p.maxLifetime );
+	}
 
 	draw_rect( viewport->width / 2.0f - w / 2.0f, // x
 	           viewport->height / 2.0f - h / 2.0f,// y
