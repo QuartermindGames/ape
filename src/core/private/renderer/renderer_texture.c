@@ -95,6 +95,7 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 
 	ApeTexture *texture = PL_NEW( ApeTexture );
 	texture->filterMode = internalTexture->filter;
+	texture->internal   = internalTexture;
 
 	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 
