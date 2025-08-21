@@ -52,11 +52,11 @@ static void draw_face_wireframe( const ApeBrushFace *face )
 
 static void draw_room_wireframe( const ApeCamera *camera )
 {
+#if 0//TODO
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	PlgImmBegin( PLG_MESH_LINES );
 
-#if 0//TODO
 	unsigned int   numFaces;
 	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )

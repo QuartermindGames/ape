@@ -16,10 +16,7 @@
 
 static void load_room_command( PL_UNUSED unsigned int argc, char **argv )
 {
-	PLPath path;
-	PlSetupPath( path, true, "rooms/%s." APE_WORLD_ROOM_EXTENSION, argv[ 1 ] );
-
-	ape_spawn_world_( path );
+	ape_spawn_world_( argv[ 1 ] );
 }
 
 static void print_world_name( const char *path, void * )

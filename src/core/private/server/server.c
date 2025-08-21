@@ -237,12 +237,12 @@ static void tick_server_client( void *userData, bool *breakEarly )
 
 void ape_tick_server_( double delta )
 {
-	COM_PROFILE_FUNCTION_START();
-
 	if ( hostSocket == nullptr )
 	{
 		return;
 	}
+
+	COM_PROFILE_FUNCTION_START();
 
 	// check if a new connection is being established
 	ApeNetSocket *connectedSocket = ape_net_accept_( hostSocket );

@@ -42,6 +42,8 @@ worldEditorMap[] = {
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_MATERIAL_BROWSER, forge::WorldEditor::on_material_browser ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_OPEN_PROPERTIES, forge::WorldEditor::on_properties ),
+
+        FXMAPFUNC( SEL_COMMAND, forge::WorldEditor::ID_PLAY, forge::WorldEditor::on_play ),
 };
 FXIMPLEMENT( forge::WorldEditor, EditorTab, worldEditorMap, ARRAYNUMBER( worldEditorMap ) )
 
@@ -95,7 +97,7 @@ forge::WorldEditor::WorldEditor( FXTabBook *owner, const FXString &worldName, Ap
 	new FXTextField( toolbar, 4, &_gridSizeTarget, FXDataTarget::ID_VALUE, TEXTFIELD_READONLY | TEXTFIELD_LIMITED | TEXTFIELD_INTEGER | FRAME_NORMAL );
 
 	new FXVerticalSeparator( toolbar );
-	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/play.gif" ) );
+	new FXButton( toolbar, "", load_fx_icon( getApp(), "resources/play.gif" ), this, ID_PLAY );
 
 	auto *hs = new FX4Splitter( middleFrame, LAYOUT_MIN_WIDTH | LAYOUT_SIDE_TOP | LAYOUT_FILL | SPLITTER_HORIZONTAL );
 
@@ -452,6 +454,46 @@ long forge::WorldEditor::on_properties( FXObject *, FXSelector, void * )
 	mainWindow->open_properties( node );
 
 	return TRUE;
+}
+
+long forge::WorldEditor::on_play( FXObject *object, FXSelector selector, void *ptr )
+{
+	PL_UNUSEDVAR( object );
+	PL_UNUSEDVAR( selector );
+	PL_UNUSEDVAR( ptr );
+
+	ApeRoom *room = get_active_room();
+	if ( room == nullptr )
+	{
+		forge_warning_( "No active room!\n" );
+		return false;
+	}
+
+	const char *path = ape_room_get_path( room );
+	if ( path == nullptr )
+	{
+		forge_warning_( "No path for room, have you saved it yet?\n" );
+		return false;
+	}
+
+	const char *projectName = com_project_get_base_name();
+
+	PLPath exeDir;
+	PlGetExecutableDirectory( exeDir, sizeof( exeDir ) );
+
+	char tmp[ sizeof( exeDir ) + 64 ];
+	snprintf( tmp, sizeof( tmp ), "%s/SS1 /window /project %s \"+game_load_room %s\"", exeDir, projectName, path );
+
+#if !defined( _WIN32 )
+	if ( system( tmp ) == -1 )
+	{
+		forge_warning_( "Failed to launch game (%s)!\n", tmp );
+	}
+#else
+#	error "Win32 implementation..."
+#endif
+
+	return true;
 }
 
 void forge::WorldEditor::open_face_inspector()

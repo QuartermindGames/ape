@@ -371,18 +371,6 @@ void ape_gui_draw_( ApeViewport *viewport )
 		gui_font_display( font );
 	}
 
-#if !defined( NDEBUG )
-	if ( !ape_is_editor_active_() )
-	{
-		static const char *buildIdentifier = "DEBUG - VERSION[" ENGINE_VERSION_STR "] BUILD[" GIT_COMMIT_COUNT "] BRANCH[" GIT_BRANCH "]\n";
-		float              sw, sh;
-		ApeGuiFont        *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
-		gui_font_get_string_pixel_size( font, 1.0f, buildIdentifier, strlen( buildIdentifier ), &sw, &sh );
-		gui_font_draw_string( font, w / 2 - ( sw / 2 ), h - sh, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, buildIdentifier, strlen( buildIdentifier ), false );
-		gui_font_display( font );
-	}
-#endif
-
 	// todo: this should use GUI
 	ape_console_draw_( viewport );
 

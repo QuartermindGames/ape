@@ -42,6 +42,8 @@ namespace forge
 			ID_GRID_UP,
 			ID_GRID_DOWN,
 			ID_GRID_ALIGN,
+
+			ID_PLAY,
 		};
 
 		WorldEditor( FXTabBook *owner, const FXString &worldName, ApeWorld *world );
@@ -69,6 +71,8 @@ namespace forge
 
 		long on_material_browser( FXObject *, FXSelector, void * );
 		long on_properties( FXObject *, FXSelector, void * );
+
+		long on_play( FXObject *object, FXSelector selector, void *ptr );
 
 		void open_face_inspector();
 		void set_face_inspector_surface( ApeBrushFace *face );
