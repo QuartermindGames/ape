@@ -2,6 +2,8 @@
 // Purpose: Cooking methods specific to models.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_time.h"
+
 #include "plcore/pl_hashtable.h"
 #include "plcore/pl_timer.h"
 #include <plcore/pl_filesystem.h>
@@ -322,7 +324,7 @@ void cook_model_process( const char *modelName )
 	AcmBranch *root  = acm_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
-		double startTime = PlGetCurrentSeconds();
+		double startTime = qm_os_time_get_seconds();
 
 		PLPath folder = {};
 		if ( PlGetFolderForPath( folder, path ) == nullptr )
@@ -337,7 +339,7 @@ void cook_model_process( const char *modelName )
 
 		write_ape_format_model( model, folder );
 
-		double endTime = PlGetCurrentSeconds();
+		double endTime = qm_os_time_get_seconds();
 
 		printf( "Processed model in %.2lfs\n", endTime - startTime );
 	}

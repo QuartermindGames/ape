@@ -378,6 +378,8 @@ CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )
 			unsigned int numTriangles = faces[ j ]->numEdges < 3 ? 0 : ( faces[ j ]->numEdges - 3 );
 		}
 	}
+
+	return nullptr;
 }
 
 static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
