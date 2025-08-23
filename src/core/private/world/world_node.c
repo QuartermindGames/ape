@@ -78,8 +78,8 @@ void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeWorldNod
 
 void ape_world_node_compute_bounds_( ApeWorldNode *self )
 {
-	self->bounds.maxs = PL_VECTOR3( -FLT_MAX, -FLT_MAX, -FLT_MAX );
-	self->bounds.mins = PL_VECTOR3( FLT_MAX, FLT_MAX, FLT_MAX );
+	self->bounds.maxs = qm_math_vector3f( -FLT_MAX, -FLT_MAX, -FLT_MAX );
+	self->bounds.mins = qm_math_vector3f( FLT_MAX, FLT_MAX, FLT_MAX );
 
 	for ( unsigned int i = 0; i < 3; ++i )
 	{
@@ -459,11 +459,11 @@ PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self )
 	transform           = PlMultiplyMatrix4( &transform, &translate );
 
 	PLMatrix4 rotate;
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.x ), &PL_VECTOR3( 1.0f, 0.0f, 0.0f ) );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
 	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.y ), &PL_VECTOR3( 0.0f, 1.0f, 0.0f ) );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
 	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.z ), &PL_VECTOR3( 0.0f, 0.0f, 1.0f ) );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 	transform = PlMultiplyMatrix4( &transform, &rotate );
 
 	return transform;

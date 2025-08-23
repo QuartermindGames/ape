@@ -186,7 +186,7 @@ PLVector3 ape_camera_get_angles( const ApeCamera *camera )
 PLVector3 ape_camera_get_forward( const ApeCamera *camera )
 {
 	PLMatrix4 view = camera->internal->internal.view;
-	return PL_VECTOR3( view.mm[ 0 ][ 2 ], view.mm[ 1 ][ 2 ], view.mm[ 2 ][ 2 ] );
+	return qm_math_vector3f( view.mm[ 0 ][ 2 ], view.mm[ 1 ][ 2 ], view.mm[ 2 ][ 2 ] );
 }
 
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
@@ -238,7 +238,7 @@ static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera
 	PLMatrix4 proj     = camera->internal->internal.proj;
 	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
 
-	PLVector4 rect = PL_VECTOR4( viewport->width, viewport->height, 0.0f, 0.0f );
+	PLVector4 rect = qm_math_vector4f( viewport->width, viewport->height, 0.0f, 0.0f );
 
 	// get the transform
 	ApeBrush *brush = face->parent;
@@ -433,8 +433,11 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 				visiblePortal->origin     = faceOrigin;
 
 				visiblePortal->normal = brush->faces[ i ].normal;
-				PLVector4 tmp         = PlTransformVector4( &PL_VEC3TO4( visiblePortal->normal ), &transform );
-				visiblePortal->normal = PlNormalizeVector3( PL_VEC4TO3( tmp ) );
+				PLVector4 tmp         = PlTransformVector4( &QM_MATH_VECTOR4F( visiblePortal->normal.x,
+				                                                               visiblePortal->normal.y,
+				                                                               visiblePortal->normal.z, 0.0f ),
+				                                            &transform );
+				visiblePortal->normal = PlNormalizeVector3( QM_MATH_VECTOR3F( tmp.x, tmp.y, tmp.z ) );
 
 				visibleRoom->numPortals++;
 

@@ -100,7 +100,7 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
 			continue;
 		}
 
-		self->particles[ i ].velocity = PL_VECTOR3( 0.0f, -0.5f, 0.0f );
+		self->particles[ i ].velocity = qm_math_vector3f( 0.0f, -0.5f, 0.0f );
 
 		PLVector3 npos = PlAddVector3(
 		        PlSubtractVector3( self->particles[ i ].position, self->particles[ i ].oldPosition ),
@@ -173,7 +173,7 @@ PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, 
 	if ( particle >= self->numParticles )
 	{
 		game_warning_( "Invalid particle segment specified for rope (%u >= %u)!\n", particle, self->numParticles );
-		return PL_VECTOR3( NAN, NAN, NAN );
+		return qm_math_vector3f( NAN, NAN, NAN );
 	}
 
 	return self->particles[ particle ].position;

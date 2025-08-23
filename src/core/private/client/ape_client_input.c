@@ -191,7 +191,7 @@ static void check_for_controllers( void )
 			serial = "Unknown";
 		}
 
-		inputControllers[ slot ].deadzones = PL_VECTOR2( DEFAULT_DEADZONE, DEFAULT_DEADZONE );
+		inputControllers[ slot ].deadzones = qm_math_vector2f( DEFAULT_DEADZONE, DEFAULT_DEADZONE );
 
 		if ( inputControllers[ slot ].activeButtonList == nullptr )
 		{

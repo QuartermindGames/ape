@@ -50,12 +50,12 @@ bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollis
 	           ( minA.z <= maxB.z && maxA.z >= minB.z );
 	if ( hit && result != nullptr )
 	{
-		PLVector3 min = PL_VECTOR3( fmaxf( a->mins.x, b->mins.x ),
-		                            fmaxf( a->mins.y, b->mins.y ),
-		                            fmaxf( a->mins.z, b->mins.z ) );
-		PLVector3 max = PL_VECTOR3( fminf( a->maxs.x, b->maxs.x ),
-		                            fminf( a->maxs.y, b->maxs.y ),
-		                            fminf( a->maxs.z, b->maxs.z ) );
+		PLVector3 min = qm_math_vector3f( fmaxf( a->mins.x, b->mins.x ),
+		                                  fmaxf( a->mins.y, b->mins.y ),
+		                                  fmaxf( a->mins.z, b->mins.z ) );
+		PLVector3 max = qm_math_vector3f( fminf( a->maxs.x, b->maxs.x ),
+		                                  fminf( a->maxs.y, b->maxs.y ),
+		                                  fminf( a->maxs.z, b->maxs.z ) );
 
 		*result = PlScaleVector3F( PlAddVector3( min, max ), 0.5f );
 	}

@@ -179,7 +179,7 @@ static void draw_selection_cube( const PLVector3 *position, const PLColour *colo
 {
 	if ( wireframe )
 	{
-		ape_draw_debug_aabb( &PL_COLLISION_AABB( *position, PL_VECTOR3( -scale, -scale, -scale ), PL_VECTOR3( scale, scale, scale ) ), *colour );
+		ape_draw_debug_aabb( &PL_COLLISION_AABB( *position, qm_math_vector3f( -scale, -scale, -scale ), qm_math_vector3f( scale, scale, scale ) ), *colour );
 		return;
 	}
 

@@ -99,16 +99,18 @@ add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 ####################################################################
 # main projects
 
+# QMFW libraries
+add_subdirectory(src/kernel/src/qmos)
+set_target_properties(qm-os PROPERTIES FOLDER "Kernel")
+add_subdirectory(src/kernel/src/qmmath)
+set_target_properties(qm-math PROPERTIES FOLDER "Kernel")
+
 add_subdirectory(src/kernel/plcore/)
 set_target_properties(plcore PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plgraphics/)
 set_target_properties(plgraphics PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plugins/driver_opengl/)
 set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
-
-# New QMFW libraries
-add_subdirectory(src/kernel/src/qmos)
-set_target_properties(qm-os PROPERTIES FOLDER "Kernel")
 
 set(HEI_LIBRARIES qm-os plcore plgraphics)
 
@@ -134,12 +136,12 @@ set(LIBTYPE STATIC)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "")
 set(ALSOFT_UTILS OFF CACHE BOOL "")
 add_subdirectory(src/3rdparty/openal-soft)
-if(WIN32)
+if (WIN32)
     set_target_properties(alsoft.build_version PROPERTIES FOLDER "3rdParty/OpenAL")
     set_target_properties(alsoft.common PROPERTIES FOLDER "3rdParty/OpenAL")
     set_target_properties(alsoft.excommon PROPERTIES FOLDER "3rdParty/OpenAL")
     set_target_properties(alsoft.fmt PROPERTIES FOLDER "3rdParty/OpenAL")
-endif()
+endif ()
 set_target_properties(OpenAL PROPERTIES FOLDER "3rdParty/OpenAL")
 
 add_subdirectory(src/3rdparty/fox)

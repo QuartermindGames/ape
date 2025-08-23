@@ -32,11 +32,11 @@ void com_math_plane_basis_vectors( const ComMathPlane *self, PLVector3 *tangentD
 {
 	if ( fabsf( self->normal.x ) > fabsf( self->normal.y ) )
 	{
-		*tangentDst = PL_VECTOR3( self->normal.z, 0.0f, -self->normal.x );
+		*tangentDst = qm_math_vector3f( self->normal.z, 0.0f, -self->normal.x );
 	}
 	else
 	{
-		*tangentDst = PL_VECTOR3( 0.0f, self->normal.z, -self->normal.y );
+		*tangentDst = qm_math_vector3f( 0.0f, self->normal.z, -self->normal.y );
 	}
 	*tangentDst = PlNormalizeVector3( *tangentDst );
 
@@ -112,8 +112,8 @@ PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int 
 		PLVector3 b = vertices[ i + 1 ];
 		PLVector3 c = vertices[ i + 2 ];
 
-		PLVector3 x = PL_VECTOR3( c.x - b.x, c.y - b.y, c.z - b.z );
-		PLVector3 y = PL_VECTOR3( a.x - b.x, a.y - b.y, a.z - b.z );
+		PLVector3 x = qm_math_vector3f( c.x - b.x, c.y - b.y, c.z - b.z );
+		PLVector3 y = qm_math_vector3f( a.x - b.x, a.y - b.y, a.z - b.z );
 		PLVector3 n = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
 
 		normal = PlAddVector3( normal, n );

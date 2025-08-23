@@ -196,7 +196,7 @@ static unsigned int convert_brush_polygon_to_triangles( const ApeBrushFace *face
 
 void ape_brush_face_compute_normal( ApeBrushFace *face )
 {
-	face->normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
+	face->normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
 
 	assert( face->numVertices >= 3 );
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
@@ -207,8 +207,8 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 		const PLVector3 *next    = face->edgeLoop[ j ]->position;
 		const PLVector3 *prev    = face->edgeLoop[ ( i == 0 ) ? face->numVertices - 1 : ( i - 1 ) ]->position;
 
-		PLVector3 edge1 = PL_VECTOR3( next->x - current->x, next->y - current->y, next->z - current->z );
-		PLVector3 edge2 = PL_VECTOR3( prev->x - current->x, prev->y - current->y, prev->z - current->z );
+		PLVector3 edge1 = qm_math_vector3f( next->x - current->x, next->y - current->y, next->z - current->z );
+		PLVector3 edge2 = qm_math_vector3f( prev->x - current->x, prev->y - current->y, prev->z - current->z );
 
 		PLVector3 n  = PlVector3CrossProduct( edge1, edge2 );
 		face->normal = PlAddVector3( face->normal, n );
@@ -313,10 +313,10 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 		}
 	}
 
-	PLVector3 up = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
+	PLVector3 up = qm_math_vector3f( 0.0f, 1.0f, 0.0f );
 	if ( fabsf( PlVector3DotProduct( face->normal, up ) ) > 0.99f )
 	{
-		up = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
+		up = qm_math_vector3f( 1.0f, 0.0f, 0.0f );
 	}
 
 	PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( face->normal, up ) );
@@ -346,10 +346,10 @@ void ape_brush_face_fit_material( ApeBrushFace *self )
 {
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
 	{
-		PLVector3 up = PL_VECTOR3( 0.0f, 1.0f, 0.0f );
+		PLVector3 up = qm_math_vector3f( 0.0f, 1.0f, 0.0f );
 		if ( fabsf( PlVector3DotProduct( self->normal, up ) ) > 0.99f )
 		{
-			up = PL_VECTOR3( 1.0f, 0.0f, 0.0f );
+			up = qm_math_vector3f( 1.0f, 0.0f, 0.0f );
 		}
 
 		PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( self->normal, up ) );
@@ -516,8 +516,8 @@ void ape_brush_face_compute_bounds( ApeBrushFace *face )
 {
 	assert( face->numVertices > 0 );
 
-	face->bounds.mins = PL_VECTOR3( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
-	face->bounds.maxs = PL_VECTOR3( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
+	face->bounds.mins = qm_math_vector3f( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
+	face->bounds.maxs = qm_math_vector3f( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		for ( unsigned int j = 0; j < 3; ++j )
@@ -540,8 +540,8 @@ void ape_brush_compute_bounds( ApeBrush *self )
 {
 	assert( self->numVertices > 0 );
 
-	self->base.localBounds.mins = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
-	self->base.localBounds.maxs = PL_VECTOR3( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
+	self->base.localBounds.mins = qm_math_vector3f( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
+	self->base.localBounds.maxs = qm_math_vector3f( self->vertices[ 0 ].x, self->vertices[ 0 ].y, self->vertices[ 0 ].z );
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
 	{
 		for ( unsigned int j = 0; j < 3; ++j )
@@ -708,7 +708,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 		self->faces[ i ].colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
 
 		self->faces[ i ].material      = material;
-		self->faces[ i ].materialScale = PL_VECTOR2( 0.5f, 0.5f );
+		self->faces[ i ].materialScale = qm_math_vector2f( 0.5f, 0.5f );
 
 		ape_brush_face_compute_normal( &self->faces[ i ] );
 		ape_brush_face_compute_bounds( &self->faces[ i ] );

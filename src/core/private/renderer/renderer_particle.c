@@ -204,8 +204,8 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		float endScale       = emitter->endScale + emitter->scaleVar * qm_os_random_float( &emitter->seed, 1.0f );
 		particle->deltaScale = ( ( endScale - startScale ) / 1.0f ) / ( float ) particle->life;
 
-		particle->bounds.maxs = PL_VECTOR3( 2.0f, 2.0f, 2.0f );
-		particle->bounds.mins = PL_VECTOR3( -2.0f, -2.0f, -2.0f );
+		particle->bounds.maxs = qm_math_vector3f( 2.0f, 2.0f, 2.0f );
+		particle->bounds.mins = qm_math_vector3f( -2.0f, -2.0f, -2.0f );
 
 		particle->node = PlInsertLinkedListNode( emitter->particles, particle );
 
@@ -231,7 +231,7 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		++i;
 	}
 
-	emitter->bounds.absOrigin = PL_VECTOR3( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
+	emitter->bounds.absOrigin = qm_math_vector3f( ( emitter->bounds.mins.x + emitter->bounds.maxs.x ) / 2, ( emitter->bounds.mins.y + emitter->bounds.maxs.y ) / 2, ( emitter->bounds.mins.z + emitter->bounds.maxs.z ) / 2 );
 	emitter->bounds.origin    = emitter->transform.translation;
 
 	emitter->numTicks++;
@@ -266,8 +266,8 @@ void ss_arl_particle_emitter_draw( const ApeParticleEmitter *emitter, const ApeC
 
 		PLColour colour = PlColourF32ToU8( &particle->colour );
 
-		unsigned int a = PlgAddMeshVertex( emitter->mesh, &PL_VECTOR3( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &PL_VECTOR2( 0.0f, 0.0f ) );
-		unsigned int b = PlgAddMeshVertex( emitter->mesh, &PL_VECTOR3( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &PL_VECTOR2( 0.0f, 1.0f ) );
+		unsigned int a = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
+		unsigned int b = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 1.0f ) );
 		//unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
 		//unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
 

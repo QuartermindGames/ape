@@ -13,9 +13,6 @@ static ApeGuiFont *menuFont;
 static const char *menuTitleFontPath = "guis/fonts/anarchist-mustache/anarchist_mustache_96.fnt";
 static ApeGuiFont *menuTitleFont;
 
-static const char  *menuLogoPath = "materials/ui/ui_goblin_icon.mat.n";
-static ApeMaterial *menuLogo;
-
 SS1MenuState ss1_menuState_;
 
 static GameMenu     mainMenu;
@@ -263,8 +260,6 @@ void ss1_menu_initialize( void )
 		game_error_( "Failed to load title font (%s)!\n", menuTitleFontPath );
 	}
 
-	menuLogo = ape_material_cache( menuLogoPath, APE_CACHE_GROUP_GLOBAL, true );
-
 	// mmm delicious pie
 	interactPie = menu_pie_create();
 	menu_pie_add_option( interactPie, "testing 1", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true ), nullptr );
@@ -370,8 +365,8 @@ static void draw_hud( const ApeViewport *viewport )
 
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
-	PlTranslateMatrix( PL_VECTOR3( HEALTH_RADIUS + 20.0f, viewport->height - ( HEALTH_RADIUS + 20.0f ), 0.0f ) );
-	PlRotateMatrix( sinf( ape_get_num_ticks() / 20.0f ) / 40.0f * ( updateAggro + 1.0f ), &PL_VECTOR3( 0.0f, 0.0f, 1.0f ) );
+	PlTranslateMatrix( qm_math_vector3f( HEALTH_RADIUS + 20.0f, viewport->height - ( HEALTH_RADIUS + 20.0f ), 0.0f ) );
+	PlRotateMatrix( sinf( ape_get_num_ticks() / 20.0f ) / 40.0f * ( updateAggro + 1.0f ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 
 	draw_dial( health, HEALTH_RADIUS, HEALTH_THICKNESS, 10.0f, 10.0f, 1.0f, &PL_COLOURU8( 0, 0, 0, 255 ) ); // health
 	draw_dial( 100, HEALTH_RADIUS / 2, HEALTH_THICKNESS, 10.0f, 10.0f, 1.0f, &PL_COLOURU8( 0, 0, 0, 255 ) );// stamina
@@ -400,17 +395,12 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		float x = 50.0f;
 		float y = 64.0f;
 
-		static constexpr char title[]    = "Embrace";
-		static constexpr char subtitle[] = "Inc.\n";
+		static constexpr char title[] = "Nihlexa";
 
-		float w;
 		gui_font_set_shadow_offset( 2.0f, 2.0f );
 		gui_font_set_slant( 20.0f );
 		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, MENU_SCALE, &PL_COLOUR_WHITE, title, strlen( title ), true );
 		gui_font_set_slant( 0.0f );
-		gui_font_draw_string( menuTitleFont, x + 4.0f, y + ( gui_font_get_line_spacing( menuTitleFont ) / 2.0f ), &w, nullptr, MENU_SCALE / 2.0f, &PL_COLOUR_GHOST_WHITE, subtitle, strlen( subtitle ), true );
-
-		ape_draw_textured_quad( menuLogo, w, 128.0f, 128.0f, -128.0f, &PL_COLOUR_WHITE );
 
 		y = 200.0f;
 

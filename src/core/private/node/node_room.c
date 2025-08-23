@@ -15,7 +15,7 @@ ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 	ApeRoom *room = PL_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
-	room->gravity = PL_VECTOR3( 0.0f, -0.9f, 0.0f );
+	room->gravity = qm_math_vector3f( 0.0f, -0.9f, 0.0f );
 
 	room->taggedSurfaceLookup = PlCreateHashTable();
 

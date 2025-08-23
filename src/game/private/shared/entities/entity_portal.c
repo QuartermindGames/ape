@@ -14,16 +14,16 @@ static constexpr float        GAME_PORTAL_OPEN_SPEED = 4.0f;
 static ApeEntity *portals[ MAX_PORTALS ];
 
 static constexpr PLVector3 OPEN_VPOS[ NUM_VERTICES ] = {
-        PL_VECTOR3( -WIDE, 0.0f, 0.0f ),
-        PL_VECTOR3( -WIDE, TALL, 0.0f ),
-        PL_VECTOR3( WIDE, TALL, 0.0f ),
-        PL_VECTOR3( WIDE, 0.0f, 0.0f ),
+        QM_MATH_VECTOR3F( -WIDE, 0.0f, 0.0f ),
+        QM_MATH_VECTOR3F( -WIDE, TALL, 0.0f ),
+        QM_MATH_VECTOR3F( WIDE, TALL, 0.0f ),
+        QM_MATH_VECTOR3F( WIDE, 0.0f, 0.0f ),
 };
 static constexpr PLVector3 CLOSED_VPOS[ NUM_VERTICES ] = {
-        PL_VECTOR3( 0.0f, 0.0f, 0.0f ),
-        PL_VECTOR3( 0.0f, TALL, 0.0f ),
-        PL_VECTOR3( 0.0f, TALL, 0.0f ),
-        PL_VECTOR3( 0.0f, 0.0f, 0.0f ),
+        QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ),
+        QM_MATH_VECTOR3F( 0.0f, TALL, 0.0f ),
+        QM_MATH_VECTOR3F( 0.0f, TALL, 0.0f ),
+        QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ),
 };
 
 typedef enum GamePortalState
@@ -169,7 +169,7 @@ static void spawn_portal( ApeEntity *self )
 	}
 
 	ape_brush_face_compute_normal( face );
-	ape_brush_face_apply_material_coordinates( face, &PL_VECTOR2( 1.0f, 1.0f ), &PL_VECTOR2( 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), false );
+	ape_brush_face_apply_material_coordinates( face, &QM_MATH_VECTOR2F( 1.0f, 1.0f ), &QM_MATH_VECTOR2F( 0.0f, 0.0f ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ), false );
 
 	ape_brush_compute_face_bounds( brush );
 	ape_brush_compute_bounds( brush );

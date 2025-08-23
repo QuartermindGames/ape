@@ -777,10 +777,10 @@ static PLMatrix4 modify_portal_projection_matrix( const PLMatrix4 *projMatrix, c
 	// as (sgn(clipPlane.x), sgn(clipPlane.y), 1, 1) and
 	// transform it into camera space by multiplying it
 	// by the inverse of the projection matrix
-	PLVector4 q = PL_VECTOR4( ( sgn( plane->x ) + projMatrix->m[ 8 ] ) / projMatrix->m[ 0 ],
-	                          ( sgn( plane->y ) + projMatrix->m[ 9 ] ) / projMatrix->m[ 5 ],
-	                          -1.0f,
-	                          ( 1.0f + projMatrix->m[ 10 ] ) / projMatrix->m[ 14 ] );
+	PLVector4 q = qm_math_vector4f( ( sgn( plane->x ) + projMatrix->m[ 8 ] ) / projMatrix->m[ 0 ],
+	                                ( sgn( plane->y ) + projMatrix->m[ 9 ] ) / projMatrix->m[ 5 ],
+	                                -1.0f,
+	                                ( 1.0f + projMatrix->m[ 10 ] ) / projMatrix->m[ 14 ] );
 
 	// Calculate the scaled plane vector
 	PLVector4 c = PlScaleVector4F( plane, 2.0f / PlVector4DotProduct( plane, &q ) );
@@ -845,12 +845,12 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	PLVector4 clipPlane;
 	if ( ape_rendererState_.mirror )
 	{
-		clipPlane   = PL_VEC3TO4( visiblePortal->normal );
+		clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
 		clipPlane.w = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
 	}
 	else
 	{
-		clipPlane   = PL_VEC3TO4( visiblePortal->normal );
+		clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
 		clipPlane.w = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
 	}
 

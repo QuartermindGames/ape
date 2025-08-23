@@ -48,24 +48,10 @@ const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
 
 static unsigned int teamResourcePools[ SS1_MAX_TEAMS ][ SS1_MAX_RESOURCE_TYPES ];
 
-extern ApeEntityClassDefinition ss1_airshipEntityClass;
-extern ApeEntityClassDefinition ss1_pawnEntityClass;
-extern ApeEntityClassDefinition ss1_playerEntityClass;
-
 void ss1_actions_register_();
 
 static bool ss1_initialize()
 {
-	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
-	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
-	game_integrations_discord_update_activity_( G_STR_( "Idling" ), nullptr, "qm1-logo", SS1_GAME_TITLE );
-
-	game_register_standard_entity_components_();
-
-	ape_register_entity_class( &ss1_airshipEntityClass );
-	ape_register_entity_class( &ss1_pawnEntityClass );
-	ape_register_entity_class( &ss1_playerEntityClass );
-
 	ss1_actions_register_();
 
 	PL_ZERO_( ss1_gameState );
@@ -441,7 +427,7 @@ static void ss1_spawn_world( ApeRoom *room )
 
 	ApeWorldNode *roomNode = APE_WORLD_NODE( room );
 	ape_world_node_attach( APE_WORLD_NODE( ss1_gameState.camera ), roomNode );
-	ape_world_node_set_position( APE_WORLD_NODE( ss1_gameState.camera ), &PL_VECTOR3( 0.0f, 128.0f, 0.0f ) );
+	ape_world_node_set_position( APE_WORLD_NODE( ss1_gameState.camera ), &QM_MATH_VECTOR3F( 0.0f, 128.0f, 0.0f ) );
 
 	//TODO: make this configurable via editor?
 	ss1_gameState.simulation.seconds = 40000;

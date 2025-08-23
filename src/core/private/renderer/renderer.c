@@ -471,7 +471,7 @@ unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int 
 			{
 				float t = prevDist / ( prevDist - curDist );
 
-				dstVertices[ numClippedVertices++ ] = PL_VECTOR3(
+				dstVertices[ numClippedVertices++ ] = qm_math_vector3f(
 				        prev->x + t * ( cur->x - prev->x ),
 				        prev->y + t * ( cur->y - prev->y ),
 				        prev->z + t * ( cur->z - prev->z ) );
@@ -494,7 +494,7 @@ unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int 
 		{
 			float t = prevDist / ( prevDist - curDist );
 
-			dstVertices[ numClippedVertices++ ] = PL_VECTOR3(
+			dstVertices[ numClippedVertices++ ] = qm_math_vector3f(
 			        prev->x + t * ( cur->x - prev->x ),
 			        prev->y + t * ( cur->y - prev->y ),
 			        prev->z + t * ( cur->z - prev->z ) );

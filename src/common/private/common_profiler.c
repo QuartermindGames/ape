@@ -76,8 +76,6 @@ bool com_profiler_start( const char *key )
 
 	group->startTime = qm_os_time_get_seconds() * 1000.0;
 
-	//printf( "START %s: %lf\n", group->key, group->timeTaken );
-
 	return true;
 }
 

@@ -132,7 +132,7 @@ static inline bool game_physics_get_ground( ApeRoom *room, const PLVector3 *posi
 {
 	PLCollisionRay ray = {};
 	ray.origin         = *position;
-	ray.direction      = PL_VECTOR3( 0.0f, -1.0f, 0.0f );
+	ray.direction      = qm_math_vector3f( 0.0f, -1.0f, 0.0f );
 
 	ape_room_ray_intersect( room, &ray, result );
 

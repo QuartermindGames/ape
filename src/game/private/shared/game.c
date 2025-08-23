@@ -1,6 +1,7 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "game_private.h"
+#include "integrations/integrations.h"
 
 #include "menu/menu.h"
 
@@ -19,7 +20,6 @@ static int globalGameErrorLog;
 static float gameTimeModifier = 1.0f;
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Public
 
 void game_print_( const char *message, ... )
 {
@@ -75,6 +75,47 @@ void game_error_( const char *message, ... )
 #endif
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+
+extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
+extern ApeEntityClassDefinition game_triggerEntityClass_;
+extern ApeEntityClassDefinition game_ropeEntityClass_;
+extern ApeEntityClassDefinition game_portalEntityClass_;
+#if defined( GAME_SS1 )
+extern ApeEntityClassDefinition ss1_airshipEntityClass;
+extern ApeEntityClassDefinition ss1_pawnEntityClass;
+extern ApeEntityClassDefinition ss1_playerEntityClass;
+#endif
+#if defined( GAME_QM2 )
+extern ApeEntityClassDefinition game_qm2_creatureEntityClass_;
+#endif
+
+extern ApeEntityComponentDefinition game_collisionComponent_;
+extern ApeEntityComponentDefinition game_healthComponent_;
+extern ApeEntityComponentDefinition game_movementComponent_;
+extern ApeEntityComponentDefinition game_inventoryComponent_;
+
+static void register_standard_entity_components()
+{
+	ape_register_entity_class( &game_playerSpawnEntityClass_ );
+	ape_register_entity_class( &game_triggerEntityClass_ );
+	ape_register_entity_class( &game_ropeEntityClass_ );
+	ape_register_entity_class( &game_portalEntityClass_ );
+#if defined( GAME_SS1 )
+	ape_register_entity_class( &ss1_airshipEntityClass );
+	ape_register_entity_class( &ss1_pawnEntityClass );
+	ape_register_entity_class( &ss1_playerEntityClass );
+#endif
+#if defined( GAME_QM2 )
+	ape_register_entity_class( &game_qm2_creatureEntityClass_ );
+#endif
+
+	ape_register_entity_component( &game_collisionComponent_ );
+	ape_register_entity_component( &game_healthComponent_ );
+	ape_register_entity_component( &game_movementComponent_ );
+	ape_register_entity_component( &game_inventoryComponent_ );
+}
+
 void game_server_initialize_();
 void game_client_initialize_();
 void game_language_initialize_();
@@ -85,10 +126,10 @@ bool game_initialize( void )
 	PlRegisterConsoleVariable( "game.timeModifier", "Time modifier, useful for emulating slow-motion.", "1.0", PL_VAR_F32, &gameTimeModifier, nullptr, false );
 
 	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
-	globalGameWarningLog = PlAddLogLevel( "game/warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
-	globalGameErrorLog   = PlAddLogLevel( "game/error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
+	globalGameWarningLog = PlAddLogLevel( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
+	globalGameErrorLog   = PlAddLogLevel( "game.error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
 
-	globalGameDebugLog = PlAddLogLevel( "game/debug", PL_COLOUR_WHITE_SMOKE,
+	globalGameDebugLog = PlAddLogLevel( "game.debug", PL_COLOUR_WHITE_SMOKE,
 #if !defined( NDEBUG )
 	                                    true
 #else
@@ -99,6 +140,12 @@ bool game_initialize( void )
 	game_language_initialize_();
 	game_server_initialize_();
 	game_client_initialize_();
+
+	register_standard_entity_components();
+
+	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
+	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
+	game_integrations_discord_update_activity_( G_STR_( "Idling" ), nullptr, "qm1-logo", "Temp" );
 
 	if ( !ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_INITIALIZE, nullptr ) )
 	{
@@ -147,29 +194,6 @@ void game_spawn_world( ApeWorld *world, ApeRoom *room )
 const char *game_get_identifier()
 {
 	return ape_gameInterface->identifier;
-}
-
-extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
-extern ApeEntityClassDefinition game_triggerEntityClass_;
-extern ApeEntityClassDefinition game_ropeEntityClass_;
-extern ApeEntityClassDefinition game_portalEntityClass_;
-
-extern ApeEntityComponentDefinition game_collisionComponent_;
-extern ApeEntityComponentDefinition game_healthComponent_;
-extern ApeEntityComponentDefinition game_movementComponent_;
-extern ApeEntityComponentDefinition game_inventoryComponent_;
-
-void game_register_standard_entity_components_( void )
-{
-	ape_register_entity_class( &game_playerSpawnEntityClass_ );
-	ape_register_entity_class( &game_triggerEntityClass_ );
-	ape_register_entity_class( &game_ropeEntityClass_ );
-	ape_register_entity_class( &game_portalEntityClass_ );
-
-	ape_register_entity_component( &game_collisionComponent_ );
-	ape_register_entity_component( &game_healthComponent_ );
-	ape_register_entity_component( &game_movementComponent_ );
-	ape_register_entity_component( &game_inventoryComponent_ );
 }
 
 AcmBranch *game_get_config()

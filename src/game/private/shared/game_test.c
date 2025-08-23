@@ -10,7 +10,7 @@ void game_test_cylinder_point_collision_( const PLVector3 *pos )
 {
 	ComCollisionCylinder cylinder = {};
 	cylinder.height               = 64.0f;
-	cylinder.origin               = PL_VECTOR3( 16.0f, 16.0f, 32.0f );
+	cylinder.origin               = qm_math_vector3f( 16.0f, 16.0f, 32.0f );
 	cylinder.radius               = 16.0f;
 
 	PLColour colour;
@@ -37,15 +37,15 @@ void game_test_cylinder_polygon_collision_( const PLVector3 *pos )
 	cylinder.radius               = 16.0f;
 
 	static constexpr PLVector3 vertices[] = {
-	        PL_VECTOR3( 0.0f, 16.0f, 0.0f ),
-	        PL_VECTOR3( 32.0f, 16.0f, 0.0f ),
-	        PL_VECTOR3( 32.0f, 16.0f, 32.0f ),
-	        PL_VECTOR3( 0.0f, 16.0f, 32.0f ),
+	        QM_MATH_VECTOR3F( 0.0f, 16.0f, 0.0f ),
+	        QM_MATH_VECTOR3F( 32.0f, 16.0f, 0.0f ),
+	        QM_MATH_VECTOR3F( 32.0f, 16.0f, 32.0f ),
+	        QM_MATH_VECTOR3F( 0.0f, 16.0f, 32.0f ),
 	};
 	static constexpr unsigned int numVertices = PL_ARRAY_ELEMENTS( vertices );
 
 	PLColour colour;
-	if ( com_collision_cylinder_intersect_polygon( &cylinder, vertices, numVertices, &PL_VECTOR3( 0.0f, 1.0f, 0.0f ) ) )
+	if ( com_collision_cylinder_intersect_polygon( &cylinder, vertices, numVertices, &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) ) )
 	{
 		colour = PL_COLOURU8( 0, 255, 0, 255 );
 	}

@@ -82,7 +82,7 @@ PLVector3 ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const Ap
 
 PLVector3 ape_grid_transform_point( const ApeEditorGrid *self, const PLVector2 *point )
 {
-	return PlTransformVector3( &PL_VECTOR3( point->x, 0.0f, point->y ), &self->transform );
+	return PlTransformVector3( &QM_MATH_VECTOR3F( point->x, 0.0f, point->y ), &self->transform );
 }
 
 void ape_grid_increase_size( void )

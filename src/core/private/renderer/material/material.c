@@ -678,9 +678,9 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 	}
 
 	/* now handle any specific parameters the material provides */
-	materialPass->textureScroll = com_acm_get_vector2( root, "textureScroll", &PL_VECTOR2( 0.0f, 0.0f ) );
-	materialPass->textureOffset = com_acm_get_vector2( root, "textureOffset", &PL_VECTOR2( 0.0f, 0.0f ) );
-	materialPass->textureScale  = com_acm_get_vector2( root, "textureScale", &PL_VECTOR2( 1.0f, 1.0f ) );
+	materialPass->textureScroll = com_acm_get_vector2( root, "textureScroll", &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
+	materialPass->textureOffset = com_acm_get_vector2( root, "textureOffset", &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
+	materialPass->textureScale  = com_acm_get_vector2( root, "textureScale", &QM_MATH_VECTOR2F( 1.0f, 1.0f ) );
 	if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
 	{
 		ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", PlPrintVector2( &materialPass->textureScale, PL_VAR_F32 ) );
@@ -896,7 +896,7 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 		{
 			int w, h;
 			ape_get_2d_viewport_size_( &w, &h );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, &PL_VECTOR2( ( float ) w, ( float ) h ), false );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, &QM_MATH_VECTOR2F( ( float ) w, ( float ) h ), false );
 			break;
 		}
 
@@ -1000,11 +1000,11 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 		PlPushMatrix();
 
-		PlTranslateMatrix( PL_VECTOR3( pass->textureOffset.x, pass->textureOffset.y, 0.0f ) );
+		PlTranslateMatrix( qm_math_vector3f( pass->textureOffset.x, pass->textureOffset.y, 0.0f ) );
 
 		float scaleX = ( pass->textureScale.x != 0.0f ) ? 1.0f / pass->textureScale.x : 1.0f;
 		float scaleY = ( pass->textureScale.y != 0.0f ) ? 1.0f / pass->textureScale.y : 1.0f;
-		PlScaleMatrix( PL_VECTOR3( scaleX, scaleY, 1.0f ) );
+		PlScaleMatrix( qm_math_vector3f( scaleX, scaleY, 1.0f ) );
 
 		PlgSetShaderUniformValueByIndex( program->internal,
 		                                 program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
@@ -1313,8 +1313,8 @@ void ape_tick_materials_( void )
 				float h = ( float ) material->height;
 
 				PLVector2 scroll;
-				scroll = PlDivideVector2( material->passes[ j ].textureScroll, PL_VECTOR2( w, h ) );
-				scroll = PlScaleVector2( &scroll, &PL_VECTOR2( material->passes[ j ].textureScale.x, material->passes[ j ].textureScale.y ) );
+				scroll = PlDivideVector2( material->passes[ j ].textureScroll, qm_math_vector2f( w, h ) );
+				scroll = PlScaleVector2( &scroll, &QM_MATH_VECTOR2F( material->passes[ j ].textureScale.x, material->passes[ j ].textureScale.y ) );
 
 				material->passes[ j ].textureOffset = PlAddVector2( material->passes[ j ].textureOffset, scroll );
 			}

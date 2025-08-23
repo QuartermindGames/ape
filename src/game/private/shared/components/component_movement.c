@@ -77,7 +77,7 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 
 	// check if there's a direction we're trying to move
 	self->direction = PlNormalizeVector3( self->direction );
-	PLVector3 accl  = PlScaleVector3F( PL_VECTOR3( self->direction.x, 0.0f, self->direction.z ), 16.0f );
+	PLVector3 accl  = PlScaleVector3F( qm_math_vector3f( self->direction.x, 0.0f, self->direction.z ), 16.0f );
 	self->velocity  = PlAddVector3( self->velocity, PlScaleVector3F( accl, delta ) );
 
 	// apply gravity (TODO: this should be hooked up with a var!)

@@ -100,7 +100,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 
 		ape_shader_set_active_( bloomBlurShader );
 
-		PlgSetShaderUniformValue( bloomBlurShader->internal, "viewportSize", &PL_VECTOR2( ( float ) bw, ( float ) bh ), false );
+		PlgSetShaderUniformValue( bloomBlurShader->internal, "viewportSize", &QM_MATH_VECTOR2F( ( float ) bw, ( float ) bh ), false );
 		PlgSetTexture( bloomFilterTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE );

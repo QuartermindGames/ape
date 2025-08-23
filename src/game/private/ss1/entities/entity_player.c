@@ -71,7 +71,7 @@ static void spawn_player_entity( ApeEntity *self )
 	collisionComponent->groups                 = GAME_COLLISION_GROUP_PLAYER;
 	collisionComponent->type                   = APE_COLLISION_TYPE_SPHERE;//APE_COLLISION_TYPE_AABB;
 	collisionComponent->collider.sphere.radius = 4.0f;
-	collisionComponent->collider.sphere.origin = PL_VECTOR3( 0.0f, collisionComponent->collider.sphere.radius, 0.0f );
+	collisionComponent->collider.sphere.origin = qm_math_vector3f( 0.0f, collisionComponent->collider.sphere.radius, 0.0f );
 	player->collisionComponent                 = collisionComponent;
 
 	player->inventoryComponent = ape_entity_add_component( self, "inventory" );
@@ -93,7 +93,7 @@ static void spawn_player_entity( ApeEntity *self )
 	PLVector3 forward;
 	PlAnglesAxes( ang, nullptr, nullptr, &forward );
 	forward              = PlNormalizeVector3( forward );
-	player->cameraAngles = PL_VECTOR3( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
+	player->cameraAngles = qm_math_vector3f( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
 
 	//TODO: this shouldn't be here...
 	ss1_gameState.cameraState = SS1_CAMERA_STATE_THIRD_PERSON;

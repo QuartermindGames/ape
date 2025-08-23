@@ -60,7 +60,7 @@ static void update_target_destination( AirshipEntity *self )
 	float x = qm_os_random_float( &self->seed, MAX_RANGE ) - qm_os_random_float( &self->seed, MAX_RANGE );
 	float z = qm_os_random_float( &self->seed, MAX_RANGE ) - qm_os_random_float( &self->seed, MAX_RANGE );
 
-	self->targetDestination = PL_VECTOR3( x, MIN_HEIGHT + qm_os_random_float( &self->seed, 100.0f ), z );
+	self->targetDestination = qm_math_vector3f( x, MIN_HEIGHT + qm_os_random_float( &self->seed, 100.0f ), z );
 }
 
 static void spawn_airship( ApeEntity *self )
@@ -74,9 +74,9 @@ static void spawn_airship( ApeEntity *self )
 	airship->healthComponent->health    = airship->healthComponent->maxHealth;
 
 	airship->model = ape_model_node_create( APE_WORLD_NODE( self ), "airship_body", "models/airship.mdl.n" );
-	ape_world_node_set_position( APE_WORLD_NODE( self ), &PL_VECTOR3( 0.0f, MIN_HEIGHT, 0.0f ) );
+	ape_world_node_set_position( APE_WORLD_NODE( self ), &QM_MATH_VECTOR3F( 0.0f, MIN_HEIGHT, 0.0f ) );
 
-	airship->audioSource  = ape_audio_source_create( &PL_VECTOR3( 0.0f, MIN_HEIGHT, 0.0f ), &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );
+	airship->audioSource  = ape_audio_source_create( &QM_MATH_VECTOR3F( 0.0f, MIN_HEIGHT, 0.0f ), &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );
 	airship->engineSample = ape_audio_sample_cache( "sounds/airship/engine.wav" );
 
 	airship->seed = qm_os_random_seed_initialize();
@@ -95,7 +95,7 @@ static void tick_airship( ApeEntity *self, double delta )
 
 	airship->oldPosition = pos;
 
-	PLVector3 direction = PL_VECTOR3( airship->targetDestination.x - pos.x, 0.0f, airship->targetDestination.z - pos.z );
+	PLVector3 direction = qm_math_vector3f( airship->targetDestination.x - pos.x, 0.0f, airship->targetDestination.z - pos.z );
 	float     distance  = PlVector3Length( direction );
 	if ( distance > 0.0f )
 	{

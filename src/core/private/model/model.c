@@ -194,8 +194,8 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			}
 
 			model->bones[ i ].parent   = acm_get_int( child, "parent", -1 );
-			model->bones[ i ].position = com_acm_get_vector3( child, "position", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
-			model->bones[ i ].rotation = com_acm_get_vector3( child, "rotation", &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+			model->bones[ i ].position = com_acm_get_vector3( child, "position", &QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ) );
+			model->bones[ i ].rotation = com_acm_get_vector3( child, "rotation", &QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ) );
 
 			child = acm_get_next_child( child );
 		}
@@ -339,8 +339,8 @@ static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 	}
 
 	if ( ( min * -1 ) > max ) max = ( min * -1 );
-	bounds.mins = PL_VECTOR3( -max, -max, -max );
-	bounds.maxs = PL_VECTOR3( max, max, max );
+	bounds.mins = qm_math_vector3f( -max, -max, -max );
+	bounds.maxs = qm_math_vector3f( max, max, max );
 
 	return bounds;
 }

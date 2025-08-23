@@ -256,7 +256,7 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 	{
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
-			face->vertices[ j ].normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
+			face->vertices[ j ].normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
 		}
 	}
 
@@ -289,7 +289,7 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 				}
 			}
 
-			PLVector3 normal = PL_VECTOR3( 0.0f, 0.0f, 0.0f );
+			PLVector3 normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
 			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
 			{
 				const ApeBrushFace *adjFace = adjacentFaces[ k ];
@@ -1290,7 +1290,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		return nullptr;
 	}
 
-	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( room ), nullptr, &PL_VECTOR3( 0.0f, 0.0f, 0.0f ), &PL_VECTOR3( 0.0f, 0.0f, 0.0f ) );
+	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( room ), nullptr, &QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ) );
 	if ( brush == nullptr )
 	{
 		return nullptr;
@@ -1311,7 +1311,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		signedArea += ( self->polygonPoints[ i ].x * self->polygonPoints[ next ].y - self->polygonPoints[ next ].x * self->polygonPoints[ i ].y );
 
 		// now transform it into 3D space
-		vertices[ i ] = PlTransformVector3( &PL_VECTOR3( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ), &self->grid.transform );
+		vertices[ i ] = PlTransformVector3( &QM_MATH_VECTOR3F( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ), &self->grid.transform );
 	}
 
 	ApeMaterial *material;

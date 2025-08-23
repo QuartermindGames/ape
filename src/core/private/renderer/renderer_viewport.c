@@ -217,7 +217,7 @@ void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColo
 
 PLVector3 ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix )
 {
-	return PlConvertScreenToWorld( PL_VECTOR2( pos[ 0 ], ( self->height - pos[ 1 ] ) ),
+	return PlConvertScreenToWorld( qm_math_vector2f( pos[ 0 ], ( self->height - pos[ 1 ] ) ),
 	                               viewMatrix,
 	                               projMatrix,
 	                               ( int[] ) { self->x, self->y, self->width, self->height } );

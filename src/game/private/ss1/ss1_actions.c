@@ -39,7 +39,7 @@ static void fire_decal( ApeInputState state, const char * )
 	unsigned int seed = qm_os_random_seed_initialize();
 
 	float     spreadAmount = PL_DEG2RAD( 16.0f );
-	PLVector3 spread       = PL_VECTOR3(
+	PLVector3 spread       = qm_math_vector3f(
             ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
             ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
             ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ) );

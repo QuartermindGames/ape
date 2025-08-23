@@ -34,7 +34,7 @@ static PLHashTable   *cachedFontsTable;
 static ApeGuiFont    *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
 static float     fontSlant        = 0.0f;
-static PLVector2 fontShadowOffset = PL_VECTOR2( 1.0f, 1.0f );
+static PLVector2 fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
 
 static uint32_t decode_utf8_char( const char **string )
 {
@@ -299,10 +299,10 @@ void gui_font_draw_glyph( const ApeGuiFont *font, float x, float y, float scale,
 	x = roundf( x );
 	y = roundf( y );
 
-	unsigned int vX = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x, y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + ( ( float ) glyph->w * scale ) + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( font->mesh, &PL_VECTOR3( x + ( ( float ) glyph->w * scale ), y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &PL_VECTOR2( tx + tw, ty + th ) );
+	unsigned int vX = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x, y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + ( ( float ) glyph->w * scale ) + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + ( ( float ) glyph->w * scale ), y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( font->mesh, vX, vY, vZ );
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );

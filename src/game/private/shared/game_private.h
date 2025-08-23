@@ -46,8 +46,6 @@ typedef struct GameServerClient GameServerClient;
  */
 double game_get_delta_mod_( double delta );
 
-void game_register_standard_entity_components_( void );
-
 void game_print_( const char *message, ... );
 void game_warning_( const char *message, ... );
 void game_error_( const char *message, ... );

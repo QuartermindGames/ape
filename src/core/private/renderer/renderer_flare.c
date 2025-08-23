@@ -161,8 +161,8 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float deltaX = ( dx / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 		float deltaY = ( dy / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 
-		float maxDistance = PlGetVector2Length( &PL_VECTOR2( w, h ) ) / 4.0f;
-		float intensity   = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &PL_VECTOR2( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
+		float maxDistance = PlGetVector2Length( &QM_MATH_VECTOR2F( w, h ) ) / 4.0f;
+		float intensity   = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
 		sumFlareIntensity += ( intensity - ( flare->distance / ( MAX_FLARE_DISTANCE / 2.0f ) ) );
 
 		draw_flare( &flares[ i ], deltaX, deltaY, intensity );

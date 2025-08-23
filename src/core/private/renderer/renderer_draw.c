@@ -24,10 +24,10 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *te
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
 
-	unsigned int vX = PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( mesh, &PL_VECTOR3( x, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( mesh, &PL_VECTOR3( x + w, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( mesh, &PL_VECTOR3( x + w, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &PL_VECTOR2( tx + tw, ty + th ) );
+	unsigned int vX = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y + h, 0 ), &pl_vecOrigin3, &PLColourRGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( mesh, vX, vY, vZ );
 	PlgAddMeshTriangle( mesh, vZ, vY, vW );
@@ -137,9 +137,9 @@ void ape_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale )
 	PlRotateMatrix3f( angles.z, 0.0f, 0.0f, 1.0f );
 
 	PLMatrix4 transform = *PlGetMatrix( PL_MODELVIEW_MATRIX );
-	PlgDrawSimpleLine( PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
-	PlgDrawSimpleLine( PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
-	PlgDrawSimpleLine( PL_VECTOR3( 0, 0, 0 ), PL_VECTOR3( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
+	PlgDrawSimpleLine( qm_math_vector3f( 0, 0, 0 ), qm_math_vector3f( scale, 0, 0 ), PLColour( 255, 0, 0, 255 ) );
+	PlgDrawSimpleLine( qm_math_vector3f( 0, 0, 0 ), qm_math_vector3f( 0, scale, 0 ), PLColour( 0, 255, 0, 255 ) );
+	PlgDrawSimpleLine( qm_math_vector3f( 0, 0, 0 ), qm_math_vector3f( 0, 0, scale ), PLColour( 0, 0, 255, 255 ) );
 	//printf( "%s\n", PlPrintVector3( &position, pl_int_var ) );
 
 	PlPopMatrix();
@@ -490,8 +490,8 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour, floa
 	direction           = PlNormalizeVector3( direction );
 
 	PLVector3 arrowHead  = PlSubtractVector3( end, PlScaleVector3F( direction, scale ) );
-	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, PL_VECTOR3( 0.0f, 0.0f, 1.0f ) ) ), scale ) );
-	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( PL_VECTOR3( 0.0f, 0.0f, 1.0f ), direction ) ), scale ) );
+	PLVector3 arrowLeft  = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( direction, qm_math_vector3f( 0.0f, 0.0f, 1.0f ) ) ), scale ) );
+	PLVector3 arrowRight = PlAddVector3( arrowHead, PlScaleVector3F( PlNormalizeVector3( PlVector3CrossProduct( qm_math_vector3f( 0.0f, 0.0f, 1.0f ), direction ) ), scale ) );
 
 	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
 	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
@@ -563,16 +563,16 @@ void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour )
 	PLVector3 corners[ 8 ];
 
 	// bottom
-	corners[ 0 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->mins.z );
-	corners[ 1 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->maxs.z );
-	corners[ 2 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->mins.z );
-	corners[ 3 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->maxs.z );
+	corners[ 0 ] = qm_math_vector3f( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->mins.z );
+	corners[ 1 ] = qm_math_vector3f( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->maxs.z );
+	corners[ 2 ] = qm_math_vector3f( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->mins.z );
+	corners[ 3 ] = qm_math_vector3f( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->mins.y, aabb->origin.z + aabb->maxs.z );
 
 	// top
-	corners[ 4 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->mins.z );
-	corners[ 5 ] = PL_VECTOR3( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->maxs.z );
-	corners[ 6 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->mins.z );
-	corners[ 7 ] = PL_VECTOR3( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->maxs.z );
+	corners[ 4 ] = qm_math_vector3f( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->mins.z );
+	corners[ 5 ] = qm_math_vector3f( aabb->origin.x + aabb->mins.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->maxs.z );
+	corners[ 6 ] = qm_math_vector3f( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->mins.z );
+	corners[ 7 ] = qm_math_vector3f( aabb->origin.x + aabb->maxs.x, aabb->origin.y + aabb->maxs.y, aabb->origin.z + aabb->maxs.z );
 
 	ape_draw_debug_line( corners[ 0 ], corners[ 1 ], colour );
 	ape_draw_debug_line( corners[ 0 ], corners[ 2 ], colour );
@@ -606,7 +606,7 @@ void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const PLColo
 	for ( unsigned int i = 0; i < resolution; ++i )
 	{
 		float angle   = PL_DEG2RAD( 360.0f * i / resolution );
-		vertices[ i ] = PL_VECTOR3(
+		vertices[ i ] = qm_math_vector3f(
 		        cylinder->origin.x + cosf( angle ) * cylinder->radius,
 		        cylinder->origin.y,
 		        cylinder->origin.z + sinf( angle ) * cylinder->radius );
@@ -621,8 +621,8 @@ void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const PLColo
 		ape_draw_debug_line( *a, *b, *colour );
 
 		// top
-		PLVector3 ua = PL_VECTOR3( a->x, cylinder->origin.y + cylinder->height, a->z );
-		PLVector3 ub = PL_VECTOR3( b->x, cylinder->origin.y + cylinder->height, b->z );
+		PLVector3 ua = qm_math_vector3f( a->x, cylinder->origin.y + cylinder->height, a->z );
+		PLVector3 ub = qm_math_vector3f( b->x, cylinder->origin.y + cylinder->height, b->z );
 		ape_draw_debug_line( ua, ub, *colour );
 
 		// line between
@@ -670,4 +670,19 @@ void ape_draw_debug_polygon( const PLVector3 *vertices, unsigned int numVertices
 	{
 		ape_draw_debug_line( vertices[ i ], vertices[ ( i + 1 ) % numVertices ], colour );
 	}
+}
+
+void ape_draw_debug_string( const float x, const float y, const float z, const PLColour *colour, const char *string, ... )
+{
+	va_list args;
+	va_start( args, string );
+	char *buf;
+	vasprintf( &buf, string, args );
+	va_end( args );
+
+	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
+
+	gui_font_draw_string( font, x, y, nullptr, nullptr, 1.0f, colour, buf, strlen( buf ), false );
+
+	free( buf );
 }

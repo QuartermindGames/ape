@@ -64,3 +64,5 @@ typedef struct AIBrain
 	AIBrainDirective directives[ AI_BRAIN_MAX_DIRECTIVES ];
 	unsigned int     numDirectives;
 } AIBrain;
+
+void game_ai_brain_tick_( AIBrain *brain, double delta );
