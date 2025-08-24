@@ -107,7 +107,7 @@ static void Audio_XAudio2_Tick()
 	X3DAUDIO_LISTENER listener;
 	PL_ZERO_( listener );
 
-	PLVector3 v;
+	QmMathVector3f v;
 	v                   = Audio_GetListenerPosition();
 	listener.Position.x = v.x;
 	listener.Position.y = v.y;
@@ -117,7 +117,7 @@ static void Audio_XAudio2_Tick()
 	listener.Velocity.y = v.y;
 	listener.Velocity.z = v.z;
 
-	PLVector3 angles = Audio_GetListenerAngles();
+	QmMathVector3f angles = Audio_GetListenerAngles();
 
 	//X3DAudioCalculate()
 #	endif
@@ -142,7 +142,7 @@ static void Audio_XAudio2_FreeSample( ApeAudioSample *audioSample )
 {
 }
 
-static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch )
+static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch )
 {
 	XAUDIO2_BUFFER buffer;
 	PL_ZERO_( buffer );

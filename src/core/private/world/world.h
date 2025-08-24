@@ -35,15 +35,15 @@
 
 typedef struct ApeWorldVertex
 {
-	PLVector3      position;
-	PLVector3      colour;
+	QmMathVector3f      position;
+	QmMathVector3f      colour;
 	PLVectorArray *adjacentFaces;
 } ApeWorldVertex;
 
 typedef struct ApeRoomZone
 {
 	// we're not using our typical AABB type here, just because these are *always* absolute!
-	PLVector3 mins, maxs;
+	QmMathVector3f mins, maxs;
 
 	PLLinkedList *worldNodes;
 	PLLinkedList *portals;
@@ -63,7 +63,7 @@ typedef struct ApeRoom
 	struct PLHashTable *taggedSurfaceLookup;
 
 	ApeAudioReverbPreset reverbPreset;// default reverb for the room
-	PLVector3            gravity;     // default gravity for the room
+	QmMathVector3f            gravity;     // default gravity for the room
 
 	unsigned int numVisits;
 
@@ -99,7 +99,7 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 /////////////////////////////////////////////////////////////////////////////////////
 // Nodes
 
-ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles );
+ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles );
 
 void     ape_world_node_mark_dirty_( ApeWorldNode *self );
 PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self );
@@ -115,7 +115,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance );
 
 void ape_brush_flip_face_( ApeBrushFace *face );
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material, ApeEditorBrushType type );
+bool ape_brush_build_from_polygon_( ApeBrush *self, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f dir, float scale, float signedArea, ApeMaterial *material, ApeEditorBrushType type );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Room

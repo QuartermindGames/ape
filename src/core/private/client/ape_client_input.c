@@ -618,8 +618,8 @@ void ape_tick_input_( void )
 		inputControllers[ i ].stickR.x = clamp_axis_input( ( ( float ) SDL_GetGamepadAxis( inputControllers[ i ].sdlGameController, SDL_GAMEPAD_AXIS_RIGHTX ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
 		inputControllers[ i ].stickR.y = clamp_axis_input( ( ( float ) SDL_GetGamepadAxis( inputControllers[ i ].sdlGameController, SDL_GAMEPAD_AXIS_RIGHTY ) ) / ( float ) INT16_MAX, inputControllers[ i ].deadzones.y );
 
-		inputControllers[ i ].stickLDelta = PlSubtractVector2( &inputControllers[ i ].stickLOld, &inputControllers[ i ].stickL );
-		inputControllers[ i ].stickRDelta = PlSubtractVector2( &inputControllers[ i ].stickROld, &inputControllers[ i ].stickR );
+		inputControllers[ i ].stickLDelta = qm_math_vector2f_sub( inputControllers[ i ].stickLOld, inputControllers[ i ].stickL );
+		inputControllers[ i ].stickRDelta = qm_math_vector2f_sub( inputControllers[ i ].stickROld, inputControllers[ i ].stickR );
 	}
 
 	Button *key;

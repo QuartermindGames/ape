@@ -59,8 +59,8 @@ static void import_obj_geometry( const char *path, const char *worldName )
 				ObjVertex *vb = PlGetVectorArrayElementAt( model->vertices, k );
 				ObjVertex *vc = PlGetVectorArrayElementAt( model->vertices, ( k + 2 ) % faces[ j ]->numEdges );
 
-				PLVector3 n = PlVector3CrossProduct( PlSubtractVector3( va->position, vb->position ),
-				                                     PlSubtractVector3( vb->position, vc->position ) );
+				PLVector3 n = PlVector3CrossProduct( qm_math_vector3f_sub( va->position, vb->position ),
+				                                     qm_math_vector3f_sub( vb->position, vc->position ) );
 				if ( k == 0 )
 				{
 					r = n;

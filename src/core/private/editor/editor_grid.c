@@ -37,35 +37,35 @@ PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst )
 	return dst;
 }
 
-static PLVector2 transform_world_to_grid( ApeEditorGrid *self, const PLVector3 *pos )
+static PLVector2 transform_world_to_grid( ApeEditorGrid *self, const QmMathVector3f *pos )
 {
 	PLMatrix4 transform = PlInverseMatrix4( self->transform );
-	PLVector3 localPos  = PlTransformVector3( pos, &transform );
+	QmMathVector3f localPos  = PlTransformVector3( pos, &transform );
 	return ( PLVector2 ) { localPos.x, localPos.z };
 }
 
-PLVector3 ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
+QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
 {
 	// convert from screen to world
-	PLVector3 pos = ape_viewport_convert_screen_to_world( viewport, ( int[] ) { mx, my }, &camera->internal->internal.view, &camera->internal->internal.proj );
+	QmMathVector3f pos = ape_viewport_convert_screen_to_world( viewport, ( int[] ) { mx, my }, &camera->internal->internal.view, &camera->internal->internal.proj );
 
-	PLVector3 cameraPos = ape_camera_get_position( camera );
+	QmMathVector3f cameraPos = ape_camera_get_position( camera );
 
 	// now setup a ray
 	PLCollisionRay ray = {};
-	ray.origin         = PlAddVector3( pos, cameraPos );
-	ray.direction      = PlNormalizeVector3( PlSubtractVector3( ray.origin, cameraPos ) );
+	ray.origin         = qm_math_vector3f_add( pos, cameraPos );
+	ray.direction      = qm_math_vector3f_normalize( qm_math_vector3f_sub( ray.origin, cameraPos ) );
 
 	// and the plane we're testing against (which is the grid)
 
-	PLVector3 up;
+	QmMathVector3f up;
 	PlExtractMatrix4Directions( &self->transform, nullptr, &up, nullptr );
 
 	PLCollisionPlane plane = {};
 	plane.origin           = PlGetMatrix4Translation( &self->transform );
 	plane.normal           = up;
 
-	PLVector3 hitPos;
+	QmMathVector3f hitPos;
 	if ( com_collision_ray_intersect_plane( &ray, &plane, &hitPos ) )
 	{
 		// transform it back into the grid-space, and round it
@@ -80,7 +80,7 @@ PLVector3 ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const Ap
 	return ape_grid_transform_point( self, &self->cursor );
 }
 
-PLVector3 ape_grid_transform_point( const ApeEditorGrid *self, const PLVector2 *point )
+QmMathVector3f ape_grid_transform_point( const ApeEditorGrid *self, const PLVector2 *point )
 {
 	return PlTransformVector3( &QM_MATH_VECTOR3F( point->x, 0.0f, point->y ), &self->transform );
 }
@@ -116,9 +116,9 @@ void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
 	assert( face->numVertices > 0 );
 	PlTranslateMatrix( *face->vertices[ 0 ].position );
 
-	PLVector3 up    = { 0.0f, 1.0f, 0.0f };
-	PLVector3 axis  = PlNormalizeVector3( PlVector3CrossProduct( up, face->normal ) );
-	float     angle = acosf( PlVector3DotProduct( up, face->normal ) );
+	QmMathVector3f up    = { 0.0f, 1.0f, 0.0f };
+	QmMathVector3f axis  = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( up, face->normal ) );
+	float     angle = acosf( qm_math_vector3f_dot_product( up, face->normal ) );
 
 	//ape_print_( "AXIS: %s, ANGLE: %f\n", PlPrintVector3( &axis, PL_VAR_F32 ), angle );
 
@@ -130,10 +130,10 @@ void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
 
 void ape_grid_move_forward( ApeEditorGrid *self )
 {
-	PLVector3 up;
+	QmMathVector3f up;
 	PlExtractMatrix4Directions( &self->transform, nullptr, &up, nullptr );
 
-	up          = PlScaleVector3F( up, self->size );
+	up          = qm_math_vector3f_scale_float( up, self->size );
 	PLMatrix4 m = PlTranslateMatrix4( up );
 
 	self->transform = PlMultiplyMatrix4( &m, &self->transform );
@@ -141,10 +141,10 @@ void ape_grid_move_forward( ApeEditorGrid *self )
 
 void ape_grid_move_backward( ApeEditorGrid *self )
 {
-	PLVector3 up;
+	QmMathVector3f up;
 	PlExtractMatrix4Directions( &self->transform, nullptr, &up, nullptr );
 
-	up          = PlInverseVector3( PlScaleVector3F( up, self->size ) );
+	up          = qm_math_vector3f_invert( qm_math_vector3f_scale_float( up, self->size ) );
 	PLMatrix4 m = PlTranslateMatrix4( up );
 
 	self->transform = PlMultiplyMatrix4( &m, &self->transform );
@@ -168,7 +168,7 @@ void ape_grid_draw_( const ApeEditorGrid *self )
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_GRID );
 
 	//TODO: don't set these like this!!! AAaaaahhhh *melts*
-	PLVector3 cursorPos = ape_grid_transform_point( self, &self->cursor );
+	QmMathVector3f cursorPos = ape_grid_transform_point( self, &self->cursor );
 	PlgSetShaderUniformValue( program->internal, "cursorPos", &cursorPos, false );
 	PlgSetShaderUniformValue( program->internal, "gridScale", &self->size, false );
 

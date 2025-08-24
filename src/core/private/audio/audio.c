@@ -58,9 +58,9 @@ float ape_audio_get_global_volume_( void )
 
 static struct
 {
-	PLVector3 position;
-	PLVector3 angles;
-	PLVector3 velocity;
+	QmMathVector3f position;
+	QmMathVector3f angles;
+	QmMathVector3f velocity;
 } audioListener;
 
 static void play_audio_command( unsigned int argc, char **argv )
@@ -90,7 +90,7 @@ static void test_3d_command( unsigned int, char ** )
 	}
 
 	unsigned int seed     = qm_os_random_seed_initialize();
-	PLVector3    position = {
+	QmMathVector3f    position = {
 	           .x = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
 	           .y = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
 	           .z = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
@@ -213,7 +213,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	return sample;
 }
 
-void ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch )
+void ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch )
 {
 	DRIVER_CALLBACK( emitSample, audioSample, position, volume, pitch );
 }
@@ -262,7 +262,7 @@ void ape_audio_pause_( bool pause )
  * Sources
  ****************************************/
 
-ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity, ApeAudioSourceGroup group )
+ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const QmMathVector3f *velocity, ApeAudioSourceGroup group )
 {
 	ApeAudioSource *source = PL_NEW( ApeAudioSource );
 
@@ -292,12 +292,12 @@ void ape_audio_source_destroy( ApeAudioSource *audioSource )
 	PL_DELETE( audioSource );
 }
 
-void ape_audio_source_set_position( ApeAudioSource *audioSource, const PLVector3 *position )
+void ape_audio_source_set_position( ApeAudioSource *audioSource, const QmMathVector3f *position )
 {
 	audioSource->position = *position;
 }
 
-void ape_audio_source_set_velocity( ApeAudioSource *audioSource, const PLVector3 *velocity )
+void ape_audio_source_set_velocity( ApeAudioSource *audioSource, const QmMathVector3f *velocity )
 {
 	audioSource->velocity = *velocity;
 }
@@ -320,7 +320,7 @@ void ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSa
  * Listener
  ****************************************/
 
-void ape_audio_update_listener( const PLVector3 *position, const PLVector3 *angles, const PLVector3 *velocity )
+void ape_audio_update_listener( const QmMathVector3f *position, const QmMathVector3f *angles, const QmMathVector3f *velocity )
 {
 	if ( position != nullptr )
 	{
@@ -344,17 +344,17 @@ void ape_audio_clear_listener( void )
 	PL_ZERO_( audioListener );
 }
 
-PLVector3 ape_audio_get_listener_position( void )
+QmMathVector3f ape_audio_get_listener_position( void )
 {
 	return audioListener.position;
 }
 
-PLVector3 ape_audio_get_listener_angles( void )
+QmMathVector3f ape_audio_get_listener_angles( void )
 {
 	return audioListener.angles;
 }
 
-PLVector3 ape_audio_get_listener_velocity( void )
+QmMathVector3f ape_audio_get_listener_velocity( void )
 {
 	return audioListener.velocity;
 }

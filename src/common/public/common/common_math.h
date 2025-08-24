@@ -9,14 +9,14 @@ typedef struct ComMathRectI32
 	int x, y, w, h;
 } ComMathRectI32;
 
-static inline bool com_math_vector_check_epsilon( const PLVector3 *va, const PLVector3 *vb )
+static inline bool com_math_vector_check_epsilon( const QmMathVector3f *va, const QmMathVector3f *vb )
 {
 	return fabsf( va->x - vb->x ) <= PL_EPSILON &&
 	       fabsf( va->y - vb->y ) <= PL_EPSILON &&
 	       fabsf( va->z - vb->z ) <= PL_EPSILON;
 }
 
-static inline PLVector3 *com_math_normalize_angles( const PLVector3 *a, PLVector3 *b )
+static inline QmMathVector3f *com_math_normalize_angles( const QmMathVector3f *a, QmMathVector3f *b )
 {
 	b->x = fmodf( a->x, 360.0f );
 	b->y = fmodf( a->y, 360.0f );
@@ -25,9 +25,9 @@ static inline PLVector3 *com_math_normalize_angles( const PLVector3 *a, PLVector
 }
 
 // Linearly interpolate euler angles in degrees, accounting for the wrap-around
-static inline PLVector3 *com_math_interpolate_angles( const PLVector3 *a, const PLVector3 *b, float t, PLVector3 *c )
+static inline QmMathVector3f *com_math_interpolate_angles( const QmMathVector3f *a, const QmMathVector3f *b, float t, QmMathVector3f *c )
 {
-	PLVector3 delta = PlSubtractVector3( *b, *a );
+	QmMathVector3f delta = qm_math_vector3f_sub( *b, *a );
 	com_math_normalize_angles( &delta, &delta );
 
 	for ( unsigned int i = 0; i < 3; i++ )

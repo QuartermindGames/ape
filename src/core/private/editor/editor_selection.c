@@ -175,7 +175,7 @@ static void render_brush_selection( const ApeBrush *brush )
 	}
 }
 
-static void draw_selection_cube( const PLVector3 *position, const PLColour *colour, float scale, bool wireframe )
+static void draw_selection_cube( const QmMathVector3f *position, const PLColour *colour, float scale, bool wireframe )
 {
 	if ( wireframe )
 	{
@@ -303,7 +303,7 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 			const ApeLight *light = camera->pvs.rooms[ 0 ].lights[ i ];
 			assert( light != nullptr );
 
-			PLVector3 pos = ape_light_get_position( light );
+			QmMathVector3f pos = ape_light_get_position( light );
 			draw_selection_cube( &pos, &light->base.selectColour, 8.0f, false );
 		}
 	}
@@ -462,7 +462,7 @@ static void render_vertices( ApeEditorInstance *self )
 		}
 	}
 
-	PLVector3 *vertex;
+	QmMathVector3f *vertex;
 	COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
 	{
 		draw_selection_cube( vertex, &PL_COLOUR_BLUE, SELECTION_VERTEX_SIZE, true );
@@ -711,7 +711,7 @@ static void render_transform_widget( ApeEditorInstance *instance )
 	else
 	{
 		PLMatrix4 transform = ape_world_node_get_transform( selected );
-		PLVector3 pos       = PlGetMatrix4Translation( &transform );
+		QmMathVector3f pos       = PlGetMatrix4Translation( &transform );
 		PlTranslateMatrix( pos );
 	}
 

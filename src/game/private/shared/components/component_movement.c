@@ -42,7 +42,7 @@ static void ground_check( GameMovementComponent *self, GameCollisionComponent *c
 		return;
 	}
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 
 	//TODO: use collision component state, rather than our own crap
 
@@ -70,15 +70,15 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 {
 	GameCollisionComponent *collision = ape_entity_get_component( entity, "collision" );
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 
 	//game_debug_( "dir: %s (%p)\n", PlPrintVector3( &self->direction, PL_VAR_F32 ), self );
 	//game_debug_( "vel: %s\n", PlPrintVector3( &self->velocity, PL_VAR_F32 ) );
 
 	// check if there's a direction we're trying to move
-	self->direction = PlNormalizeVector3( self->direction );
-	PLVector3 accl  = PlScaleVector3F( qm_math_vector3f( self->direction.x, 0.0f, self->direction.z ), 16.0f );
-	self->velocity  = PlAddVector3( self->velocity, PlScaleVector3F( accl, delta ) );
+	self->direction = qm_math_vector3f_normalize( self->direction );
+	QmMathVector3f accl  = qm_math_vector3f_scale_float( qm_math_vector3f( self->direction.x, 0.0f, self->direction.z ), 16.0f );
+	self->velocity  = qm_math_vector3f_add( self->velocity, qm_math_vector3f_scale_float( accl, delta ) );
 
 	// apply gravity (TODO: this should be hooked up with a var!)
 	if ( !self->isGrounded )
@@ -91,8 +91,8 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 		self->velocity.y += self->direction.y * 1024.0f * delta;
 	}
 
-	PLVector3 disp = PlScaleVector3F( self->velocity, delta );
-	pos            = PlAddVector3( pos, disp );
+	QmMathVector3f disp = qm_math_vector3f_scale_float( self->velocity, delta );
+	pos            = qm_math_vector3f_add( pos, disp );
 
 	if ( collision != nullptr )
 	{
@@ -123,8 +123,8 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 
 						if ( hits[ i ].depth > 0.0f )
 						{
-							PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( hits[ i ].origin, hits[ i ].intersection ) );
-							pos                          = PlAddVector3( pos, PlScaleVector3F( collisionDirection, hits[ i ].depth ) );
+							QmMathVector3f collisionDirection = qm_math_vector3f_normalize( qm_math_vector3f_sub( hits[ i ].origin, hits[ i ].intersection ) );
+							pos                          = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( collisionDirection, hits[ i ].depth ) );
 						}
 					}
 
@@ -138,7 +138,7 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 
 	ape_world_node_set_position( APE_WORLD_NODE( entity ), &pos );
 
-	self->direction = ( PLVector3 ) {};
+	self->direction = ( QmMathVector3f ) {};
 }
 
 ApeEntityComponentDefinition game_movementComponent_ = {

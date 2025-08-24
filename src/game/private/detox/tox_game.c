@@ -3,7 +3,7 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
-	PLVector3 ang = ape_camera_get_angles( playerCamera );
+	QmMathVector3f ang = ape_camera_get_angles( playerCamera );
 
 	ang.x = 0.0f;
 	if ( strcmp( id, "rotateLeft" ) == 0 )
@@ -15,15 +15,15 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 		ang.y -= 1.5f;
 	}
 
-	PLVector3 forward, left;
+	QmMathVector3f forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
 	static const float SPEED = 0.5f;
 
-	PLVector3 pos = ape_camera_get_position( playerCamera );
+	QmMathVector3f pos = ape_camera_get_position( playerCamera );
 	if ( strcmp( id, "moveForward" ) == 0 )
 	{
-		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+		pos = qm_math_vector3f_add( pos, PlScaleVector3F( forward, SPEED ) );
 	}
 	else if ( strcmp( id, "moveBackward" ) == 0 )
 	{
@@ -31,7 +31,7 @@ static void move_camera_iso_callback( ApeInputState state, const char *id )
 	}
 	else if ( strcmp( id, "moveLeft" ) == 0 )
 	{
-		pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+		pos = qm_math_vector3f_add( pos, PlScaleVector3F( left, SPEED ) );
 	}
 	else if ( strcmp( id, "moveRight" ) == 0 )
 	{
@@ -57,8 +57,8 @@ static void move_camera_callback( ApeInputState state, const char *id )
 		return;
 	}
 
-	PLVector3 pos = ape_camera_get_position( playerCamera );
-	PLVector3 ang = ape_camera_get_angles( playerCamera );
+	QmMathVector3f pos = ape_camera_get_position( playerCamera );
+	QmMathVector3f ang = ape_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateLeft" ) == 0 )
 	{
 		ang.y += 1.5f;
@@ -68,14 +68,14 @@ static void move_camera_callback( ApeInputState state, const char *id )
 		ang.y -= 1.5f;
 	}
 
-	PLVector3 forward, left;
+	QmMathVector3f forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
 	static const float SPEED = 2.0f;
 
 	if ( strcmp( id, "moveForward" ) == 0 )
 	{
-		pos = PlAddVector3( pos, PlScaleVector3F( forward, SPEED ) );
+		pos = qm_math_vector3f_add( pos, PlScaleVector3F( forward, SPEED ) );
 	}
 	else if ( strcmp( id, "moveBackward" ) == 0 )
 	{
@@ -83,7 +83,7 @@ static void move_camera_callback( ApeInputState state, const char *id )
 	}
 	else if ( strcmp( id, "moveLeft" ) == 0 )
 	{
-		pos = PlAddVector3( pos, PlScaleVector3F( left, SPEED ) );
+		pos = qm_math_vector3f_add( pos, PlScaleVector3F( left, SPEED ) );
 	}
 	else if ( strcmp( id, "moveRight" ) == 0 )
 	{
@@ -107,7 +107,7 @@ static void rotate_camera_action( ApeInputState state, const char *id )
 	if ( state != APE_INPUT_STATE_DOWN )
 		return;
 
-	PLVector3 ang = ape_camera_get_angles( playerCamera );
+	QmMathVector3f ang = ape_camera_get_angles( playerCamera );
 	if ( strcmp( id, "rotateUp" ) == 0 )
 	{
 		ang.x += 1.5f;
@@ -147,9 +147,9 @@ static void progress_time_action( ApeInputState state, const char *id )
 
 static void print_pos_command( unsigned int, char ** )
 {
-	PLVector3 cameraPos = ape_camera_get_position( playerCamera );
+	QmMathVector3f cameraPos = ape_camera_get_position( playerCamera );
 	game_print_( "Camera Pos: %s\n", PlPrintVector3( &cameraPos, PL_VAR_F32 ) );
-	PLVector3 cameraAngles = ape_camera_get_angles( playerCamera );
+	QmMathVector3f cameraAngles = ape_camera_get_angles( playerCamera );
 	game_print_( "Camera Ang: %s\n", PlPrintVector3( &cameraAngles, PL_VAR_F32 ) );
 }
 
@@ -240,8 +240,8 @@ static bool shutdown_game( void )
 
 static void ss1_handle_input( void )
 {
-	PLVector3 ang = ape_camera_get_angles( playerCamera );
-	PLVector3 pos = ape_camera_get_position( playerCamera );
+	QmMathVector3f ang = ape_camera_get_angles( playerCamera );
+	QmMathVector3f pos = ape_camera_get_position( playerCamera );
 
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( mouseLook != NULL && mouseLook->b_value )
@@ -258,7 +258,7 @@ static void ss1_handle_input( void )
 	ang.x -= rightStick.y * 2.0f;
 	ang.y -= rightStick.x * 2.0f;
 
-	PLVector3 forward, left;
+	QmMathVector3f forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
 	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );

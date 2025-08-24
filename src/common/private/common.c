@@ -195,7 +195,7 @@ PLVector2 com_acm_get_vector2( AcmBranch *root, const char *name, const PLVector
 	return v;
 }
 
-PLVector3 com_acm_get_vector3( AcmBranch *root, const char *name, const PLVector3 *fallback )
+QmMathVector3f com_acm_get_vector3( AcmBranch *root, const char *name, const QmMathVector3f *fallback )
 {
 	AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
@@ -203,7 +203,7 @@ PLVector3 com_acm_get_vector3( AcmBranch *root, const char *name, const PLVector
 		return *fallback;
 	}
 
-	PLVector3 v;
+	QmMathVector3f v;
 	if ( acm_branch_get_float32_array( child, ( float * ) &v, 3 ) != ND_ERROR_SUCCESS )
 	{
 		return *fallback;
@@ -237,7 +237,7 @@ PLColourF32 com_acm_get_colour_f32( AcmBranch *root, const char *name, const PLC
 
 AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional )
 {
-	if ( conditional && PlCompareVector2( vector, &pl_vecOrigin2 ) )
+	if ( conditional && qm_math_vector2f_compare( *vector, pl_vecOrigin2 ) )
 	{
 		return nullptr;
 	}
@@ -245,9 +245,9 @@ AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const PLVe
 	return acm_push_array_f32( parent, name, ( float * ) vector, 2 );
 }
 
-AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const PLVector3 *vector, bool conditional )
+AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const QmMathVector3f *vector, bool conditional )
 {
-	if ( conditional && PlCompareVector3( vector, &pl_vecOrigin3 ) )
+	if ( conditional && qm_math_vector3f_compare( *vector, pl_vecOrigin3 ) )
 	{
 		return nullptr;
 	}
@@ -257,7 +257,7 @@ AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const PLVe
 
 AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional )
 {
-	if ( conditional && PlCompareVector4( vector, &pl_vecOrigin4 ) )
+	if ( conditional && qm_math_vector4f_compare( *vector, pl_vecOrigin4 ) )
 	{
 		return nullptr;
 	}

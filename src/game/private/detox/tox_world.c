@@ -21,12 +21,12 @@ static float moonBrightness = 0.0f;
  * This is a very convoluted way to set the pitch and yaw, but
  * unfortunately *this* idiot decided to make the sun a position
  */
-static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
+static QmMathVector3f pitch_yaw_to_position( float pitch, float yaw )
 {
-	PLVector3 position = { 1.0f, pitch, 0.0f };
+	QmMathVector3f position = { 1.0f, pitch, 0.0f };
 	PLMatrix4 matrix = PlMatrix4Identity();
 	matrix = PlMultiplyMatrix4( PlTranslateMatrix4( position ), &matrix );
-	matrix = PlMultiplyMatrix4( PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ){ 0.0f, 1.0f, 0.0f } ), &matrix );
+	matrix = PlMultiplyMatrix4( PlRotateMatrix4( PL_DEG2RAD( yaw ), &( QmMathVector3f ){ 0.0f, 1.0f, 0.0f } ), &matrix );
 	position.x = matrix.m[ 0 ];
 	position.z = matrix.m[ 8 ];
 	return position;
@@ -38,7 +38,7 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 
 	if ( sunLight != nullptr )
 	{
-		PLVector3 sunPosition = pitch_yaw_to_position( sunPitch, sunYaw );
+		QmMathVector3f sunPosition = pitch_yaw_to_position( sunPitch, sunYaw );
 		ape_light_set_position( sunLight, &sunPosition );
 		ape_light_set_colour( sunLight, &PL_COLOURF32( DEFAULT_SUN_COLOUR.r,
 		                                               DEFAULT_SUN_COLOUR.g,
@@ -46,7 +46,7 @@ static PLVector3 pitch_yaw_to_position( float pitch, float yaw )
 		                                               sunBrightness ) );
 	}
 
-	PLVector3 moonPosition = pitch_yaw_to_position( -sunPitch, -sunYaw );
+	QmMathVector3f moonPosition = pitch_yaw_to_position( -sunPitch, -sunYaw );
 	moonBrightness = PlClamp( 0.0f, ( sunPitch ) / 1.0f, 0.25f );
 
 	if ( moonLight != nullptr )

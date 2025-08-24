@@ -16,7 +16,7 @@
 typedef struct ToxWorldState
 {
 	float windPower;
-	PLVector3 windDirection;
+	QmMathVector3f windDirection;
 
 	unsigned int seconds;// not *real* seconds!
 } ToxWorldState;

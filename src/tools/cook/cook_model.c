@@ -116,8 +116,8 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 		// apply the scale here...
 		for ( unsigned int i = 0; i < dst->numVertices; ++i )
 		{
-			dst->vertices[ i ].position = PlScaleVector3F( dst->vertices[ i ].position, dst->scale );
-			dst->vertices[ i ].normal   = PlScaleVector3F( dst->vertices[ i ].normal, dst->scale );
+			dst->vertices[ i ].position = qm_math_vector3f_scale_float( dst->vertices[ i ].position, dst->scale );
+			dst->vertices[ i ].normal   = qm_math_vector3f_scale_float( dst->vertices[ i ].normal, dst->scale );
 		}
 
 		if ( interface == nullptr )
@@ -206,7 +206,7 @@ static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone, const Co
 		acm_push_i32( boneBranch, "parent", bone->parent );
 	}
 
-	PLVector3 bonePosition = PlScaleVector3F( bone->position, model->scale );
+	PLVector3 bonePosition = qm_math_vector3f_scale_float( bone->position, model->scale );
 	acm_push_array_f32( boneBranch, "position", ( float * ) &bonePosition, 3 );
 	acm_push_array_f32( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }

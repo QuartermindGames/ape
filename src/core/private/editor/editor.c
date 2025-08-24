@@ -289,23 +289,23 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 				}
 			}
 
-			PLVector3 normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
+			QmMathVector3f normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
 			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
 			{
 				const ApeBrushFace *adjFace = adjacentFaces[ k ];
 				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
 				{
-					const PLVector3 *a = adjFace->edgeLoop[ l ]->position;
-					const PLVector3 *b = adjFace->edgeLoop[ l + 1 ]->position;
-					const PLVector3 *c = adjFace->edgeLoop[ ( l + 2 ) % adjFace->numVertices ]->position;
+					const QmMathVector3f *a = adjFace->edgeLoop[ l ]->position;
+					const QmMathVector3f *b = adjFace->edgeLoop[ l + 1 ]->position;
+					const QmMathVector3f *c = adjFace->edgeLoop[ ( l + 2 ) % adjFace->numVertices ]->position;
 
-					PLVector3 n = PlgGenerateVertexNormal( *a, *b, *c );
+					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
 
-					normal = PlAddVector3( normal, n );
+					normal = qm_math_vector3f_add( normal, n );
 				}
 			}
 
-			face->vertices[ j ].normal = PlNormalizeVector3( normal );
+			face->vertices[ j ].normal = qm_math_vector3f_normalize( normal );
 		}
 	}
 
@@ -383,7 +383,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 	PlDestroyLinkedList( newSelectionList );
 }
 
-void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
+void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *dir )
 {
 	ApeCamera *camera = self->camera;
 	assert( camera != nullptr );
@@ -391,13 +391,13 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 	ApeRoom *room = ape_camera_get_room( camera );
 	assert( room != nullptr );
 
-	PLVector3 left, up, forward;
+	QmMathVector3f left, up, forward;
 	PlExtractMatrix4Directions( &self->grid.transform, &left, &up, &forward );
 
 	// transform the dir relative to the grid
-	PLVector3 gridDir = PlScaleVector3F( left, dir->x );
-	gridDir           = PlAddVector3( gridDir, PlScaleVector3F( up, dir->y ) );
-	gridDir           = PlAddVector3( gridDir, PlScaleVector3F( forward, dir->z ) );
+	QmMathVector3f gridDir = qm_math_vector3f_scale_float( left, dir->x );
+	gridDir           = qm_math_vector3f_add( gridDir, qm_math_vector3f_scale_float( up, dir->y ) );
+	gridDir           = qm_math_vector3f_add( gridDir, qm_math_vector3f_scale_float( forward, dir->z ) );
 
 	switch ( self->geometryMode )
 	{
@@ -405,10 +405,10 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
 		{
-			PLVector3 *vertex;
+			QmMathVector3f *vertex;
 			COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
 			{
-				*vertex = PlAddVector3( *vertex, PlScaleVector3F( gridDir, self->grid.size ) );
+				*vertex = qm_math_vector3f_add( *vertex, qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
 
 				// try to determine what faces we need to update... sigh
 				intptr_t  ptr   = ( intptr_t ) vertex;
@@ -460,10 +460,10 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 				}
 			}
 
-			PLVector3 *vertex;
+			QmMathVector3f *vertex;
 			COM_ITERATE_HASHED_LIST( vertex, vertexTable, i )
 			{
-				*vertex = PlAddVector3( *vertex, PlScaleVector3F( gridDir, self->grid.size ) );
+				*vertex = qm_math_vector3f_add( *vertex, qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
 			}
 
 			// recompute normals, bounds, etc.
@@ -496,7 +496,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 					ApeBrush *brush = ( ApeBrush * ) node;
 					for ( unsigned int j = 0; j < brush->numVertices; ++j )
 					{
-						brush->vertices[ j ] = PlAddVector3( brush->vertices[ j ], PlScaleVector3F( gridDir, self->grid.size ) );
+						brush->vertices[ j ] = qm_math_vector3f_add( brush->vertices[ j ], qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
 					}
 
 					ape_brush_compute_bounds( brush );
@@ -507,8 +507,8 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir )
 					continue;
 				}
 
-				PLVector3 pos = ape_world_node_get_position( node );
-				pos           = PlAddVector3( pos, PlScaleVector3F( gridDir, self->grid.size ) );
+				QmMathVector3f pos = ape_world_node_get_position( node );
+				pos           = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
 				ape_world_node_set_position( node, &pos );
 			}
 		}
@@ -674,7 +674,7 @@ static void draw_brush_gui( const ApeViewport *viewport, ApeGuiFont *font )
 		snprintf( msg, sizeof( msg ), "%u", num++ );
 		//gui_font_draw_string( font, screenPos.x, screenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 
-		PLVector3 end = ( i + 1 >= editorInstance->numPolygonPoints ) ? editorInstance->polygonPoints[ 0 ] : editorInstance->polygonPoints[ i + 1 ];
+		QmMathVector3f end = ( i + 1 >= editorInstance->numPolygonPoints ) ? editorInstance->polygonPoints[ 0 ] : editorInstance->polygonPoints[ i + 1 ];
 
 		PLVector2 otherScreenPos = PlConvertWorldToScreen( &end, &m, viewportSize, true );
 		if ( otherScreenPos.x == 0.0f && otherScreenPos.y == 0.0f )
@@ -684,7 +684,7 @@ static void draw_brush_gui( const ApeViewport *viewport, ApeGuiFont *font )
 
 		// determine the point between the two on the screen
 		PLVector2 midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
-		snprintf( msg, sizeof( msg ), "%f (%s)", PlVector3Length( PlSubtractVector3( end, editorInstance->polygonPoints[ i ] ) ), PlPrintVector3( &editorInstance->polygonPoints[ i ], PL_VAR_F32 ) );
+		snprintf( msg, sizeof( msg ), "%f (%s)", PlVector3Length( qm_math_vector3f_sub( end, editorInstance->polygonPoints[ i ] ) ), PlPrintVector3( &editorInstance->polygonPoints[ i ], PL_VAR_F32 ) );
 		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
 #endif
@@ -708,8 +708,8 @@ static void render_plot_polygon( ApeEditorInstance *self )
 	if ( self->numPolygonPoints > 0 )
 	{
 		PLColour   colour                                            = PL_COLOUR_WHITE;
-		PLVector3  points[ ( APE_BRUSH_MAX_FACE_VERTICES * 2 ) + 1 ] = {};
-		PLVector3 *point                                             = points;
+		QmMathVector3f  points[ ( APE_BRUSH_MAX_FACE_VERTICES * 2 ) + 1 ] = {};
+		QmMathVector3f *point                                             = points;
 		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
 		{
 			if ( self->numPolygonPoints < APE_BRUSH_MAX_FACE_VERTICES )
@@ -847,7 +847,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 	{
 		draw_node_text_overlay( self, node, viewport, font, viewProj );
 
-		PLVector3 origin;
+		QmMathVector3f origin;
 		if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 		{
 			continue;
@@ -962,7 +962,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 				static constexpr float scale = 16.0f;
 
-				PLVector3 worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
+				QmMathVector3f worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
 
 				float     w;
 				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &w, true );
@@ -1297,13 +1297,13 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 	}
 
 	// determine the orientation of the grid
-	PLVector3 dir;
+	QmMathVector3f dir;
 	PlExtractMatrix4Directions( &self->grid.transform, nullptr, &dir, nullptr );
 
 	// because the grid operates in 2D space, we need to transform all the vertices into 3D space
 	// and use this time to determine the order too...so we can reverse for edge loop if needed
 	float      signedArea = 0.0f;
-	PLVector3 *vertices   = PL_NEW_( PLVector3, self->numPolygonPoints );
+	QmMathVector3f *vertices   = PL_NEW_( QmMathVector3f, self->numPolygonPoints );
 	for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 	{
 		// determine order

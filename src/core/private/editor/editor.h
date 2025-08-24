@@ -27,7 +27,7 @@ bool ape_is_editor_active_( void );
 void ape_grid_draw_( const ApeEditorGrid *self );
 void ape_grid_post_draw_( const ApeEditorGrid *self );
 
-PLVector3 ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport );
+QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Selection Buffer

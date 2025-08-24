@@ -4,14 +4,14 @@
 
 typedef struct GameMovementComponent
 {
-	PLVector3 direction;
+	QmMathVector3f direction;
 
 	float forwardVelocity;
 	float strafeVelocity;
 
-	PLVector3 velocity;
+	QmMathVector3f velocity;
 
-	PLVector3 contactNormal;
+	QmMathVector3f contactNormal;
 
 	float maxRunSpeed, maxWalkSpeed;
 

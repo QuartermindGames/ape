@@ -10,25 +10,25 @@
 // Plane
 /////////////////////////////////////////////////////////////////////////////////////
 
-ComMathPlane *com_math_plane_setup( ComMathPlane *self, const PLVector3 *p0, const PLVector3 *p1, const PLVector3 *p2 )
+ComMathPlane *com_math_plane_setup( ComMathPlane *self, const QmMathVector3f *p0, const QmMathVector3f *p1, const QmMathVector3f *p2 )
 {
-	PLVector3 s0 = PlSubtractVector3( *p1, *p0 );
-	PLVector3 s1 = PlSubtractVector3( *p2, *p0 );
+	QmMathVector3f s0 = qm_math_vector3f_sub( *p1, *p0 );
+	QmMathVector3f s1 = qm_math_vector3f_sub( *p2, *p0 );
 
-	self->normal = PlVector3CrossProduct( s0, s1 );
-	self->normal = PlNormalizeVector3( self->normal );
+	self->normal = qm_math_vector3f_cross_product( s0, s1 );
+	self->normal = qm_math_vector3f_normalize( self->normal );
 
-	self->distance = -PlVector3DotProduct( self->normal, *p0 );
+	self->distance = -qm_math_vector3f_dot_product( self->normal, *p0 );
 
 	return self;
 }
 
-float com_math_plane_distance( const ComMathPlane *self, const PLVector3 *pos )
+float com_math_plane_distance( const ComMathPlane *self, const QmMathVector3f *pos )
 {
-	return PlVector3DotProduct( self->normal, *pos ) + self->distance;
+	return qm_math_vector3f_dot_product( self->normal, *pos ) + self->distance;
 }
 
-void com_math_plane_basis_vectors( const ComMathPlane *self, PLVector3 *tangentDst, PLVector3 *bitangentDst )
+void com_math_plane_basis_vectors( const ComMathPlane *self, QmMathVector3f *tangentDst, QmMathVector3f *bitangentDst )
 {
 	if ( fabsf( self->normal.x ) > fabsf( self->normal.y ) )
 	{
@@ -38,10 +38,10 @@ void com_math_plane_basis_vectors( const ComMathPlane *self, PLVector3 *tangentD
 	{
 		*tangentDst = qm_math_vector3f( 0.0f, self->normal.z, -self->normal.y );
 	}
-	*tangentDst = PlNormalizeVector3( *tangentDst );
+	*tangentDst = qm_math_vector3f_normalize( *tangentDst );
 
-	*bitangentDst = PlVector3CrossProduct( self->normal, *tangentDst );
-	*bitangentDst = PlNormalizeVector3( *bitangentDst );
+	*bitangentDst = qm_math_vector3f_cross_product( self->normal, *tangentDst );
+	*bitangentDst = qm_math_vector3f_normalize( *bitangentDst );
 }
 
 ComMathPlaneProjection com_math_plane_compute_projection( const ComMathPlane *self )
@@ -62,16 +62,16 @@ ComMathPlaneProjection com_math_plane_compute_projection( const ComMathPlane *se
 	return COM_MATH_PLANE_PROJECTION_YZ;
 }
 
-PLVector3 com_math_plane_project_point( const ComMathPlane *self, const PLVector3 *point )
+QmMathVector3f com_math_plane_project_point( const ComMathPlane *self, const QmMathVector3f *point )
 {
 	float dist = com_math_plane_distance( self, point );
-	return PlAddVector3( *point, PlScaleVector3F( self->normal, -dist ) );
+	return qm_math_vector3f_add( *point, qm_math_vector3f_scale_float( self->normal, -dist ) );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVertices )
+bool com_math_is_polygon_convex( const QmMathVector2f *vertices, const unsigned int numVertices )
 {
 	if ( numVertices < 4 )
 	{
@@ -81,11 +81,11 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVert
 	bool sign = false;
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
-		PLVector2 a;
+		QmMathVector2f a;
 		a.x = vertices[ ( i + 2 ) % numVertices ].x - vertices[ ( i + 1 ) % numVertices ].x;
 		a.y = vertices[ ( i + 2 ) % numVertices ].y - vertices[ ( i + 1 ) % numVertices ].y;
 
-		PLVector2 b;
+		QmMathVector2f b;
 		b.x = vertices[ i ].x - vertices[ ( i + 1 ) % numVertices ].x;
 		b.y = vertices[ i ].y - vertices[ ( i + 1 ) % numVertices ].y;
 
@@ -103,33 +103,33 @@ bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVert
 	return true;
 }
 
-PLVector3 com_math_compute_face_normal( const PLVector3 *vertices, unsigned int numVertices )
+QmMathVector3f com_math_compute_face_normal( const QmMathVector3f *vertices, unsigned int numVertices )
 {
-	PLVector3 normal = {};
+	QmMathVector3f normal = {};
 	for ( unsigned int i = 0; i < numVertices; i += 3 )
 	{
-		PLVector3 a = vertices[ i ];
-		PLVector3 b = vertices[ i + 1 ];
-		PLVector3 c = vertices[ i + 2 ];
+		QmMathVector3f a = vertices[ i ];
+		QmMathVector3f b = vertices[ i + 1 ];
+		QmMathVector3f c = vertices[ i + 2 ];
 
-		PLVector3 x = qm_math_vector3f( c.x - b.x, c.y - b.y, c.z - b.z );
-		PLVector3 y = qm_math_vector3f( a.x - b.x, a.y - b.y, a.z - b.z );
-		PLVector3 n = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
+		QmMathVector3f x = qm_math_vector3f( c.x - b.x, c.y - b.y, c.z - b.z );
+		QmMathVector3f y = qm_math_vector3f( a.x - b.x, a.y - b.y, a.z - b.z );
+		QmMathVector3f n = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( x, y ) );
 
-		normal = PlAddVector3( normal, n );
+		normal = qm_math_vector3f_add( normal, n );
 	}
 
-	return PlNormalizeVector3( normal );
+	return qm_math_vector3f_normalize( normal );
 }
 
-PLVector3 com_math_pitch_yaw_to_position( float pitch, float yaw )
+QmMathVector3f com_math_pitch_yaw_to_position( float pitch, float yaw )
 {
-	PLVector3 position = { 1.0f, pitch, 0.0f };
-	PLMatrix4 matrix   = PlMatrix4Identity();
-	PLMatrix4 m2;
+	QmMathVector3f position = { 1.0f, pitch, 0.0f };
+	PLMatrix4      matrix   = PlMatrix4Identity();
+	PLMatrix4      m2;
 	m2         = PlTranslateMatrix4( position );
 	matrix     = PlMultiplyMatrix4( &m2, &matrix );
-	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &( PLVector3 ) { 0.0f, 1.0f, 0.0f } );
+	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &( QmMathVector3f ) { 0.0f, 1.0f, 0.0f } );
 	matrix     = PlMultiplyMatrix4( &m2, &matrix );
 	position.x = matrix.m[ 0 ];
 	position.z = matrix.m[ 8 ];

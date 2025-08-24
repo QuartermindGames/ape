@@ -220,17 +220,17 @@ static ApeAudioSource *get_free_temporary_source()
 
 static void al_tick( void )
 {
-	PLVector3 position = ape_audio_get_listener_position();
+	QmMathVector3f position = ape_audio_get_listener_position();
 	XAL_CALL( alListenerfv( AL_POSITION, ( ALfloat * ) &position ) );
 
-	PLVector3 angles = ape_audio_get_listener_angles();
-	PLVector3 up, forward;
+	QmMathVector3f angles = ape_audio_get_listener_angles();
+	QmMathVector3f up, forward;
 	PlAnglesAxes( angles, nullptr, &up, &forward );
 	//TODO: camera is inversed relative to everything else... fuuuuck
-	forward = PlInverseVector3( forward );
+	forward = qm_math_vector3f_invert( forward );
 	XAL_CALL( alListenerfv( AL_ORIENTATION, ( float[] ) { forward.x, forward.y, forward.z, up.x, up.y, up.z } ) );
 
-	PLVector3 velocity = ape_audio_get_listener_velocity();
+	QmMathVector3f velocity = ape_audio_get_listener_velocity();
 	XAL_CALL( alListenerfv( AL_VELOCITY, ( ALfloat * ) &velocity ) );
 
 	XAL_CALL( alListenerf( AL_GAIN, ape_audio_get_global_volume_() ) );
@@ -296,7 +296,7 @@ static void al_free_sample( ApeAudioSample *sample )
 	XAL_CALL( alDeleteBuffers( 1, ( ALuint * ) &sample->user ) );
 }
 
-static void al_emit_sample( ApeAudioSample *sample, const PLVector3 *position, float volume, float pitch )
+static void al_emit_sample( ApeAudioSample *sample, const QmMathVector3f *position, float volume, float pitch )
 {
 	ApeAudioSource *source = get_free_temporary_source();
 	if ( source == nullptr )

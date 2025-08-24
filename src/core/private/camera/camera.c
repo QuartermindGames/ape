@@ -79,7 +79,7 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode )
 /****************************************
  ****************************************/
 
-ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
+ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
 {
 	ApeCamera *camera = PL_NEW( ApeCamera );
 	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, name, position, angles );
@@ -161,29 +161,29 @@ void ape_camera_destroy_( void *data, ApeWorldNode *parent )
 	}
 }
 
-void ape_camera_set_position( ApeCamera *self, const PLVector3 *position )
+void ape_camera_set_position( ApeCamera *self, const QmMathVector3f *position )
 {
 	self->internal->position = *position;
 	ape_world_node_set_position( &self->base, position );
 }
 
-void ape_camera_set_angles( ApeCamera *camera, const PLVector3 *angles )
+void ape_camera_set_angles( ApeCamera *camera, const QmMathVector3f *angles )
 {
 	camera->internal->angles = *angles;
 	ape_world_node_set_angles( &camera->base, angles );
 }
 
-PLVector3 ape_camera_get_position( const ApeCamera *camera )
+QmMathVector3f ape_camera_get_position( const ApeCamera *camera )
 {
 	return ape_world_node_get_local_position( &camera->base );
 }
 
-PLVector3 ape_camera_get_angles( const ApeCamera *camera )
+QmMathVector3f ape_camera_get_angles( const ApeCamera *camera )
 {
 	return ape_world_node_get_angles( &camera->base );
 }
 
-PLVector3 ape_camera_get_forward( const ApeCamera *camera )
+QmMathVector3f ape_camera_get_forward( const ApeCamera *camera )
 {
 	PLMatrix4 view = camera->internal->internal.view;
 	return qm_math_vector3f( view.mm[ 0 ][ 2 ], view.mm[ 1 ][ 2 ], view.mm[ 2 ][ 2 ] );
@@ -247,7 +247,7 @@ static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		PLVector3 vertex = PlTransformVector3( face->vertices[ i ].position, &transform );
+		QmMathVector3f vertex = PlTransformVector3( face->vertices[ i ].position, &transform );
 
 		float     depth;
 		PLVector2 screenPos = PlConvertWorldToScreen( &vertex, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
@@ -288,10 +288,10 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 		return false;
 	}
 
-	PLVector3 position = ape_light_get_position( light );
+	QmMathVector3f position = ape_light_get_position( light );
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
-		float distance = PlVector3Length( PlSubtractVector3( position, ape_camera_get_position( self ) ) );
+		float distance = PlVector3Length( qm_math_vector3f_sub( position, ape_camera_get_position( self ) ) );
 		if ( distance > ape_config_.renderer.maxLightDistance )
 		{
 			return false;
@@ -312,10 +312,10 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 			ape_draw_debug_sphere( position, PlColourF32ToU8( &light->colour ), light->radius );
 			if ( light->type != APE_LIGHT_TYPE_OMNI )
 			{
-				PLVector3 angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
-				PLVector3 forward;
+				QmMathVector3f angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
+				QmMathVector3f forward;
 				PlAnglesAxes( angles, nullptr, nullptr, &forward );
-				PLVector3 end = PlAddVector3( position, PlScaleVector3F( forward, 16.0f ) );
+				QmMathVector3f end = qm_math_vector3f_add( position, qm_math_vector3f_scale_float( forward, 16.0f ) );
 				ape_draw_debug_arrow( position, end, PlColourF32ToU8( &light->colour ), 1.0f );
 			}
 		}
@@ -332,9 +332,9 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 	return true;
 }
 
-static void setup_reflection_matrix( const PLVector3 *normal, const PLVector3 *planePoint, PLMatrix4 *reflectionMatrix )
+static void setup_reflection_matrix( const QmMathVector3f *normal, const QmMathVector3f *planePoint, PLMatrix4 *reflectionMatrix )
 {
-	const float d = -PlVector3DotProduct( *normal, *planePoint );
+	const float d = -qm_math_vector3f_dot_product( *normal, *planePoint );
 
 	reflectionMatrix->mm[ 0 ][ 0 ] = 1.0f - 2.0f * normal->x * normal->x;
 	reflectionMatrix->mm[ 0 ][ 1 ] = -2.0f * normal->x * normal->y;
@@ -385,10 +385,10 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 		}
 
 		// ensure it's facing the camera
-		PLVector3 faceOrigin     = PlAddVector3( bounds.absOrigin, bounds.origin );
-		PLVector3 cameraPosition = ape_camera_get_position( self );
-		PLVector3 view           = PlNormalizeVector3( PlSubtractVector3( cameraPosition, faceOrigin ) );
-		if ( PlVector3DotProduct( brush->faces[ i ].normal, view ) < 0.0f )
+		QmMathVector3f faceOrigin     = qm_math_vector3f_add( bounds.absOrigin, bounds.origin );
+		QmMathVector3f cameraPosition = ape_camera_get_position( self );
+		QmMathVector3f view           = qm_math_vector3f_normalize( qm_math_vector3f_sub( cameraPosition, faceOrigin ) );
+		if ( qm_math_vector3f_dot_product( brush->faces[ i ].normal, view ) < 0.0f )
 		{
 			continue;
 		}
@@ -437,7 +437,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 				                                                               visiblePortal->normal.y,
 				                                                               visiblePortal->normal.z, 0.0f ),
 				                                            &transform );
-				visiblePortal->normal = PlNormalizeVector3( QM_MATH_VECTOR3F( tmp.x, tmp.y, tmp.z ) );
+				visiblePortal->normal = qm_math_vector3f_normalize( QM_MATH_VECTOR3F( tmp.x, tmp.y, tmp.z ) );
 
 				visibleRoom->numPortals++;
 
@@ -506,7 +506,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 	{
 		PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
 		PLMatrix4       transform         = ape_world_node_get_transform( worldNode );
-		PLVector3       pos               = PlGetMatrix4Translation( &transform );
+		QmMathVector3f       pos               = PlGetMatrix4Translation( &transform );
 		ape_draw_debug_axis( pos, worldNode->angles, 16.0f );
 		ape_draw_debug_aabb( &worldNode->bounds, PL_COLOUR_PURPLE );
 		ape_draw_debug_aabb( &transformedBounds, PL_COLOUR_ORANGE );
