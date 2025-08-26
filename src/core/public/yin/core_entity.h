@@ -71,7 +71,7 @@ void                             ape_register_entity_class( const ApeEntityClass
 const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses );
 const ApeEntityClassDefinition  *ape_get_entity_class_table( const char *className );
 
-ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const PLVector3 *position, const PLVector3 *angles );
+ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const QmMathVector3f *position, const QmMathVector3f *angles );
 
 void ape_entity_spawn( ApeEntity *self );
 void ape_entity_tick( ApeEntity *self, double delta );

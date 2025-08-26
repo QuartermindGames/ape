@@ -125,7 +125,7 @@ ApeInputState ape_client_input_get_button_state( unsigned int slot, ApeInputButt
 /**
  * Returns the analogue stick state for the given slot.
  */
-PLVector2 ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum );
+QmMathVector2f ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum );
 
 // Mouse
 void ape_client_input_get_mouse_position( int *x, int *y );

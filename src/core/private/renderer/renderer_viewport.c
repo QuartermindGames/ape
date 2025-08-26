@@ -47,7 +47,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 		return nullptr;
 	}
 
-	viewports[ i ]               = PL_NEW( ApeViewport );
+	viewports[ i ]               = QM_OS_MEMORY_NEW( ApeViewport );
 	viewports[ i ]->x            = x;
 	viewports[ i ]->y            = y;
 	viewports[ i ]->width        = width;
@@ -67,7 +67,8 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	if ( viewports[ i ]->renderTarget == NULL )
 	{
 		ape_warning_( "Failed to create render target for viewport!\n" );
-		PL_DELETEN( viewports[ i ] );
+		qm_os_memory_free( viewports[ i ] );
+		viewports[ i ] = nullptr;
 	}
 #endif
 
@@ -88,7 +89,7 @@ void ape_viewport_destroy( ApeViewport *self )
 	}
 
 	unsigned int index = self->index;
-	PL_DELETE( viewports[ index ] );
+	qm_os_memory_free( viewports[ index ] );
 	viewports[ index ] = NULL;
 }
 
@@ -210,12 +211,12 @@ void ape_viewport_set_clip( const ApeViewport *self )
 	PlgClipViewport( self->x, self->y, rw, rh );
 }
 
-void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour )
+void ape_viewport_set_clear_colour( ApeViewport *self, const QmMathColour4ub *clearColour )
 {
 	self->clearColour = *clearColour;
 }
 
-PLVector3 ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix )
+QmMathVector3f ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix )
 {
 	return PlConvertScreenToWorld( qm_math_vector2f( pos[ 0 ], ( self->height - pos[ 1 ] ) ),
 	                               viewMatrix,

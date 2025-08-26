@@ -151,7 +151,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 	}
 }
 
-static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, unsigned int *offset, ApeRendererPassFlag stage )
+static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
@@ -166,6 +166,12 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 			}
 
 			ApeBrushFace *face = &brush->faces[ i ];
+			// check the face isn't the same face we're looking in from
+			if ( visibleRoom->entrance != nullptr && visibleRoom->entrance->portalFace == face )
+			{
+				continue;
+			}
+
 			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && !showHiddenFaces )
 			{
 				continue;
@@ -183,11 +189,13 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 
 			if ( light != nullptr )
 			{
-				PLVector3 lightPos = ape_light_get_position( light );
+				QmMathVector3f lightPos = ape_light_get_position( light );
 				if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &face->bounds ) )
 				{
 					continue;
 				}
+
+				//ape_draw_debug_arrow( lightPos, face->bounds.absOrigin, PL_COLOURF32_TO_U8( light->colour ), 2.0f );
 			}
 
 #if 0// ditched for speed...
@@ -212,7 +220,7 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		build_brush_display_list( child, material, light, camera, offset, stage );
+		build_brush_display_list( child, material, light, camera, visibleRoom, offset, stage );
 	}
 }
 
@@ -232,7 +240,7 @@ static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const
 #endif
 }
 
-static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
+static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *visibleRoom, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
 	ape_world_node_update_mesh_cache_( worldNode );
 
@@ -263,7 +271,7 @@ static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLig
 			COM_PROFILE_START( "build_brush_display_list" );
 
 			unsigned int offset = 0;
-			build_brush_display_list( worldNode, material, light, camera, &offset, flags );
+			build_brush_display_list( worldNode, material, light, camera, visibleRoom, &offset, flags );
 
 			COM_PROFILE_END( "build_brush_display_list" );
 
@@ -288,13 +296,13 @@ static void draw_node_meshes( ApeWorldNode *worldNode, ApeCamera *camera, ApeLig
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
 	{
-		draw_node_meshes( child, camera, light, flags );
+		draw_node_meshes( child, visibleRoom, camera, light, flags );
 	}
 }
 
 void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light );
 
-static void draw_room( ApeCamera *camera, ApeRoom *room, ApeLight *light, const ApeRendererPassFlag flags )
+static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, ApeLight *light, const ApeRendererPassFlag flags )
 {
 	if ( !( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS ) && light == nullptr )
 	{
@@ -303,6 +311,7 @@ static void draw_room( ApeCamera *camera, ApeRoom *room, ApeLight *light, const 
 
 	COM_PROFILE_FUNCTION_START();
 
+	ApeRoom *room = visibleRoom->room;
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = room->ambientLight;
@@ -313,7 +322,7 @@ static void draw_room( ApeCamera *camera, ApeRoom *room, ApeLight *light, const 
 	draw_visible_camera_nodes( camera, light, flags );
 
 	// recurse down the tree to draw all nodes with explicit meshes
-	draw_node_meshes( APE_WORLD_NODE( room ), camera, light, flags );
+	draw_node_meshes( APE_WORLD_NODE( room ), visibleRoom, camera, light, flags );
 
 	//TODO: botch, we don't check render pass flag under draw models yet
 	if ( !( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) )
@@ -323,7 +332,7 @@ static void draw_room( ApeCamera *camera, ApeRoom *room, ApeLight *light, const 
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience = PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f );
+		ape_rendererState_.ambience = QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
 
 	COM_PROFILE_FUNCTION_END();
@@ -335,16 +344,16 @@ static void draw_room( ApeCamera *camera, ApeRoom *room, ApeLight *light, const 
 
 static constexpr float F_INFINITY = 10000.0f;
 
-static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex, const PLVector3 *faceOrigin )
+static QmMathVector3f get_projection( const ApeLight *light, const QmMathVector3f *vertex, const QmMathVector3f *faceOrigin )
 {
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( light ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( light ) );
 	if ( light->type == APE_LIGHT_TYPE_SUN )
 	{
-		return PlScaleVector3F( PlNormalizeVector3( pos ), F_INFINITY );
+		return qm_math_vector3f_scale_float( qm_math_vector3f_normalize( pos ), F_INFINITY );
 	}
 	if ( light->type == APE_LIGHT_TYPE_SPOT )
 	{
-		return PlScaleVector3F( *vertex, light->radius );
+		return qm_math_vector3f_scale_float( *vertex, light->radius );
 	}
 
 #if 0// this doesn't work right now...
@@ -361,7 +370,7 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex,
 	float c = light->radius * light->radius * light->radius;
 	float r = powf( F_PI * c, 1.0f / 3.0f );
 
-	float range = PlVector3Length( PlNormalizeVector3( PlSubtractVector3( *faceOrigin, pos ) ) );
+	float range = qm_math_vector3f_length( qm_math_vector3f_normalize( qm_math_vector3f_sub( *faceOrigin, pos ) ) );
 	if ( range > r )
 	{
 		range = r;
@@ -369,36 +378,36 @@ static PLVector3 get_projection( const ApeLight *light, const PLVector3 *vertex,
 
 	range = r - range;
 
-	PLVector3 fdir = PlNormalizeVector3( PlSubtractVector3( *faceOrigin, pos ) );
-	PLVector3 fpos = PlAddVector3( *faceOrigin, PlScaleVector3F( fdir, range ) );
+	QmMathVector3f fdir = qm_math_vector3f_normalize( qm_math_vector3f_sub( *faceOrigin, pos ) );
+	QmMathVector3f fpos = qm_math_vector3f_add( *faceOrigin, qm_math_vector3f_scale_float( fdir, range ) );
 
-	PLVector3 vdir = PlNormalizeVector3( PlSubtractVector3( *vertex, pos ) );
-	PLVector3 vpos = PlAddVector3( *vertex, PlScaleVector3F( vdir, range ) );
+	QmMathVector3f vdir = qm_math_vector3f_normalize( qm_math_vector3f_sub( *vertex, pos ) );
+	QmMathVector3f vpos = qm_math_vector3f_add( *vertex, qm_math_vector3f_scale_float( vdir, range ) );
 
 	ape_draw_debug_arrow( *faceOrigin, fpos, PL_COLOUR_GREEN, 1.0f );
 	ape_draw_debug_arrow( *vertex, vpos, PL_COLOUR_RED, 1.0f );
 
-	return PlAddVector3( *vertex, vpos );
+	return qm_math_vector3f_add( *vertex, vpos );
 
 #elif 0// this restricts each vertex to the extent of the light radius
 
-	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, pos ) );
-	float     r = PlVector3Length( PlSubtractVector3( *vertex, pos ) );
+	QmMathVector3f s = qm_math_vector3f_normalize( qm_math_vector3f_sub( *vertex, pos ) );
+	float          r = qm_math_vector3f_length( qm_math_vector3f_sub( *vertex, pos ) );
 	if ( r > light->radius )
 	{
 		r = light->radius;
 	}
 
-	return PlAddVector3( *vertex, PlScaleVector3F( s, light->radius - r ) );
+	return qm_math_vector3f_add( *vertex, qm_math_vector3f_scale_float( s, light->radius - r ) );
 
 #else// this restricts each vertex to a volume derived from the light radius
 
 	static constexpr float F_PI = 4.0f / 3.0f * PL_PI;
 
-	float     c = light->radius * light->radius * light->radius;
-	float     r = powf( F_PI * c, 1.0f / 3.0f );
-	PLVector3 s = PlNormalizeVector3( PlSubtractVector3( *vertex, pos ) );
-	return PlAddVector3( *vertex, PlScaleVector3F( s, r ) );
+	float          c = light->radius * light->radius * light->radius;
+	float          r = powf( F_PI * c, 1.0f / 3.0f );
+	QmMathVector3f s = qm_math_vector3f_normalize( qm_math_vector3f_sub( *vertex, pos ) );
+	return qm_math_vector3f_add( *vertex, qm_math_vector3f_scale_float( s, r ) );
 
 #endif
 }
@@ -410,7 +419,7 @@ static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLi
 		const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
 
 		// get the projected position (if start, just uses the initial position)
-		const PLVector3 ppos = start ? *vertex->position : get_projection( light, vertex->position, &face->bounds.absOrigin );
+		const QmMathVector3f ppos = start ? *vertex->position : get_projection( light, vertex->position, &face->bounds.absOrigin );
 
 		indices[ i ] = PlgImmPushVertex( ppos.x, ppos.y, ppos.z );
 	}
@@ -450,7 +459,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 			}
 
 			//todo: this check should probably be integrated into light_test_plane...
-			PLVector3 lightPos = ape_light_get_position( light );
+			QmMathVector3f lightPos = ape_light_get_position( light );
 			if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &brush->faces[ i ].bounds ) )
 			{
 				continue;
@@ -464,12 +473,12 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 			if ( indices == NULL )
 			{
 				maxIndices = ( *numIndices * brush->numFaces );
-				indices    = PL_NEW_( unsigned int, maxIndices );
+				indices    = QM_OS_MEMORY_NEW_( unsigned int, maxIndices );
 			}
 			else if ( *numIndices > maxIndices )
 			{
 				maxIndices = *numIndices + 16;
-				indices    = PL_REALLOCA( indices, sizeof( unsigned int ) * maxIndices );
+				indices    = qm_os_memory_realloc( indices, sizeof( unsigned int ) * maxIndices );
 			}
 
 			unsigned int *fl = &indices[ *numIndices - ( face->numVertices * 2 ) ];
@@ -565,7 +574,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 	PlgPushDebugGroupMarker( "Translucent Room" );
 
 	// and now depth pre-pass
-	draw_room( camera, visibleRoom->room, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+	draw_room( camera, visibleRoom, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
@@ -584,7 +593,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 			ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 			ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-			draw_room( camera, visibleRoom->room, visibleRoom->lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
+			draw_room( camera, visibleRoom, visibleRoom->lights[ i ], APE_RENDERER_PASS_FLAG_TRANSLUCENT );
 
 			ape_rendererState_.overrideBlendMode = false;
 		}
@@ -597,7 +606,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 	COM_PROFILE_FUNCTION_END();
 }
 
-static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *light, bool depth )
+static void draw_solid_room_lit( const ApeCameraVisibleRoom *visibleRoom, ApeCamera *camera, ApeLight *light, bool depth )
 {
 	if ( light->colour.a <= 0.0f )
 	{
@@ -645,7 +654,7 @@ static void draw_solid_room_lit( ApeRoom *room, ApeCamera *camera, ApeLight *lig
 	ape_rendererState_.blendModeA        = PLG_BLEND_ONE;
 	ape_rendererState_.blendModeB        = PLG_BLEND_ONE;
 
-	draw_room( camera, room, light, APE_RENDERER_PASS_FLAG_OPAQUE );
+	draw_room( camera, visibleRoom, light, APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	ape_rendererState_.overrideBlendMode = false;
 
@@ -667,7 +676,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 	PlgPushDebugGroupMarker( "Solid Room" );
 
 	// and now depth pre-pass
-	draw_room( camera, visibleRoom->room, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
+	draw_room( camera, visibleRoom, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
@@ -682,8 +691,8 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 			{
 				unsigned int seed = ape_config_.renderer.lightJitterSamples;
 
-				PLVector3 storePos   = light->base.position;
-				float     storePower = light->colour.a;
+				QmMathVector3f storePos   = light->base.position;
+				float          storePower = light->colour.a;
 				for ( unsigned int j = 0; j < ape_config_.renderer.lightJitterSamples; ++j )
 				{
 #define JITTER_VARIATION ( qm_os_random_float( &seed, ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) - \
@@ -693,7 +702,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 					light->base.position.z += JITTER_VARIATION;
 					light->colour.a = ( i * 1.0f / ape_config_.renderer.lightJitterSamples );
 
-					draw_solid_room_lit( visibleRoom->room, camera, visibleRoom->lights[ i ], depth );
+					draw_solid_room_lit( visibleRoom, camera, visibleRoom->lights[ i ], depth );
 				}
 
 				light->base.position = storePos;
@@ -701,7 +710,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 				continue;
 			}
 
-			draw_solid_room_lit( visibleRoom->room, camera, light, depth );
+			draw_solid_room_lit( visibleRoom, camera, light, depth );
 		}
 
 		PlgDepthMask( depth );
@@ -714,7 +723,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 	COM_PROFILE_FUNCTION_END();
 }
 
-static void draw_portal_face( const ApeBrushFace *portal )
+static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 {
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -722,10 +731,7 @@ static void draw_portal_face( const ApeBrushFace *portal )
 	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( portal->parent ) );
 	PlMultiMatrix( &transform );
 
-	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
-
-	PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-
+	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
 		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
@@ -734,7 +740,15 @@ static void draw_portal_face( const ApeBrushFace *portal )
 		PlgImmColour( 0, 0, 0, 0 );
 	}
 
-	PlgImmDraw();
+	if ( useMaterial )
+	{
+		ape_material_draw( portal->material, mesh, nullptr );
+	}
+	else
+	{
+		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
+		PlgImmDraw();
+	}
 
 	PlPopMatrix();
 }
@@ -763,7 +777,7 @@ static void draw_wireframe_portal_face( const ApeBrushFace *portal )
 	PlPopMatrix();
 }
 
-static float sgn( float a )
+static float sgn( const float a )
 {
 	if ( a > 0.0f ) return 1.0f;
 	if ( a < 0.0f ) return -1.0f;
@@ -771,19 +785,19 @@ static float sgn( float a )
 }
 
 // based on https://terathon.com/blog/oblique-clipping.html
-static PLMatrix4 modify_portal_projection_matrix( const PLMatrix4 *projMatrix, const PLVector4 *plane )
+static PLMatrix4 modify_portal_projection_matrix( const PLMatrix4 *projMatrix, const QmMathVector4f *plane )
 {
 	// Calculate the clip-space corner point opposite the clipping plane
 	// as (sgn(clipPlane.x), sgn(clipPlane.y), 1, 1) and
 	// transform it into camera space by multiplying it
 	// by the inverse of the projection matrix
-	PLVector4 q = qm_math_vector4f( ( sgn( plane->x ) + projMatrix->m[ 8 ] ) / projMatrix->m[ 0 ],
-	                                ( sgn( plane->y ) + projMatrix->m[ 9 ] ) / projMatrix->m[ 5 ],
-	                                -1.0f,
-	                                ( 1.0f + projMatrix->m[ 10 ] ) / projMatrix->m[ 14 ] );
+	QmMathVector4f q = qm_math_vector4f( ( sgn( plane->x ) + projMatrix->m[ 8 ] ) / projMatrix->m[ 0 ],
+	                                     ( sgn( plane->y ) + projMatrix->m[ 9 ] ) / projMatrix->m[ 5 ],
+	                                     -1.0f,
+	                                     ( 1.0f + projMatrix->m[ 10 ] ) / projMatrix->m[ 14 ] );
 
 	// Calculate the scaled plane vector
-	PLVector4 c = PlScaleVector4F( plane, 2.0f / PlVector4DotProduct( plane, &q ) );
+	QmMathVector4f c = qm_math_vector4f_scale_float( *plane, 2.0f / qm_math_vector4f_dot_product( *plane, q ) );
 
 	// Replace the third row of the projection matrix
 	PLMatrix4 matrix = *projMatrix;
@@ -826,7 +840,7 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 
 	PlgColourMask( false, false, false, false );
 
-	draw_portal_face( portal );
+	draw_portal_face( portal, false );
 
 	PlgStencilBufferFunction( PLG_COMPARE_EQUAL, 4, 0xFF );
 	PlgStencilOp( PLG_STENCIL_FACE_FRONTANDBACK, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP, PLG_STENCIL_OP_KEEP );
@@ -842,16 +856,16 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 
 	PLMatrix4 clipMatrix = PlTranslateMatrix4( visiblePortal->origin );
 	ape_draw_debug_sphere( visiblePortal->origin, PL_COLOUR_RED, 16.0f );
-	PLVector4 clipPlane;
+	QmMathVector4f clipPlane;
 	if ( ape_rendererState_.mirror )
 	{
 		clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
-		clipPlane.w = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
+		clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
 	}
 	else
 	{
 		clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
-		clipPlane.w = -PlVector3DotProduct( visiblePortal->normal, visiblePortal->origin );
+		clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
 	}
 
 	PlgSetClipPlane( &clipPlane, &clipMatrix, false );
@@ -884,7 +898,7 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	PlgColourMask( false, false, false, false );
 	PlgDepthMask( true );
 
-	draw_portal_face( portal );
+	draw_portal_face( portal, true );
 
 	PlgColourMask( true, true, true, true );
 

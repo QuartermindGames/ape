@@ -17,7 +17,7 @@ static void DestroyEmitterTemplateCallback( void *userData )
 
 	PlgDestroyMesh( emitter->mesh );
 
-	PlFree( emitter );
+	qm_os_memory_free( emitter );
 }
 
 AcmBranch *PS_SerializeEmitter( const ApeParticleEmitter *emitter )
@@ -53,7 +53,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 		return;
 	}
 
-	emitter = PL_NEW( ApeParticleEmitter );
+	emitter = QM_OS_MEMORY_NEW( ApeParticleEmitter );
 
 	//SG_DS_Transform( root, "transform", &emitter->transform );
 	//SG_DS_Transform( root, "transformVar", &emitter->transformVar );
@@ -85,7 +85,7 @@ ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 		return nullptr;
 	}
 
-	ApeParticleEmitter *emitter = PlMAlloc( sizeof( ApeParticleEmitter ), true );
+	ApeParticleEmitter *emitter = QM_OS_MEMORY_MALLOC_( sizeof( ApeParticleEmitter ) );
 	memcpy( emitter, emitterTemplate, sizeof( ApeParticleEmitter ) );
 
 	return emitter;
@@ -93,7 +93,7 @@ ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 
 ApeParticleEmitter *ss_arl_particle_emitter_create( void )
 {
-	ApeParticleEmitter *emitter = PL_NEW( ApeParticleEmitter );
+	ApeParticleEmitter *emitter = QM_OS_MEMORY_NEW( ApeParticleEmitter );
 	emitter->particles              = PlCreateLinkedList();
 
 	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
@@ -121,14 +121,14 @@ void ss_arl_particle_emitter_destroy( ApeParticleEmitter *emitter )
 	{
 		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
 		node                      = PlGetNextLinkedListNode( node );
-		PlFree( particle );
+		qm_os_memory_free( particle );
 	}
 
 	if ( emitter->material != NULL )
 		ape_material_release( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
-	PlFree( emitter );
+	qm_os_memory_free( emitter );
 }
 
 static void tick_particle( ApeParticle *particle, ApeParticleEmitter *emitter )
@@ -136,18 +136,18 @@ static void tick_particle( ApeParticle *particle, ApeParticleEmitter *emitter )
 	if ( particle->life <= 0 )
 	{
 		PlDestroyLinkedListNode( particle->node );
-		PlFree( particle );
+		qm_os_memory_free( particle );
 		return;
 	}
 
 	particle->oldTransform = particle->transform;
 
-	PLVector3 force;
+	QmMathVector3f force;
 	force.x = emitter->force.x + qm_os_random_float( &emitter->seed, emitter->forceVar.x );
 	force.y = emitter->force.y + qm_os_random_float( &emitter->seed, emitter->forceVar.y );
 	force.z = emitter->force.z + qm_os_random_float( &emitter->seed, emitter->forceVar.z );
 
-	particle->transform.translation = PlAddVector3( particle->transform.translation, force );
+	particle->transform.translation = qm_math_vector3f_add( particle->transform.translation, force );
 
 	particle->bounds.origin = particle->transform.translation;
 
@@ -172,11 +172,11 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 	int numParticles = PlGetNumLinkedListNodes( emitter->particles );
 	if ( numParticles < emitter->maxParticles && emitter->numTicks > emitter->maxTicks )
 	{
-		ApeParticle *particle = PL_NEW( ApeParticle );
+		ApeParticle *particle = QM_OS_MEMORY_NEW( ApeParticle );
 
 		particle->emitter = emitter;
 
-		PLVector3 translationMod;
+		QmMathVector3f translationMod;
 		translationMod.x                = emitter->transform.translation.x + ( qm_os_random_float( &emitter->seed, emitter->transformVar.translation.x ) + qm_os_random_float( &emitter->seed, -emitter->transformVar.translation.x ) );
 		translationMod.y                = emitter->transform.translation.y + ( qm_os_random_float( &emitter->seed, emitter->transformVar.translation.y ) + qm_os_random_float( &emitter->seed, -emitter->transformVar.translation.y ) );
 		translationMod.z                = emitter->transform.translation.z + ( qm_os_random_float( &emitter->seed, emitter->transformVar.translation.z ) + qm_os_random_float( &emitter->seed, -emitter->transformVar.translation.z ) );
@@ -184,7 +184,7 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 
 		particle->life = emitter->particleLife + emitter->particleLifeVar * qm_os_random_int( &emitter->seed ) % 100;
 
-		PLColourF32 startColour, endColour;
+		QmMathColour4f startColour, endColour;
 		startColour.r = emitter->startColour.r + emitter->startColourVar.r * qm_os_random_float( &emitter->seed, 1.0f );
 		startColour.g = emitter->startColour.g + emitter->startColourVar.g * qm_os_random_float( &emitter->seed, 1.0f );
 		startColour.b = emitter->startColour.b + emitter->startColourVar.b * qm_os_random_float( &emitter->seed, 1.0f );
@@ -221,8 +221,8 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
 		if ( i == 0 )
 		{
-			emitter->bounds.maxs = ( PLVector3 ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
-			emitter->bounds.mins = ( PLVector3 ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
+			emitter->bounds.maxs = ( QmMathVector3f ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
+			emitter->bounds.mins = ( QmMathVector3f ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
 		}
 
 		node = PlGetNextLinkedListNode( node );
@@ -247,7 +247,7 @@ void ss_arl_particle_emitter_draw( const ApeParticleEmitter *emitter, const ApeC
 	PlLoadIdentityMatrix();
 
 	//R_DrawAxesPivot( emitter->transform.translation, PlQuaternionToEuler( &emitter->transform.rotation ) );
-	//PlgDrawBoundingVolume( &emitter->bounds, PLColour( 255, 0, 255, 255 ) );
+	//PlgDrawBoundingVolume( &emitter->bounds, QmMathColour4ub( 255, 0, 255, 255 ) );
 
 	PlgClearMesh( emitter->mesh );
 
@@ -264,12 +264,12 @@ void ss_arl_particle_emitter_draw( const ApeParticleEmitter *emitter, const ApeC
 		float y = particle->transform.translation.y;
 		float z = particle->transform.translation.z;
 
-		PLColour colour = PlColourF32ToU8( &particle->colour );
+		QmMathColour4ub colour = PlColourF32ToU8( &particle->colour );
 
 		unsigned int a = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
 		unsigned int b = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 1.0f ) );
-		//unsigned int c = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 0.0f ) );
-		//unsigned int d = PlgAddMeshVertex( emitter->mesh, PLVector3( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, PLVector2( 1.0f, 1.0f ) );
+		//unsigned int c = PlgAddMeshVertex( emitter->mesh, QmMathVector3f( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, QmMathVector2f( 1.0f, 0.0f ) );
+		//unsigned int d = PlgAddMeshVertex( emitter->mesh, QmMathVector3f( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, QmMathVector2f( 1.0f, 1.0f ) );
 
 		//PlgAddMeshTriangle( emitter->mesh, a, b, c );
 		//PlgAddMeshTriangle( emitter->mesh, c, b, d );

@@ -94,9 +94,9 @@ typedef struct ApeMaterialPass
 	ApeShaderProgram *program;
 
 	PLGTextureFilter textureFilter;
-	PLVector2        textureScroll;
-	PLVector2        textureOffset;
-	PLVector2        textureScale;
+	QmMathVector2f   textureScroll;
+	QmMathVector2f   textureOffset;
+	QmMathVector2f   textureScale;
 
 	PLGBlend            blendMode[ 2 ];
 	ApeMaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];

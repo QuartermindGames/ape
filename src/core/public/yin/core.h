@@ -10,7 +10,7 @@
 
 PL_EXTERN_C
 
-typedef struct ComMathPlane ComMathPlane;// common.h
+typedef struct QmMathPlane QmMathPlane;// common.h
 
 typedef unsigned long int  ulong;
 typedef unsigned short int ushort;

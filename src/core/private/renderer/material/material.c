@@ -188,7 +188,7 @@ static PLGCompareFunction get_compare_mode_by_tag( const char *tag )
 	        [PLG_COMPARE_GEQUAL]   = "gequal",
 	        [PLG_COMPARE_ALWAYS]   = "always",
 	};
-	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( compareModeTags ) == PLG_MAX_COMPARE_FUNCTIONS, "" );
+	PL_STATIC_ASSERT( QM_OS_ARRAY_ELEMENTS( compareModeTags ) == PLG_MAX_COMPARE_FUNCTIONS, "" );
 
 	for ( int i = 0; i < PLG_MAX_COMPARE_FUNCTIONS; ++i )
 	{
@@ -223,7 +223,7 @@ static int get_blend_mode_by_tag( const char *tag )
 	        [PLG_BLEND_ONE_MINUS_DST_COLOR] = "one_minus_dst_color",
 	        [PLG_BLEND_SRC_ALPHA_SATURATE]  = "src_alpha_saturate",
 	};
-	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( blendModeTags ) == PLG_MAX_BLEND_MODES, "" );
+	PL_STATIC_ASSERT( QM_OS_ARRAY_ELEMENTS( blendModeTags ) == PLG_MAX_BLEND_MODES, "" );
 
 	for ( int i = 0; i < PLG_MAX_BLEND_MODES; ++i )
 	{
@@ -252,7 +252,7 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 
 	        [APE_MATERIAL_BUILTIN_RT_SPHERE] = "rt_sphere",
 	};
-	PL_STATIC_ASSERT( PL_ARRAY_ELEMENTS( builtInTags ) == SS_ARL_MAX_MATERIAL_BUILTINS, "" );
+	PL_STATIC_ASSERT( QM_OS_ARRAY_ELEMENTS( builtInTags ) == SS_ARL_MAX_MATERIAL_BUILTINS, "" );
 
 	for ( int i = 0; i < SS_ARL_MAX_MATERIAL_BUILTINS; ++i )
 	{
@@ -411,7 +411,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 				case PLG_UNIFORM_BOOL:
 				{
-					materialVariable->data.ptr = PL_NEW_( bool, materialVariable->numElements );
+					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( bool, materialVariable->numElements );
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
@@ -434,7 +434,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 				case PLG_UNIFORM_FLOAT:
 				{
-					materialVariable->data.ptr = PL_NEW_( float, materialVariable->numElements );
+					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( float, materialVariable->numElements );
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
@@ -456,7 +456,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				}
 				case PLG_UNIFORM_DOUBLE:
 				{
-					materialVariable->data.ptr = PL_NEW_( double, materialVariable->numElements );
+					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( double, materialVariable->numElements );
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
@@ -479,7 +479,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 				case PLG_UNIFORM_UINT:
 				{
-					materialVariable->data.ptr = PL_NEW_( uint32_t, materialVariable->numElements );
+					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( uint32_t, materialVariable->numElements );
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
@@ -501,7 +501,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				}
 				case PLG_UNIFORM_INT:
 				{
-					materialVariable->data.ptr = PL_NEW_( int32_t, materialVariable->numElements );
+					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( int32_t, materialVariable->numElements );
 
 					AcmErrorCode status;
 					if ( materialVariable->numElements > 1 )
@@ -524,7 +524,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 				case PLG_UNIFORM_VEC2:
 				{
-					materialVariable->data.ptr = PL_NEW_( PLVector2, materialVariable->numElements );
+					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( QmMathVector2f, materialVariable->numElements );
 					if ( acm_branch_get_float32_array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ND_ERROR_SUCCESS )
 					{
 						break;
@@ -648,9 +648,9 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 		if ( acm_branch_get_string_array( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
 		{
 			materialPass->blendMode[ 0 ] = get_blend_mode_by_tag( blendModesArray[ 0 ] );
-			PL_DELETE( blendModesArray[ 0 ] );
+			ACM_DELETE( blendModesArray[ 0 ] );
 			materialPass->blendMode[ 1 ] = get_blend_mode_by_tag( blendModesArray[ 1 ] );
-			PL_DELETE( blendModesArray[ 1 ] );
+			ACM_DELETE( blendModesArray[ 1 ] );
 		}
 		else
 		{
@@ -683,7 +683,10 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 	materialPass->textureScale  = com_acm_get_vector2( root, "textureScale", &QM_MATH_VECTOR2F( 1.0f, 1.0f ) );
 	if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
 	{
-		ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", PlPrintVector2( &materialPass->textureScale, PL_VAR_F32 ) );
+		char str[ 64 ];
+		qm_math_vector2f_print( materialPass->textureScale, str, sizeof( str ) );
+
+		ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", str );
 	}
 
 	if ( ( subNode = acm_get_child_by_name( root, "shaderParameters" ) ) != NULL )
@@ -791,7 +794,7 @@ static void destroy_material( ApeMaterial *material )
 					ape_render_target_release( material->passes[ i ].variables[ j ].data.ptr );
 					break;
 				default:
-					PL_DELETE( material->passes[ i ].variables[ j ].data.ptr );
+					qm_os_memory_free( material->passes[ i ].variables[ j ].data.ptr );
 					break;
 			}
 		}
@@ -803,7 +806,7 @@ static void destroy_material( ApeMaterial *material )
 		PlDestroyLinkedListNode( material->node );
 	}
 
-	PL_DELETE( material );
+	qm_os_memory_free( material );
 }
 
 static void destroy_material_callback( void *userData )
@@ -840,8 +843,8 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 	reject = material;
 
 	PLCollisionAABB bounds = PlgGenerateAabbFromMesh( mesh, true );
-	PLVector3       origin = bounds.absOrigin;
-	PLVector3       dir    = PlSubtractVector3( APE_SG_NODE_GET_POSITION( camera ), origin );
+	QmMathVector3f       origin = bounds.absOrigin;
+	QmMathVector3f       dir    = qm_math_vector3f_sub( APE_SG_NODE_GET_POSITION( camera ), origin );
 
 	// save some of the camera state, so we can do dumb shit
 
@@ -917,7 +920,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
-		PLColourF32 fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		QmMathColour4f fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( QmMathColour4f ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &fogColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
@@ -933,12 +936,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
-		PLColourF32 lightColour = ( light != NULL ) ? light->colour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		QmMathColour4f lightColour = ( light != NULL ) ? light->colour : ( QmMathColour4f ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
-		PLVector3 lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
+		QmMathVector3f lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( QmMathVector3f ) { 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
@@ -948,12 +951,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ] >= 0 )
 	{
-		PLVector3 lightDirection;
+		QmMathVector3f lightDirection;
 		if ( light != nullptr )
 		{
-			PLVector3 angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
+			QmMathVector3f angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
 			PlAnglesAxes( angles, nullptr, nullptr, &lightDirection );
-			lightDirection = PlNormalizeVector3( lightDirection );
+			lightDirection = qm_math_vector3f_normalize( lightDirection );
 		}
 		else
 		{
@@ -969,21 +972,21 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
-		PLColourF32 sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( PLColourF32 ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		QmMathColour4f sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( QmMathColour4f ) { 0.0f, 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
 	{
-		PLVector3 lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( PLVector3 ) { 0.0f, 0.0f, 0.0f };
+		QmMathVector3f lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( QmMathVector3f ) { 0.0f, 0.0f, 0.0f };
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ] >= 0 )
 	{
-		PLColourF32 sunAmbience;
+		QmMathColour4f sunAmbience;
 		if ( ape_rendererState_.camera != nullptr && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
 		{
-			sunAmbience = ( PLColourF32 ) { 1.0f, 1.0f, 1.0f, 1.0f };
+			sunAmbience = ( QmMathColour4f ) { 1.0f, 1.0f, 1.0f, 1.0f };
 		}
 		else
 		{
@@ -1042,7 +1045,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 		return fallbackPtr;
 	}
 
-	material = PL_NEW( ApeMaterial );
+	material = QM_OS_MEMORY_NEW( ApeMaterial );
 	snprintf( material->path, sizeof( material->path ), "%s", path );
 
 	parse_material( material, root );
@@ -1312,11 +1315,11 @@ void ape_tick_materials_( void )
 				float w = ( float ) material->width;
 				float h = ( float ) material->height;
 
-				PLVector2 scroll;
-				scroll = PlDivideVector2( material->passes[ j ].textureScroll, qm_math_vector2f( w, h ) );
-				scroll = PlScaleVector2( &scroll, &QM_MATH_VECTOR2F( material->passes[ j ].textureScale.x, material->passes[ j ].textureScale.y ) );
+				QmMathVector2f scroll;
+				scroll = qm_math_vector2f_div( material->passes[ j ].textureScroll, qm_math_vector2f( w, h ) );
+				scroll = qm_math_vector2f_scale( scroll, QM_MATH_VECTOR2F( material->passes[ j ].textureScale.x, material->passes[ j ].textureScale.y ) );
 
-				material->passes[ j ].textureOffset = PlAddVector2( material->passes[ j ].textureOffset, scroll );
+				material->passes[ j ].textureOffset = qm_math_vector2f_add( material->passes[ j ].textureOffset, scroll );
 			}
 		}
 	}

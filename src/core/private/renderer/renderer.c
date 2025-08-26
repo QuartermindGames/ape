@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 #include "qmos/public/qm_os_time.h"
+#include "qmmath/public/qm_math_plane.h"
 
 #include "ape_private.h"
 #include "world/world.h"
@@ -50,8 +51,8 @@ static pthread_t       captureThread[ MAX_CAPTURE_THREADS ];
 static void destroy_capture_frame( void *ptr )
 {
 	CaptureFrame *frame = ptr;
-	PL_DELETE( frame->buf );
-	PL_DELETE( frame );
+	qm_os_memory_free( frame->buf );
+	qm_os_memory_free( frame );
 }
 
 static void *process_capture_queue( void * )
@@ -144,7 +145,7 @@ bool ape_get_capture_state_( void )
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport )
 {
-	PlgSetClearColour( PL_COLOURU8( 0, 0, 0, 255 ) );
+	PlgSetClearColour( QM_MATH_COLOUR4UB( 0, 0, 0, 255 ) );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 	PlgDepthMask( true );
@@ -199,14 +200,14 @@ static void write_screenshot( void )
 	assert( fboBuffer != NULL );
 
 	size_t         bufSize = ( ( w * h ) * 4 );
-	unsigned char *buf     = PL_NEW_( unsigned char, bufSize );
+	unsigned char *buf     = QM_OS_MEMORY_NEW_( unsigned char, bufSize );
 	if ( PlgReadFrameBufferRegion( nullptr, 0, 0, w, h, bufSize, buf ) != NULL )
 	{
 		if ( isCapturing )
 		{
 			pthread_mutex_lock( &captureMutex );
 
-			CaptureFrame *frame = PL_NEW( CaptureFrame );
+			CaptureFrame *frame = QM_OS_MEMORY_NEW( CaptureFrame );
 			PlInsertLinkedListNode( captureQueue, frame );
 			frame->buf = buf;
 			frame->w   = w;
@@ -246,7 +247,7 @@ static void write_screenshot( void )
 		ape_warning_( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
 	}
 
-	PL_DELETE( buf );
+	qm_os_memory_free( buf );
 }
 
 void ape_draw_end_( ApeViewport *viewport )
@@ -455,16 +456,16 @@ ApeCamera *ape_renderer_get_current_camera_()
 // Utility Methods
 /////////////////////////////////////////////////////////////////////////////////////
 
-unsigned int ape_renderer_clip_polygon( const PLVector3 *vertices, unsigned int numVertices, const ComMathPlane *plane, PLVector3 *dstVertices, unsigned int dstSize )
+unsigned int ape_renderer_clip_polygon( const QmMathVector3f *vertices, unsigned int numVertices, const QmMathPlane *plane, QmMathVector3f *dstVertices, unsigned int dstSize )
 {
 	unsigned int numClippedVertices = 0;
 
-	const PLVector3 *prev     = &vertices[ numVertices - 1 ];
-	float            prevDist = com_math_plane_distance( plane, prev );
+	const QmMathVector3f *prev     = &vertices[ numVertices - 1 ];
+	float                 prevDist = qm_math_plane_distance( plane, prev );
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
-		const PLVector3 *cur     = &vertices[ i ];
-		float            curDist = com_math_plane_distance( plane, cur );
+		const QmMathVector3f *cur     = &vertices[ i ];
+		float                 curDist = qm_math_plane_distance( plane, cur );
 		if ( curDist >= 0.f )
 		{
 			if ( prevDist < 0.f )

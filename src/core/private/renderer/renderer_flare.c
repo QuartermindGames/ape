@@ -11,11 +11,11 @@
 
 typedef struct Flare
 {
-	PLColourF32 colour;
-	PLVector2   screenPos;
-	float       size;
-	float       intensity;
-	float       distance;
+	QmMathColour4f colour;
+	QmMathVector2f screenPos;
+	float          size;
+	float          intensity;
+	float          distance;
 } Flare;
 
 static constexpr unsigned int MAX_FLARES = 64;
@@ -67,7 +67,7 @@ void ape_shutdown_flares_( void )
 	PL_ZERO_( flares );
 }
 
-void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos, const PLColourF32 *colour, float size, float intensity )
+void ape_add_flare_to_queue( const ApeCamera *camera, const QmMathVector3f *worldPos, const QmMathColour4f *colour, float size, float intensity )
 {
 	ApeViewport *viewport = ape_viewport_get_active();
 	if ( viewport == NULL )
@@ -81,16 +81,16 @@ void ape_add_flare_to_queue( const ApeCamera *camera, const PLVector3 *worldPos,
 		return;
 	}
 
-	float distance = PlVector3Length( PlSubtractVector3( *worldPos, ape_camera_get_position( camera ) ) );
+	float distance = qm_math_vector3f_length( qm_math_vector3f_sub( *worldPos, ape_camera_get_position( camera ) ) );
 	if ( distance >= MAX_FLARE_DISTANCE )
 	{
 		return;
 	}
 
-	PLMatrix4 m              = PlMultiplyMatrix4( &camera->internal->internal.proj, &camera->internal->internal.view );
-	int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
-	float     depth;
-	PLVector2 screenPos = PlConvertWorldToScreen( worldPos, &m, viewportSize, &depth, true );
+	PLMatrix4      m              = PlMultiplyMatrix4( &camera->internal->internal.proj, &camera->internal->internal.view );
+	int            viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
+	float          depth;
+	QmMathVector2f screenPos = PlConvertWorldToScreen( worldPos, &m, viewportSize, &depth, true );
 	if ( depth <= 0.0f )
 	{
 		return;
@@ -119,10 +119,10 @@ static void draw_flare( const Flare *flare, float deltaX, float deltaY, float in
 
 		// sprite properties
 		const FlareElement *element  = &flareElements[ i ];
-		PLColourF32         colour   = { 1.0f, 1.0f, 1.0f, intensity };
-		PLVector3           position = { x, y, 0.0f };
-		PLVector3           origin   = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
-		PLVector3           angles   = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / PL_PI : 0.0f };
+		QmMathColour4f      colour   = { 1.0f, 1.0f, 1.0f, intensity };
+		QmMathVector3f      position = { x, y, 0.0f };
+		QmMathVector3f      origin   = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
+		QmMathVector3f      angles   = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / PL_PI : 0.0f };
 
 		// area of the texture we want to use
 		PLQuad quad = { element->x, element->y, element->w, element->h };
@@ -161,8 +161,8 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float deltaX = ( dx / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 		float deltaY = ( dy / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 
-		float maxDistance = PlGetVector2Length( &QM_MATH_VECTOR2F( w, h ) ) / 4.0f;
-		float intensity   = PlClamp( 0.0f, ( 1.0f - ( PlGetVector2Length( &QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
+		float maxDistance = qm_math_vector2f_length( QM_MATH_VECTOR2F( w, h ) ) / 4.0f;
+		float intensity   = PlClamp( 0.0f, ( 1.0f - ( qm_math_vector2f_length( QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
 		sumFlareIntensity += ( intensity - ( flare->distance / ( MAX_FLARE_DISTANCE / 2.0f ) ) );
 
 		draw_flare( &flares[ i ], deltaX, deltaY, intensity );
@@ -175,7 +175,7 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 		PlgSetBlendMode( PLG_BLEND_ADDITIVE );
-		PlgDrawRectangle( 0.0f, 0.0f, w, h, PLColour( 255, 255, 255, PlFloatToByte( sumFlareIntensity ) ) );
+		PlgDrawRectangle( 0.0f, 0.0f, w, h, qm_math_colour4ub( 255, 255, 255, PlFloatToByte( sumFlareIntensity ) ) );
 		PlgSetBlendMode( PLG_BLEND_DISABLE );
 	}
 #endif

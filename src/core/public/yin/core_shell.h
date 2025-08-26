@@ -46,7 +46,7 @@ ApeInputState ss_shell_get_button_state( ApeInputButton inputButton );
 ApeInputState ss_shell_get_key_state( int key );
 void          shell_set_mouse_position( int x, int y );
 void          ss_shell_grab_mouse( bool grab );
-void          ss_shell_push_message( int level, const char *msg, const PLColour *colour );
+void          ss_shell_push_message( int level, const char *msg, const QmMathColour4ub *colour );
 
 void ss_shell_shutdown( void );
 

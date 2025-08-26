@@ -36,7 +36,7 @@ static void destroy_texture( void *userData )
 	//TODO: set hashtable lookup index to null...
 
 	PlgDestroyTexture( texture->internal );
-	PL_DELETE( texture );
+	qm_os_memory_free( texture );
 }
 
 static ApeTexture *generate_texture( const char *id, void *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
@@ -93,7 +93,7 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 
 	PlDestroyImage( imageData );
 
-	ApeTexture *texture = PL_NEW( ApeTexture );
+	ApeTexture *texture = QM_OS_MEMORY_NEW( ApeTexture );
 	texture->filterMode = internalTexture->filter;
 	texture->internal   = internalTexture;
 
@@ -189,7 +189,7 @@ void ape_initialize_textures_( void )
 	}
 
 	// generate fallback texture
-	static PLColour fallbackData[] = {
+	static QmMathColour4ub fallbackData[] = {
 	        {128, 0,   128, 255},
 	        {0,   128, 128, 255},
 	        {0,   128, 128, 255},
@@ -208,7 +208,7 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 		return texture;
 	}
 
-	texture             = PL_NEW( ApeTexture );
+	texture             = QM_OS_MEMORY_NEW( ApeTexture );
 	texture->filterMode = filter;
 	texture->wrapMode   = PLG_TEXTURE_WRAP_MODE_REPEAT;
 	PlSetupPath( texture->path, true, "%s", path );
@@ -219,7 +219,7 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 	if ( texture->internal == nullptr )
 	{
 		ape_warning_( "Failed to load texture (%s): %s\n", path, PlGetError() );
-		PL_DELETE( texture );
+		qm_os_memory_free( texture );
 		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
 	}
 

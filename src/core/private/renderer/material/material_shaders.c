@@ -54,7 +54,7 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 	PlgSetShaderStageDefinitions( stage, definitions, numDefinitions );
 
 	size_t length = PlGetFileSize( filePtr );
-	char  *buffer = PL_NEW_( char, length + 1 );
+	char  *buffer = QM_OS_MEMORY_NEW_( char, length + 1 );
 	PlReadFile( filePtr, buffer, length, 1 );
 
 	PlCloseFile( filePtr );
@@ -81,7 +81,7 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 		stage = nullptr;
 	}
 
-	PL_DELETE( buffer );
+	qm_os_memory_free( buffer );
 
 	return stage;
 }
@@ -258,7 +258,7 @@ static void destroy_shader( void *user )
 	ApeShaderProgram *programIndex = ( ApeShaderProgram * ) user;
 	assert( programIndex != nullptr );
 	PlgDestroyShaderProgram( programIndex->internal, true );
-	PL_DELETE( programIndex );
+	qm_os_memory_free( programIndex );
 }
 
 static void load_shader_program_callback( const char *path, PL_UNUSED void *userData )
@@ -272,7 +272,7 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 		return;
 	}
 
-	ApeShaderProgram *program = PL_NEW( ApeShaderProgram );
+	ApeShaderProgram *program = QM_OS_MEMORY_NEW( ApeShaderProgram );
 	if ( parse_shader_program( program, root ) == nullptr )
 	{
 		ape_warning_( "Failed to parse shader program (%s)!\n", path );

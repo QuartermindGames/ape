@@ -2,8 +2,10 @@
 // Purpose: Decal and decal manager.
 // Author:  Mark E. Sowden
 
-#include "ape_private.h"
+#include "qmos/public/qm_os_shared_ptr.h"
+#include "qmmath/public/qm_math_plane.h"
 
+#include "ape_private.h"
 #include "renderer.h"
 
 //TODO: there should be a static list and a dynamic list here...
@@ -23,19 +25,19 @@ typedef struct ApeDecal
 	float angle;
 	float scale;
 
-	PLVector3 position;
-	PLVector3 normal;
-	PLVector3 tangent, bitangent;
+	QmMathVector3f position;
+	QmMathVector3f normal;
+	QmMathVector3f tangent, bitangent;
 
-	PLVector3    vertices[ MAX_DECAL_VERTS ];
-	unsigned int numVertices;
+	QmMathVector3f vertices[ MAX_DECAL_VERTS ];
+	unsigned int   numVertices;
 
 	PLCollisionAABB bounds;
 
 	ApeMaterial *material;
 
-	ComSharedPtr *facePtr;
-	ComSharedPtr *ptr;
+	QmOsSharedPtr *facePtr;
+	QmOsSharedPtr *ptr;
 
 	PLLinkedListNode *node;
 } ApeDecal;
@@ -67,14 +69,14 @@ static void cleanup_decal( ApeDecal *self )
 
 	if ( self->facePtr != nullptr )
 	{
-		com_shared_ptr_release( self->facePtr );
+		qm_os_shared_ptr_release( self->facePtr );
 		self->facePtr = nullptr;
 	}
 
 	// decals are a little weird here (given they're from a pool),
 	// so we need to set self to null first in the shared ptr
-	com_shared_ptr_set( self->ptr, nullptr );
-	com_shared_ptr_release( self->ptr );
+	qm_os_shared_ptr_set( self->ptr, nullptr );
+	qm_os_shared_ptr_release( self->ptr );
 	self->ptr = nullptr;
 }
 
@@ -93,13 +95,16 @@ void ape_decal_manager_register_console_()
 
 ApeDecalManager *ape_decal_manager_create_()
 {
-	ApeDecalManager *manager = PL_NEW( ApeDecalManager );
+	ApeDecalManager *manager = QM_OS_MEMORY_NEW( ApeDecalManager );
 
 	manager->decalList = PlCreateLinkedList();
 	if ( manager->decalList == nullptr )
 	{
 		ape_warning_( "Failed to create decals list: %s\n", PlGetError() );
-		PL_DELETEN( manager );
+
+		qm_os_memory_free( manager );
+		manager = nullptr;
+
 		return nullptr;
 	}
 
@@ -157,7 +162,7 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 	COM_ITERATE_LINKED_LIST( decal, self->decalList, i )
 	{
 		// check the decal is still attached to something
-		ApeBrushFace *face = com_shared_ptr_get( decal->facePtr );
+		ApeBrushFace *face = qm_os_shared_ptr_get( decal->facePtr );
 		if ( face == nullptr )
 		{
 			cleanup_decal( decal );
@@ -181,7 +186,7 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 
 static bool decal_build_rect( ApeDecal *self )
 {
-	ApeBrushFace *face = com_shared_ptr_get( self->facePtr );
+	ApeBrushFace *face = qm_os_shared_ptr_get( self->facePtr );
 	if ( face == nullptr )
 	{
 		return false;
@@ -190,7 +195,7 @@ static bool decal_build_rect( ApeDecal *self )
 	// don't ask me how anything below works (or why it's awful),
 	// me is big dumb dumb when it comes to maths...
 
-	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = face->normal }, &self->tangent, &self->bitangent );
+	qm_math_plane_basis_vectors( &( QmMathPlane ) { .normal = face->normal }, &self->tangent, &self->bitangent );
 
 	if ( self->angle != 0.0f )
 	{
@@ -199,34 +204,34 @@ static bool decal_build_rect( ApeDecal *self )
 		self->bitangent    = PlTransformVector3( &self->bitangent, &rotation );
 	}
 
-	float     halfSize        = self->scale / 2.0f;
-	PLVector3 tangentOffset   = PlScaleVector3F( self->tangent, halfSize );
-	PLVector3 bitangentOffset = PlScaleVector3F( self->bitangent, halfSize );
+	float          halfSize        = self->scale / 2.0f;
+	QmMathVector3f tangentOffset   = qm_math_vector3f_scale_float( self->tangent, halfSize );
+	QmMathVector3f bitangentOffset = qm_math_vector3f_scale_float( self->bitangent, halfSize );
 
 	// first, setup the initial quad (and move slightly away from the face to avoid z-fighting)
-	PLVector3 npos      = PlAddVector3( self->position, PlScaleVector3F( self->normal, decalOffset ) );
+	QmMathVector3f npos = qm_math_vector3f_add( self->position, qm_math_vector3f_scale_float( self->normal, decalOffset ) );
 	self->numVertices   = 4;
-	self->vertices[ 0 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, 1.0f ), PlScaleVector3F( bitangentOffset, -1.0f ) ) );
-	self->vertices[ 1 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, 1.0f ), PlScaleVector3F( bitangentOffset, 1.0f ) ) );
-	self->vertices[ 2 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, -1.0f ), PlScaleVector3F( bitangentOffset, 1.0f ) ) );
-	self->vertices[ 3 ] = PlAddVector3( npos, PlAddVector3( PlScaleVector3F( tangentOffset, -1.0f ), PlScaleVector3F( bitangentOffset, -1.0f ) ) );
+	self->vertices[ 0 ] = qm_math_vector3f_add( npos, qm_math_vector3f_add( qm_math_vector3f_scale_float( tangentOffset, 1.0f ), qm_math_vector3f_scale_float( bitangentOffset, -1.0f ) ) );
+	self->vertices[ 1 ] = qm_math_vector3f_add( npos, qm_math_vector3f_add( qm_math_vector3f_scale_float( tangentOffset, 1.0f ), qm_math_vector3f_scale_float( bitangentOffset, 1.0f ) ) );
+	self->vertices[ 2 ] = qm_math_vector3f_add( npos, qm_math_vector3f_add( qm_math_vector3f_scale_float( tangentOffset, -1.0f ), qm_math_vector3f_scale_float( bitangentOffset, 1.0f ) ) );
+	self->vertices[ 3 ] = qm_math_vector3f_add( npos, qm_math_vector3f_add( qm_math_vector3f_scale_float( tangentOffset, -1.0f ), qm_math_vector3f_scale_float( bitangentOffset, -1.0f ) ) );
 
 	// and now, clip it
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		const PLVector3 a = *face->edgeLoop[ i ]->position;
-		const PLVector3 b = *face->edgeLoop[ ( i + 1 ) % face->numVertices ]->position;
+		const QmMathVector3f a = *face->edgeLoop[ i ]->position;
+		const QmMathVector3f b = *face->edgeLoop[ ( i + 1 ) % face->numVertices ]->position;
 
-		PLVector3 edgeNormal = PlSubtractVector3( b, a );
-		edgeNormal           = PlVector3CrossProduct( self->normal, edgeNormal );
-		edgeNormal           = PlNormalizeVector3( edgeNormal );
+		QmMathVector3f edgeNormal = qm_math_vector3f_sub( b, a );
+		edgeNormal                = qm_math_vector3f_cross_product( self->normal, edgeNormal );
+		edgeNormal                = qm_math_vector3f_normalize( edgeNormal );
 
 		// setup the clip plane
-		ComMathPlane plane = {};
-		plane.normal       = edgeNormal;
-		plane.distance     = -PlVector3DotProduct( edgeNormal, a );
+		QmMathPlane plane = {};
+		plane.normal      = edgeNormal;
+		plane.distance    = -qm_math_vector3f_dot_product( edgeNormal, a );
 
-		PLVector3 newClippedVertices[ MAX_DECAL_VERTS ] = { {} };
+		QmMathVector3f newClippedVertices[ MAX_DECAL_VERTS ] = { {} };
 
 		self->numVertices = ape_renderer_clip_polygon( self->vertices, self->numVertices, &plane, newClippedVertices, MAX_DECAL_VERTS );
 		if ( self->numVertices < 3 || self->numVertices >= MAX_DECAL_VERTS )
@@ -234,13 +239,13 @@ static bool decal_build_rect( ApeDecal *self )
 			return false;
 		}
 
-		memcpy( self->vertices, newClippedVertices, self->numVertices * sizeof( PLVector3 ) );
+		memcpy( self->vertices, newClippedVertices, self->numVertices * sizeof( QmMathVector3f ) );
 	}
 
 	return true;
 }
 
-ComSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const PLVector3 *pos, float angle, float scale )
+QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale )
 {
 	assert( face != nullptr );
 
@@ -271,11 +276,11 @@ ComSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFa
 			// Urgh, this is a botch to work
 			// around the fact that brushes are
 			// created procedurally...
-			face->ptr = com_shared_ptr_create( face );
+			face->ptr = qm_os_shared_ptr_create( face );
 		}
 
 		decal->facePtr = face->ptr;
-		com_shared_ptr_add( decal->facePtr );
+		qm_os_shared_ptr_add( decal->facePtr );
 
 		decal->position = *pos;
 		decal->normal   = face->normal;
@@ -287,7 +292,7 @@ ComSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFa
 
 		if ( !decal_build_rect( decal ) )
 		{
-			com_shared_ptr_release( decal->facePtr );
+			qm_os_shared_ptr_release( decal->facePtr );
 			return nullptr;
 		}
 
@@ -295,7 +300,7 @@ ComSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFa
 
 		// because decals can be destroyed at runtime,
 		// we'll need to use a shared ptr here...
-		decal->ptr = com_shared_ptr_create( decal );
+		decal->ptr = qm_os_shared_ptr_create( decal );
 
 		return decal->ptr;
 	}
@@ -303,7 +308,7 @@ ComSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFa
 	return nullptr;
 }
 
-ComSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale )
+QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale )
 {
 	unsigned int numDecals = PlGetNumLinkedListNodes( self->decalList );
 	if ( numDecals >= MAX_DECALS )
@@ -338,7 +343,7 @@ ComSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, 
 	ApeCollisionIntersection *hits = ape_room_intersect( room, &collider, &numHits );
 	if ( hits != nullptr )
 	{
-		ComSharedPtr *ptr = nullptr;
+		QmOsSharedPtr *ptr = nullptr;
 		for ( unsigned int i = 0; i < numHits; ++i )
 		{
 			if ( hits[ i ].face == nullptr )
@@ -353,7 +358,7 @@ ComSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, 
 			}
 		}
 
-		PL_DELETE( hits );
+		qm_os_memory_free( hits );
 
 		return ptr;
 	}
@@ -362,7 +367,7 @@ ComSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, 
 	// alright then, just make a single decal at the point of intersection...
 #endif
 
-	ComSharedPtr *ptr = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection, angle, scale );
+	QmOsSharedPtr *ptr = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection, angle, scale );
 	if ( ptr == nullptr )
 	{
 		return nullptr;
@@ -397,9 +402,9 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 			PlgImmColour( 255, 255, 255, PlFloatToByte( fade ) );
 
 			// and now for the texture coords
-			PLVector3 delta = PlSubtractVector3( decal->vertices[ j ], decal->position );
-			PlgImmTextureCoord( 0.5f + PlVector3DotProduct( delta, decal->tangent ) * textureScale,
-			                    0.5f + PlVector3DotProduct( delta, decal->bitangent ) * textureScale );
+			QmMathVector3f delta = qm_math_vector3f_sub( decal->vertices[ j ], decal->position );
+			PlgImmTextureCoord( 0.5f + qm_math_vector3f_dot_product( delta, decal->tangent ) * textureScale,
+			                    0.5f + qm_math_vector3f_dot_product( delta, decal->bitangent ) * textureScale );
 		}
 
 		ape_material_draw( decal->material, mesh, nullptr );

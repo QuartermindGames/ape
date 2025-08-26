@@ -9,8 +9,8 @@
  */
 typedef struct ApeSceneTransform
 {
-	PLVector3 translation;
-	PLVector3 scale;
+	QmMathVector3f translation;
+	QmMathVector3f scale;
 	PLQuaternion rotation;
 } ApeSceneTransform;
 #define apeInitializeTransform( TRANSFORM ) memset( ( TRANSFORM ), 0, sizeof( SGTransform ) )

@@ -15,10 +15,10 @@ static void DestroyBitmapFont( void *userData )
 
 	PlgDestroyMesh( font->mesh );
 
-	PlFree( font );
+	qm_os_memory_free( font );
 }
 
-void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character )
+void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, float y, float scale, QmMathColour4ub colour, uint8_t character )
 {
 	int row = ( character - font->start ) / ( font->w / font->cw );
 	int col = ( character - font->start ) % ( font->w / font->cw );
@@ -41,7 +41,7 @@ void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, flo
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow )
+void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, float scale, QmMathColour4ub colour, const char *msg, size_t length, bool shadow )
 {
 	if ( length == 0 )
 		return;
@@ -63,7 +63,7 @@ void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, 
 		}
 
 		if ( shadow )
-			ss_arl_bitmap_font_batch_character( font, n_x + 1, n_y + 1, scale, PLColourRGB( 0, 0, 0 ), ( uint8_t ) msg[ i ] );
+			ss_arl_bitmap_font_batch_character( font, n_x + 1, n_y + 1, scale, QM_MATH_COLOUR4UB_RGB( 0, 0, 0 ), ( uint8_t ) msg[ i ] );
 
 		ss_arl_bitmap_font_batch_character( font, n_x, n_y, scale, colour, ( uint8_t ) msg[ i ] );
 
@@ -74,7 +74,7 @@ void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, 
 /**
  * Draw a single bitmap character at the specified coordinates.
  */
-void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, float scale, PLColour colour, char character )
+void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, float scale, QmMathColour4ub colour, char character )
 {
 	if ( scale <= 0 )
 		return;
@@ -103,7 +103,7 @@ void ss_arl_bitmap_font_draw_character( ApeBitmapFont *font, float x, float y, f
 	PlPopMatrix();
 }
 
-void ape_bitmap_font_draw_string( ApeBitmapFont *font, float x, float y, float spacing, float scale, PLColour colour, const char *msg, bool shadow )
+void ape_bitmap_font_draw_string( ApeBitmapFont *font, float x, float y, float spacing, float scale, QmMathColour4ub colour, const char *msg, bool shadow )
 {
 	if ( scale == 0.0f )
 		return;
@@ -177,7 +177,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 		return NULL;
 	}
 
-	font           = PlMAlloc( sizeof( ApeBitmapFont ), true );
+	font           = QM_OS_MEMORY_MALLOC_( sizeof( ApeBitmapFont ) );
 	font->material = material;
 	font->mesh     = mesh;
 	font->w        = w;

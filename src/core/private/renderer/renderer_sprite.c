@@ -3,7 +3,7 @@
 #include "ape_private.h"
 #include "renderer.h"
 
-void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const PLVector3 *position, float spriteAngle )
+void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const QmMathVector3f *position, float spriteAngle )
 {
 #if 0
     PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -35,7 +35,7 @@ void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const PLVector3 *po
 #endif
 }
 
-void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const PLVector3 *position, float angle )
+void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const QmMathVector3f *position, float angle )
 {
 #if 0
     const GfxCamera *camera = Gfx_GetCurrentCamera();
@@ -44,9 +44,9 @@ void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFram
 	}
 
 	/* here we go, dumb maths written by dumb me... */
-	PLVector2 a = PLVector2( position->x, position->z );
-	PLVector2 b = PLVector2( camera->cameraPtr->position.x, camera->cameraPtr->position.z );
-	PLVector2 normal = plComputeLineNormal( &a, &b );
+	QmMathVector2f a = QmMathVector2f( position->x, position->z );
+	QmMathVector2f b = QmMathVector2f( camera->cameraPtr->position.x, camera->cameraPtr->position.z );
+	QmMathVector2f normal = plComputeLineNormal( &a, &b );
 
 	float spriteAngle = atan2f( normal.y, normal.x ) * PL_180_DIV_PI;
 

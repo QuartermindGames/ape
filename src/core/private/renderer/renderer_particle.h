@@ -14,7 +14,7 @@ typedef struct ApeParticleEmitter
 {
 	ApeSceneTransform transform, transformVar;
 
-	PLVector3 force, forceVar; /* exterior forces, such as gravity */
+	QmMathVector3f force, forceVar; /* exterior forces, such as gravity */
 
 	int emissionRate, emissionVar; /* how many particles to emit per tick */
 
@@ -26,8 +26,8 @@ typedef struct ApeParticleEmitter
 	float speed, speedVar;
 
 	/* particle colour */
-	PLColourF32 startColour, startColourVar;
-	PLColourF32 endColour, endColourVar;
+	QmMathColour4f startColour, startColourVar;
+	QmMathColour4f endColour, endColourVar;
 
 	float startScale, endScale, scaleVar;
 
@@ -48,11 +48,11 @@ typedef struct ApeParticle
 {
 	ApeSceneTransform transform, oldTransform;
 
-	PLVector3 dir;
+	QmMathVector3f dir;
 
-	PLColourF32 colour;
-	PLColourF32 oldColour;
-	PLColourF32 deltaColour;
+	QmMathColour4f colour;
+	QmMathColour4f oldColour;
+	QmMathColour4f deltaColour;
 
 	float scale, oldScale, deltaScale;
 

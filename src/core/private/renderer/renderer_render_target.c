@@ -121,7 +121,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 		textureAttachment = NULL;
 	}
 
-	renderTarget                             = PL_NEW( ApeRenderTarget );
+	renderTarget                             = QM_OS_MEMORY_NEW( ApeRenderTarget );
 	renderTarget->frameBuffer                = frameBuffer;
 	renderTarget->textureAttachment          = textureAttachment;
 	renderTarget->textureAttachmentComponent = textureAttachmentComponent;
