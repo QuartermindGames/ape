@@ -12,7 +12,7 @@
 
 ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name )
 {
-	ApeRoom *room = PL_NEW( ApeRoom );
+	ApeRoom *room = QM_OS_MEMORY_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	room->gravity = qm_math_vector3f( 0.0f, -0.9f, 0.0f );
@@ -38,15 +38,15 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 
 	ape_decal_manager_destroy_( self->decalManager );
 
-	PL_DELETE( self );
+	qm_os_memory_free( self );
 }
 
-void ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience )
+void ape_room_set_ambience( ApeRoom *self, QmMathColour4f ambience )
 {
 	self->ambientLight = ambience;
 }
 
-PLColourF32 ape_room_get_ambience( const ApeRoom *self )
+QmMathColour4f ape_room_get_ambience( const ApeRoom *self )
 {
 	return self->ambientLight;
 }
@@ -126,7 +126,7 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *parent, AcmBranch *roo
 {
 	ApeRoom *self      = ape_room_create( parent, "temp" );
 	self->flags        = ACM_GET_INT( self->flags, root, "flags", 0 );
-	self->ambientLight = com_acm_get_colour_f32( root, "ambience", &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	self->ambientLight = com_acm_get_colour_f32( root, "ambience", &QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	self->reverbPreset = ACM_GET_INT( self->flags, root, "reverb", 0 );
 
 	ape_decal_manager_deserialize_( self->decalManager, root );
@@ -142,7 +142,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 {
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
-		PLVector3 intersection;
+		QmMathVector3f intersection;
 		if ( !com_collision_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
 		{
 			return false;
@@ -163,7 +163,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 						continue;
 					}
 
-					PLVector3 vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+					QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
 					for ( unsigned int j = 0; j < face->numVertices; ++j )
 					{
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
@@ -178,7 +178,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 					hit->node                     = APE_WORLD_NODE( brush );
 					hit->face                     = face;
 					hit->intersection             = intersection;
-					hit->distance                 = PlVector3Length( PlSubtractVector3( intersection, ray->origin ) );
+					hit->distance                 = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
 					( *numHits )++;
 				}
 				break;
@@ -188,7 +188,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 		if ( *numHits >= *maxHits )
 		{
 			*maxHits = *maxHits + RAY_HIT_INC;
-			hits     = PL_REALLOCA( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
+			hits     = qm_os_memory_realloc( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
 		}
 	}
 
@@ -205,11 +205,11 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 {
 	unsigned int              maxHits = RAY_HIT_INC;
 	unsigned int              numHits = 0;
-	ApeCollisionIntersection *hits    = PL_NEW_( ApeCollisionIntersection, maxHits );
+	ApeCollisionIntersection *hits    = QM_OS_MEMORY_NEW_( ApeCollisionIntersection, maxHits );
 
 	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits ) || numHits == 0 )
 	{
-		PL_DELETE( hits );
+		qm_os_memory_free( hits );
 		return false;
 	}
 
@@ -223,7 +223,7 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 		}
 	}
 
-	PL_DELETE( hits );
+	qm_os_memory_free( hits );
 
 	return true;
 }
@@ -281,7 +281,7 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 {
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
-		PLVector3 intersection;
+		QmMathVector3f intersection;
 		switch ( collider->type )
 		{
 			default:
@@ -315,7 +315,7 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 						continue;
 					}
 
-					PLVector3 vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+					QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
 					for ( unsigned int j = 0; j < face->numVertices; ++j )
 					{
 						vertices[ j ] = *face->edgeLoop[ j ]->position;
@@ -323,7 +323,7 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 
 					ApeCollisionIntersection *hit = &hits[ *numHits ];
 
-					PLVector3 normal = PlNormalizeVector3( face->normal );
+					QmMathVector3f normal = qm_math_vector3f_normalize( face->normal );
 					if ( collider->type == APE_COLLISION_TYPE_CAPSULE )
 					{
 						if ( !com_collision_capsule_intersect_polygon( collider->capsule, &normal, vertices, face->numVertices, &intersection ) )
@@ -340,7 +340,7 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 							continue;
 						}
 
-						hit->distance = PlVector3Length( PlSubtractVector3( intersection, collider->sphere->origin ) );
+						hit->distance = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, collider->sphere->origin ) );
 						hit->depth    = collider->sphere->radius - hit->distance;
 						hit->origin   = collider->sphere->origin;
 					}
@@ -366,7 +366,7 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 		if ( *numHits >= *maxHits )
 		{
 			*maxHits = *maxHits + RAY_HIT_INC;
-			hits     = PL_REALLOCA( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
+			hits     = qm_os_memory_realloc( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
 		}
 	}
 
@@ -383,11 +383,11 @@ ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionC
 {
 	unsigned int maxHits           = RAY_HIT_INC;
 	*numHits                       = 0;
-	ApeCollisionIntersection *hits = PL_NEW_( ApeCollisionIntersection, maxHits );
+	ApeCollisionIntersection *hits = QM_OS_MEMORY_NEW_( ApeCollisionIntersection, maxHits );
 
 	if ( !intersect_children( self, &self->base, collider, hits, numHits, &maxHits ) || numHits == 0 )
 	{
-		PL_DELETE( hits );
+		qm_os_memory_free( hits );
 		return nullptr;
 	}
 
@@ -402,7 +402,7 @@ ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionC
 		}
 	}
 
-	PL_DELETE( hits );
+	qm_os_memory_free( hits );
 #endif
 
 	return hits;
@@ -426,12 +426,12 @@ const char *ape_room_get_path( const ApeRoom *self )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-PLVector3 ape_room_get_gravity( const ApeRoom *self )
+QmMathVector3f ape_room_get_gravity( const ApeRoom *self )
 {
-	return PlAddVector3( self->gravity, ape_config_.world.gravityModifier );
+	return qm_math_vector3f_add( self->gravity, ape_config_.world.gravityModifier );
 }
 
-bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale )
+bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale )
 {
 	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir, angle, scale ) != nullptr;
 }
@@ -509,7 +509,7 @@ const ApeWorldNodeClass ape_roomClass = {
         .deserialize = ape_room_deserialize_,
 
         .properties    = properties,
-        .numProperties = PL_ARRAY_ELEMENTS( properties ),
+        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
 
         .flags = APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR,
 };

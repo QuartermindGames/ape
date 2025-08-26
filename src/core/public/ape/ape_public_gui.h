@@ -140,10 +140,10 @@ void gui_font_get_string_pixel_size( const ApeGuiFont *self, float scale, const 
  * @param x 		The x-coordinate where the character will be drawn.
  * @param y 		The y-coordinate where the character will be drawn.
  * @param scale 	Scaling factor for the character size.
- * @param colour 	Pointer to a PLColour structure defining the color for the character.
+ * @param colour 	Pointer to a QmMathColour4ub structure defining the color for the character.
  * @param character Unicode code point of the character to be drawn.
  */
-void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character );
+void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float scale, const QmMathColour4ub *colour, uint32_t character );
 
 /**
  * Draws a string using the specified font.
@@ -156,12 +156,12 @@ void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float sc
  * @param ox 		Output parameter. If not NULL, it will be updated with the x-coordinate after drawing the string.
  * @param oy 		Output parameter. If not NULL, it will be updated with the y-coordinate after drawing the string.
  * @param scale 	The scale factor applied to the font size.
- * @param colour 	A pointer to the PLColour structure defining the colour of the text.
+ * @param colour 	A pointer to the QmMathColour4ub structure defining the colour of the text.
  * @param string 	The string to be drawn.
  * @param length 	The length of the string to be drawn.
  * @param shadow 	If true, the text will be drawn with a shadow effect.
  */
-void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow );
+void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, float *oy, float scale, const QmMathColour4ub *colour, const char *string, size_t length, bool shadow );
 
 /**
  * @brief Renders the given bitmap font on the screen.

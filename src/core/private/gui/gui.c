@@ -1,7 +1,5 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
-#include <acm/acm.h>
-
 #include "qmos/public/qm_os_random.h"
 
 #include "gui_private.h"
@@ -75,10 +73,10 @@ static int compare_profiling_group( const void *a, const void *b )
 	return ta < tb;
 }
 
-static PLColour get_profiling_group_colour( const void *p )
+static QmMathColour4ub get_profiling_group_colour( const void *p )
 {
 	unsigned int seed = ( intptr_t ) p;
-	return PL_COLOURU8(
+	return QM_MATH_COLOUR4UB(
 	        100 + qm_os_random_int( &seed ) % 155,
 	        100 + qm_os_random_int( &seed ) % 155,
 	        100 + qm_os_random_int( &seed ) % 155,
@@ -95,10 +93,10 @@ static void draw_debug_window( const char *title, const float x, const float y, 
 	// title bar
 	if ( title != nullptr )
 	{
-		ape_draw_rectangle_( mesh, x, y - barHeight, w, barHeight, &PL_COLOURU8( 255, 255, 255, 200 ) );
+		ape_draw_rectangle_( mesh, x, y - barHeight, w, barHeight, &QM_MATH_COLOUR4UB( 255, 255, 255, 200 ) );
 	}
 
-	ape_draw_rectangle_( mesh, x, y, w, h, &PL_COLOURU8( 0, 0, 0, 200 ) );
+	ape_draw_rectangle_( mesh, x, y, w, h, &QM_MATH_COLOUR4UB( 0, 0, 0, 200 ) );
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX_ALPHA );
 	ape_material_draw( material, mesh, nullptr );
@@ -108,7 +106,7 @@ static void draw_debug_window( const char *title, const float x, const float y, 
 		return;
 	}
 
-	gui_font_draw_string( font, x + 8.0f, y - barHeight, nullptr, nullptr, 1.0f, &PL_COLOURU8( 0, 0, 0, 255 ), title, strlen( title ), false );
+	gui_font_draw_string( font, x + 8.0f, y - barHeight, nullptr, nullptr, 1.0f, &QM_MATH_COLOUR4UB( 0, 0, 0, 255 ), title, strlen( title ), false );
 	gui_font_display( font );
 }
 
@@ -171,7 +169,7 @@ static void draw_profiler( const ApeViewport *viewport )
 	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 	for ( unsigned int i = 0; i < numProfilingGroups; ++i )
 	{
-		PLColour colour = get_profiling_group_colour( groups[ i ] );
+		QmMathColour4ub colour = get_profiling_group_colour( groups[ i ] );
 
 		char tmp[ 64 ];
 		snprintf( tmp, sizeof( tmp ), "%.2f %s\n", com_profiler_get_time_average( groups[ i ] ), com_profiler_get_group_name( groups[ i ] ) );
@@ -198,7 +196,7 @@ static void draw_profiler( const ApeViewport *viewport )
 	// now let's draw all the graphs
 	for ( unsigned int i = 0; i < numProfilingGroups; ++i )
 	{
-		PLColour colour = get_profiling_group_colour( groups[ i ] );
+		QmMathColour4ub colour = get_profiling_group_colour( groups[ i ] );
 
 		unsigned int  numPoints;
 		const double *points = com_profiler_get_samples( groups[ i ], &numPoints );
@@ -207,7 +205,7 @@ static void draw_profiler( const ApeViewport *viewport )
 
 		for ( unsigned int j = 1; j < numPoints; ++j )
 		{
-			PLVector2 point;
+			QmMathVector2f point;
 			point.x = profX + profW / ( numPoints - 1 ) * ( j - 1 );
 			point.y = profY + profH - 1 - ( points[ j - 1 ] - min ) * ( profH / ( max - min ) );
 
@@ -268,9 +266,9 @@ static void draw_debug_overlay( ApeViewport *viewport )
 
 	snprintf( buf, sizeof( buf ), "---------------------\n" );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetTotalAllocatedMemory() ) );
+	snprintf( buf, sizeof( buf ), "Alloc memory:     %.2lfMB\n", PlBytesToMegabytes( qm_os_memory_get_total() ) );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
-	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( PlGetCurrentMemoryUsage() ) );
+	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( qm_os_memory_get_usage() ) );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
 	unsigned int numTasks = apeGetNumScheduledTasks();
@@ -352,8 +350,8 @@ void ape_gui_draw_( ApeViewport *viewport )
 			const ApeCameraVisibleRoom *room = &camera->pvs.rooms[ 0 ];
 			for ( unsigned int i = 0; i < room->numPortals; ++i )
 			{
-				PLVector4 screenRect = room->portals[ i ].screenRect;
-				screenRect.y         = viewport->height - screenRect.y - screenRect.w;
+				QmMathVector4f screenRect = room->portals[ i ].screenRect;
+				screenRect.y              = viewport->height - screenRect.y - screenRect.w;
 				PlgDrawLineRectangle( screenRect.x, screenRect.y, screenRect.z, screenRect.w, PL_COLOUR_GREEN );
 			}
 		}

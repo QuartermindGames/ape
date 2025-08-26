@@ -27,7 +27,7 @@ static void generate_lightmap_( ApeLight *light )
 {
 	if ( light->lightmap == nullptr )
 	{
-		light->lightmap = PL_NEW_( ApeLightmapPixel, APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE );
+		light->lightmap = QM_OS_MEMORY_NEW_( ApeLightmapPixel, APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE );
 	}
 	else
 	{

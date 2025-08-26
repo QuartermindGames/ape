@@ -11,11 +11,11 @@
 void Monster_Collide( Actor *self, Actor *other, float force )
 {
 	/* decide what direction to push out from */
-	PLVector3 pushDir = PlSubtractVector3( Act_GetPosition( other ), Act_GetPosition( self ) );
+	QmMathVector3f pushDir = qm_math_vector3f_sub( Act_GetPosition( other ), Act_GetPosition( self ) );
 	/* need to this based on distance from center */
-	float length = PlVector3Length( pushDir );
+	float length = qm_math_vector3f_length( pushDir );
 	pushDir = PlScaleVector3F( pushDir, ( length / 10000.0f ) * force );
-	other->velocity = PlAddVector3( other->velocity, pushDir );
+	other->velocity = qm_math_vector3f_add( other->velocity, pushDir );
 	//Act_SetVelocity( other, &pushDir );
 }
 
@@ -102,10 +102,10 @@ void Act_TickActors( void *userData, double delta )
 		}
 
 		actor->oldPosition = actor->position;
-		actor->position = PlAddVector3( actor->position, actor->velocity );
+		actor->position = qm_math_vector3f_add( actor->position, actor->velocity );
 
-		PLVector3 nPos = PlSubtractVector3( actor->position,
-		                                    PlSubtractVector3( actor->position, actor->oldPosition ) );
+		QmMathVector3f nPos = qm_math_vector3f_sub( actor->position,
+		                                    qm_math_vector3f_sub( actor->position, actor->oldPosition ) );
 
 		/* ensure bounds origin is kept updated */
 		actor->collisionVolume.origin = nPos;
@@ -147,15 +147,15 @@ void Act_TickActors( void *userData, double delta )
 				PLCollisionPlane plane = PlSetupCollisionPlane( faces[ i ]->bounds.absOrigin, faces[ i ]->normal );
 
 				/* now see if we're hitting anything */
-				PLVector3         absOrigin = PlGetAabbAbsOrigin( &actor->collisionVolume, nPos );
+				QmMathVector3f         absOrigin = PlGetAabbAbsOrigin( &actor->collisionVolume, nPos );
 				PLCollisionSphere colSphere = PlSetupCollisionSphere( absOrigin, 16.0f );
 				PLCollision       collision = PlIsSphereIntersectingPlane( &colSphere, &plane );
 				if ( collision.penetration > 0.0f )
 				{
 					//printf( "penetration: %f\n", collision.penetration );
-					actor->position = PlAddVector3( actor->position, PlScaleVector3F( PlNormalizeVector3( collision.contactNormal ), collision.penetration / GRAVITY ) );
+					actor->position = qm_math_vector3f_add( actor->position, PlScaleVector3F( qm_math_vector3f_normalize( collision.contactNormal ), collision.penetration / GRAVITY ) );
 
-					float d = PL_RAD2DEG( PlVector3Length( PlNormalizeVector3( collision.contactNormal ) ) );
+					float d = PL_RAD2DEG( qm_math_vector3f_length( qm_math_vector3f_normalize( collision.contactNormal ) ) );
 
 					PLLinkedListNode *node = PlInsertLinkedListNode( actor->geoColliders, &faces[ i ] );
 					if ( node == NULL )
@@ -164,7 +164,7 @@ void Act_TickActors( void *userData, double delta )
 					}
 				}
 			}
-			PL_DELETE( faces );
+			qm_os_memory_free( faces );
 		}
 #endif
 

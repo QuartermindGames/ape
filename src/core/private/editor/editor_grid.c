@@ -31,17 +31,17 @@ void ape_grid_toggle_command_( unsigned int, char ** )
 	state->grid.visible = !state->grid.visible;
 }
 
-PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst )
+QmMathVector2f *ape_grid_get_cursor_position( ApeEditorGrid *self, QmMathVector2f *dst )
 {
 	*dst = self->cursor;
 	return dst;
 }
 
-static PLVector2 transform_world_to_grid( ApeEditorGrid *self, const QmMathVector3f *pos )
+static QmMathVector2f transform_world_to_grid( ApeEditorGrid *self, const QmMathVector3f *pos )
 {
-	PLMatrix4 transform = PlInverseMatrix4( self->transform );
+	PLMatrix4      transform = PlInverseMatrix4( self->transform );
 	QmMathVector3f localPos  = PlTransformVector3( pos, &transform );
-	return ( PLVector2 ) { localPos.x, localPos.z };
+	return qm_math_vector2f( localPos.x, localPos.y );
 }
 
 QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
@@ -69,9 +69,9 @@ QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, con
 	if ( com_collision_ray_intersect_plane( &ray, &plane, &hitPos ) )
 	{
 		// transform it back into the grid-space, and round it
-		PLVector2 gridPos = transform_world_to_grid( self, &hitPos );
-		gridPos.x         = roundf( gridPos.x / self->size ) * self->size;
-		gridPos.y         = roundf( gridPos.y / self->size ) * self->size;
+		QmMathVector2f gridPos = transform_world_to_grid( self, &hitPos );
+		gridPos.x              = roundf( gridPos.x / self->size ) * self->size;
+		gridPos.y              = roundf( gridPos.y / self->size ) * self->size;
 
 		// update the cursor position
 		self->cursor = gridPos;
@@ -80,7 +80,7 @@ QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, con
 	return ape_grid_transform_point( self, &self->cursor );
 }
 
-QmMathVector3f ape_grid_transform_point( const ApeEditorGrid *self, const PLVector2 *point )
+QmMathVector3f ape_grid_transform_point( const ApeEditorGrid *self, const QmMathVector2f *point )
 {
 	return PlTransformVector3( &QM_MATH_VECTOR3F( point->x, 0.0f, point->y ), &self->transform );
 }
@@ -116,9 +116,10 @@ void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
 	assert( face->numVertices > 0 );
 	PlTranslateMatrix( *face->vertices[ 0 ].position );
 
-	QmMathVector3f up    = { 0.0f, 1.0f, 0.0f };
-	QmMathVector3f axis  = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( up, face->normal ) );
-	float     angle = acosf( qm_math_vector3f_dot_product( up, face->normal ) );
+	static constexpr QmMathVector3f UP = QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f );
+
+	QmMathVector3f axis  = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( UP, face->normal ) );
+	float          angle = acosf( qm_math_vector3f_dot_product( UP, face->normal ) );
 
 	//ape_print_( "AXIS: %s, ANGLE: %f\n", PlPrintVector3( &axis, PL_VAR_F32 ), angle );
 
@@ -175,7 +176,7 @@ void ape_grid_draw_( const ApeEditorGrid *self )
 	int size     = PlClamp( APE_EDITOR_GRID_MAX_POINTS_ROW, self->size * self->size, APE_EDITOR_GRID_MAX_POINTS );
 	int position = -size / 2;
 
-	PLColour colour = PL_COLOURU8( 0, 0, 255, 255 );
+	QmMathColour4ub colour = QM_MATH_COLOUR4UB( 0, 0, 255, 255 );
 
 	//TODO: cache this...
 	PlgImmBegin( PLG_MESH_LINES );

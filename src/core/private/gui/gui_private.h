@@ -11,7 +11,7 @@
 typedef struct ApeGUIState
 {
 	ApeVector2i mousePos, mouseOldPos;
-	PLVector2  mouseWheel, mouseOldWheel;
+	QmMathVector2f  mouseWheel, mouseOldWheel;
 
 	unsigned int numBatches, lastNumBatches;    // number of batches this frame
 	unsigned int numTriangles, lastNumTriangles;// number of triangles drawn this frame
@@ -20,5 +20,5 @@ extern ApeGUIState ape_guiState_;
 
 void     guiShutdownDraw_( void );
 PLGMesh *ape_gui_get_batch_queue_mesh( PLGTexture *texture );
-void     ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour );
-void     ape_gui_draw_quad( PLGMesh *mesh, ApeVector2i tl, ApeVector2i tr, ApeVector2i ll, ApeVector2i lr, int z, const PLColourF32 *colour );
+void     ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour );
+void     ape_gui_draw_quad( PLGMesh *mesh, ApeVector2i tl, ApeVector2i tr, ApeVector2i ll, ApeVector2i lr, int z, const QmMathColour4f *colour );

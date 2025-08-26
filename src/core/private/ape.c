@@ -78,7 +78,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		}
 
 		PlParseConsoleString( commands[ i ] );
-		PL_DELETE( commands[ i ] );
+		qm_os_memory_free( commands[ i ] );
 	}
 }
 

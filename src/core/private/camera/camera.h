@@ -26,7 +26,7 @@ typedef struct ApeCameraVisiblePortal
 	QmMathVector3f origin;
 	QmMathVector3f normal;
 
-	PLVector4 screenRect;// area of the screen the portal occupies
+	QmMathVector4f screenRect;// area of the screen the portal occupies
 } ApeCameraVisiblePortal;
 
 typedef struct ApeCameraVisibleRoom

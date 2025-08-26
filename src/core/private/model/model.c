@@ -30,7 +30,7 @@ static void model_cleanup_callback_( void *userData )
 
 	PlgDestroyMesh( model->cache );
 
-	PL_DELETE( model );
+	qm_os_memory_free( model );
 }
 
 static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmBranch *root )
@@ -114,7 +114,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		unsigned int numIndices = acm_get_num_of_children( branch );
 		if ( numIndices >= 3 )
 		{
-			vertices    = PL_NEW_( float, numIndices );
+			vertices    = QM_OS_MEMORY_NEW_( float, numIndices );
 			numVertices = numIndices / numFloatElements;
 			acm_branch_get_float32_array( branch, vertices, numIndices );
 		}
@@ -142,9 +142,9 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	for ( unsigned int i = 0; i < numVertices; ++i, v += numFloatElements )
 	{
 		PlgAddMeshVertex( model->cache,
-		                  ( const PLVector3 * ) &v[ 0 ],
-		                  ( const PLVector3 * ) &v[ 3 ], &PL_COLOUR_WHITE,
-		                  ( const PLVector2 * ) &v[ 6 ] );
+		                  ( const QmMathVector3f * ) &v[ 0 ],
+		                  ( const QmMathVector3f * ) &v[ 3 ], &PL_COLOUR_WHITE,
+		                  ( const QmMathVector2f * ) &v[ 6 ] );
 	}
 
 	AcmBranch *meshArray = acm_get_child_by_name( root, "meshes" );
@@ -209,7 +209,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		model->rootBone = &model->bones[ rootBone ];
 	}
 
-	PL_DELETE( vertices );
+	qm_os_memory_free( vertices );
 
 	model->sceneNodes = PlCreateLinkedList();
 
@@ -232,7 +232,7 @@ ApeModel *ape_model_load( const char *path )
 		return nullptr;
 	}
 
-	model = PL_NEW( ApeModel );
+	model = QM_OS_MEMORY_NEW( ApeModel );
 	if ( deserialize_model( model, root ) != nullptr )
 	{
 		ape_memory_setup_reference( path, APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
@@ -240,7 +240,9 @@ ApeModel *ape_model_load( const char *path )
 	}
 	else
 	{
-		PL_DELETEN( model );
+		qm_os_memory_free( model );
+		model = nullptr;
+
 		ape_warning_( "Failed to load model, \"%s\"!\n", path );
 	}
 
@@ -254,15 +256,15 @@ void ape_model_release( ApeModel *model )
 	ape_memory_release( &model->reference );
 }
 
-static PLVector3 get_transformed_bone_position( const ApeModel *model, const ApeFormatBone *bone, const PLMatrix4 *transform )
+static QmMathVector3f get_transformed_bone_position( const ApeModel *model, const ApeFormatBone *bone, const PLMatrix4 *transform )
 {
-	PLVector3 pos = bone->position;
+	QmMathVector3f pos = bone->position;
 	while ( bone->parent != -1 )
 	{
 		const ApeFormatBone *parent = &model->bones[ bone->parent ];
 
 		pos  = PlTransformVector3( &pos, transform );
-		pos  = PlAddVector3( pos, parent->position );
+		pos  = qm_math_vector3f_add( pos, parent->position );
 		bone = parent;
 	}
 
@@ -280,7 +282,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
 
 			const ApeFormatBone *a  = &model->bones[ i ];
-			const PLVector3      pa = get_transformed_bone_position( model, a, mat );
+			const QmMathVector3f      pa = get_transformed_bone_position( model, a, mat );
 			ape_draw_debug_sphere( pa, PL_COLOUR_CYAN, 1.0f );
 
 			if ( model->bones[ i ].parent == -1 )
@@ -289,7 +291,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 			}
 
 			const ApeFormatBone *b  = &model->bones[ model->bones[ i ].parent ];
-			const PLVector3      pb = get_transformed_bone_position( model, b, mat );
+			const QmMathVector3f      pb = get_transformed_bone_position( model, b, mat );
 			ape_draw_debug_arrow( pa, pb, PL_COLOUR_WHITE, 2.0f );
 		}
 
@@ -399,7 +401,7 @@ ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, con
 		return nullptr;
 	}
 
-	ApeModelNode *modelNode = PL_NEW( ApeModelNode );
+	ApeModelNode *modelNode = QM_OS_MEMORY_NEW( ApeModelNode );
 	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, name, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	modelNode->model = model;
@@ -422,7 +424,7 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 
 	ape_model_release( self->model );
 
-	PL_DELETE( self );
+	qm_os_memory_free( self );
 }
 
 AcmBranch *serialize_model_node( void *data, AcmBranch *root )

@@ -65,11 +65,12 @@ static ApeEditorInstance *editorInstance;
 
 ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode )
 {
-	ApeEditorInstance *instance = PL_NEW( ApeEditorInstance );
+	ApeEditorInstance *instance = QM_OS_MEMORY_NEW( ApeEditorInstance );
 
 	if ( ape_editor_instance_setup( instance, mode ) == nullptr )
 	{
-		PL_DELETEN( instance );
+		qm_os_memory_free( instance );
+		instance = nullptr;
 	}
 
 	if ( instance != NULL )
@@ -157,7 +158,7 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 	// the engine needs to destroy managed ones itself
 	if ( self->managed )
 	{
-		PL_DELETE( self );
+		qm_os_memory_free( self );
 	}
 }
 
@@ -614,7 +615,7 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 			static const float scale  = 0.1f;
 			const float        origin = -( size / 2.0f );
 
-			PLColourF32 colour;
+			QmMathColour4f colour;
 			if ( worldNode->type == APE_WORLD_NODE_TYPE_LIGHT )
 			{
 				ApeLight *light = ( ApeLight * ) worldNode;
@@ -661,7 +662,7 @@ static void draw_brush_gui( const ApeViewport *viewport, ApeGuiFont *font )
 	{
 		PLMatrix4 m              = PlMultiplyMatrix4( camera->internal->internal.proj, &camera->internal->internal.view );
 		int       viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
-		PLVector2 screenPos      = PlConvertWorldToScreen( &editorInstance->polygonPoints[ i ], &m, viewportSize, true );
+		QmMathVector2f screenPos      = PlConvertWorldToScreen( &editorInstance->polygonPoints[ i ], &m, viewportSize, true );
 		if ( screenPos.x == 0.0f && screenPos.y == 0.0f )
 		{
 			return;
@@ -676,21 +677,21 @@ static void draw_brush_gui( const ApeViewport *viewport, ApeGuiFont *font )
 
 		QmMathVector3f end = ( i + 1 >= editorInstance->numPolygonPoints ) ? editorInstance->polygonPoints[ 0 ] : editorInstance->polygonPoints[ i + 1 ];
 
-		PLVector2 otherScreenPos = PlConvertWorldToScreen( &end, &m, viewportSize, true );
+		QmMathVector2f otherScreenPos = PlConvertWorldToScreen( &end, &m, viewportSize, true );
 		if ( otherScreenPos.x == 0.0f && otherScreenPos.y == 0.0f )
 		{
 			return;
 		}
 
 		// determine the point between the two on the screen
-		PLVector2 midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
-		snprintf( msg, sizeof( msg ), "%f (%s)", PlVector3Length( qm_math_vector3f_sub( end, editorInstance->polygonPoints[ i ] ) ), PlPrintVector3( &editorInstance->polygonPoints[ i ], PL_VAR_F32 ) );
+		QmMathVector2f midpointScreenPos = { ( screenPos.x + otherScreenPos.x ) / 2.0f, ( screenPos.y + otherScreenPos.y ) / 2.0f };
+		snprintf( msg, sizeof( msg ), "%f (%s)", qm_math_vector3f_length( qm_math_vector3f_sub( end, editorInstance->polygonPoints[ i ] ) ), PlPrintVector3( &editorInstance->polygonPoints[ i ], PL_VAR_F32 ) );
 		gui_font_draw_string( font, midpointScreenPos.x, midpointScreenPos.y, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, msg, strlen( msg ), true );
 	}
 #endif
 }
 
-static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int numVertices );
+static bool validate_convex_polygon( const QmMathVector2f *vertices, unsigned int numVertices );
 
 static void render_plot_polygon( ApeEditorInstance *self )
 {
@@ -704,10 +705,10 @@ static void render_plot_polygon( ApeEditorInstance *self )
 
 	// draw pending polygon
 	// and attempt to draw it to the cursor too
-	PLVector2 cursor;
+	QmMathVector2f cursor;
 	if ( self->numPolygonPoints > 0 )
 	{
-		PLColour   colour                                            = PL_COLOUR_WHITE;
+		QmMathColour4ub   colour                                            = PL_COLOUR_WHITE;
 		QmMathVector3f  points[ ( APE_BRUSH_MAX_FACE_VERTICES * 2 ) + 1 ] = {};
 		QmMathVector3f *point                                             = points;
 		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
@@ -723,7 +724,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 
 			for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 			{
-				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &cursor : &self->polygonPoints[ i + 1 ];
+				QmMathVector2f *end = ( i + 1 >= self->numPolygonPoints ) ? &cursor : &self->polygonPoints[ i + 1 ];
 
 				point->x = self->polygonPoints[ i ].x;
 				point->y = 0.0f;
@@ -752,7 +753,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 		{
 			for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 			{
-				PLVector2 *end = ( i + 1 >= self->numPolygonPoints ) ? &self->polygonPoints[ 0 ] : &self->polygonPoints[ i + 1 ];
+				QmMathVector2f *end = ( i + 1 >= self->numPolygonPoints ) ? &self->polygonPoints[ 0 ] : &self->polygonPoints[ i + 1 ];
 
 				point->x = self->polygonPoints[ i ].x;
 				point->y = 0.0f;
@@ -856,7 +857,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 		origin = node->position;
 
 		float     depth;
-		PLVector2 screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
+		QmMathVector2f screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
 		if ( depth <= 0.0f )
 		{
 			continue;
@@ -895,7 +896,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 
 		if ( material != nullptr )
 		{
-			PLColour colour;
+			QmMathColour4ub colour;
 			if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 			{
 				ApeLight *light = ( ApeLight * ) node;
@@ -904,7 +905,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 			}
 			else
 			{
-				colour = PL_COLOURU8( 255, 255, 255, 255 );
+				colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
 			}
 
 			ape_draw_textured_quad( nodeIcons[ node->type ], screenPos.x - ( scale / 2.0f ), screenPos.y, scale, -scale, &colour );
@@ -955,7 +956,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 		if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
 		{
-			PLVector2 pos;
+			QmMathVector2f pos;
 			if ( ape_grid_get_cursor_position( &editorInstance->grid, &pos ) != nullptr )
 			{
 				ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
@@ -965,7 +966,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 				QmMathVector3f worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
 
 				float     w;
-				PLVector2 screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &w, true );
+				QmMathVector2f screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &w, true );
 				if ( w > 0.f )
 				{
 					PlgDrawLineRectangle( screenPos.x - ( scale / 2.0f ), screenPos.y - ( scale / 2.0f ), scale, scale, PL_COLOUR_WHITE );
@@ -1001,10 +1002,10 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 {
 	ape_grid_update_cursor_( &self->grid, x, y, self->camera, viewport );
 
-	PLColour pixel;
+	QmMathColour4ub pixel;
 	if ( ape_editor_selection_get_pixel_under_cursor_( &pixel ) != nullptr )
 	{
-		self->hoverSelection = PlLookupHashTableUserData( self->selectionTable, &pixel, sizeof( PLColour ) );
+		self->hoverSelection = PlLookupHashTableUserData( self->selectionTable, &pixel, sizeof( QmMathColour4ub ) );
 	}
 	else
 	{
@@ -1172,8 +1173,8 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 #if 0// concave supporting implementation... doesn't really work :(
 typedef struct Segment
 {
-	PLVector2 start;
-	PLVector2 end;
+	QmMathVector2f start;
+	QmMathVector2f end;
 } Segment;
 
 static bool test_intersection( Segment s1, Segment s2 )
@@ -1196,7 +1197,7 @@ static bool test_intersection( Segment s1, Segment s2 )
 	return false;
 }
 
-static bool validate_concave_polygon( const PLVector2 *vertices, unsigned int numVertices )
+static bool validate_concave_polygon( const QmMathVector2f *vertices, unsigned int numVertices )
 {
 	if ( numVertices < 4 )
 	{
@@ -1227,7 +1228,7 @@ static bool validate_concave_polygon( const PLVector2 *vertices, unsigned int nu
 }
 #endif
 
-static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int numVertices )
+static bool validate_convex_polygon( const QmMathVector2f *vertices, unsigned int numVertices )
 {
 	// this determines that the plane is convex, hopefully
 
@@ -1242,7 +1243,7 @@ static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int num
 		// ensure any point isn't doubling up
 		for ( unsigned int j = i + 1; j < numVertices; ++j )
 		{
-			if ( !PlCompareVector2( &vertices[ i ], &vertices[ j ] ) )
+			if ( !qm_math_vector2f_compare( vertices[ i ], vertices[ j ] ) )
 			{
 				continue;
 			}
@@ -1250,11 +1251,11 @@ static bool validate_convex_polygon( const PLVector2 *vertices, unsigned int num
 			return false;
 		}
 
-		PLVector2 a;
+		QmMathVector2f a;
 		a.x = vertices[ ( i + 2 ) % numVertices ].x - vertices[ ( i + 1 ) % numVertices ].x;
 		a.y = vertices[ ( i + 2 ) % numVertices ].y - vertices[ ( i + 1 ) % numVertices ].y;
 
-		PLVector2 b;
+		QmMathVector2f b;
 		b.x = vertices[ i ].x - vertices[ ( i + 1 ) % numVertices ].x;
 		b.y = vertices[ i ].y - vertices[ ( i + 1 ) % numVertices ].y;
 
@@ -1303,7 +1304,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 	// because the grid operates in 2D space, we need to transform all the vertices into 3D space
 	// and use this time to determine the order too...so we can reverse for edge loop if needed
 	float      signedArea = 0.0f;
-	QmMathVector3f *vertices   = PL_NEW_( QmMathVector3f, self->numPolygonPoints );
+	QmMathVector3f *vertices   = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numPolygonPoints );
 	for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 	{
 		// determine order
@@ -1332,7 +1333,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		brush = nullptr;
 	}
 
-	PL_DELETE( vertices );
+	qm_os_memory_free( vertices );
 
 	ape_editor_clear_plot_points( self );
 
@@ -1390,7 +1391,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 		return false;
 	}
 
-	PLVector2 cursor;
+	QmMathVector2f cursor;
 	if ( ape_grid_get_cursor_position( &self->grid, &cursor ) == NULL )
 	{
 		return false;
@@ -1398,8 +1399,8 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 
 	if ( self->numPolygonPoints > 0 )
 	{
-		const PLVector2 *start = &self->polygonPoints[ 0 ];
-		if ( PlCompareVector2( start, &cursor ) )
+		const QmMathVector2f *start = &self->polygonPoints[ 0 ];
+		if ( qm_math_vector2f_compare( *start, cursor ) )
 		{
 			ape_editor_brush_from_polygon( self, nullptr, APE_EDITOR_BRUSH_TYPE_BLOCK );
 			return true;

@@ -81,7 +81,7 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode )
 
 ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
 {
-	ApeCamera *camera = PL_NEW( ApeCamera );
+	ApeCamera *camera = QM_OS_MEMORY_NEW( ApeCamera );
 	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, name, position, angles );
 
 	camera->mode     = cameraMode;
@@ -152,7 +152,7 @@ void ape_camera_destroy_( void *data, ApeWorldNode *parent )
 
 	PlDestroyLinkedListNode( self->node );
 
-	PL_DELETE( self );
+	qm_os_memory_free( self );
 
 	if ( PlGetNumLinkedListNodes( cameras ) == 0 )
 	{
@@ -230,7 +230,7 @@ const ApeWorldNodeClass ape_cameraClass = {
 
 static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport, ApeWorldNode *worldNode, ApeCameraVisibleRoom *visibleRoom );
 
-static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera *camera, const ApeViewport *viewport )
+static QmMathVector4f get_face_screen_rect( const ApeBrushFace *face, const ApeCamera *camera, const ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -238,7 +238,7 @@ static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera
 	PLMatrix4 proj     = camera->internal->internal.proj;
 	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
 
-	PLVector4 rect = qm_math_vector4f( viewport->width, viewport->height, 0.0f, 0.0f );
+	QmMathVector4f rect = qm_math_vector4f( viewport->width, viewport->height, 0.0f, 0.0f );
 
 	// get the transform
 	ApeBrush *brush = face->parent;
@@ -250,7 +250,7 @@ static PLVector4 get_face_screen_rect( const ApeBrushFace *face, const ApeCamera
 		QmMathVector3f vertex = PlTransformVector3( face->vertices[ i ].position, &transform );
 
 		float     depth;
-		PLVector2 screenPos = PlConvertWorldToScreen( &vertex, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
+		QmMathVector2f screenPos = PlConvertWorldToScreen( &vertex, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
 
 		if ( screenPos.x < rect.x )
 		{
@@ -291,7 +291,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 	QmMathVector3f position = ape_light_get_position( light );
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
-		float distance = PlVector3Length( qm_math_vector3f_sub( position, ape_camera_get_position( self ) ) );
+		float distance = qm_math_vector3f_length( qm_math_vector3f_sub( position, ape_camera_get_position( self ) ) );
 		if ( distance > ape_config_.renderer.maxLightDistance )
 		{
 			return false;
@@ -416,7 +416,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 					continue;
 				}
 
-				PLVector4 screenRect = get_face_screen_rect( &brush->faces[ i ], self, viewport );
+				QmMathVector4f screenRect = get_face_screen_rect( &brush->faces[ i ], self, viewport );
 				if ( screenRect.z == 0.f || screenRect.w == 0.f )
 				{
 					continue;
@@ -433,7 +433,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 				visiblePortal->origin     = faceOrigin;
 
 				visiblePortal->normal = brush->faces[ i ].normal;
-				PLVector4 tmp         = PlTransformVector4( &QM_MATH_VECTOR4F( visiblePortal->normal.x,
+				QmMathVector4f tmp         = PlTransformVector4( &QM_MATH_VECTOR4F( visiblePortal->normal.x,
 				                                                               visiblePortal->normal.y,
 				                                                               visiblePortal->normal.z, 0.0f ),
 				                                            &transform );

@@ -67,7 +67,7 @@ static void update_auto_complete_result( const char *input )
 typedef struct ConsoleNotification
 {
 	char     buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
-	PLColour colour;
+	QmMathColour4ub colour;
 	double   time;
 } ConsoleNotification;
 
@@ -82,7 +82,7 @@ static void update_notification_limit( PLConsoleVariable * )
 {
 	if ( consoleMaxNotifications == 0 )
 	{
-		PL_DELETE( consoleNotifications );
+		qm_os_memory_free( consoleNotifications );
 		consoleNotifications    = nullptr;
 		consoleNumNotifications = 0;
 		return;
@@ -93,11 +93,12 @@ static void update_notification_limit( PLConsoleVariable * )
 		consoleNumNotifications = consoleMaxNotifications;
 	}
 
-	consoleNotifications = PL_REALLOCA( consoleNotifications, sizeof( ConsoleNotification ) * consoleMaxNotifications );
-	PL_ZERO( consoleNotifications, sizeof( ConsoleNotification ) * consoleMaxNotifications );
+	size_t size = sizeof( ConsoleNotification ) * consoleMaxNotifications;
+	consoleNotifications = qm_os_memory_realloc( consoleNotifications, size );
+	PL_ZERO( consoleNotifications, size );
 }
 
-void ape_console_push_notification_( const char *buffer, PLColour colour )
+void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour )
 {
 	if ( consoleMaxNotifications == 0 )
 	{
@@ -506,10 +507,10 @@ void ape_console_draw_( const ApeViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-#define CON_SIDE_COLOUR      PLColourRGB( 128, 128, 128 )
-#define CON_BACK_COLOUR      PLColour( 0, 0, 0, consoleAlpha )
+#define CON_SIDE_COLOUR      QM_MATH_COLOUR4UB_RGB( 128, 128, 128 )
+#define CON_BACK_COLOUR      qm_math_colour4ub( 0, 0, 0, consoleAlpha )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
-#define CON_INPUT_COLOUR     PLColour( 0, 0, 0, 255 )
+#define CON_INPUT_COLOUR     qm_math_colour4ub( 0, 0, 0, 255 )
 
 	const float lineSpacing   = gui_font_get_line_spacing( font ) * consoleFontScale;
 	const float width         = ( float ) viewport->width;
@@ -558,7 +559,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 		float autoCompleteHeight = 0.0f;
 		float autoCompleteWidth  = 0.0f;
 
-		PLVector2 selectionBox;
+		QmMathVector2f selectionBox;
 
 		//HACK: because the height depends on a newline, we'll have to call this... fuck
 		const float ch = gui_font_get_line_spacing( font ) * consoleFontScale;
@@ -606,7 +607,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 		float x = width - strW;
 		float y = height - strH;
-		gui_font_draw_string( tinyFont, x, y, nullptr, nullptr, 1.0f, &PLColourRGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+		gui_font_draw_string( tinyFont, x, y, nullptr, nullptr, 1.0f, &QM_MATH_COLOUR4UB_RGB( 0, 255, 0 ), buf, sizeof( buf ), false );
 
 		gui_font_display( tinyFont );
 	}

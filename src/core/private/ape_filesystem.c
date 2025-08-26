@@ -112,7 +112,7 @@ void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize )
 
 	size_t fileSize = PlGetFileSize( file );
 	*outSize = fileSize + 1;
-	char *buf = PL_NEW_( char, *outSize );
+	char *buf = QM_OS_MEMORY_NEW_( char, *outSize );
 	memcpy( buf, PlGetFileData( file ), fileSize );
 
 	PlCloseFile( file );
@@ -140,7 +140,7 @@ char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
 	if ( *size == 0 || !status )
 		return NULL;
 
-	char *buf = PL_NEW_( char, ( *size ) + 1 );
+	char *buf = QM_OS_MEMORY_NEW_( char, ( *size ) + 1 );
 	size_t rb = PlReadFile( file, buf, sizeof( char ), *size );
 	assert( rb == *size );
 	return buf;
@@ -202,16 +202,16 @@ float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int mi
 	return ss_acl_fs_parse_float( file );
 }
 
-PLVector3 ss_acl_fs_parse_vector( PLFile *file )
+QmMathVector3f ss_acl_fs_parse_vector( PLFile *file )
 {
-	return ( PLVector3 ){
+	return ( QmMathVector3f ){
 	        ss_acl_fs_parse_float( file ),
 	        ss_acl_fs_parse_float( file ),
 	        ss_acl_fs_parse_float( file ),
 	};
 }
 
-PLVector3 acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector3 *fallback )
+QmMathVector3f acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const QmMathVector3f *fallback )
 {
 	if ( version < minVersion || version > maxVersion )
 		return *fallback;
@@ -219,9 +219,9 @@ PLVector3 acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned i
 	return ss_acl_fs_parse_vector( file );
 }
 
-PLVector4 ss_acl_fs_parse_vector4( PLFile *file )
+QmMathVector4f ss_acl_fs_parse_vector4( PLFile *file )
 {
-	return ( PLVector4 ){
+	return ( QmMathVector4f ){
 	        ss_acl_fs_parse_float( file ),
 	        ss_acl_fs_parse_float( file ),
 	        ss_acl_fs_parse_float( file ),
@@ -229,7 +229,7 @@ PLVector4 ss_acl_fs_parse_vector4( PLFile *file )
 	};
 }
 
-PLVector4 ss_acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const PLVector4 *fallback )
+QmMathVector4f ss_acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const QmMathVector4f *fallback )
 {
 	if ( version < minVersion || version > maxVersion )
 		return *fallback;
@@ -255,10 +255,10 @@ PLMatrix3 ss_acl_fs_parse_mat3( PLFile *file )
 	};
 }
 
-PLColour ss_acl_fs_parse_colour( PLFile *file )
+QmMathColour4ub ss_acl_fs_parse_colour( PLFile *file )
 {
 	bool status;
-	PLColour c = ( PLColour ){
+	QmMathColour4ub c = ( QmMathColour4ub ){
 	        PL_READUINT8( file, &status ),
 	        PL_READUINT8( file, &status ),
 	        PL_READUINT8( file, &status ),

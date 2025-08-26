@@ -80,7 +80,7 @@ extern const unsigned int       APE_NUM_AUDIO_EFFECT_TYPES;
  * @param angles 	Angles of the listener.
  * @param velocity 	Velocity of the listener.
  */
-void ape_audio_update_listener( const PLVector3 *position, const PLVector3 *angles, const PLVector3 *velocity );
+void ape_audio_update_listener( const QmMathVector3f *position, const QmMathVector3f *angles, const QmMathVector3f *velocity );
 
 /**
  * Clear the properties of the current listener.
@@ -92,36 +92,36 @@ void ape_audio_clear_listener( void );
  *
  * @return 	Vector position of the listener.
  */
-PLVector3 ape_audio_get_listener_position( void );
+QmMathVector3f ape_audio_get_listener_position( void );
 
 /**
  * Fetch the current angles of the listener.
  *
  * @return 	Vector angles of the listener.
  */
-PLVector3 ape_audio_get_listener_angles( void );
+QmMathVector3f ape_audio_get_listener_angles( void );
 
 /**
  * Fetch the current velocity of the listener.
  *
  * @return 	Vector velocity of the listener.
  */
-PLVector3 ape_audio_get_listener_velocity( void );
+QmMathVector3f ape_audio_get_listener_velocity( void );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Sample
 
 ApeAudioSample *ape_audio_sample_cache( const char *path );
-void            ape_audio_sample_emit( ApeAudioSample *audioSample, const PLVector3 *position, float volume, float pitch );
+void            ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch );
 void            ape_audio_sample_release( ApeAudioSample *audioSample );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Source
 
-ApeAudioSource *ape_audio_source_create( const PLVector3 *position, const PLVector3 *velocity, ApeAudioSourceGroup group );
+ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const QmMathVector3f *velocity, ApeAudioSourceGroup group );
 void            ape_audio_source_destroy( ApeAudioSource *audioSource );
-void            ape_audio_source_set_position( ApeAudioSource *audioSource, const PLVector3 *position );
-void            ape_audio_source_set_velocity( ApeAudioSource *audioSource, const PLVector3 *velocity );
+void            ape_audio_source_set_position( ApeAudioSource *audioSource, const QmMathVector3f *position );
+void            ape_audio_source_set_velocity( ApeAudioSource *audioSource, const QmMathVector3f *velocity );
 void            ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 PL_EXTERN_C_END

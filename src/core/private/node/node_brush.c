@@ -3,10 +3,10 @@
 // Author:  Mark E. Sowden
 
 #include "plcore/pl_hashtable.h"
+#include "qmos/public/qm_os_shared_ptr.h"
 
 #include "ape_private.h"
 #include "renderer/material/material.h"
-
 #include "world/world.h"
 
 static void clear_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
@@ -39,12 +39,13 @@ static void add_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
 	}
 }
 
-ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles )
+ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles )
 {
-	ApeBrush *brush = PL_NEW( ApeBrush );
+	ApeBrush *brush = QM_OS_MEMORY_NEW( ApeBrush );
 	if ( ape_world_node_setup_( &brush->base, parent, APE_WORLD_NODE_TYPE_BRUSH, name, position, angles ) == nullptr )
 	{
-		PL_DELETEN( brush );
+		qm_os_memory_free( brush );
+		brush = nullptr;
 	}
 
 	if ( parent != nullptr )
@@ -75,7 +76,7 @@ static void destroy_brush( void *data, ApeWorldNode *parent )
 		clear_tagged_surfaces( self, room );
 	}
 
-	PL_DELETE( self->vertices );
+	qm_os_memory_free( self->vertices );
 
 	for ( unsigned int i = 0; i < self->numFaces; ++i )
 	{
@@ -84,17 +85,17 @@ static void destroy_brush( void *data, ApeWorldNode *parent )
 			continue;
 		}
 
-		com_shared_ptr_release( self->faces[ i ].ptr );
-		com_shared_ptr_set( self->faces[ i ].ptr, nullptr );
+		qm_os_shared_ptr_release( self->faces[ i ].ptr );
+		qm_os_shared_ptr_set( self->faces[ i ].ptr, nullptr );
 		self->faces[ i ].ptr = nullptr;
 	}
-	PL_DELETE( self->faces );
+	qm_os_memory_free( self->faces );
 
 #if !defined( APE_NO_EDITOR )
-	PL_DELETE( self->vertexSelectColours );
+	qm_os_memory_free( self->vertexSelectColours );
 #endif
 
-	PL_DELETE( self );
+	qm_os_memory_free( self );
 }
 
 static ApeWorldNode *clone_brush( ApeWorldNode *src )
@@ -110,14 +111,14 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 	dstBrush->type = srcBrush->type;
 
 	dstBrush->numVertices = srcBrush->numVertices;
-	dstBrush->vertices    = PL_NEW_( PLVector3, dstBrush->numVertices );
+	dstBrush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, dstBrush->numVertices );
 	for ( unsigned int j = 0; j < dstBrush->numVertices; ++j )
 	{
 		dstBrush->vertices[ j ] = srcBrush->vertices[ j ];
 	}
 
 	dstBrush->numFaces = srcBrush->numFaces;
-	dstBrush->faces    = PL_NEW_( ApeBrushFace, dstBrush->numFaces );
+	dstBrush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, dstBrush->numFaces );
 	for ( unsigned int j = 0; j < dstBrush->numFaces; ++j )
 	{
 		//TODO: materials are an annoying pain in the ass because of how we're handling references... this should be fixed...
@@ -203,18 +204,18 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 	{
 		unsigned int j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
 
-		const PLVector3 *current = face->edgeLoop[ i ]->position;
-		const PLVector3 *next    = face->edgeLoop[ j ]->position;
-		const PLVector3 *prev    = face->edgeLoop[ ( i == 0 ) ? face->numVertices - 1 : ( i - 1 ) ]->position;
+		const QmMathVector3f *current = face->edgeLoop[ i ]->position;
+		const QmMathVector3f *next    = face->edgeLoop[ j ]->position;
+		const QmMathVector3f *prev    = face->edgeLoop[ ( i == 0 ) ? face->numVertices - 1 : ( i - 1 ) ]->position;
 
-		PLVector3 edge1 = qm_math_vector3f( next->x - current->x, next->y - current->y, next->z - current->z );
-		PLVector3 edge2 = qm_math_vector3f( prev->x - current->x, prev->y - current->y, prev->z - current->z );
+		QmMathVector3f edge1 = qm_math_vector3f( next->x - current->x, next->y - current->y, next->z - current->z );
+		QmMathVector3f edge2 = qm_math_vector3f( prev->x - current->x, prev->y - current->y, prev->z - current->z );
 
-		PLVector3 n  = PlVector3CrossProduct( edge1, edge2 );
-		face->normal = PlAddVector3( face->normal, n );
+		QmMathVector3f n = qm_math_vector3f_cross_product( edge1, edge2 );
+		face->normal     = qm_math_vector3f_add( face->normal, n );
 	}
 
-	face->normal = PlNormalizeVector3( face->normal );
+	face->normal = qm_math_vector3f_normalize( face->normal );
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		face->vertices[ i ].normal = face->normal;
@@ -226,7 +227,7 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 
 static void compute_brush_face_tangents( ApeBrushFace *face )
 {
-	face->tangent = face->bitangent = ( PLVector3 ) {};
+	face->tangent = face->bitangent = ( QmMathVector3f ) {};
 
 	assert( face->numVertices >= 3 );
 
@@ -236,23 +237,23 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 	ApeBrushFaceVertex *v1 = face->edgeLoop[ 1 ];
 	ApeBrushFaceVertex *v2 = face->edgeLoop[ 2 ];
 
-	PLVector3 edge1 = PlSubtractVector3( *v1->position, *v0->position );
-	PLVector3 edge2 = PlSubtractVector3( *v2->position, *v0->position );
+	QmMathVector3f edge1 = qm_math_vector3f_sub( *v1->position, *v0->position );
+	QmMathVector3f edge2 = qm_math_vector3f_sub( *v2->position, *v0->position );
 
-	PLVector2 deltaUV1 = PlSubtractVector2( &v1->textureCoords, &v0->textureCoords );
-	PLVector2 deltaUV2 = PlSubtractVector2( &v2->textureCoords, &v0->textureCoords );
+	QmMathVector2f deltaUV1 = qm_math_vector2f_sub( v1->textureCoords, v0->textureCoords );
+	QmMathVector2f deltaUV2 = qm_math_vector2f_sub( v2->textureCoords, v0->textureCoords );
 
 	float f = 1.0f / ( deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y );
 
 	face->tangent.x = f * ( deltaUV2.y * edge1.x - deltaUV1.y * edge2.x );
 	face->tangent.y = f * ( deltaUV2.y * edge1.y - deltaUV1.y * edge2.y );
 	face->tangent.z = f * ( deltaUV2.y * edge1.z - deltaUV1.y * edge2.z );
-	face->tangent   = PlNormalizeVector3( face->tangent );
+	face->tangent   = qm_math_vector3f_normalize( face->tangent );
 
 	face->bitangent.x = f * ( -deltaUV2.x * edge1.x + deltaUV1.x * edge2.x );
 	face->bitangent.y = f * ( -deltaUV2.x * edge1.y + deltaUV1.x * edge2.y );
 	face->bitangent.z = f * ( -deltaUV2.x * edge1.z + deltaUV1.x * edge2.z );
-	face->bitangent   = PlNormalizeVector3( face->bitangent );
+	face->bitangent   = qm_math_vector3f_normalize( face->bitangent );
 
 #else// my original incorrect approach...
 
@@ -265,16 +266,16 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 		ApeBrushFaceVertex *next    = face->edgeLoop[ j ];
 		ApeBrushFaceVertex *prev    = face->edgeLoop[ ( i == 0 ) ? face->numVertices - 1 : ( i - 1 ) ];
 
-		PLVector3 dpos1 = PlSubtractVector3( *next->position, *current->position );
-		PLVector3 dpos2 = PlSubtractVector3( *prev->position, *current->position );
+		QmMathVector3f dpos1 = qm_math_vector3f_sub( *next->position, *current->position );
+		QmMathVector3f dpos2 = qm_math_vector3f_sub( *prev->position, *current->position );
 
-		PLVector2 duv1 = PlSubtractVector2( &next->textureCoords, &current->textureCoords );
-		PLVector2 duv2 = PlSubtractVector2( &prev->textureCoords, &current->textureCoords );
+		QmMathVector2f duv1 = PlSubtractVector2( &next->textureCoords, &current->textureCoords );
+		QmMathVector2f duv2 = PlSubtractVector2( &prev->textureCoords, &current->textureCoords );
 
 		float r = 1.0f / ( duv1.x * duv2.y - duv1.y * duv2.x );
 
-		PLVector3 tangent   = PlScaleVector3F( PlSubtractVector3( PlScaleVector3F( dpos1, duv2.y ), PlScaleVector3F( dpos2, duv1.y ) ), r );
-		PLVector3 bitangent = PlScaleVector3F( PlAddVector3( PlScaleVector3F( dpos1, -duv2.x ), PlScaleVector3F( dpos2, duv1.x ) ), r );
+		QmMathVector3f tangent   = qm_math_vector3f_scale_float( qm_math_vector3f_sub( qm_math_vector3f_scale_float( dpos1, duv2.y ), PlScaleVector3F( dpos2, duv1.y ) ), r );
+		QmMathVector3f bitangent = qm_math_vector3f_scale_float( qm_math_vector3f_add( qm_math_vector3f_scale_float( dpos1, -duv2.x ), PlScaleVector3F( dpos2, duv1.x ) ), r );
 
 		current->tangent = next->tangent = prev->tangent = tangent;
 		current->bitangent = next->bitangent = prev->bitangent = bitangent;
@@ -290,19 +291,19 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 	unsigned int width  = ape_material_get_width( material );
 	unsigned int height = ape_material_get_height( material );
 
-	PLVector3 verticies[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
+	QmMathVector3f verticies[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
 	if ( computeLocal )
 	{
-		PLVector3 origin = {};
+		QmMathVector3f origin = {};
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			origin = PlAddVector3( origin, *face->edgeLoop[ i ]->position );
+			origin = qm_math_vector3f_add( origin, *face->edgeLoop[ i ]->position );
 		}
 
-		origin = PlDivideVector3F( origin, face->numVertices );
+		origin = qm_math_vector3f_div_float( origin, face->numVertices );
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			verticies[ i ] = PlSubtractVector3( *face->edgeLoop[ i ]->position, origin );
+			verticies[ i ] = qm_math_vector3f_sub( *face->edgeLoop[ i ]->position, origin );
 		}
 	}
 	else
@@ -313,20 +314,20 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 		}
 	}
 
-	PLVector3 up = qm_math_vector3f( 0.0f, 1.0f, 0.0f );
-	if ( fabsf( PlVector3DotProduct( face->normal, up ) ) > 0.99f )
+	QmMathVector3f up = qm_math_vector3f( 0.0f, 1.0f, 0.0f );
+	if ( fabsf( qm_math_vector3f_dot_product( face->normal, up ) ) > 0.99f )
 	{
 		up = qm_math_vector3f( 1.0f, 0.0f, 0.0f );
 	}
 
-	PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( face->normal, up ) );
-	PLVector3 v = PlVector3CrossProduct( face->normal, u );
+	QmMathVector3f u = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( face->normal, up ) );
+	QmMathVector3f v = qm_math_vector3f_cross_product( face->normal, u );
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		PLVector2 coord;
-		coord.x = PlVector3DotProduct( verticies[ i ], u );
-		coord.y = PlVector3DotProduct( verticies[ i ], v );
+		QmMathVector2f coord;
+		coord.x = qm_math_vector3f_dot_product( verticies[ i ], u );
+		coord.y = qm_math_vector3f_dot_product( verticies[ i ], v );
 
 		// apply rotation
 		float ang  = PL_DEG2RAD( face->materialAngle.x );
@@ -346,18 +347,18 @@ void ape_brush_face_fit_material( ApeBrushFace *self )
 {
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
 	{
-		PLVector3 up = qm_math_vector3f( 0.0f, 1.0f, 0.0f );
-		if ( fabsf( PlVector3DotProduct( self->normal, up ) ) > 0.99f )
+		QmMathVector3f up = qm_math_vector3f( 0.0f, 1.0f, 0.0f );
+		if ( fabsf( qm_math_vector3f_dot_product( self->normal, up ) ) > 0.99f )
 		{
 			up = qm_math_vector3f( 1.0f, 0.0f, 0.0f );
 		}
 
-		PLVector3 u = PlNormalizeVector3( PlVector3CrossProduct( self->normal, up ) );
-		PLVector3 v = PlVector3CrossProduct( self->normal, u );
+		QmMathVector3f u = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( self->normal, up ) );
+		QmMathVector3f v = qm_math_vector3f_cross_product( self->normal, u );
 
-		//PLVector2 coord;
-		//coord.x = PlVector3DotProduct( *self->edgeLoop[ i ]->position, u );
-		//coord.y = PlVector3DotProduct( *self->edgeLoop[ i ]->position, v );
+		//QmMathVector2f coord;
+		//coord.x = qm_math_vector3f_dot_product( *self->edgeLoop[ i ]->position, u );
+		//coord.y = qm_math_vector3f_dot_product( *self->edgeLoop[ i ]->position, v );
 	}
 
 	const ApeMaterial *material = self->material;
@@ -400,7 +401,7 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 	}
 }
 
-void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation, bool computeLocal )
+void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const QmMathVector2f *scale, const QmMathVector2f *offset, const QmMathVector3f *rotation, bool computeLocal )
 {
 	self->materialScale = *scale;
 	self->materialAngle = *rotation;
@@ -557,7 +558,7 @@ void ape_brush_compute_bounds( ApeBrush *self )
 		}
 	}
 
-	PLVector3 localPos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	QmMathVector3f localPos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 
 	self->base.localBounds.absOrigin = PlGetAabbAbsOrigin( &self->base.localBounds, localPos );
 
@@ -604,14 +605,14 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 	}
 }
 
-static void build_block_brush( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea )
+static void build_block_brush( ApeBrush *self, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f dir, float scale, float signedArea )
 {
 	self->numVertices = numVertices * 2;
-	self->vertices    = PL_NEW_( PLVector3, self->numVertices );
-	memcpy( self->vertices, vertices, numVertices * sizeof( PLVector3 ) );
+	self->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numVertices );
+	memcpy( self->vertices, vertices, numVertices * sizeof( QmMathVector3f ) );
 
 	self->numFaces = numVertices + 2;// plus two for top and bottom
-	self->faces    = PL_NEW_( ApeBrushFace, self->numFaces );
+	self->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
 
 	// set up the top and bottom faces first
 	self->faces[ 0 ].numVertices = self->faces[ 1 ].numVertices = numVertices;
@@ -632,13 +633,13 @@ static void build_block_brush( ApeBrush *self, const PLVector3 *vertices, unsign
 		}
 
 		// extrude the vertices for the top
-		self->vertices[ i + numVertices ] = PlAddVector3( self->vertices[ i ], PlScaleVector3F( dir, scale ) );
+		self->vertices[ i + numVertices ] = qm_math_vector3f_add( self->vertices[ i ], qm_math_vector3f_scale_float( dir, scale ) );
 
 		// set up the faces for the edges
 
 		unsigned int next = ( i + 1 ) % numVertices;
 
-		PLVector3 *quad[ 4 ];
+		QmMathVector3f *quad[ 4 ];
 		quad[ 0 ] = &self->vertices[ i ];
 		quad[ 1 ] = &self->vertices[ next ];
 		quad[ 2 ] = &self->vertices[ i + numVertices ];
@@ -657,14 +658,14 @@ static void build_block_brush( ApeBrush *self, const PLVector3 *vertices, unsign
 	}
 }
 
-static void build_plane_brush( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, float signedArea )
+static void build_plane_brush( ApeBrush *self, const QmMathVector3f *vertices, unsigned int numVertices, float signedArea )
 {
 	self->numVertices = numVertices;
-	self->vertices    = PL_NEW_( PLVector3, self->numVertices );
-	memcpy( self->vertices, vertices, numVertices * sizeof( PLVector3 ) );
+	self->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numVertices );
+	memcpy( self->vertices, vertices, numVertices * sizeof( QmMathVector3f ) );
 
 	self->numFaces               = 1;
-	self->faces                  = PL_NEW_( ApeBrushFace, self->numFaces );
+	self->faces                  = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
 	self->faces[ 0 ].numVertices = self->numVertices;
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
 	{
@@ -680,7 +681,7 @@ static void build_plane_brush( ApeBrush *self, const PLVector3 *vertices, unsign
 	}
 }
 
-bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, unsigned int numVertices, PLVector3 dir, float scale, float signedArea, ApeMaterial *material, ApeEditorBrushType type )
+bool ape_brush_build_from_polygon_( ApeBrush *self, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f dir, float scale, float signedArea, ApeMaterial *material, ApeEditorBrushType type )
 {
 	// extrude and build the brush geometry from the given polygon shape
 	if ( numVertices < 3 )
@@ -705,7 +706,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const PLVector3 *vertices, u
 	for ( unsigned int i = 0; i < self->numFaces; ++i )
 	{
 		self->faces[ i ].parent = self;
-		self->faces[ i ].colour = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
+		self->faces[ i ].colour = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
 
 		self->faces[ i ].material      = material;
 		self->faces[ i ].materialScale = qm_math_vector2f( 0.5f, 0.5f );
@@ -787,7 +788,7 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 
 static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeBrush *self = ape_brush_create( parent, "temp", &( PLVector3 ) {}, &( PLVector3 ) {} );
+	ApeBrush *self = ape_brush_create( parent, "temp", &( QmMathVector3f ) {}, &( QmMathVector3f ) {} );
 
 	self->type = ACM_GET_INT( self->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
 
@@ -795,7 +796,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
 	{
 		self->numVertices = acm_get_num_of_children( branch ) / 3;
-		self->vertices    = PL_NEW_( PLVector3, self->numVertices );
+		self->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numVertices );
 		acm_branch_get_float32_array( branch, ( float * ) self->vertices, self->numVertices * 3 );
 	}
 	else
@@ -808,7 +809,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 	if ( ( branch = acm_get_child_by_name( root, "faces" ) ) != nullptr )
 	{
 		self->numFaces = acm_get_num_of_children( branch );
-		self->faces    = PL_NEW_( ApeBrushFace, self->numFaces );
+		self->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
 
 		branch = acm_get_first_child( branch );
 		for ( unsigned int i = 0; i < self->numFaces; ++i, branch = acm_get_next_child( branch ) )
@@ -826,9 +827,9 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 					int16_t vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
 					assert( vertexIndex <= self->numVertices );
 					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
-					self->faces[ i ].vertices[ j ].textureCoords = com_acm_get_vector2( vertexBranch, "uv", &( PLVector2 ) {} );
-					self->faces[ i ].vertices[ j ].normal        = com_acm_get_vector3( vertexBranch, "normal", &( PLVector3 ) {} );
-					self->faces[ i ].vertices[ j ].colour        = com_acm_get_colour_f32( vertexBranch, "colour", &( PLColourF32 ) { .a = 1.0f } );
+					self->faces[ i ].vertices[ j ].textureCoords = com_acm_get_vector2( vertexBranch, "uv", &( QmMathVector2f ) {} );
+					self->faces[ i ].vertices[ j ].normal        = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
+					self->faces[ i ].vertices[ j ].colour        = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
 				}
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
@@ -866,14 +867,14 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 				ape_warning_( "No material specified for a brush face, using default!\n" );
 				self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 			}
-			self->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( PLVector2 ) {} );
-			self->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &( PLVector3 ) {} );
-			self->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &( PLVector3 ) {} );
+			self->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( QmMathVector2f ) {} );
+			self->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &( QmMathVector3f ) {} );
+			self->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &( QmMathVector3f ) {} );
 
 			self->faces[ i ].flags = ACM_GET_UINT( self->faces[ i ].flags, branch, "flags", 0 );
 
-			self->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &( PLVector3 ) {} );
-			self->faces[ i ].colour = com_acm_get_colour_f32( branch, "colour", &( PLColourF32 ) { .a = 1.0f } );
+			self->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &( QmMathVector3f ) {} );
+			self->faces[ i ].colour = com_acm_get_colour_f32( branch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );
@@ -927,7 +928,7 @@ const ApeWorldNodeClass ape_brushClass = {
         .clone = clone_brush,
 
         .properties    = properties,
-        .numProperties = PL_ARRAY_ELEMENTS( properties ),
+        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
 
         .flags = APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR,
 };

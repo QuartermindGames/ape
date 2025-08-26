@@ -33,7 +33,7 @@ typedef struct ApeEditorField
 #define APE_ENTITY_COMPONENT_END_PROPERTIES() \
 	}                                         \
 	;                                         \
-	static unsigned int x_numEditorVariables = PL_ARRAY_ELEMENTS( x_editorVariables );
+	static unsigned int x_numEditorVariables = QM_OS_ARRAY_ELEMENTS( x_editorVariables );
 #define APE_ENTITY_COMPONENT_PROPERTY( TYPE, VAR, DESC, VARTYPE ) \
 	{ #VAR, DESC, VARTYPE, PL_OFFSETOF( TYPE, VAR ) },
 #define APE_ENTITY_HOOK_PROPERTIES( CBTABLE )        \
@@ -60,7 +60,7 @@ typedef struct ApeEditorGrid
 
 	PLMatrix4 transform;
 
-	PLVector2 cursor;
+	QmMathVector2f cursor;
 
 	unsigned char visible;// unsigned char, because otherwise
 	                      // can't hook it with frontend :(
@@ -78,7 +78,7 @@ typedef struct ApeEditorInstance
 	float turnSpeed;
 
 	// polygon points are always interpreted on a 2D plane for simplicity’s sake
-	PLVector2      polygonPoints[ APE_BRUSH_MAX_FACE_VERTICES ];
+	QmMathVector2f polygonPoints[ APE_BRUSH_MAX_FACE_VERTICES ];
 	unsigned int   numPolygonPoints;
 	PLRectangleF32 polySize;
 
@@ -130,7 +130,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self );
  * @param self	Editor instance.
  * @param dir	Direction to shift in.
  */
-void ape_editor_shift_selection( ApeEditorInstance *self, const PLVector3 *dir );
+void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *dir );
 
 /**
  * Loads a preview of the specified material, rather than loading the entire thing.
@@ -146,16 +146,16 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 // Grid
 /////////////////////////////////////////////////////////////////////////////////////
 
-PLVector2 *ape_grid_get_cursor_position( ApeEditorGrid *self, PLVector2 *dst );
+QmMathVector2f *ape_grid_get_cursor_position( ApeEditorGrid *self, QmMathVector2f *dst );
 
 /**
  * Transforms a 2D point into 3D space using the grid's transformation matrix.
  *
  * @param self 	A pointer to an ApeEditorGrid structure containing transformation information.
- * @param point A pointer to a PLVector2 structure representing the 2D point to be transformed.
- * @return 		A PLVector3 structure representing the transformed 3D point.
+ * @param point A pointer to a QmMathVector2f structure representing the 2D point to be transformed.
+ * @return 		A QmMathVector3f structure representing the transformed 3D point.
  */
-PLVector3 ape_grid_transform_point( const ApeEditorGrid *self, const PLVector2 *point );
+QmMathVector3f ape_grid_transform_point( const ApeEditorGrid *self, const QmMathVector2f *point );
 
 void ape_grid_increase_size( void );
 void ape_grid_decrease_size( void );

@@ -36,10 +36,10 @@ typedef struct ActorSetup
 
 typedef struct Actor
 {
-	PLVector3 position, oldPosition;
-	PLVector3 angles, oldAngles;
-	PLVector3 velocity;
-	PLVector3 forward;
+	QmMathVector3f position, oldPosition;
+	QmMathVector3f angles, oldAngles;
+	QmMathVector3f velocity;
+	QmMathVector3f forward;
 	float angle;
 	float viewPitch;
 	float viewOffset;

@@ -46,7 +46,7 @@ static struct
 	int           dx, dy;
 	ApeInputState buttons[ APE_MAX_INPUT_MOUSE_BUTTONS ];
 
-	PLVector2 wheel, oldWheel;
+	QmMathVector2f wheel, oldWheel;
 } inputMouse = {};
 
 static struct
@@ -64,9 +64,9 @@ static struct
 	Button        buttons[ APE_MAX_BUTTON_INPUTS ];
 	PLLinkedList *activeButtonList;
 
-	PLVector2 stickL, stickLOld, stickLDelta;
-	PLVector2 stickR, stickROld, stickRDelta;
-	PLVector2 deadzones;
+	QmMathVector2f stickL, stickLOld, stickLDelta;
+	QmMathVector2f stickR, stickROld, stickRDelta;
+	QmMathVector2f deadzones;
 
 	SDL_Gamepad *sdlGameController;
 } inputControllers[ CLIENT_INPUT_MAX_CONTROLLERS ];
@@ -353,7 +353,7 @@ void ape_initialize_input_( void )
 	{
 		// read it into a null-terminated buffer
 		size_t size = PlGetFileSize( mapFile );
-		char  *buf  = PL_NEW_( char, size + 1 );
+		char  *buf  = QM_OS_MEMORY_NEW_( char, size + 1 );
 		PlReadFile( mapFile, buf, sizeof( char ), size );
 		PlCloseFile( mapFile );
 
@@ -670,7 +670,7 @@ ApeInputState ape_client_input_get_button_state( unsigned int slot, ApeInputButt
 	return inputControllers[ slot ].buttons[ button ].state;
 }
 
-PLVector2 ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum )
+QmMathVector2f ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum )
 {
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	return ( stickNum == 0 ) ? inputControllers[ slot ].stickL : inputControllers[ slot ].stickR;
@@ -702,7 +702,13 @@ void ape_client_input_register_action( const char    *id,
 		ape_warning_( "Too many default key inputs for action!\n" );
 	}
 
-	ApeInputAction *inputAction = PL_NEW( ApeInputAction );
+	ApeInputAction *inputAction = QM_OS_MEMORY_NEW( ApeInputAction );
+	if ( inputAction == nullptr )
+	{
+		ape_warning_( "Failed to allocate action (%s)!\n", id );
+		return;
+	}
+
 	snprintf( inputAction->id, sizeof( inputAction->id ), "%s", id );
 	inputAction->callback = actionCallback;
 

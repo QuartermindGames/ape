@@ -36,7 +36,7 @@ typedef struct ApeGuiCanvas
 
 ApeGuiCanvas *ape_gui_canvas_create( int width, int height )
 {
-	ApeGuiCanvas *canvas    = PL_NEW( ApeGuiCanvas );
+	ApeGuiCanvas *canvas    = QM_OS_MEMORY_NEW( ApeGuiCanvas );
 	canvas->width        = width;
 	canvas->height       = height;
 	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
@@ -52,7 +52,7 @@ void ape_gui_destroy_canvas( ApeGuiCanvas *canvas )
 
 	ape_render_target_release( canvas->renderTarget );
 
-	PL_DELETE( canvas );
+	qm_os_memory_free( canvas );
 }
 
 void ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height )
@@ -118,7 +118,7 @@ PLGMesh *ape_gui_get_batch_queue_mesh( PLGTexture *texture )
 	}
 
 	// Texture isn't in the queue, so create a new batch request
-	ApeGuiDrawBatch *drawBatch = PL_NEW( ApeGuiDrawBatch );
+	ApeGuiDrawBatch *drawBatch = QM_OS_MEMORY_NEW( ApeGuiDrawBatch );
 	drawBatch->mesh            = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
 	drawBatch->texture         = texture;
 	PlInsertLinkedListNode( batches, drawBatch );
@@ -135,7 +135,7 @@ static void cleanup_batch_queue( void )
 		{
 			PlgDestroyMesh( drawBatch->mesh );
 
-			PL_DELETE( drawBatch );
+			qm_os_memory_free( drawBatch );
 
 			PLLinkedListNode *prevNode = node;
 			node                       = PlGetNextLinkedListNode( node );
@@ -222,7 +222,7 @@ void gui_canvas_display( ApeGuiCanvas *canvas )
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
 }
 
-void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const PLColour *colour )
+void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour )
 {
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
@@ -238,10 +238,10 @@ void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, i
 /**
  * Similar to Draw_FilledRectangle, only more explicit for the frame coords.
  */
-void ape_gui_draw_quad( PLGMesh *mesh, ApeVector2i tl, ApeVector2i tr, ApeVector2i ll, ApeVector2i lr, int z, const PLColourF32 *colour )
+void ape_gui_draw_quad( PLGMesh *mesh, ApeVector2i tl, ApeVector2i tr, ApeVector2i ll, ApeVector2i lr, int z, const QmMathColour4f *colour )
 {
 	// todo: drawing API should take floating-point colours!
-	PLColour bColour = PlColourF32ToU8( colour );
+	QmMathColour4ub bColour = PlColourF32ToU8( colour );
 
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( tl.x, tl.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),

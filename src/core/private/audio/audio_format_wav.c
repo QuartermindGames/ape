@@ -8,7 +8,7 @@
 ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
 {
 	uint32_t size = PlGetFileSize( file );
-	uint8_t *buf  = PL_NEW_( uint8_t, size );
+	uint8_t *buf  = QM_OS_MEMORY_NEW_( uint8_t, size );
 
 	ApeAudioSample *sample = nullptr;
 
@@ -36,8 +36,8 @@ ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
 
 				if ( format != APE_AUDIO_SAMPLE_FORMAT_INVALID )
 				{
-					sample             = PL_NEW( ApeAudioSample );
-					sample->buffer     = PL_NEW_( uint8_t, size );
+					sample             = QM_OS_MEMORY_NEW( ApeAudioSample );
+					sample->buffer     = QM_OS_MEMORY_NEW_( uint8_t, size );
 					sample->bufferSize = size;
 					sample->channels   = dstSpec.channels;
 					sample->type       = format;
@@ -63,7 +63,7 @@ ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
 		ape_warning_( "Failed to read wav file: %s\n", PlGetError() );
 	}
 
-	PL_DELETE( buf );
+	qm_os_memory_free( buf );
 
 	return sample;
 }

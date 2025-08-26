@@ -11,8 +11,8 @@ typedef struct PLHashTableNode PLHashTableNode;
 
 typedef struct ApeModelAnimationFrame
 {
-	PLVector3 mins;
-	PLVector3 maxs;
+	QmMathVector3f mins;
+	QmMathVector3f maxs;
 } ApeModelAnimationFrame;
 
 typedef struct ApeModelAnimation

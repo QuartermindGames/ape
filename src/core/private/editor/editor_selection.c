@@ -45,9 +45,9 @@ void ape_editor_selection_shutdown_()
 	cleanup_transform_widget();
 }
 
-static PLColour encode_hash_to_colour( uint64_t hash )
+static QmMathColour4ub encode_hash_to_colour( uint64_t hash )
 {
-	return PL_COLOURU8( ( hash >> 16 ) & 0xFF, ( hash >> 8 ) & 0xFF, hash & 0xFF, 255 );
+	return QM_MATH_COLOUR4UB( ( hash >> 16 ) & 0xFF, ( hash >> 8 ) & 0xFF, hash & 0xFF, 255 );
 }
 
 static void add_node_to_face_selection( ApeEditorInstance *self, ApeWorldNode *node, ApeEditorGeometryMode mode )
@@ -61,20 +61,20 @@ static void add_node_to_face_selection( ApeEditorInstance *self, ApeWorldNode *n
 			{
 				uint64_t hash                  = PlGenerateHashFNV1( &brush->faces[ i ], sizeof( ApeBrushFace ) );
 				brush->faces[ i ].selectColour = encode_hash_to_colour( hash );
-				PlInsertHashTableNode( self->selectionTable, &brush->faces[ i ].selectColour, sizeof( PLColour ), &brush->faces[ i ] );
+				PlInsertHashTableNode( self->selectionTable, &brush->faces[ i ].selectColour, sizeof( QmMathColour4ub ), &brush->faces[ i ] );
 			}
 		}
 		else if ( mode == APE_EDITOR_GEOMETRY_MODE_VERTEX )
 		{
 			if ( brush->numVertices != brush->numVertexSelectColours )
 			{
-				brush->vertexSelectColours    = PL_REALLOCA( brush->vertexSelectColours, sizeof( PLColour ) * brush->numVertices );
+				brush->vertexSelectColours    = qm_os_memory_realloc( brush->vertexSelectColours, sizeof( QmMathColour4ub ) * brush->numVertices );
 				brush->numVertexSelectColours = brush->numVertices;
 			}
 			for ( unsigned int i = 0; i < brush->numVertices; ++i )
 			{
 				brush->vertexSelectColours[ i ] = encode_hash_to_colour( ( uintptr_t ) &brush->vertices[ i ] );
-				PlInsertHashTableNode( self->selectionTable, &brush->vertexSelectColours[ i ], sizeof( PLColour ), &brush->vertices[ i ] );
+				PlInsertHashTableNode( self->selectionTable, &brush->vertexSelectColours[ i ], sizeof( QmMathColour4ub ), &brush->vertices[ i ] );
 
 				// this is dumb as hell, but throw it into our sub selection list too so we can determine the faces we need to update
 				intptr_t ptr = ( intptr_t ) &brush->vertices[ i ];
@@ -94,7 +94,7 @@ static void add_node_to_transform_selection( ApeEditorInstance *self, ApeWorldNo
 {
 	uint64_t hash      = PlGenerateHashFNV1( node, sizeof( ApeWorldNode ) );
 	node->selectColour = encode_hash_to_colour( hash );
-	PlInsertHashTableNode( self->selectionTable, &node->selectColour, sizeof( PLColour ), node );
+	PlInsertHashTableNode( self->selectionTable, &node->selectColour, sizeof( QmMathColour4ub ), node );
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
@@ -175,7 +175,7 @@ static void render_brush_selection( const ApeBrush *brush )
 	}
 }
 
-static void draw_selection_cube( const QmMathVector3f *position, const PLColour *colour, float scale, bool wireframe )
+static void draw_selection_cube( const QmMathVector3f *position, const QmMathColour4ub *colour, float scale, bool wireframe )
 {
 	if ( wireframe )
 	{
@@ -212,7 +212,7 @@ static void draw_selection_cube( const QmMathVector3f *position, const PLColour 
 	assert( material != nullptr );
 
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
-	for ( unsigned int i = 0; i < PL_ARRAY_ELEMENTS( CUBE_INDICES ); ++i )
+	for ( unsigned int i = 0; i < QM_OS_ARRAY_ELEMENTS( CUBE_INDICES ); ++i )
 	{
 		for ( unsigned int j = 0; j < 3; ++j )
 		{
@@ -354,7 +354,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ape_material_draw( material, mesh, nullptr );
 }
 
-static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, const PLColour *colour )
+static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, const QmMathColour4ub *colour )
 {
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
@@ -371,7 +371,7 @@ static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, co
 	}
 }
 
-static void render_selected_wireframe( ApeWorldNode *node, const PLColour *colour, bool selected )
+static void render_selected_wireframe( ApeWorldNode *node, const QmMathColour4ub *colour, bool selected )
 {
 	draw_selection_cube( &node->position, colour, SELECTION_OBJECT_SIZE, true );
 
@@ -448,7 +448,7 @@ static void render_vertices( ApeEditorInstance *self )
 		ApeBrush *brush = ( ApeBrush * ) node;
 		for ( unsigned int j = 0; j < brush->numVertices; ++j )
 		{
-			PLColour colour;
+			QmMathColour4ub colour;
 			if ( self->hoverSelection != nullptr && self->hoverSelection == &brush->vertices[ j ] )
 			{
 				colour = PL_COLOUR_YELLOW;
@@ -502,7 +502,7 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 }
 
-PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst )
+QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst )
 {
 	ApeViewport    *selectionViewport = ape_editor_selection_get_viewport_();
 	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
@@ -512,7 +512,7 @@ PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst )
 	}
 
 	size_t    size = frameBuffer->width * frameBuffer->height * 4;
-	PLColour *buf  = PL_NEW_( PLColour, size );
+	QmMathColour4ub *buf  = QM_OS_MEMORY_NEW_( QmMathColour4ub, size );
 	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
 	{
 		int x, y;
@@ -525,7 +525,7 @@ PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst )
 		if ( x < frameBuffer->width && y < frameBuffer->height )
 		{
 			*dst = buf[ ( frameBuffer->height - y - 1 ) * frameBuffer->width + x ];
-			PL_DELETE( buf );
+			qm_os_memory_free( buf );
 			return dst;
 		}
 	}
@@ -534,7 +534,7 @@ PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst )
 		ape_warning_( "Failed to read framebuffer: %s\n", PlGetError() );
 	}
 
-	PL_DELETE( buf );
+	qm_os_memory_free( buf );
 	return nullptr;
 }
 

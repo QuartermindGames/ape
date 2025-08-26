@@ -8,7 +8,7 @@
 #include "yin/core_fs.h"
 #include "node/node_entity.h"
 
-void ape_console_push_notification_( const char *buffer, PLColour colour );
+void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour );
 
 /****************************************
  * CONSOLE OUTPUT BUFFER
@@ -33,7 +33,7 @@ static void clear_console_command( unsigned int argc, char **argv )
 	clear_output_buffer();
 }
 
-static void output_callback( int level, const char *message, PLColour colour )
+static void output_callback( int level, const char *message, QmMathColour4ub colour )
 {
 	ape_console_push_notification_( message, colour );
 
@@ -237,14 +237,14 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
 	if ( length <= 0 )
 		return;
 
-	char *buf = PL_NEW_( char, length );
+	char *buf = QM_OS_MEMORY_NEW_( char, length );
 	vsnprintf( buf, length, message, args );
 
 	va_end( args );
 
 	PlLogMessage( logLevels[ level ], buf );
 
-	PL_DELETE( buf );
+	qm_os_memory_free( buf );
 }
 
 /**

@@ -46,7 +46,7 @@ typedef struct ApeViewport
 
 	ApeCamera       *camera;
 	ApeRenderTarget *renderTarget;
-	PLColour         clearColour;
+	QmMathColour4ub  clearColour;
 
 	struct
 	{
@@ -85,7 +85,7 @@ ApeViewport *ape_viewport_get_active( void );
 
 void ape_viewport_set_clip( const ApeViewport *self );
 
-void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColour );
+void ape_viewport_set_clear_colour( ApeViewport *self, const QmMathColour4ub *clearColour );
 
 /**
  * Convert the given position in screen space, into a position in world space.
@@ -96,7 +96,7 @@ void ape_viewport_set_clear_colour( ApeViewport *self, const PLColour *clearColo
  * @param projMatrix	Projection matrix.
  * @return				World-space position.
  */
-PLVector3 ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix );
+QmMathVector3f ape_viewport_convert_screen_to_world( const ApeViewport *self, const int pos[ 2 ], const PLMatrix4 *viewMatrix, const PLMatrix4 *projMatrix );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Render Target API
@@ -214,8 +214,8 @@ void           ss_arl_bitmap_font_release( ApeBitmapFont *font );
 
 ApeBitmapFont *ape_get_default_small_bitmap_font( void );
 
-void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, uint8_t character );
-void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, float scale, PLColour colour, const char *msg, size_t length, bool shadow );
+void ss_arl_bitmap_font_batch_character( const ApeBitmapFont *font, float x, float y, float scale, QmMathColour4ub colour, uint8_t character );
+void ape_bitmap_font_batch_string( const ApeBitmapFont *font, float x, float y, float scale, QmMathColour4ub colour, const char *msg, size_t length, bool shadow );
 
 void ape_bitmap_font_begin_draw( ApeBitmapFont *font );
 void ape_bitmap_font_draw( ApeBitmapFont *font );
@@ -225,15 +225,15 @@ void ape_bitmap_font_draw( ApeBitmapFont *font );
 /////////////////////////////////////////////////////////////////////////////////////
 // Draw API
 
-void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const PLColourF32 *colour, const PLVector3 *position, const PLVector3 *origin, const PLVector3 *angles, float scale );
+void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMathColour4f *colour, const QmMathVector3f *position, const QmMathVector3f *origin, const QmMathVector3f *angles, float scale );
 
 /**
  * Draws a textured quad. *SLOW* so use sparingly.
  * If material is null, this will draw without passing through the material API.
  */
-void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const PLColour *colour );
+void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const QmMathColour4ub *colour );
 
-void ape_draw_axis_pivot( PLVector3 position, PLVector3 rotation, float scale );
+void ape_draw_axis_pivot( QmMathVector3f position, QmMathVector3f rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max, ApeGuiFont *font );
 
 // The following are safe to be called during tick, the above are *not*!
@@ -245,7 +245,7 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
  * @param end 		Point the line ends.
  * @param colour 	Colour of the line.
  */
-void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour );
+void ape_draw_debug_line( QmMathVector3f start, QmMathVector3f end, QmMathColour4ub colour );
 
 /**
  * Draw a wireframe arrow from start to end.
@@ -254,7 +254,7 @@ void ape_draw_debug_line( PLVector3 start, PLVector3 end, PLColour colour );
  * @param end 		Point the line ends. Arrow will point in this direction.
  * @param colour	Colour of the line.
  */
-void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour, float scale );
+void ape_draw_debug_arrow( QmMathVector3f start, QmMathVector3f end, QmMathColour4ub colour, float scale );
 
 /**
  * Draw a wireframe sphere at the given location.
@@ -263,7 +263,7 @@ void ape_draw_debug_arrow( PLVector3 start, PLVector3 end, PLColour colour, floa
  * @param colour 	Colour of the sphere.
  * @param scale 	Scale of the sphere.
  */
-void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
+void ape_draw_debug_sphere( QmMathVector3f origin, QmMathColour4ub colour, float scale );
 
 /**
  * Draw an axis at the given position using Euler angles.
@@ -272,7 +272,7 @@ void ape_draw_debug_sphere( PLVector3 origin, PLColour colour, float scale );
  * @param angles 	Angles of the axis.
  * @param scale		Scale of the axis.
  */
-void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
+void ape_draw_debug_axis( QmMathVector3f origin, QmMathVector3f angles, float scale );
 
 /**
  * Draw the specified AABB volume at its origin.
@@ -280,7 +280,7 @@ void ape_draw_debug_axis( PLVector3 origin, PLVector3 angles, float scale );
  * @param aabb		Pointer to the AABB to draw.
  * @param colour 	Colour of the volume.
  */
-void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour );
+void ape_draw_debug_aabb( const PLCollisionAABB *aabb, QmMathColour4ub colour );
 
 /**
  * Draw the specified cylinder at its origin.
@@ -289,7 +289,7 @@ void ape_draw_debug_aabb( const PLCollisionAABB *aabb, PLColour colour );
  * @param colour		Colour of the cylinder.
  * @param resolution	Resolution of the cylinder.
  */
-void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const PLColour *colour, unsigned int resolution );
+void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const QmMathColour4ub *colour, unsigned int resolution );
 
 /**
  * Draw the specified plane.
@@ -298,7 +298,7 @@ void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const PLColo
  * @param colour	Colour of the plane.
  * @param scale
  */
-void ape_draw_debug_plane( const PLCollisionPlane *plane, PLColour colour, float scale );
+void ape_draw_debug_plane( const PLCollisionPlane *plane, QmMathColour4ub colour, float scale );
 
 /**
  * Draw a polygon derived from the given vertices.
@@ -307,7 +307,20 @@ void ape_draw_debug_plane( const PLCollisionPlane *plane, PLColour colour, float
  * @param numVertices	The number of vertices in the array.
  * @param colour		Colour of the polygon.
  */
-void ape_draw_debug_polygon( const PLVector3 *vertices, unsigned int numVertices, PLColour colour );
+void ape_draw_debug_polygon( const QmMathVector3f *vertices, unsigned int numVertices, QmMathColour4ub colour );
+
+/**
+ * Queue up a string to display on the screen.
+ * Mind this is not for displaying a string in 3D space!
+ *
+ * @param x X position of the string.
+ * @param y Y position of the string.
+ * @param z Z position of the string.
+ * @param colour Colour to display for the string.
+ * @param string String to display.
+ * @param ... Variable arguments.
+ */
+void ape_draw_debug_string( float x, float y, float z, const QmMathColour4ub *colour, const char *string, ... );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

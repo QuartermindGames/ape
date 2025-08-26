@@ -41,6 +41,6 @@ void ape_editor_selection_rebuild_( ApeEditorInstance *self );
 void ape_editor_selection_render_( ApeEditorInstance *self );
 void ape_editor_selection_render_post_( ApeEditorInstance *self );
 
-PLColour *ape_editor_selection_get_pixel_under_cursor_( PLColour *dst );
+QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst );
 
 PL_EXTERN_C_END

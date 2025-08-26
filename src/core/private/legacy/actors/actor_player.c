@@ -22,14 +22,14 @@
 
 typedef struct APlayer
 {
-	PLVector3 centerView; /* center */
+	QmMathVector3f centerView; /* center */
 
 	float forwardVelocity;
 	float strafeVelocity;
 
 	float viewBob;
 
-	PLVector3 viewAngles;
+	QmMathVector3f viewAngles;
 
 	ApeCamera *eyeCamera;
 
@@ -41,7 +41,7 @@ typedef struct APlayer
 static void Player_ApplyViewBob( Actor *self )
 {
 	/* apply view bob */
-	float velocityVector = PlVector3Length( self->velocity );
+	float velocityVector = qm_math_vector3f_length( self->velocity );
 	APLAYER( self )->viewBob += ( sinf( ape_get_num_ticks() / 5.0f ) / 10.0f ) * velocityVector;
 
 	float viewOffset = self->position.y + PLAYER_VIEW_OFFSET;
@@ -108,11 +108,11 @@ static void Player_Tick( Actor *self, void *userData )
 	APLAYER( self )->viewAngles   = self->angles;
 	APLAYER( self )->viewAngles.z = self->viewPitch;
 
-	PLVector3 left;
+	QmMathVector3f left;
 	PlAnglesAxes( APLAYER( self )->viewAngles, &left, NULL, &self->forward );
 
-	self->velocity = PlAddVector3( self->velocity,
-	                               PlAddVector3(
+	self->velocity = qm_math_vector3f_add( self->velocity,
+	                               qm_math_vector3f_add(
 	                                       PlScaleVector3F( self->forward, APLAYER( self )->forwardVelocity ),
 	                                       PlScaleVector3F( left, APLAYER( self )->strafeVelocity ) ) );
 

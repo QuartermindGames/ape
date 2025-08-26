@@ -34,7 +34,7 @@ static PLHashTable   *cachedFontsTable;
 static ApeGuiFont    *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
 static float     fontSlant        = 0.0f;
-static PLVector2 fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
+static QmMathVector2f fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
 
 static uint32_t decode_utf8_char( const char **string )
 {
@@ -95,8 +95,8 @@ void ape_gui_font_destroy( ApeGuiFont *font )
 	PlDestroyHashTable( font->glyphTable );
 	PlgDestroyTexture( font->texture );
 	PlgDestroyMesh( font->mesh );
-	PL_DELETE( font->glyphs );
-	PL_DELETE( font );
+	qm_os_memory_free( font->glyphs );
+	qm_os_memory_free( font );
 }
 
 static ApeGuiFont *font_deserialize( PLFile *file )
@@ -123,9 +123,9 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 		return nullptr;
 	}
 
-	ApeGuiFont *font = PL_NEW( ApeGuiFont );
+	ApeGuiFont *font = QM_OS_MEMORY_NEW( ApeGuiFont );
 	font->glyphTable = PlCreateHashTable();
-	font->glyphs     = PL_NEW_( ComFontGlyph, numGlyphs );
+	font->glyphs     = QM_OS_MEMORY_NEW_( ComFontGlyph, numGlyphs );
 	for ( uint32_t i = 0; i < numGlyphs; ++i )
 	{
 		font->glyphs[ i ].codepoint = PL_READUINT32( file, false, NULL );
@@ -288,7 +288,7 @@ void gui_font_get_string_pixel_size( const ApeGuiFont *self, float scale, const 
 	if ( dh != NULL ) { *dh = h; }
 }
 
-void gui_font_draw_glyph( const ApeGuiFont *font, float x, float y, float scale, const PLColour *colour, const ComFontGlyph *glyph )
+void gui_font_draw_glyph( const ApeGuiFont *font, float x, float y, float scale, const QmMathColour4ub *colour, const ComFontGlyph *glyph )
 {
 	float tw = ( float ) glyph->w / ( float ) font->texture->w;
 	float th = ( float ) glyph->h / ( float ) font->texture->h;
@@ -308,7 +308,7 @@ void gui_font_draw_glyph( const ApeGuiFont *font, float x, float y, float scale,
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );
 }
 
-void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float scale, const PLColour *colour, uint32_t character )
+void gui_font_draw_character( const ApeGuiFont *font, float x, float y, float scale, const QmMathColour4ub *colour, uint32_t character )
 {
 	ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL )
@@ -340,12 +340,12 @@ static void parse_hex_component( const char **str, const char *end, unsigned cha
 	}
 }
 
-void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, float *oy, float scale, const PLColour *colour, const char *string, size_t length, bool shadow )
+void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, float *oy, float scale, const QmMathColour4ub *colour, const char *string, size_t length, bool shadow )
 {
 	float nx = x;
 	float ny = y;
 
-	PLColour currentColour = *colour;
+	QmMathColour4ub currentColour = *colour;
 
 	const char *end = string + length;
 	while ( string < end )
@@ -386,7 +386,7 @@ void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, 
 
 		if ( shadow )
 		{
-			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &PLColour( 0, 0, 0, currentColour.a ), glyph );
+			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &QM_MATH_COLOUR4UB( 0, 0, 0, currentColour.a ), glyph );
 		}
 
 		gui_font_draw_glyph( self, nx, ny, scale, &currentColour, glyph );

@@ -918,13 +918,13 @@ static void *setup_malloc(vorb *f, int sz)
       f->setup_offset += sz;
       return p;
    }
-   return sz ? PL_MALLOCA(sz) : NULL;
+   return sz ? QM_OS_MEMORY_MALLOC_(sz) : NULL;
 }
 
 static void setup_free(vorb *f, void *p)
 {
    if (f->alloc.alloc_buffer) return; // do nothing; setup mem is a stack
-   PL_DELETE(p);
+   qm_os_memory_free(p);
 }
 
 static void *setup_temp_malloc(vorb *f, int sz)
@@ -935,7 +935,7 @@ static void *setup_temp_malloc(vorb *f, int sz)
       f->temp_offset -= sz;
       return (char *) f->alloc.alloc_buffer + f->temp_offset;
    }
-   return PL_MALLOCA(sz);
+   return QM_OS_MEMORY_MALLOC_(sz);
 }
 
 static void setup_temp_free(vorb *f, void *p, int sz)
@@ -944,7 +944,7 @@ static void setup_temp_free(vorb *f, void *p, int sz)
       f->temp_offset += (sz+3)&~3;
       return;
    }
-   PL_DELETE(p);
+   qm_os_memory_free(p);
 }
 
 #define CRC32_POLY    0x04c11db7   // from spec

@@ -80,7 +80,7 @@ void ape_server_drop_client_( ApeServerClient *serverClient )
 	game->serverClientDisconnected( serverClient );
 
 	PlDestroyLinkedListNode( serverClient->node );
-	PL_DELETE( serverClient );
+	qm_os_memory_free( serverClient );
 }
 
 static void validate_client( const ApeProtocolValidationMessage *message, ApeServerClient *client )
@@ -248,7 +248,7 @@ void ape_tick_server_( double delta )
 	ApeNetSocket *connectedSocket = ape_net_accept_( hostSocket );
 	if ( connectedSocket != NULL )
 	{
-		ApeServerClient *serverClient = PlMAllocA( sizeof( ApeServerClient ) );
+		ApeServerClient *serverClient = QM_OS_MEMORY_MALLOC_( sizeof( ApeServerClient ) );
 		serverClient->netSocket       = connectedSocket;
 		serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
 		serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;

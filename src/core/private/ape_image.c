@@ -100,7 +100,7 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 			else
 				offsetSize = sizeof( uint32_t );
 
-			void *pixelOffsets = PlCAlloc( numBlockPixels, offsetSize, true );
+			void *pixelOffsets = QM_OS_MEMORY_CALLOC( numBlockPixels, offsetSize );
 			if ( PlReadFile( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels )
 				PRINT_ERROR( "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
 
@@ -127,7 +127,7 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 				memcpy( &image->data[ 0 ][ po * numChannels ], colour, numChannels );
 			}
 
-			PlFree( pixelOffsets );
+			qm_os_memory_free( pixelOffsets );
 		}
 	}
 

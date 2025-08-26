@@ -57,7 +57,7 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProp
 	        APE_WORLD_NODE_PROPERTY_BASIC( "Angles", "Angles of the node in 3D space.", ApeWorldNode, angles, VEC3 ),
 	        APE_WORLD_NODE_PROPERTY_BASIC( "Scale", "Scale of the node in 3D space.", ApeWorldNode, scale, VEC3 ),
 	};
-	*numProperties = PL_ARRAY_ELEMENTS( properties );
+	*numProperties = QM_OS_ARRAY_ELEMENTS( properties );
 
 	return properties;
 }
@@ -84,8 +84,8 @@ void ape_world_node_compute_bounds_( ApeWorldNode *self )
 	for ( unsigned int i = 0; i < 3; ++i )
 	{
 		PLCollisionAABB localBounds = ape_world_node_get_transformed_local_bounds( self );
-		localBounds.mins            = PlAddVector3( localBounds.mins, localBounds.origin );
-		localBounds.maxs            = PlAddVector3( localBounds.maxs, localBounds.origin );
+		localBounds.mins            = qm_math_vector3f_add( localBounds.mins, localBounds.origin );
+		localBounds.maxs            = qm_math_vector3f_add( localBounds.maxs, localBounds.origin );
 
 		if ( PL_VECTOR3_I( localBounds.maxs, i ) > PL_VECTOR3_I( self->bounds.maxs, i ) )
 		{
@@ -139,7 +139,10 @@ static ApeRoom *lookup_parent_room( ApeWorldNode *self )
 	ApeWorldNode *roomNode = ape_world_node_get_parent_by_type( self, APE_WORLD_NODE_TYPE_ROOM );
 	if ( roomNode == nullptr )
 	{
-		ape_warning_( "Encountered a node (%s) without an associated room!\n", PlPrintVector3( &self->position, PL_VAR_F32 ) );
+		char tmp[ 64 ];
+		qm_math_vector3f_print( self->position, tmp, sizeof( tmp ) );
+
+		ape_warning_( "Encountered a node (%s) without an associated room!\n", tmp );
 		return nullptr;
 	}
 
@@ -167,7 +170,7 @@ static void update_world_transform( ApeWorldNode *self )
 	}
 }
 
-ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const PLVector3 *position, const PLVector3 *angles )
+ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles )
 {
 	self->magic = APE_WORLD_NODE_MAGIC;
 
@@ -295,18 +298,18 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 	ape_world_node_mark_dirty_( parent );
 }
 
-PLVector3 ape_world_node_get_local_position( const ApeWorldNode *self )
+QmMathVector3f ape_world_node_get_local_position( const ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 	return self->position;
 }
 
-PLVector3 ape_world_node_get_position( const ApeWorldNode *self )
+QmMathVector3f ape_world_node_get_position( const ApeWorldNode *self )
 {
 	return PlGetMatrix4Translation( &self->worldTransform );
 }
 
-void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position )
+void ape_world_node_set_position( ApeWorldNode *self, const QmMathVector3f *position )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 	self->position = *position;
@@ -314,13 +317,13 @@ void ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position 
 	update_world_transform( self );
 }
 
-PLVector3 ape_world_node_get_angles( const ApeWorldNode *self )
+QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 	return self->angles;
 }
 
-void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles )
+void ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 
@@ -329,7 +332,7 @@ void ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles )
 	update_world_transform( self );
 }
 
-void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs )
+void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 
@@ -762,7 +765,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 
 				// this is a gross botch to allow us to do special shaded
 				// types via the editor... *sigh*
-				PLColour                 colour;
+				QmMathColour4ub          colour;
 				const ApeEditorInstance *editorInstance = ape_editor_get_active_instance();
 				if ( editorInstance != nullptr && editorInstance->camera != nullptr )
 				{
@@ -771,7 +774,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 					{
 						unsigned int seed = ( unsigned int ) ( uintptr_t ) brush;
 
-						colour = PL_COLOURU8(
+						colour = QM_MATH_COLOUR4UB(
 						        ( uint8_t ) ( qm_os_random_int( &seed ) % 256 ),
 						        ( uint8_t ) ( qm_os_random_int( &seed ) % 256 ),
 						        ( uint8_t ) ( qm_os_random_int( &seed ) % 256 ), 255 );
@@ -781,17 +784,17 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 					}
 					else
 					{
-						colour = PL_COLOURU8( 255, 255, 255, 255 );
+						colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
 					}
 				}
 				else
 				{
-					colour = PL_COLOURU8( 255, 255, 255, 255 );
+					colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
 				}
 
 #else
 
-				PLColour colour = PL_COLOURU8( 255, 255, 255, 255 );
+				QmMathColour4ub colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
 
 #endif
 

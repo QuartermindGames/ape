@@ -150,9 +150,9 @@ typedef struct ApeWorldNode
 	const ApeWorldNodeClass *classType;
 
 	//todo: remove these once transform matrix is used more widely
-	PLVector3 position;
-	PLVector3 angles;
-	PLVector3 scale;
+	QmMathVector3f position;
+	QmMathVector3f angles;
+	QmMathVector3f scale;
 
 	PLMatrix4 localTransform;
 	PLMatrix4 worldTransform;
@@ -171,7 +171,7 @@ typedef struct ApeWorldNode
 	struct PLLinkedListNode *parentListNode;// our slot under the parent
 
 #if !defined( APE_NO_EDITOR )
-	PLColour selectColour;
+	QmMathColour4ub selectColour;
 #endif
 
 	PLPath path;// where we were loaded from, if at all (note this isn't always valid)
@@ -214,14 +214,14 @@ void ape_world_node_destroy( ApeWorldNode *self );
 void ape_world_node_dettach( ApeWorldNode *self );
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent );
 
-PLVector3 ape_world_node_get_local_position( const ApeWorldNode *self );
-PLVector3 ape_world_node_get_position( const ApeWorldNode *self );
-void      ape_world_node_set_position( ApeWorldNode *self, const PLVector3 *position );
+QmMathVector3f ape_world_node_get_local_position( const ApeWorldNode *self );
+QmMathVector3f ape_world_node_get_position( const ApeWorldNode *self );
+void           ape_world_node_set_position( ApeWorldNode *self, const QmMathVector3f *position );
 
-PLVector3 ape_world_node_get_angles( const ApeWorldNode *self );
-void      ape_world_node_set_angles( ApeWorldNode *self, const PLVector3 *angles );
+QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self );
+void           ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles );
 
-void ape_world_node_set_local_bounds( ApeWorldNode *self, const PLVector3 *mins, const PLVector3 *maxs );
+void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs );
 
 ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type );
 
@@ -350,11 +350,11 @@ typedef enum ApeBrushFaceFlag
 
 typedef struct ApeBrushFaceVertex
 {
-	PLVector3  *position;
-	PLVector2   textureCoords;
-	PLVector2   lightmapCoords;
-	PLVector3   normal;
-	PLColourF32 colour;
+	QmMathVector3f *position;
+	QmMathVector2f  textureCoords;
+	QmMathVector2f  lightmapCoords;
+	QmMathVector3f  normal;
+	QmMathColour4f  colour;
 } ApeBrushFaceVertex;
 
 ////////////////////////////////////////////////////////////////////
@@ -365,18 +365,18 @@ static constexpr unsigned int APE_BRUSH_FACE_MAX_PATH = sizeof( PLPath );
 
 typedef struct ApeBrushFace
 {
-	int          materialIndex;
-	ApeMaterial *material;
-	PLVector2    materialScale;
-	PLVector3    materialOffset;
-	PLVector3    materialAngle;
+	int            materialIndex;
+	ApeMaterial   *material;
+	QmMathVector2f materialScale;
+	QmMathVector3f materialOffset;
+	QmMathVector3f materialAngle;
 
-	PLVector3 tangent;
-	PLVector3 bitangent;
+	QmMathVector3f tangent;
+	QmMathVector3f bitangent;
 
-	PLVector3   normal;
-	PLColourF32 colour;
-	PLColour    selectColour;
+	QmMathVector3f  normal;
+	QmMathColour4f  colour;
+	QmMathColour4ub selectColour;
 
 	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];// represents the actual draw order
 	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];// list of vertices
@@ -393,13 +393,13 @@ typedef struct ApeBrushFace
 
 	ApeBrush *parent;
 
-	struct ComSharedPtr *ptr;
+	struct QmOsSharedPtr *ptr;
 } ApeBrushFace;
 
 void ape_brush_face_fit_material( ApeBrushFace *self );
 
 void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material );
-void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const PLVector2 *scale, const PLVector2 *offset, const PLVector3 *rotation, bool computeLocal );
+void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const QmMathVector2f *scale, const QmMathVector2f *offset, const QmMathVector3f *rotation, bool computeLocal );
 
 bool          ape_brush_face_is_portal( const ApeBrushFace *self );
 bool          ape_brush_face_is_mirror( const ApeBrushFace *self );
@@ -422,19 +422,19 @@ typedef struct ApeBrush
 
 	ApeBrushType type;
 
-	PLVector3   *vertices;
-	unsigned int numVertices;
+	QmMathVector3f *vertices;
+	unsigned int    numVertices;
 
 #if !defined( APE_NO_EDITOR )
-	PLColour    *vertexSelectColours;   // colours used for selection of vertices
-	unsigned int numVertexSelectColours;// should match num vertices
+	QmMathColour4ub *vertexSelectColours;   // colours used for selection of vertices
+	unsigned int     numVertexSelectColours;// should match num vertices
 #endif
 
 	ApeBrushFace *faces;
 	unsigned int  numFaces;
 } ApeBrush;
 
-ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const PLVector3 *position, const PLVector3 *angles );
+ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles );
 
 void ape_brush_compute_bounds( ApeBrush *self );
 void ape_brush_compute_face_bounds( ApeBrush *self );
@@ -465,9 +465,9 @@ typedef struct ApeWorld
 	PLLinkedList       *entities;//ApeEntity
 	struct PLHashTable *roomLookup;
 
-	PLColourF32 fogColour;
-	float       fogNear;
-	float       fogFar;
+	QmMathColour4f fogColour;
+	float          fogNear;
+	float          fogFar;
 } ApeWorld;
 
 #define APE_WORLD_VERSION   3
@@ -527,8 +527,8 @@ void ape_world_attach_light( ApeWorld *world, ApeLight *light );
  */
 ApeRoom *ape_room_create( ApeWorldNode *parent, const char *name );
 
-void        ape_room_set_ambience( ApeRoom *self, PLColourF32 ambience );
-PLColourF32 ape_room_get_ambience( const ApeRoom *self );
+void           ape_room_set_ambience( ApeRoom *self, QmMathColour4f ambience );
+QmMathColour4f ape_room_get_ambience( const ApeRoom *self );
 
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
@@ -579,12 +579,12 @@ typedef struct ApeCollisionCollider
 
 typedef struct ApeCollisionIntersection
 {
-	ApeWorldNode *node;        // the node that we hit
-	ApeBrushFace *face;        // face we hit, if any
-	PLVector3     origin;      // origin position of the original collider
-	PLVector3     intersection;// point on the node that we hit
-	float         distance;    // distance from point of intersection vs. caster
-	float         depth;
+	ApeWorldNode  *node;        // the node that we hit
+	ApeBrushFace  *face;        // face we hit, if any
+	QmMathVector3f origin;      // origin position of the original collider
+	QmMathVector3f intersection;// point on the node that we hit
+	float          distance;    // distance from point of intersection vs. caster
+	float          depth;
 } ApeCollisionIntersection;
 
 ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionCollider *collider, unsigned int *numHits );
@@ -600,9 +600,9 @@ bool        ape_room_set_save_path( ApeRoom *self, const char *path );
 const char *ape_room_get_save_path( const ApeRoom *self );
 #endif
 
-PLVector3 ape_room_get_gravity( const ApeRoom *self );
+QmMathVector3f ape_room_get_gravity( const ApeRoom *self );
 
-bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const PLVector3 *pos, const PLVector3 *dir, float angle, float scale );
+bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting
@@ -640,17 +640,17 @@ typedef enum ApeLightFlag
 /// \param type 	The type of light to be created.
 /// \param position Position of the light.
 /// \return 		A pointer to the instance of the light. This is owned by the world.
-ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags );
+ApeLight *ape_create_light( ApeWorldNode *parent, const QmMathVector3f *position, const QmMathColour4f *colour, float radius, ApeLightType type, unsigned int flags );
 void      ape_light_destroy( ApeLight *light );
 
-PLColourF32 ape_light_get_colour( const ApeLight *self );
-void        ape_light_set_colour( ApeLight *light, const PLColourF32 *colour );
+QmMathColour4f ape_light_get_colour( const ApeLight *self );
+void           ape_light_set_colour( ApeLight *light, const QmMathColour4f *colour );
 
-PLVector3 ape_light_get_position( const ApeLight *self );
-void      ape_light_set_position( ApeLight *light, const PLVector3 *position );
+QmMathVector3f ape_light_get_position( const ApeLight *self );
+void           ape_light_set_position( ApeLight *light, const QmMathVector3f *position );
 
-PLVector3 ape_light_get_angles( const ApeLight *self );
-void      ape_light_set_angles( ApeLight *self, const PLVector3 *angles );
+QmMathVector3f ape_light_get_angles( const ApeLight *self );
+void           ape_light_set_angles( ApeLight *self, const QmMathVector3f *angles );
 
 ApeLightType ape_light_get_type( const ApeLight *self );
 void         ape_light_set_type( ApeLight *self, ApeLightType type );

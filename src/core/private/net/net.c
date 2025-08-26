@@ -255,7 +255,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	}
 
 	/* all done, allocate and return it */
-	ApeNetSocket *netSocket = PlMAllocA( sizeof( ApeNetSocket ) );
+	ApeNetSocket *netSocket = QM_OS_MEMORY_MALLOC_( sizeof( ApeNetSocket ) );
 	netSocket->connectionState = NET_CONNECTION_PENDING;
 	netSocket->handle = handle;
 	netSocket->addressType = addressType;
@@ -277,8 +277,8 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 void ape_net_close_socket_( ApeNetSocket *netSocket )
 {
 	close_socket( netSocket->handle );
-	PlFree( netSocket->sendBuffer );
-	PlFree( netSocket );
+	qm_os_memory_free( netSocket->sendBuffer );
+	qm_os_memory_free( netSocket );
 }
 
 static bool flush_send_buffer( ApeNetSocket *netSocket )
@@ -373,7 +373,7 @@ ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket )
 		fcntl( handle, F_SETFL, O_NONBLOCK );
 #endif
 
-		ApeNetSocket *out = PlMAllocA( sizeof( ApeNetSocket ) );
+		ApeNetSocket *out = QM_OS_MEMORY_MALLOC_( sizeof( ApeNetSocket ) );
 		out->handle = handle;
 
 		socklen_t addrSize;
@@ -443,7 +443,7 @@ bool ape_net_set_max_send_size_( ApeNetSocket *netSocket, size_t maxSendSize )
 		return false;
 	}
 
-	void *newSendBuffer = PlReAlloc( netSocket->sendBuffer, maxSendSize, false );
+	void *newSendBuffer = qm_os_memory_realloc( netSocket->sendBuffer, maxSendSize );
 	if ( newSendBuffer == NULL )
 	{
 		return false;

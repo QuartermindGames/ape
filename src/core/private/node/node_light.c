@@ -9,9 +9,9 @@
 
 #include "world/world.h"
 
-ApeLight *ape_create_light( ApeWorldNode *parent, const PLVector3 *position, const PLColourF32 *colour, float radius, ApeLightType type, unsigned int flags )
+ApeLight *ape_create_light( ApeWorldNode *parent, const QmMathVector3f *position, const QmMathColour4f *colour, float radius, ApeLightType type, unsigned int flags )
 {
-	ApeLight *light = PL_NEW( ApeLight );
+	ApeLight *light = QM_OS_MEMORY_NEW( ApeLight );
 	ape_world_node_setup_( &light->base, parent, APE_WORLD_NODE_TYPE_LIGHT, nullptr, position, &pl_vecOrigin3 );
 
 	light->colour = *colour;
@@ -31,8 +31,8 @@ static void destroy_light( void *data, ApeWorldNode *parent )
 		return;
 	}
 
-	PL_DELETE( self->lightmap );
-	PL_DELETE( self );
+	qm_os_memory_free( self->lightmap );
+	qm_os_memory_free( self );
 }
 
 static ApeWorldNode *clone_light( ApeWorldNode *src )
@@ -54,25 +54,25 @@ static ApeWorldNode *clone_light( ApeWorldNode *src )
 	return APE_WORLD_NODE( dstLight );
 }
 
-PLColourF32 ape_light_get_colour( const ApeLight *light ) { return light->colour; }
-void        ape_light_set_colour( ApeLight *light, const PLColourF32 *colour ) { light->colour = *colour; }
+QmMathColour4f ape_light_get_colour( const ApeLight *light ) { return light->colour; }
+void        ape_light_set_colour( ApeLight *light, const QmMathColour4f *colour ) { light->colour = *colour; }
 
-PLVector3 ape_light_get_position( const ApeLight *self )
+QmMathVector3f ape_light_get_position( const ApeLight *self )
 {
 	return ape_world_node_get_position( APE_WORLD_NODE( self ) );
 }
 
-void ape_light_set_position( ApeLight *self, const PLVector3 *position )
+void ape_light_set_position( ApeLight *self, const QmMathVector3f *position )
 {
 	ape_world_node_set_position( ( ApeWorldNode * ) self, position );
 }
 
-PLVector3 ape_light_get_angles( const ApeLight *self )
+QmMathVector3f ape_light_get_angles( const ApeLight *self )
 {
 	return ape_world_node_get_angles( ( ApeWorldNode * ) self );
 }
 
-void ape_light_set_angles( ApeLight *self, const PLVector3 *angles )
+void ape_light_set_angles( ApeLight *self, const QmMathVector3f *angles )
 {
 	ape_world_node_set_angles( ( ApeWorldNode * ) self, angles );
 }
@@ -127,10 +127,10 @@ bool ape_light_is_active( const ApeLight *light )
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 {
 	//HACK: the sun is an awkward case...
-	PLVector3 origin = ( self->type == APE_LIGHT_TYPE_SUN ) ? pl_vecOrigin3 : plane->origin;
+	QmMathVector3f origin = ( self->type == APE_LIGHT_TYPE_SUN ) ? pl_vecOrigin3 : plane->origin;
 
-	PLVector3 dir = PlNormalizeVector3( PlSubtractVector3( origin, ape_light_get_position( self ) ) );
-	float     dot = PlVector3DotProduct( plane->normal, dir );
+	QmMathVector3f dir = qm_math_vector3f_normalize( qm_math_vector3f_sub( origin, ape_light_get_position( self ) ) );
+	float          dot = qm_math_vector3f_dot_product( plane->normal, dir );
 	if ( self->type == APE_LIGHT_TYPE_SUN )
 	{
 		return ( dot >= 0 );
@@ -169,7 +169,7 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 
 static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeLight *light = ape_create_light( parent, &pl_vecOrigin3, &PL_COLOURF32( 1.0f, 1.0f, 1.0f, 0.0f ), 0.0f, APE_LIGHT_TYPE_OMNI, 0 );
+	ApeLight *light = ape_create_light( parent, &pl_vecOrigin3, &QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 0.0f ), 0.0f, APE_LIGHT_TYPE_OMNI, 0 );
 	light->type     = acm_get_uint( root, "type", light->type );
 	light->colour   = com_acm_get_colour_f32( root, "colour", &light->colour );
 	light->radius   = acm_get_f32( root, "radius", light->radius );
@@ -203,7 +203,7 @@ const ApeWorldNodeClass ape_lightClass = {
         .clone = clone_light,
 
         .properties    = properties,
-        .numProperties = PL_ARRAY_ELEMENTS( properties ),
+        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
 
 #if !defined( APE_NO_EDITOR )
 

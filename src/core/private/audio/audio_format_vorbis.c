@@ -18,20 +18,20 @@ ApeAudioSample *ape_audio_format_vorbis_load_( PLFile *file )
 	int samples = stb_vorbis_decode_memory( data, length, &channels, &sampleRate, &output );
 	if ( samples < 0 )
 	{
-		PL_DELETE( output );
+		qm_os_memory_free( output );
 
 		ape_warning_( "Failed to decode ogg!\n" );
 		return nullptr;
 	}
 	else if ( channels == 0 || channels > 2 )
 	{
-		PL_DELETE( output );
+		qm_os_memory_free( output );
 
 		ape_warning_( "Invalid number of channels for ogg!\n" );
 		return nullptr;
 	}
 
-	ApeAudioSample *sample = PL_NEW( ApeAudioSample );
+	ApeAudioSample *sample = QM_OS_MEMORY_NEW( ApeAudioSample );
 	sample->buffer         = output;
 	sample->bufferSize     = samples * channels * sizeof( int16_t );
 	sample->sampleRate     = sampleRate;

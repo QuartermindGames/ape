@@ -9,7 +9,7 @@
 
 ApeWorld *ape_world_create( void )
 {
-	ApeWorld *world = PL_NEW( ApeWorld );
+	ApeWorld *world = QM_OS_MEMORY_NEW( ApeWorld );
 	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	world->entities = PlCreateLinkedList();
@@ -54,7 +54,7 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 	PlDestroyLinkedList( self->entities );
 	PlDestroyHashTable( self->roomLookup );
 
-	PL_DELETE( self );
+	qm_os_memory_free( self );
 }
 
 void ape_world_spawn_entities_( ApeWorld *self )
@@ -192,7 +192,7 @@ ApeBrushFace **ape_world_get_tagged_surfaces( ApeWorld *self, unsigned int *numD
 
 	// and now allocate and populate the list
 	unsigned int   faceIndex = 0;
-	ApeBrushFace **faces     = PL_NEW_( ApeBrushFace *, numTaggedSurfaces );
+	ApeBrushFace **faces     = QM_OS_MEMORY_NEW_( ApeBrushFace *, numTaggedSurfaces );
 	COM_ITERATE_HASHED_LIST( room, self->roomLookup, i )
 	{
 		ApeBrushFace *face;

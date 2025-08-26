@@ -103,7 +103,7 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassLookup, className, strlen( className ) );
 }
 
-ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const PLVector3 *position, const PLVector3 *angles )
+ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const QmMathVector3f *position, const QmMathVector3f *angles )
 {
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( classDefinition == NULL )
@@ -112,7 +112,7 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 		return nullptr;
 	}
 
-	ApeEntity *entity = PL_NEW( ApeEntity );
+	ApeEntity *entity = QM_OS_MEMORY_NEW( ApeEntity );
 	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, name, position, angles );
 	entity->classDefinition = classDefinition;
 	entity->componentTable  = PlCreateHashTable();
@@ -151,7 +151,7 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 			component->componentDefinition->destroyFunction( component->data );
 		}
 
-		PL_DELETE( component );
+		qm_os_memory_free( component );
 	}
 
 	if ( self->classDefinition->destroyFunction != nullptr )
@@ -163,7 +163,7 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 
 	PlDestroyLinkedListNode( self->worldListNode );
 
-	PL_DELETE( self );
+	qm_os_memory_free( self );
 }
 
 void ape_entity_spawn( ApeEntity *self )
@@ -227,7 +227,7 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 		return NULL;
 	}
 
-	ApeEntityComponent *component  = PL_NEW( ApeEntityComponent );
+	ApeEntityComponent *component  = QM_OS_MEMORY_NEW( ApeEntityComponent );
 	component->componentDefinition = componentDefinition;
 	if ( component->componentDefinition->createFunction != NULL )
 	{
@@ -243,7 +243,7 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 			component->componentDefinition->destroyFunction( component );
 		}
 
-		PL_DELETE( component );
+		qm_os_memory_free( component );
 		return NULL;
 	}
 

@@ -119,7 +119,7 @@ bool apeIsScheduledTaskRunning( const char *desc )
 
 void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay )
 {
-	SchTask *task = PlMAlloc( sizeof( SchTask ), true );
+	SchTask *task = QM_OS_MEMORY_MALLOC_( sizeof( SchTask ) );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
 	task->delay = delay + ape_get_num_ticks();
 	task->callback = callback;
@@ -142,7 +142,7 @@ void ape_tick_tasks_( void )
 			PlDestroyLinkedListNode( node );
 			task->callback( task->userData, ( task->delay - ape_get_num_ticks() ) + 1 );
 			task->delay = 0.0;
-			PlFree( task );
+			qm_os_memory_free( task );
 		}
 
 		node = nextNode;
@@ -190,7 +190,7 @@ void apeKillScheduledTask( const char *desc )
 		return;
 
 	PlDestroyLinkedListNode( task->node );
-	PlFree( task );
+	qm_os_memory_free( task );
 }
 
 void apeSetScheduledTaskDelay( const char *desc, double delay )

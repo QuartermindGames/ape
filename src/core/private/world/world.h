@@ -22,15 +22,15 @@
 #define APE_WORLD_NODE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                        \
 	{                                                                                                                       \
 		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                       \
-			                                                                                   PL_ARRAY_ELEMENTS( ENUMS ) } \
+			                                                                                   QM_OS_ARRAY_ELEMENTS( ENUMS ) } \
 	}
 
 #if 1 /* original values, used for prototype */
-#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.25f, 0.25f, 0.25f, 1.0f )
-#	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
+#	define WORLD_DEFAULT_AMBIENCE    QM_MATH_COLOUR4F( 0.25f, 0.25f, 0.25f, 1.0f )
+#	define WORLD_DEFAULT_CLEARCOLOUR QM_MATH_COLOUR4F( 0.1f, 0.5f, 1.0f, 1.0f )
 #else
-#	define WORLD_DEFAULT_AMBIENCE    PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
-#	define WORLD_DEFAULT_CLEARCOLOUR PL_COLOURF32( 0.0f, 0.0f, 0.0f, 1.0f )
+#	define WORLD_DEFAULT_AMBIENCE    QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f )
+#	define WORLD_DEFAULT_CLEARCOLOUR QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f )
 #endif
 
 typedef struct ApeWorldVertex
@@ -57,8 +57,8 @@ typedef struct ApeRoom
 	PLPath       path;
 	unsigned int flags;
 
-	PLColourF32 colour;// an identifying colour
-	PLColourF32 ambientLight;
+	QmMathColour4f colour;// an identifying colour
+	QmMathColour4f ambientLight;
 
 	struct PLHashTable *taggedSurfaceLookup;
 

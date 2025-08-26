@@ -39,7 +39,7 @@ const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
         {"largehall",       APE_AUDIO_REVERB_PRESET_LARGEHALL      },
         {"plate",           APE_AUDIO_REVERB_PRESET_PLATE          },
 };
-const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = PL_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
+const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = QM_OS_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
 static const ApeAudioDriverInterface *audioDriverInterface = nullptr;
 #define DRIVER_CALLBACK( FUNCTION, ... )                                                                                        \
@@ -140,8 +140,8 @@ static void destroy_sample( void *user )
 
 	DRIVER_CALLBACK( freeSample, sample );
 
-	PL_DELETE( sample->buffer );
-	PL_DELETE( sample );
+	qm_os_memory_free( sample->buffer );
+	qm_os_memory_free( sample );
 }
 
 void ape_audio_sample_release( ApeAudioSample *audioSample )
@@ -264,7 +264,7 @@ void ape_audio_pause_( bool pause )
 
 ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const QmMathVector3f *velocity, ApeAudioSourceGroup group )
 {
-	ApeAudioSource *source = PL_NEW( ApeAudioSource );
+	ApeAudioSource *source = QM_OS_MEMORY_NEW( ApeAudioSource );
 
 	if ( position != nullptr )
 	{
@@ -289,7 +289,7 @@ void ape_audio_source_destroy( ApeAudioSource *audioSource )
 
 	DRIVER_CALLBACK( destroySource, audioSource );
 
-	PL_DELETE( audioSource );
+	qm_os_memory_free( audioSource );
 }
 
 void ape_audio_source_set_position( ApeAudioSource *audioSource, const QmMathVector3f *position )

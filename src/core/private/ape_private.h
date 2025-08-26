@@ -3,6 +3,11 @@
 #pragma once
 
 #include "qmos/public/qm_os.h"
+#include "qmos/public/qm_os_memory.h"
+
+#include "qmmath/public/qm_math_vector.h"
+#include "qmmath/public/qm_math_quaternion.h"
+#include "qmmath/public/qm_math_colour.h"
 
 #include <plcore/pl.h>
 #include <plcore/pl_console.h>
@@ -44,7 +49,7 @@ PL_EXTERN_C
 void apeUpdateProfilerGraphs( void );
 
 #include "ape_scheduler.h"
-#include "ape_memory.h"
+#include "memory/memory.h"
 
 /****************************************
  * CONSOLE
@@ -75,8 +80,8 @@ typedef enum ApeConsoleLogLevel
 
 typedef struct ApeConsoleLine
 {
-	char     buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
-	PLColour colour;
+	char            buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+	QmMathColour4ub colour;
 } ApeConsoleLine;
 
 typedef struct ApeConsoleOutput
@@ -158,7 +163,7 @@ typedef struct ApeConfig
 
 		bool sortLights;
 
-		PLVector3 gravityModifier;
+		QmMathVector3f gravityModifier;
 	} world;
 
 	bool editor;
