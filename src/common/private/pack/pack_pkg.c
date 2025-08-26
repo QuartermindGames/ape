@@ -111,7 +111,7 @@ void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t siz
 	}
 	else if ( compressedSize >= size )
 	{
-		PL_DELETE( compressedData );
+		qm_os_memory_free( compressedData );
 		compressedData = NULL;
 		compressedSize = size;
 	}
@@ -127,5 +127,5 @@ void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t siz
 
 	fwrite( buf, sizeof( char ), size, pack );
 
-	PL_DELETE( compressedData );
+	qm_os_memory_free( compressedData );
 }

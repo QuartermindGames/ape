@@ -178,7 +178,7 @@ void com_error_( const char *m, ... )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-PLVector2 com_acm_get_vector2( AcmBranch *root, const char *name, const PLVector2 *fallback )
+QmMathVector2f com_acm_get_vector2( AcmBranch *root, const char *name, const QmMathVector2f *fallback )
 {
 	AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
@@ -186,7 +186,7 @@ PLVector2 com_acm_get_vector2( AcmBranch *root, const char *name, const PLVector
 		return *fallback;
 	}
 
-	PLVector2 v;
+	QmMathVector2f v;
 	if ( acm_branch_get_float32_array( child, ( float * ) &v, 2 ) != ND_ERROR_SUCCESS )
 	{
 		return *fallback;
@@ -212,7 +212,7 @@ QmMathVector3f com_acm_get_vector3( AcmBranch *root, const char *name, const QmM
 	return v;
 }
 
-PLVector4 com_acm_get_vector4( AcmBranch *root, const char *name, const PLVector4 *fallback )
+QmMathVector4f com_acm_get_vector4( AcmBranch *root, const char *name, const QmMathVector4f *fallback )
 {
 	AcmBranch *child = acm_get_child_by_name( root, name );
 	if ( child == NULL )
@@ -220,7 +220,7 @@ PLVector4 com_acm_get_vector4( AcmBranch *root, const char *name, const PLVector
 		return *fallback;
 	}
 
-	PLVector4 v;
+	QmMathVector4f v;
 	if ( acm_branch_get_float32_array( child, ( float * ) &v, 4 ) != ND_ERROR_SUCCESS )
 	{
 		return *fallback;
@@ -229,13 +229,13 @@ PLVector4 com_acm_get_vector4( AcmBranch *root, const char *name, const PLVector
 	return v;
 }
 
-PLColourF32 com_acm_get_colour_f32( AcmBranch *root, const char *name, const PLColourF32 *fallback )
+QmMathColour4f com_acm_get_colour_f32( AcmBranch *root, const char *name, const QmMathColour4f *fallback )
 {
-	PLVector4 v = com_acm_get_vector4( root, name, ( PLVector4 * ) fallback );
+	QmMathVector4f v = com_acm_get_vector4( root, name, ( QmMathVector4f * ) fallback );
 	return PlVector4ToColourF32( &v );
 }
 
-AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional )
+AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const QmMathVector2f *vector, bool conditional )
 {
 	if ( conditional && qm_math_vector2f_compare( *vector, pl_vecOrigin2 ) )
 	{
@@ -255,7 +255,7 @@ AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const QmMa
 	return acm_push_array_f32( parent, name, ( float * ) vector, 3 );
 }
 
-AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional )
+AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const QmMathVector4f *vector, bool conditional )
 {
 	if ( conditional && qm_math_vector4f_compare( *vector, pl_vecOrigin4 ) )
 	{
@@ -265,9 +265,9 @@ AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const PLVe
 	return acm_push_array_f32( parent, name, ( float * ) vector, 4 );
 }
 
-AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const PLColourF32 *colour, bool conditional )
+AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const QmMathColour4f *colour, bool conditional )
 {
-	if ( conditional && PlColour4fCompare( colour, &PL_COLOURF32( 0.0f, 0.0f, 0.0f, 0.0f ) ) )
+	if ( conditional && PlColour4fCompare( colour, &QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 0.0f ) ) )
 	{
 		return nullptr;
 	}
@@ -288,13 +288,13 @@ AcmBranch *com_acm_load_file( const char *path, const char *object )
 	size_t size = PlGetFileSize( file );
 	if ( size > 0 )
 	{
-		uint8_t *buf = PL_NEW_( uint8_t, size + 1 );
+		uint8_t *buf = QM_OS_MEMORY_NEW_( uint8_t, size + 1 );
 		if ( PlReadFile( file, buf, sizeof( uint8_t ), size ) == size )
 		{
 			root = acm_load_from_memory( buf, size, object, path );
 		}
 
-		PL_DELETE( buf );
+		qm_os_memory_free( buf );
 	}
 
 	PlCloseFile( file );

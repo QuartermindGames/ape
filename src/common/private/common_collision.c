@@ -2,6 +2,8 @@
 
 #include <float.h>
 
+#include "qmmath/public/qm_math_plane.h"
+
 #include <plcore/pl_physics.h>
 
 #include "common_private.h"
@@ -19,7 +21,7 @@ static QmMathVector3f closest_point_on_line_segment( const QmMathVector3f *a, co
 	return qm_math_vector3f_scale( qm_math_vector3f_add_float( *a, fminf( fmaxf( t, 0.0f ), 1.0f ) ), ab );
 }
 
-static PLVector2 compute_polygon_vertical_bounds( const QmMathVector3f *vertices, unsigned int numVertices )
+static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *vertices, unsigned int numVertices )
 {
 	// compute the maximum and minimum y of the plane
 	float maxY = vertices[ 0 ].y, minY = vertices[ 0 ].y;
@@ -35,7 +37,7 @@ static PLVector2 compute_polygon_vertical_bounds( const QmMathVector3f *vertices
 		}
 	}
 
-	return ( PLVector2 ) { minY, maxY };
+	return ( QmMathVector2f ) { minY, maxY };
 }
 
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, QmMathVector3f *result )
@@ -57,7 +59,7 @@ bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollis
 		                                       fminf( a->maxs.y, b->maxs.y ),
 		                                       fminf( a->maxs.z, b->maxs.z ) );
 
-		*result = qm_math_vector3f_scale_float( PlAddVector3( min, max ), 0.5f );
+		*result = qm_math_vector3f_scale_float( qm_math_vector3f_add( min, max ), 0.5f );
 	}
 
 	return hit;
@@ -113,9 +115,9 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 	QmMathVector3f projectedPoint = qm_math_vector3f_sub( sphere->origin, qm_math_vector3f_scale_float( *normal, distanceToPlane ) );
 
 	QmMathVector3f tangent, bitangent;
-	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = *normal }, &tangent, &bitangent );
+	qm_math_plane_basis_vectors( &( QmMathPlane ) { .normal = *normal }, &tangent, &bitangent );
 
-	PLVector2 poly2D[ MAX_EDGES ];
+	QmMathVector2f poly2D[ MAX_EDGES ];
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		QmMathVector3f delta = qm_math_vector3f_sub( vertices[ i ], projectedPoint );
@@ -125,10 +127,10 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 	bool inside = false;
 	for ( int i = 0, j = numVertices - 1; i < numVertices; j = i++ )
 	{
-		static constexpr PLVector2 point2D = {};
+		static constexpr QmMathVector2f point2D = {};
 
-		PLVector2 vi = poly2D[ i ];
-		PLVector2 vj = poly2D[ j ];
+		QmMathVector2f vi = poly2D[ i ];
+		QmMathVector2f vj = poly2D[ j ];
 		if ( ( ( vi.y > point2D.y ) != ( vj.y > point2D.y ) ) &&
 		     ( point2D.x < ( vj.x - vi.x ) * ( point2D.y - vi.y ) / ( vj.y - vi.y ) + vi.x ) )
 		{
@@ -219,9 +221,9 @@ bool com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinde
 		return false;
 	}
 
-	PLVector2 x = ( PLVector2 ) { cylinder->origin.x, cylinder->origin.z };
-	PLVector2 y = ( PLVector2 ) { point->x, point->z };
-	if ( PlVector2Distance( &x, &y ) <= cylinder->radius )
+	QmMathVector2f x = ( QmMathVector2f ) { cylinder->origin.x, cylinder->origin.z };
+	QmMathVector2f y = ( QmMathVector2f ) { point->x, point->z };
+	if ( qm_math_vector2f_distance( x, y ) <= cylinder->radius )
 	{
 		return true;
 	}
@@ -237,7 +239,7 @@ bool com_collision_cylinder_intersect_polygon( const ComCollisionCylinder *cylin
 	}
 
 	// compute the maximum and minimum y of the plane
-	PLVector2 vbounds = compute_polygon_vertical_bounds( vertices, numVertices );
+	QmMathVector2f vbounds = compute_polygon_vertical_bounds( vertices, numVertices );
 
 	// check if the cylinder is higher or lower than the plane
 	float top = com_collision_cylinder_get_top( cylinder );
@@ -316,9 +318,9 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 	QmMathVector3f projectedPoint = qm_math_vector3f_sub( closestPoint, qm_math_vector3f_scale_float( *normal, distanceToPlane ) );
 
 	QmMathVector3f tangent, bitangent;
-	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = *normal }, &tangent, &bitangent );
+	qm_math_plane_basis_vectors( &( QmMathPlane ) { .normal = *normal }, &tangent, &bitangent );
 
-	PLVector2 poly2D[ MAX_EDGES ];
+	QmMathVector2f poly2D[ MAX_EDGES ];
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		QmMathVector3f delta = qm_math_vector3f_sub( vertices[ i ], projectedPoint );
@@ -328,10 +330,10 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 	bool inside = false;
 	for ( int i = 0, j = numVertices - 1; i < numVertices; j = i++ )
 	{
-		static constexpr PLVector2 point2D = {};
+		static constexpr QmMathVector2f point2D = {};
 
-		PLVector2 vi = poly2D[ i ];
-		PLVector2 vj = poly2D[ j ];
+		QmMathVector2f vi = poly2D[ i ];
+		QmMathVector2f vj = poly2D[ j ];
 		if ( ( ( vi.y > point2D.y ) != ( vj.y > point2D.y ) ) &&
 		     ( point2D.x < ( vj.x - vi.x ) * ( point2D.y - vi.y ) / ( vj.y - vi.y ) + vi.x ) )
 		{
@@ -413,7 +415,7 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const Qm
 
 	QmMathVector3f aabbMin     = qm_math_vector3f_add( aabb->origin, aabb->mins );
 	QmMathVector3f aabbMax     = qm_math_vector3f_add( aabb->origin, aabb->maxs );
-	QmMathVector3f aabbCenter  = qm_math_vector3f_scale_float( PlAddVector3( aabbMin, aabbMax ), 0.5f );
+	QmMathVector3f aabbCenter  = qm_math_vector3f_scale_float( qm_math_vector3f_add( aabbMin, aabbMax ), 0.5f );
 	QmMathVector3f halfExtents = qm_math_vector3f_scale_float( qm_math_vector3f_sub( aabbMax, aabbMin ), 0.5f );
 
 	float D = -qm_math_vector3f_dot_product( *normal, vertices[ 0 ] );
@@ -429,14 +431,14 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const Qm
 	}
 
 	QmMathVector3f tangent, bitangent;
-	com_math_plane_basis_vectors( &( ComMathPlane ) { .normal = *normal }, &tangent, &bitangent );
+	qm_math_plane_basis_vectors( &( QmMathPlane ) { .normal = *normal }, &tangent, &bitangent );
 
 	float minT = qm_math_vector3f_dot_product( aabbMin, tangent );
 	float maxT = qm_math_vector3f_dot_product( aabbMax, tangent );
 	float minB = qm_math_vector3f_dot_product( aabbMin, bitangent );
 	float maxB = qm_math_vector3f_dot_product( aabbMax, bitangent );
 
-	PLVector2 poly2D[ MAX_EDGES ];
+	QmMathVector2f poly2D[ MAX_EDGES ];
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		poly2D[ i ].x = qm_math_vector3f_dot_product( vertices[ i ], tangent );
@@ -453,7 +455,7 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const Qm
 		}
 	}
 
-	PLVector2 aabbPoints[ 4 ] = {
+	QmMathVector2f aabbPoints[ 4 ] = {
 	        {minT, minB},
 	        {maxT, minB},
 	        {maxT, maxB},
@@ -465,8 +467,8 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const Qm
 		bool inside = false;
 		for ( int j = 0, k = numVertices - 1; j < numVertices; k = j++ )
 		{
-			PLVector2 vi = poly2D[ j ];
-			PLVector2 vk = poly2D[ k ];
+			QmMathVector2f vi = poly2D[ j ];
+			QmMathVector2f vk = poly2D[ k ];
 
 			if ( ( ( vi.y > aabbPoints[ i ].y ) != ( vk.y > aabbPoints[ i ].y ) ) &&
 			     ( aabbPoints[ i ].x < ( vk.x - vi.x ) * ( aabbPoints[ i ].y - vi.y ) / ( vk.y - vi.y ) + vi.x ) )
@@ -492,7 +494,7 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const Qm
 bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, const PLCollisionSphere *sphere2, QmMathVector3f *result )
 {
 	QmMathVector3f difference = qm_math_vector3f_sub( sphere2->origin, sphere->origin );
-	float          distance   = PlVector3Length( difference );
+	float          distance   = qm_math_vector3f_length( difference );
 	float          r1         = sphere->radius;
 	float          r2         = sphere2->radius;
 	float          sumRadius  = r1 + r2;
@@ -608,7 +610,7 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 			continue;
 		}
 
-		QmMathVector3f c2 = PlVector3CrossProduct( point, edge2 );
+		QmMathVector3f c2 = qm_math_vector3f_cross_product( point, edge2 );
 		float          b  = qm_math_vector3f_dot_product( normal, c2 ) / area;
 		if ( b < 0.0f || b > 1.0f )
 		{
@@ -635,7 +637,7 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 // 2D Collision
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool com_collision_point_intersect_recti32( const PLVector2 *point, const ComMathRectI32 *rect )
+bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const ComMathRectI32 *rect )
 {
 	if ( point->x <= rect->x )
 	{

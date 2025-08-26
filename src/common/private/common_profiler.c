@@ -47,7 +47,7 @@ static ComProfilingGroup *register_profiler_group( const char *key )
 		return group;
 	}
 
-	group      = PL_NEW( ComProfilingGroup );
+	group      = QM_OS_MEMORY_NEW( ComProfilingGroup );
 	group->key = key;
 
 	if ( profilingGroups == nullptr )

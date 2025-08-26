@@ -132,7 +132,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 			}
 
 			unsigned int index                  = head->numDependencies;
-			head->dependencies[ index ]         = PL_NEW( ComProject );
+			head->dependencies[ index ]         = QM_OS_MEMORY_NEW( ComProject );
 			head->dependencies[ index ]->parent = out;
 			head->numDependencies++;
 
@@ -162,13 +162,13 @@ static void free_project( ComProject *out )
 	if ( out->config != NULL )
 	{
 		acm_branch_destroy( out->config );
-		out->config = NULL;
+		out->config = nullptr;
 	}
 
 	if ( out->mountLocation != NULL )
 	{
 		PlClearMountedLocation( out->mountLocation );
-		out->mountLocation = NULL;
+		out->mountLocation = nullptr;
 	}
 
 	for ( unsigned int i = 0; i < out->numSubMountLocations; ++i )
@@ -179,7 +179,7 @@ static void free_project( ComProject *out )
 		}
 
 		PlClearMountedLocation( out->subMountLocations[ i ] );
-		out->subMountLocations[ i ] = NULL;
+		out->subMountLocations[ i ] = nullptr;
 	}
 	out->numSubMountLocations = 0;
 
@@ -189,8 +189,8 @@ static void free_project( ComProject *out )
 			break;
 
 		free_project( out->dependencies[ i ] );
-		PL_DELETE( out->dependencies[ i ] );
-		out->dependencies[ i ] = NULL;
+		qm_os_memory_free( out->dependencies[ i ] );
+		out->dependencies[ i ] = nullptr;
 	}
 }
 

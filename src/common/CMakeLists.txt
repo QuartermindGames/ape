@@ -1,6 +1,4 @@
 add_library(ApeCommon STATIC
-        private/memory/memory_shared_ptr.c
-
         private/common.c
         private/common_collision.c
         private/common_math.c

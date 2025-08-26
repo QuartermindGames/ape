@@ -77,15 +77,15 @@ void com_pkg_add_data( FILE *pack, const char *path, const void *buf, size_t siz
 
 typedef struct AcmBranch AcmBranch;
 
-PLVector2      com_acm_get_vector2( AcmBranch *root, const char *name, const PLVector2 *fallback );
+QmMathVector2f com_acm_get_vector2( AcmBranch *root, const char *name, const QmMathVector2f *fallback );
 QmMathVector3f com_acm_get_vector3( AcmBranch *root, const char *name, const QmMathVector3f *fallback );
-PLVector4      com_acm_get_vector4( AcmBranch *root, const char *name, const PLVector4 *fallback );
-PLColourF32    com_acm_get_colour_f32( AcmBranch *root, const char *name, const PLColourF32 *fallback );
+QmMathVector4f com_acm_get_vector4( AcmBranch *root, const char *name, const QmMathVector4f *fallback );
+QmMathColour4f com_acm_get_colour_f32( AcmBranch *root, const char *name, const QmMathColour4f *fallback );
 
-AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const PLVector2 *vector, bool conditional );
+AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const QmMathVector2f *vector, bool conditional );
 AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const QmMathVector3f *vector, bool conditional );
-AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const PLVector4 *vector, bool conditional );
-AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const PLColourF32 *colour, bool conditional );
+AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const QmMathVector4f *vector, bool conditional );
+AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const QmMathColour4f *colour, bool conditional );
 
 AcmBranch *com_acm_load_file( const char *path, const char *object );
 
@@ -201,31 +201,6 @@ typedef struct PLCollisionRay    PLCollisionRay;
 typedef struct PLCollisionPlane  PLCollisionPlane;
 typedef struct PLCollisionSphere PLCollisionSphere;
 
-// Plane
-
-typedef struct ComMathPlane
-{
-	QmMathVector3f normal;
-	float          distance;
-} ComMathPlane;
-
-ComMathPlane *com_math_plane_setup( ComMathPlane *self, const QmMathVector3f *p0, const QmMathVector3f *p1, const QmMathVector3f *p2 );
-float         com_math_plane_distance( const ComMathPlane *self, const QmMathVector3f *pos );
-void          com_math_plane_basis_vectors( const ComMathPlane *self, QmMathVector3f *tangentDst, QmMathVector3f *bitangentDst );
-
-typedef enum ComMathPlaneProjection
-{
-	COM_MATH_PLANE_PROJECTION_YZ,
-	COM_MATH_PLANE_PROJECTION_XZ,
-	COM_MATH_PLANE_PROJECTION_XY,
-} ComMathPlaneProjection;
-
-ComMathPlaneProjection com_math_plane_compute_projection( const ComMathPlane *self );
-
-QmMathVector3f com_math_plane_project_point( const ComMathPlane *self, const QmMathVector3f *point );
-
-//////////
-
 /**
  * @brief Determines if a given set of vertices form a convex polygon.
  *
@@ -237,21 +212,7 @@ QmMathVector3f com_math_plane_project_point( const ComMathPlane *self, const QmM
  * @param numVertices 	The number of vertices in the polygon.
  * @return 				true if the polygon is convex, false otherwise.
  */
-bool com_math_is_polygon_convex( const PLVector2 *vertices, unsigned int numVertices );
-
-/**
- * Computes the face normal of a polygon composed of multiple triangles.
- *
- * @param vertices		A pointer to an array of QmMathVector3f structures representing the vertices of the polygon.
- * @param numVertices 	The number of vertices in the polygon. This should be a multiple of 3, as each face is a triangle.
- * @return 				A QmMathVector3f structure representing the normalized face normal vector of the polygon.
- *
- * This function calculates the normal vector for a polygon by considering it as a collection of
- * triangles. Each set of three vertices is treated as a triangle. The function computes the cross
- * product of vectors formed by these vertices to determine the normal for each triangle, sums these
- * normal vectors, and finally normalizes the resulting vector to generate the face normal.
- */
-QmMathVector3f com_math_compute_face_normal( const QmMathVector3f *vertices, unsigned int numVertices );
+bool qm_math_is_polygon_convex( const QmMathVector2f *vertices, unsigned int numVertices );
 
 /**
  * Converts the given pitch and yaw into a position around a sphere.
@@ -300,18 +261,9 @@ bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollis
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, QmMathVector3f *result );
 bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
 
-bool com_collision_point_intersect_recti32( const PLVector2 *point, const ComMathRectI32 *rect );
+bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const ComMathRectI32 *rect );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
-
-typedef struct ComSharedPtr ComSharedPtr;
-
-ComSharedPtr *com_shared_ptr_create( void *ptr );
-
-void  com_shared_ptr_add( ComSharedPtr *self );
-void  com_shared_ptr_release( ComSharedPtr *self );
-void *com_shared_ptr_get( const ComSharedPtr *self );
-void  com_shared_ptr_set( ComSharedPtr *self, void *ptr );
 
 PL_EXTERN_C_END
