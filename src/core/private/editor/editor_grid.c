@@ -41,7 +41,7 @@ static QmMathVector2f transform_world_to_grid( ApeEditorGrid *self, const QmMath
 {
 	PLMatrix4      transform = PlInverseMatrix4( self->transform );
 	QmMathVector3f localPos  = PlTransformVector3( pos, &transform );
-	return qm_math_vector2f( localPos.x, localPos.y );
+	return qm_math_vector2f( localPos.x, localPos.z );
 }
 
 QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
