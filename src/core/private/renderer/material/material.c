@@ -547,9 +547,27 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						break;
 					}
 
+					PLGTexture *texture = ape_texture_load_direct_( texturePath, materialPass->textureFilter );
+
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
 					{
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_DIFFUSE;
+
+						/* this sucks, but shaders only deal with a default "pass" rather than a whole material, so
+						 * it needs to be able to pass a null material... probably revisit this later. */
+						// this now doubly sucks because we're assuming the diffuse map is representative of the "size" we care about,
+						// which isn't necessarily always going to be the case... *sigh*
+						if ( material != nullptr )
+						{
+							if ( material->width < texture->w )
+							{
+								material->width = texture->w;
+							}
+							if ( material->height < texture->h )
+							{
+								material->height = texture->h;
+							}
+						}
 					}
 					else if ( pl_strcasecmp( materialVariable->name, "normalMap" ) == 0 )
 					{
@@ -558,21 +576,6 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					else if ( pl_strcasecmp( materialVariable->name, "specularMap" ) == 0 )
 					{
 						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_SPECULAR;
-					}
-
-					PLGTexture *texture = ape_texture_load_direct_( texturePath, materialPass->textureFilter );
-					/* this sucks, but shaders only deal with a default "pass" rather than a whole material, so
-					 * it needs to be able to pass a null material... probably revisit this later. */
-					if ( material != nullptr )
-					{
-						if ( material->width < texture->w )
-						{
-							material->width = texture->w;
-						}
-						if ( material->height < texture->h )
-						{
-							material->height = texture->h;
-						}
 					}
 
 					materialVariable->data.ptr = texture;
