@@ -115,7 +115,7 @@ void ape_initialize_materials_( void )
 	                [APE_MATERIAL_DEFAULT_SHADOW]       = "materials/engine/shadow.mat.n",
 	                [APE_MATERIAL_DEFAULT_HIDDEN]       = "materials/editor/hidden.mat.n",
 
-	                [APE_MATERIAL_DEFAULT_EDITOR]           = "materials/editor/default.mat.n",//TODO: get rid of and make this configurable
+	                [APE_MATERIAL_DEFAULT_EDITOR]           = "materials/world/dev/dev_tile_generic_00.mat.n",//TODO: get rid of and make this configurable
 	                [APE_MATERIAL_DEFAULT_EDITOR_SELECTION] = "materials/engine/selection.mat.n",
 
 	                [APE_MATERIAL_DEFAULT_DEBUG_NORMALS] = "materials/debug/debug_normals.mat.n",
@@ -923,7 +923,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
-		QmMathColour4f fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( QmMathColour4f ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		QmMathColour4f fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( QmMathColour4f ) {};
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &fogColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
@@ -939,12 +939,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
-		QmMathColour4f lightColour = ( light != NULL ) ? light->colour : ( QmMathColour4f ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		QmMathColour4f lightColour = ( light != NULL ) ? light->colour : ( QmMathColour4f ) {};
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
-		QmMathVector3f lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( QmMathVector3f ) { 0.0f, 0.0f, 0.0f };
+		QmMathVector3f lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( QmMathVector3f ) {};
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
@@ -975,12 +975,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
-		QmMathColour4f sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( QmMathColour4f ) { 0.0f, 0.0f, 0.0f, 0.0f };
+		QmMathColour4f sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( QmMathColour4f ) {};
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
 	{
-		QmMathVector3f lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( QmMathVector3f ) { 0.0f, 0.0f, 0.0f };
+		QmMathVector3f lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( QmMathVector3f ) {};
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
 
@@ -989,7 +989,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		QmMathColour4f sunAmbience;
 		if ( ape_rendererState_.camera != nullptr && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
 		{
-			sunAmbience = ( QmMathColour4f ) { 1.0f, 1.0f, 1.0f, 1.0f };
+			sunAmbience = ( QmMathColour4f ) {};
 		}
 		else
 		{
