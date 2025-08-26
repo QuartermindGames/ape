@@ -30,22 +30,22 @@ static void fire_decal( ApeInputState state, const char * )
 		return;
 	}
 
-	PLVector3 pos = ape_camera_get_position( ss1_gameState.camera );
-	PLVector3 dir = ape_camera_get_forward( ss1_gameState.camera );
-	dir           = PlInverseVector3( dir );//TODO: sigh... camera is inverted
+	QmMathVector3f pos = ape_camera_get_position( ss1_gameState.camera );
+	QmMathVector3f dir = ape_camera_get_forward( ss1_gameState.camera );
+	dir           = qm_math_vector3f_invert( dir );//TODO: sigh... camera is inverted
 
 	// apply some randomisation to the fire direction
 
 	unsigned int seed = qm_os_random_seed_initialize();
 
 	float     spreadAmount = PL_DEG2RAD( 16.0f );
-	PLVector3 spread       = qm_math_vector3f(
-            ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
-            ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ),
-            ( qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount ) );
+	QmMathVector3f spread       = qm_math_vector3f(
+            qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount,
+            qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount,
+            qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount );
 
-	dir = PlAddVector3( dir, spread );
-	dir = PlNormalizeVector3( dir );
+	dir = qm_math_vector3f_add( dir, spread );
+	dir = qm_math_vector3f_normalize( dir );
 
 	game_test_fire_decal_( room, &pos, &dir );
 

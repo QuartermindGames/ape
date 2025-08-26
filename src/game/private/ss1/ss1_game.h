@@ -52,11 +52,11 @@ typedef enum SS1ResourceType : uint8_t
 	SS1_MAX_RESOURCE_TYPES
 } SS1ResourceType;
 
-#define SS1_DEFAULT_SUN_POSITION PL_VECTOR3( -2.0f, -2.0f, 0.0f )
-#define SS1_DEFAULT_SUN_COLOUR   PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.85f )
-#define SS1_DEFAULT_CLEAR_COLOUR PL_COLOURF32( 0.1f, 0.5f, 1.0f, 1.0f )
+#define SS1_DEFAULT_SUN_POSITION QM_MATH_VECTOR3F( -2.0f, -2.0f, 0.0f )
+#define SS1_DEFAULT_SUN_COLOUR   QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.85f )
+#define SS1_DEFAULT_CLEAR_COLOUR QM_MATH_COLOUR4F( 0.1f, 0.5f, 1.0f, 1.0f )
 
-#define SS1_DEFAULT_MOON_COLOUR PL_COLOURF32( 0.2f, 0.2f, 0.5f, 0.0f )
+#define SS1_DEFAULT_MOON_COLOUR QM_MATH_COLOUR4F( 0.2f, 0.2f, 0.5f, 0.0f )
 
 typedef enum SS1CameraState
 {
@@ -72,7 +72,7 @@ typedef struct SS1GameState
 	GamePlayer players[ SS1_MAX_PLAYERS ];
 
 	ApeCamera     *camera;// our eyes
-	PLVector3      oldCameraPosition;
+	QmMathVector3f      oldCameraPosition;
 	SS1CameraState oldCameraState, cameraState;
 
 	ApeWorld *world;// world container
@@ -81,7 +81,7 @@ typedef struct SS1GameState
 	float     moonBrightness;
 
 	ApeLight *sunLight;
-	PLVector2 sunAngles;
+	QmMathVector2f sunAngles;
 	float     sunBrightness;
 
 	bool       isFirstLaunch;

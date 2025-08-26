@@ -68,12 +68,12 @@ static void Tick( ApeEntityComponent *self )
 	GAME_MOVEMENT_COMPONENT( self )->strafeVelocity = PlClamp( -maxVelocity, GAME_MOVEMENT_COMPONENT( self )->strafeVelocity, maxVelocity );
 
 #if 0
-	PLVector3 left;
+	QmMathVector3f left;
 	PlAnglesAxes( GAME_MOVEMENT_COMPONENT( self )->viewAngles, &left, NULL, &self->forward );
-	GAME_MOVEMENT_COMPONENT( self )->velocity = PlAddVector3( GAME_MOVEMENT_COMPONENT( self )->velocity,
-	                               PlAddVector3(
-	                                       PlScaleVector3F( GAME_MOVEMENT_COMPONENT( self )->forward, GAME_MOVEMENT_COMPONENT( self )->forwardVelocity ),
-	                                       PlScaleVector3F( left, GAME_MOVEMENT_COMPONENT( self )->strafeVelocity ) ) );
+	GAME_MOVEMENT_COMPONENT( self )->velocity = qm_math_vector3f_add( GAME_MOVEMENT_COMPONENT( self )->velocity,
+	                               qm_math_vector3f_add(
+	                                       qm_math_vector3f_scale_float( GAME_MOVEMENT_COMPONENT( self )->forward, GAME_MOVEMENT_COMPONENT( self )->forwardVelocity ),
+	                                       qm_math_vector3f_scale_float( left, GAME_MOVEMENT_COMPONENT( self )->strafeVelocity ) ) );
 #endif
 }
 

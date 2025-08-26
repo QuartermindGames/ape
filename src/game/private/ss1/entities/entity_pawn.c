@@ -8,12 +8,13 @@
 
 static void *create_class( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( SS1Pawn );
+	return QM_OS_MEMORY_NEW( SS1Pawn );
 }
 
 static void destroy_class( ApeEntity *self )
 {
-	PL_DELETEN( self->classData );
+	qm_os_memory_free( self->classData );
+	self->classData = nullptr;
 }
 
 static void spawn_class( ApeEntity *self )

@@ -118,8 +118,8 @@ static void handle_camera_input( double delta )
 		return;
 	}
 
-	PLVector3 ang = ape_camera_get_angles( ss1_gameState.camera );
-	PLVector3 pos = ape_camera_get_position( ss1_gameState.camera );
+	QmMathVector3f ang = ape_camera_get_angles( ss1_gameState.camera );
+	QmMathVector3f pos = ape_camera_get_position( ss1_gameState.camera );
 
 	switch ( ss1_gameState.cameraState )
 	{
@@ -136,16 +136,16 @@ static void handle_camera_input( double delta )
 				ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 			}
 
-			PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+			QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
 			ang.x -= ( rightStick.y * 100.0f ) * delta;
 			ang.y -= ( rightStick.x * 150.0f ) * delta;
 
-			PLVector3 forward, left;
+			QmMathVector3f forward, left;
 			PlAnglesAxes( ang, &left, nullptr, &forward );
 
-			PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
-			pos                 = PlAddVector3( pos, PlScaleVector3F( forward, ( leftStick.y * 100.0f ) * delta ) );
-			pos                 = PlAddVector3( pos, PlScaleVector3F( left, ( leftStick.x * 100.0f ) * delta ) );
+			QmMathVector2f leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
+			pos                 = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, ( leftStick.y * 100.0f ) * delta ) );
+			pos                 = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, ( leftStick.x * 100.0f ) * delta ) );
 
 			ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.camera ) );
 			if ( room != nullptr )
@@ -174,15 +174,15 @@ static void handle_camera_input( double delta )
 							float penetrationDepth = sphere.radius - hits[ i ].distance;
 							if ( penetrationDepth > 0.0f )
 							{
-								PLVector3 collisionDirection = PlNormalizeVector3( PlSubtractVector3( sphere.origin, hits[ i ].intersection ) );
-								pos                          = PlAddVector3( pos, PlScaleVector3F( collisionDirection, penetrationDepth ) );
+								QmMathVector3f collisionDirection = qm_math_vector3f_normalize( qm_math_vector3f_sub( sphere.origin, hits[ i ].intersection ) );
+								pos                          = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( collisionDirection, penetrationDepth ) );
 							}
 						}
 
 						ape_draw_debug_axis( hits[ i ].intersection, pl_vecOrigin3, 2.0f );
 					}
 
-					PL_DELETE( hits );
+					qm_os_memory_free( hits );
 				}
 			}
 
@@ -206,7 +206,7 @@ static void handle_camera_input( double delta )
 				return;
 			}
 
-			PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+			QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
 
 			// update the pitch
 			playerEntity->cameraAngles.x -= ( rightStick.y * 100.0f ) * delta;
@@ -262,8 +262,8 @@ static void camera_tick( double delta )
 		return;
 	}
 
-	PLVector3 cpos = ape_camera_get_position( camera );
-	PLVector3 cang = ape_camera_get_angles( camera );
+	QmMathVector3f cpos = ape_camera_get_position( camera );
+	QmMathVector3f cang = ape_camera_get_angles( camera );
 
 	ss1_gameState.oldCameraPosition = cpos;
 
@@ -284,18 +284,18 @@ static void camera_tick( double delta )
 		SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
 
 		// entity camera position + view height
-		PLVector3 epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+		QmMathVector3f epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 		epos.y         = epos.y + playerEntity->cameraHeight;
 		// entity camera angles
-		PLVector3 eang = playerEntity->cameraAngles;
+		QmMathVector3f eang = playerEntity->cameraAngles;
 
-		PLVector3 forward, left;
+		QmMathVector3f forward, left;
 		PlAnglesAxes( eang, &left, nullptr, &forward );
 
 		// push entity position out and to either side
-		PLVector3 npos = epos;
-		npos           = PlAddVector3( npos, PlScaleVector3F( forward, playerEntity->cameraDistance ) );
-		npos           = PlAddVector3( npos, PlScaleVector3F( left, playerEntity->cameraSide ) );
+		QmMathVector3f npos = epos;
+		npos           = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( forward, playerEntity->cameraDistance ) );
+		npos           = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( left, playerEntity->cameraSide ) );
 
 		// now interpolate the position and angles for the camera to the new position
 		cpos = PlLinearInterpolateV3f( cpos, npos, 7.0f * delta );
@@ -307,7 +307,7 @@ static void camera_tick( double delta )
 		{
 			PLCollisionRay ray = {};
 			ray.origin         = epos;
-			ray.direction      = PlSubtractVector3( npos, epos );
+			ray.direction      = qm_math_vector3f_sub( npos, epos );
 
 			ApeCollisionIntersection result = {};
 			if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= playerEntity->cameraDistance )
@@ -321,7 +321,7 @@ static void camera_tick( double delta )
 	}
 
 	// this is utterly dumb, but we'll use this to determine a vague "velocity"
-	PLVector3 cdiff = PlSubtractVector3( cpos, ss1_gameState.oldCameraPosition );
+	QmMathVector3f cdiff = qm_math_vector3f_sub( cpos, ss1_gameState.oldCameraPosition );
 
 	ape_audio_update_listener( &cpos, &cang, &cdiff );
 }
@@ -341,18 +341,18 @@ static void world_tick( double delta )
 
 	if ( ss1_gameState.sunLight != nullptr )
 	{
-		PLColourF32 sunColour  = SS1_DEFAULT_SUN_COLOUR;
-		PLColourF32 moonColour = SS1_DEFAULT_MOON_COLOUR;
+		QmMathColour4f sunColour  = SS1_DEFAULT_SUN_COLOUR;
+		QmMathColour4f moonColour = SS1_DEFAULT_MOON_COLOUR;
 
 		ss1_gameState.sunAngles.x = game_world_simulation_get_seconds_in_day( simulation ) / ( game_world_simulation_get_seconds_to_day( simulation ) / 360.0f );
 		ss1_gameState.sunAngles.y = sinf( PL_DEG2RAD( ss1_gameState.sunAngles.x + 90.0f ) ) * 2.0f;
 		sunColour.a               = PlClamp( 0.0f, ( -ss1_gameState.sunAngles.y ) / 1.0f, 1.0f );
 
-		PLVector3 sunPosition = com_math_pitch_yaw_to_position( ss1_gameState.sunAngles.y, ss1_gameState.sunAngles.x );
+		QmMathVector3f sunPosition = com_math_pitch_yaw_to_position( ss1_gameState.sunAngles.y, ss1_gameState.sunAngles.x );
 		ape_light_set_position( ss1_gameState.sunLight, &sunPosition );
 		ape_light_set_colour( ss1_gameState.sunLight, &sunColour );
 
-		PLVector3 moonPosition = com_math_pitch_yaw_to_position( -ss1_gameState.sunAngles.y, -ss1_gameState.sunAngles.x );
+		QmMathVector3f moonPosition = com_math_pitch_yaw_to_position( -ss1_gameState.sunAngles.y, -ss1_gameState.sunAngles.x );
 		ape_light_set_position( ss1_gameState.moonLight, &moonPosition );
 		moonColour.a = PlClamp( 0.0f, ( ss1_gameState.sunAngles.y ) / 1.0f, 0.25f );
 		ape_light_set_colour( ss1_gameState.moonLight, &moonColour );
@@ -360,7 +360,7 @@ static void world_tick( double delta )
 		ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.sunLight ) );
 		if ( room != nullptr )
 		{
-			PLColourF32 ambience;
+			QmMathColour4f ambience;
 			ambience.r = PlClamp( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
 			ambience.g = PlClamp( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
 			ambience.b = PlClamp( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
@@ -372,7 +372,7 @@ static void world_tick( double delta )
 			if ( viewport != nullptr )
 			{
 				// BLEH
-				PLColour bamb = PlColourF32ToU8( &ambience );
+				QmMathColour4ub bamb = PlColourF32ToU8( &ambience );
 				ape_viewport_set_clear_colour( viewport, &bamb );
 			}
 		}
@@ -390,7 +390,7 @@ static void ss1_tick( double delta )
 #if 0
 	if ( ss1_gameState.camera != nullptr )
 	{
-		PLVector3 cameraPos = ape_camera_get_position( ss1_gameState.camera );
+		QmMathVector3f cameraPos = ape_camera_get_position( ss1_gameState.camera );
 		game_test_cylinder_point_collision_( &cameraPos );
 		game_test_cylinder_polygon_collision_( &cameraPos );
 	}

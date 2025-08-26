@@ -376,7 +376,7 @@ void forge::MainWindow::open_properties( ApeWorldNode *node )
 /**
  * Push a message to the console.
  */
-void forge::MainWindow::push_message( int level, const char *msg, const PLColour &colour )
+void forge::MainWindow::push_message( int level, const char *msg, const QmMathColour4ub &colour )
 {
 	console->push_message( level, msg, colour );
 }

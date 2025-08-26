@@ -8,13 +8,13 @@
 
 static void *create_inventory()
 {
-	return PL_NEW( GameInventoryComponent );
+	return QM_OS_MEMORY_NEW( GameInventoryComponent );
 }
 
 static void destroy_inventory( void *data )
 {
 	GameInventoryComponent *inventory = data;
-	PL_DELETE( inventory );
+	qm_os_memory_free( inventory );
 }
 
 static AcmBranch *serialize_inventory( void *ptr, AcmBranch *root )

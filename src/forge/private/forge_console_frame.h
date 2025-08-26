@@ -21,7 +21,7 @@ namespace forge
 			ID_CLEAR,
 		};
 
-		void push_message( int level, const char *msg, const PLColour &colour );
+		void push_message( int level, const char *msg, const QmMathColour4ub &colour );
 		long submit_command( FXObject *, FXSelector, void * );
 		long submit_key( FXObject *obj, FXSelector, void *ptr );
 

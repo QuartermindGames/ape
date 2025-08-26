@@ -3,6 +3,7 @@
 #pragma once
 
 #include "qmos/public/qm_os.h"
+#include "qmos/public/qm_os_memory.h"
 
 #include <plcore/pl_console.h>
 #include <plcore/pl_physics.h>
@@ -94,9 +95,9 @@ const char *game_player_get_name_( const GamePlayer *self );
 /////////////////////////////////////////////////////////////////
 // Test Methods
 
-void game_test_cylinder_point_collision_( const PLVector3 *pos );
-void game_test_cylinder_polygon_collision_( const PLVector3 *pos );
+void game_test_cylinder_point_collision_( const QmMathVector3f *pos );
+void game_test_cylinder_polygon_collision_( const QmMathVector3f *pos );
 
-bool game_test_fire_decal_( ApeRoom *room, const PLVector3 *pos, const PLVector3 *dir );
+bool game_test_fire_decal_( ApeRoom *room, const QmMathVector3f *pos, const QmMathVector3f *dir );
 
 PL_EXTERN_C_END

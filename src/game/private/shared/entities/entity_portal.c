@@ -13,13 +13,13 @@ static constexpr float        GAME_PORTAL_OPEN_SPEED = 4.0f;
 
 static ApeEntity *portals[ MAX_PORTALS ];
 
-static constexpr PLVector3 OPEN_VPOS[ NUM_VERTICES ] = {
+static constexpr QmMathVector3f OPEN_VPOS[ NUM_VERTICES ] = {
         QM_MATH_VECTOR3F( -WIDE, 0.0f, 0.0f ),
         QM_MATH_VECTOR3F( -WIDE, TALL, 0.0f ),
         QM_MATH_VECTOR3F( WIDE, TALL, 0.0f ),
         QM_MATH_VECTOR3F( WIDE, 0.0f, 0.0f ),
 };
-static constexpr PLVector3 CLOSED_VPOS[ NUM_VERTICES ] = {
+static constexpr QmMathVector3f CLOSED_VPOS[ NUM_VERTICES ] = {
         QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ),
         QM_MATH_VECTOR3F( 0.0f, TALL, 0.0f ),
         QM_MATH_VECTOR3F( 0.0f, TALL, 0.0f ),
@@ -38,8 +38,8 @@ typedef struct GamePortalEntity
 	ApeBrush     *brush;
 	ApeBrushFace *surface;
 
-	PLVector3 startPos;
-	PLVector3 startAng;
+	QmMathVector3f startPos;
+	QmMathVector3f startAng;
 
 	GamePortalState state;
 
@@ -90,7 +90,7 @@ static void *create_portal( ApeEntity *self, AcmBranch *properties )
 		portalMaterial = ape_material_cache( "materials/world/test/portal.mat.n", APE_CACHE_GROUP_WORLD, true );
 	}
 
-	GamePortalEntity *portal = PL_NEW( GamePortalEntity );
+	GamePortalEntity *portal = QM_OS_MEMORY_NEW( GamePortalEntity );
 	portal->slot             = i;
 	return portal;
 }
@@ -109,7 +109,7 @@ static void destroy_portal( ApeEntity *self )
 	}
 
 	GamePortalEntity *portal = GAME_PORTAL_ENTITY( self );
-	PL_DELETE( portal );
+	qm_os_memory_free( portal );
 }
 
 static void spawn_portal( ApeEntity *self )
@@ -131,14 +131,14 @@ static void spawn_portal( ApeEntity *self )
 	portal->state = GAME_PORTAL_STATE_OPENING;
 
 	brush->numVertices = NUM_VERTICES;
-	brush->vertices    = PL_NEW_( PLVector3, brush->numVertices );
+	brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
 	for ( unsigned int i = 0; i < NUM_VERTICES; ++i )
 	{
 		brush->vertices[ i ] = CLOSED_VPOS[ i ];
 	}
 
 	brush->numFaces = 1;
-	brush->faces    = PL_NEW_( ApeBrushFace, brush->numFaces );
+	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 
 	ApeEntity        *lastPortalEntity = ( portal->slot > 0 ) ? portals[ portal->slot - 1 ] : nullptr;
 	GamePortalEntity *lastPortal       = lastPortalEntity != nullptr ? GAME_PORTAL_ENTITY( lastPortalEntity ) : nullptr;
@@ -152,7 +152,7 @@ static void spawn_portal( ApeEntity *self )
 	{
 		ApeBrushFaceVertex *vertex = &face->vertices[ i ];
 		vertex->position           = &brush->vertices[ i ];
-		vertex->colour             = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
+		vertex->colour             = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
 
 		face->edgeLoop[ i ] = vertex;
 	}
@@ -189,8 +189,8 @@ static void tick_portal( ApeEntity *self, double delta )
 
 	//TODO: cool animation of the portal magically closing and opening
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
-	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	unsigned int numTicks = ape_get_num_ticks();
 
@@ -211,7 +211,7 @@ static void tick_portal( ApeEntity *self, double delta )
 			bool updating = false;
 			for ( unsigned int i = 0; i < NUM_VERTICES; ++i )
 			{
-				float d = PlVector3Length( PlSubtractVector3( brush->vertices[ i ], OPEN_VPOS[ i ] ) );
+				float d = qm_math_vector3f_length( qm_math_vector3f_sub( brush->vertices[ i ], OPEN_VPOS[ i ] ) );
 				if ( d <= 1.0f )
 				{
 					continue;
@@ -241,7 +241,7 @@ static void tick_portal( ApeEntity *self, double delta )
 			bool updating = false;
 			for ( unsigned int i = 0; i < NUM_VERTICES; ++i )
 			{
-				float d = PlVector3Length( PlSubtractVector3( brush->vertices[ i ], OPEN_VPOS[ i ] ) );
+				float d = qm_math_vector3f_length( qm_math_vector3f_sub( brush->vertices[ i ], OPEN_VPOS[ i ] ) );
 				if ( d >= 16.f )
 				{
 					continue;

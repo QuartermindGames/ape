@@ -21,7 +21,7 @@ static AcmBranch *shellConfig;
 
 static PLConsoleVariable *tickFrequencyVar;
 
-void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
+void ss_shell_push_message( int level, const char *msg, const QmMathColour4ub *colour )
 {
 }
 
@@ -61,7 +61,7 @@ void shell_display_message( SS_Shell_MessageBoxType messageType, const char *mes
 	va_start( args, message );
 
 	int   l   = pl_vscprintf( message, args );
-	char *buf = PlMAllocA( l + 1 );
+	char *buf = QM_OS_MEMORY_MALLOC_( l + 1 );
 
 	vsnprintf( buf, l, message, args );
 
@@ -71,7 +71,7 @@ void shell_display_message( SS_Shell_MessageBoxType messageType, const char *mes
 
 	SDL_ShowSimpleMessageBox( flags, title, buf, nullptr );
 
-	PL_DELETE( buf );
+	qm_os_memory_free( buf );
 }
 
 static bool IsWindowActive( void )
@@ -345,9 +345,9 @@ static int Sys_TranslateSDLKeyInput( int key )
 static SDL_TimerID  sdlTimer = 0;
 static unsigned int timer_callback( void *userData, SDL_TimerID timerId, uint32_t interval )
 {
-	SDL_UserEvent userEvent;
-	userEvent.type = SDL_EVENT_USER;
-	userEvent.code = 0;
+	SDL_UserEvent userEvent = {};
+	userEvent.type          = SDL_EVENT_USER;
+	userEvent.code          = 0;
 
 	SDL_Event event;
 	event.type = SDL_EVENT_USER;
@@ -386,10 +386,10 @@ static bool initialize_display( void )
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
 	{
 		size_t size       = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
-		char  *driverPath = PL_NEW_( char, size );
+		char  *driverPath = QM_OS_MEMORY_NEW_( char, size );
 		snprintf( driverPath, size, "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
-		PL_DELETE( driverPath );
+		qm_os_memory_free( driverPath );
 	}
 	else
 	{

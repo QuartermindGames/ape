@@ -15,7 +15,7 @@ PLLinkedList *game_player_spawn_get_spawn_points()
 
 static void *create_player_spawn( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( GamePlayerSpawnEntity );
+	return QM_OS_MEMORY_NEW( GamePlayerSpawnEntity );
 }
 
 static void spawn_player_spawn( ApeEntity *self )
@@ -43,7 +43,7 @@ static void destroy_player_spawn( ApeEntity *self )
 		playerSpawnPoints = nullptr;
 	}
 
-	PL_DELETE( spawnEntity );
+	qm_os_memory_free( spawnEntity );
 }
 
 ApeEntityClassDefinition game_playerSpawnEntityClass_ = {

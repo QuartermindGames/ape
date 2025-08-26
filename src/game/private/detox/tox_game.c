@@ -254,14 +254,14 @@ static void ss1_handle_input( void )
 		ang.x = PlClamp( -90.0f, ang.x, 90.0f );
 	}
 
-	PLVector2 rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+	QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
 	ang.x -= rightStick.y * 2.0f;
 	ang.y -= rightStick.x * 2.0f;
 
 	QmMathVector3f forward, left;
 	PlAnglesAxes( ang, &left, NULL, &forward );
 
-	PLVector2 leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
+	QmMathVector2f leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
 	pos = PlSubtractVector3( pos, PlScaleVector3F( forward, leftStick.y ) );
 	pos = PlSubtractVector3( pos, PlScaleVector3F( left, leftStick.x ) );
 

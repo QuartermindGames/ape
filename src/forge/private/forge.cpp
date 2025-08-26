@@ -16,10 +16,10 @@
 
 // Override C++ new/delete operators, so we can track memory usage
 #if 0//TODO: causing pain on win32 target, let's not bother for now
-void *operator new( size_t size ) { return PL_NEW_( char, size ); }
-void *operator new[]( size_t size ) { return PL_NEW_( char, size ); }
-void operator delete( void *p ) noexcept { PL_DELETE( p ); }
-void operator delete[]( void *p ) noexcept { PL_DELETE( p ); }
+void *operator new( size_t size ) { return QM_OS_MEMORY_NEW_( char, size ); }
+void *operator new[]( size_t size ) { return QM_OS_MEMORY_NEW_( char, size ); }
+void operator delete( void *p ) noexcept { qm_os_memory_free( p ); }
+void operator delete[]( void *p ) noexcept { qm_os_memory_free( p ); }
 #endif
 
 int editorLogLevels[ EDITOR_MAX_LOG_LEVELS ];
@@ -180,7 +180,7 @@ static AcmBranch *generate_project_config( const char *name, const char *path )
  */
 forge::Project *forge::create_project( const std::string &name, const std::string &folderName )
 {
-	auto *project = PL_NEW( Project );
+	auto *project = QM_OS_MEMORY_NEW( Project );
 
 	PLPath projectPath;
 	PlSetupPath( projectPath, true, "%s/%s", cachedPaths[ PATH_PROJECTS ], folderName.c_str() );
@@ -352,10 +352,10 @@ int main( int argc, char **argv )
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != nullptr )
 	{
 		size_t const size       = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
-		char        *driverPath = PL_NEW_( char, size );
+		char        *driverPath = QM_OS_MEMORY_NEW_( char, size );
 		snprintf( driverPath, size, "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
-		PL_DELETE( driverPath );
+		qm_os_memory_free( driverPath );
 	}
 	else
 	{
@@ -493,7 +493,7 @@ extern "C"
 
 	void ss_shell_grab_mouse( bool grab ) {}
 
-	void ss_shell_push_message( int level, const char *msg, const PLColour *colour )
+	void ss_shell_push_message( int level, const char *msg, const QmMathColour4ub *colour )
 	{
 		forge::mainWindow->push_message( level, msg, *colour );
 	}

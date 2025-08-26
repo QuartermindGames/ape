@@ -11,8 +11,8 @@ namespace forge
 
 		SurfaceInspector *surfaceInspector_;
 
-		std::vector< PLVector2 * > uvCoords_;
-		std::vector< PLVector2 * > selectedUvCoords_;
+		std::vector< QmMathVector2f * > uvCoords_;
+		std::vector< QmMathVector2f * > selectedUvCoords_;
 
 		FXint view_[ 2 ]{};
 		FXint cursor_[ 2 ]{};
@@ -32,7 +32,7 @@ namespace forge
 
 		~UVFrame() override = default;
 
-		void set_active( FXImage *background, std::vector< PLVector2 * > uvCoords );
+		void set_active( FXImage *background, std::vector< QmMathVector2f * > uvCoords );
 
 		long on_paint( FXObject *, FXSelector, void *ptr );
 		long on_motion( FXObject *, FXSelector, void *ptr );

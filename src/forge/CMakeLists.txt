@@ -53,6 +53,9 @@ else ()
 endif ()
 
 target_link_libraries(Forge
+        qm-os
+        qm-math
+
         FOX-1.6
         acm
         #[[

@@ -15,6 +15,8 @@
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_linkedlist.h>
 
+#include "qmos/public/qm_os_memory.h"
+
 #include <acm/acm.h>
 
 #include "common.h"

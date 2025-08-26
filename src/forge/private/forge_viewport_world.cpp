@@ -200,7 +200,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				return TRUE;
 			}
 
-			PLVector2 pos;
+			QmMathVector2f pos;
 			if ( ape_grid_get_cursor_position( &instance->grid, &pos ) == nullptr )
 			{
 				return TRUE;
@@ -291,7 +291,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 						}
 					}
 
-					PL_DELETE( taggedSurfaces );
+					qm_os_memory_free( taggedSurfaces );
 				}
 			}
 
@@ -397,7 +397,7 @@ long forge::WorldViewport::on_middle_click( FXObject *fx_object, FXSelector fx_s
 
 		ape_brush_face_apply_material( highlightedFace, face->material );
 
-		const PLVector2 offset = PL_VECTOR2( face->materialOffset.x, face->materialOffset.y );
+		const QmMathVector2f offset = qm_math_vector2f( face->materialOffset.x, face->materialOffset.y );
 		ape_brush_face_apply_material_coordinates( highlightedFace, &face->materialScale, &offset, &face->materialAngle, false );
 	}
 
@@ -547,7 +547,7 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 	                                   instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM ||
 	                                   instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE ) )
 	{
-		PLVector3 dir = {};
+		QmMathVector3f dir = {};
 		switch ( event->code )
 		{
 			default:
@@ -576,7 +576,7 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 			}
 		}
 
-		if ( PlCompareVector3( &dir, &pl_vecOrigin3 ) )
+		if ( qm_math_vector3f_compare( dir, pl_vecOrigin3 ) )
 		{
 			return false;
 		}
@@ -852,14 +852,14 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 	assert( room != nullptr );
 
 	// check for the current grid cursor position
-	PLVector2 pos;
+	QmMathVector2f pos;
 	if ( ape_grid_get_cursor_position( &instance->grid, &pos ) == nullptr )
 	{
 		return TRUE;
 	}
 
 	// now get the transformed position
-	PLVector3 tpos = ape_grid_transform_point( &instance->grid, &pos );
+	QmMathVector3f tpos = ape_grid_transform_point( &instance->grid, &pos );
 	switch ( FXSELID( sel ) )
 	{
 		default:
@@ -895,7 +895,7 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 		}
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_LIGHT:
 		{
-			static constexpr PLColourF32 DEFAULT_COLOUR = PL_COLOURF32( 1.0f, 1.0f, 1.0f, 1.0f );
+			static constexpr QmMathColour4f DEFAULT_COLOUR = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
 			ape_create_light( APE_WORLD_NODE( room ), &tpos, &DEFAULT_COLOUR, 128.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_RUNTIME_SHADOWS | APE_LIGHT_FLAG_SHADOWS );
 			break;
 		}

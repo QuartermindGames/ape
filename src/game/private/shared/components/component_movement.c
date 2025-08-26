@@ -11,13 +11,13 @@
 
 static void *create_movement()
 {
-	return PL_NEW( GameMovementComponent );
+	return QM_OS_MEMORY_NEW( GameMovementComponent );
 }
 
 static void destroy_movement( void *data )
 {
 	GameMovementComponent *movement = data;
-	PL_DELETE( movement );
+	qm_os_memory_free( movement );
 }
 
 static AcmBranch *serialize_movement( void *ptr, AcmBranch *root )
@@ -97,7 +97,7 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 	if ( collision != nullptr )
 	{
 		static constexpr float SPHERE_SIZE = 4.0f;
-		ape_draw_debug_sphere( pos, PL_COLOURU8( 255, 255, 0, 255 ), SPHERE_SIZE );
+		ape_draw_debug_sphere( pos, QM_MATH_COLOUR4UB( 255, 255, 0, 255 ), SPHERE_SIZE );
 
 		ground_check( self, collision, entity );
 
@@ -131,7 +131,7 @@ void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *enti
 					ape_draw_debug_axis( hits[ i ].intersection, pl_vecOrigin3, SPHERE_SIZE );
 				}
 
-				PL_DELETE( hits );
+				qm_os_memory_free( hits );
 			}
 		}
 	}

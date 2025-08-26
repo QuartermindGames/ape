@@ -16,12 +16,14 @@ void game_entity_place_on_ground( ApeEntity *self )
 		return;
 	}
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 
 	ApeCollisionIntersection result = {};
 	if ( !game_physics_get_ground( room, &pos, &result ) )
 	{
-		game_warning_( "Failed to place entity on ground at %s!\n", PlPrintVector3( &pos, PL_VAR_F32 ) );
+		char tmp[ 64 ];
+		qm_math_vector3f_print( pos, tmp, sizeof( tmp ) );
+		game_warning_( "Failed to place entity on ground at %s!\n", tmp );
 		return;
 	}
 

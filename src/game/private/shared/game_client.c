@@ -30,7 +30,7 @@ static void say_command( unsigned int argc, char **argv )
 	        messageSize,
 	};
 
-	if ( !ape_client_send( items, sizes, PL_ARRAY_ELEMENTS( items ) ) )
+	if ( !ape_client_send( items, sizes, QM_OS_ARRAY_ELEMENTS( items ) ) )
 	{
 		game_warning_( "Failed to send \"say\" command!\n" );
 	}
@@ -94,5 +94,5 @@ bool game_client_send_message_( GameNetMessageType type, const void *buf, size_t
 	        bufSize,
 	};
 
-	return ape_client_send( items, sizes, PL_ARRAY_ELEMENTS( items ) );
+	return ape_client_send( items, sizes, QM_OS_ARRAY_ELEMENTS( items ) );
 }

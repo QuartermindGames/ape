@@ -14,7 +14,7 @@ typedef struct TriggerEntity
 
 static void *create_trigger( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( TriggerEntity );
+	return QM_OS_MEMORY_NEW( TriggerEntity );
 }
 
 static void spawn_trigger( ApeEntity *self )
@@ -35,7 +35,7 @@ static void destroy_trigger( ApeEntity *self )
 {
 	TriggerEntity *trigger = TRIGGER_ENTITY( self );
 	assert( trigger != nullptr );
-	PL_DELETE( trigger );
+	qm_os_memory_free( trigger );
 }
 
 ApeEntityClassDefinition game_triggerEntityClass_ = {

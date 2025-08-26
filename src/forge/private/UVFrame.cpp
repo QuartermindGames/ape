@@ -25,7 +25,7 @@ forge::UVFrame::UVFrame( FXComposite *parent, SurfaceInspector *inspector ) : FX
 	flags |= FLAG_ENABLED;
 }
 
-void forge::UVFrame::set_active( FXImage *background, std::vector< PLVector2 * > uvCoords )
+void forge::UVFrame::set_active( FXImage *background, std::vector< QmMathVector2f * > uvCoords )
 {
 	background_ = background;
 	uvCoords_   = std::move( uvCoords );
@@ -129,7 +129,7 @@ long forge::UVFrame::on_motion( FXObject *, FXSelector, void *ptr )
 	// only update if the cursor actually moved
 	if ( event->win_x != cursor_[ 0 ] || event->win_y != cursor_[ 1 ] )
 	{
-		PLVector2 delta;
+		QmMathVector2f delta;
 		delta.x = ( float ) event->win_x - cursor_[ 0 ];//* background_->getWidth();
 		delta.y = ( float ) event->win_y - cursor_[ 1 ];//* background_->getHeight();
 
@@ -159,7 +159,7 @@ long forge::UVFrame::on_left_click( FXObject *, FXSelector, void *ptr )
 	}
 
 	FXEvent  *event  = ( FXEvent * ) ptr;
-	PLVector2 cursor = ( PLVector2 ) { ( float ) event->win_x, ( float ) event->win_y };
+	QmMathVector2f cursor = ( QmMathVector2f ) { ( float ) event->win_x, ( float ) event->win_y };
 
 	if ( !( event->state & CONTROLMASK ) )
 	{

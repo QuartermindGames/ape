@@ -8,13 +8,13 @@
 
 static void *create_health()
 {
-	return PL_NEW( GameHealthComponent );
+	return QM_OS_MEMORY_NEW( GameHealthComponent );
 }
 
 static void destroy_health( void *data )
 {
 	GameHealthComponent *health = data;
-	PL_DELETE( health );
+	qm_os_memory_free( health );
 }
 
 static AcmBranch *serialize_health( void *ptr, AcmBranch *root )

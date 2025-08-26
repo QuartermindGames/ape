@@ -19,6 +19,8 @@ set(GAME_SHARED_FILES
         private/shared/components/component_inventory.c
         private/shared/components/component_movement.c
 
+        private/shared/entities/qm2/qm2_entity_creature.c
+
         private/shared/entities/entity_player_spawn.c
         private/shared/entities/entity_portal.c
         private/shared/entities/entity_rope.c
@@ -36,6 +38,10 @@ include_directories(public/)
 if (MINGW)
     set(GAME_LINK_LIBS
             -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive
+
+            qm-os
+            qm-math
+
             plcore
             plgraphics
             ApeCommon
@@ -43,6 +49,9 @@ if (MINGW)
     )
 else ()
     set(GAME_LINK_LIBS
+            qm-os
+            qm-math
+
             plcore
             plgraphics
             ApeCommon
@@ -70,12 +79,12 @@ set(SS1_SOURCES
 
 add_executable(SS1 WIN32 ${SS1_SOURCES} ../shells/launcher_sdl2/launcher.c)
 target_link_libraries(SS1 ${GAME_LINK_LIBS})
-target_compile_definitions(SS1 PRIVATE -DGAME_SS1)
+target_compile_definitions(SS1 PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(SS1 PRIVATE private)
 set_target_properties(SS1 PROPERTIES FOLDER "Shells")
 
 add_executable(SS1Forge WIN32 ${SS1_SOURCES})
 target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})
-target_compile_definitions(SS1Forge PRIVATE -DGAME_SS1)
+target_compile_definitions(SS1Forge PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(SS1Forge PRIVATE private)
 set_target_properties(SS1Forge PROPERTIES FOLDER "Shells")

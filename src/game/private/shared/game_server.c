@@ -129,7 +129,7 @@ bool game_server_send_message_( ApeServerClient *clientHandle, GameNetMessageTyp
 	        bufSize,
 	};
 
-	return ape_server_send( clientHandle, items, sizes, PL_ARRAY_ELEMENTS( items ) );
+	return ape_server_send( clientHandle, items, sizes, QM_OS_ARRAY_ELEMENTS( items ) );
 }
 
 void game_server_tick_( double delta )
@@ -212,7 +212,7 @@ void game_server_broadcast_message_( GameNetMessageType type, const void *buf, s
 	{
 		GameServerClient *client = PlGetHashTableNodeUserData( hashNode );
 		hashNode                 = PlGetNextHashTableNode( hashNode );
-		if ( !ape_server_send( client->internalHandle, items, sizes, PL_ARRAY_ELEMENTS( items ) ) )
+		if ( !ape_server_send( client->internalHandle, items, sizes, QM_OS_ARRAY_ELEMENTS( items ) ) )
 		{
 			game_warning_( "Failed to send message to client %p!\n", client->internalHandle );
 		}
@@ -277,8 +277,8 @@ static void spawn_player( GamePlayer *self )
 		return;
 	}
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
 
 	self->entity = ape_entity_create( APE_WORLD_NODE( room ), playerClassName, "player", nullptr, &pos, &ang );
 

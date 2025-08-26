@@ -14,13 +14,13 @@ float game_physics_rope_get_length( const GamePhysicsRope *self )
 	float l = 0.0f;
 	for ( unsigned int i = 0; i < ( self->numParticles - 1 ); ++i )
 	{
-		l += PlVector3Length( PlSubtractVector3( self->particles[ i + 1 ].position, self->particles[ i ].position ) );
+		l += qm_math_vector3f_length( qm_math_vector3f_sub( self->particles[ i + 1 ].position, self->particles[ i ].position ) );
 	}
 
 	return l;
 }
 
-void game_physics_rope_attach( GamePhysicsRope *self, const PLVector3 *position, bool start )
+void game_physics_rope_attach( GamePhysicsRope *self, const QmMathVector3f *position, bool start )
 {
 	unsigned int slot                = start ? 0 : ( self->numParticles - 1 );
 	self->particles[ slot ].fixed    = true;
@@ -68,7 +68,7 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, unsigned int nu
 	}
 }
 
-static PLVector3 test_particle_collision( const PLVector3 *position, const PLVector3 *newPosition, ApeRoom *room )
+static QmMathVector3f test_particle_collision( const QmMathVector3f *position, const QmMathVector3f *newPosition, ApeRoom *room )
 {
 	if ( room == nullptr )
 	{
@@ -77,9 +77,9 @@ static PLVector3 test_particle_collision( const PLVector3 *position, const PLVec
 
 	PLCollisionRay ray = {};
 	ray.origin         = *position;
-	ray.direction      = PlSubtractVector3( *newPosition, ray.origin );
+	ray.direction      = qm_math_vector3f_sub( *newPosition, ray.origin );
 
-	float distance = PlVector3Length( ray.direction );
+	float distance = qm_math_vector3f_length( ray.direction );
 
 	ApeCollisionIntersection result;
 	if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= distance )
@@ -102,12 +102,12 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
 
 		self->particles[ i ].velocity = qm_math_vector3f( 0.0f, -0.5f, 0.0f );
 
-		PLVector3 npos = PlAddVector3(
-		        PlSubtractVector3( self->particles[ i ].position, self->particles[ i ].oldPosition ),
-		        PlScaleVector3F( self->particles[ i ].velocity, delta * 2.0f ) );
+		QmMathVector3f npos = qm_math_vector3f_add(
+		        qm_math_vector3f_sub( self->particles[ i ].position, self->particles[ i ].oldPosition ),
+		        qm_math_vector3f_scale_float( self->particles[ i ].velocity, delta * 2.0f ) );
 
 		self->particles[ i ].oldPosition = self->particles[ i ].position;
-		self->particles[ i ].position    = PlAddVector3( self->particles[ i ].position, npos );
+		self->particles[ i ].position    = qm_math_vector3f_add( self->particles[ i ].position, npos );
 		self->particles[ i ].position    = test_particle_collision( &self->particles[ i ].oldPosition, &self->particles[ i ].position, room );
 	}
 
@@ -120,26 +120,26 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
 			GamePhysicsRopeParticle *a = &self->particles[ j ];
 			GamePhysicsRopeParticle *b = &self->particles[ j + 1 ];
 
-			PLVector3 deltaVec = PlSubtractVector3( a->position, b->position );
-			float     deltaLen = PlVector3Length( deltaVec );
+			QmMathVector3f deltaVec = qm_math_vector3f_sub( a->position, b->position );
+			float     deltaLen = qm_math_vector3f_length( deltaVec );
 			float     diff     = deltaLen > 0 ? ( self->length - deltaLen ) / deltaLen : 0.0f;
 
-			PLVector3 adjust = PlScaleVector3F( deltaVec, 0.5f * diff );
+			QmMathVector3f adjust = qm_math_vector3f_scale_float( deltaVec, 0.5f * diff );
 			if ( !a->fixed )
 			{
-				a->position = PlAddVector3( a->position, adjust );
+				a->position = qm_math_vector3f_add( a->position, adjust );
 				a->position = test_particle_collision( &a->oldPosition, &a->position, room );
 			}
 			if ( !b->fixed )
 			{
-				b->position = PlSubtractVector3( b->position, adjust );
+				b->position = qm_math_vector3f_sub( b->position, adjust );
 				b->position = test_particle_collision( &b->oldPosition, &b->position, room );
 			}
 		}
 	}
 }
 
-void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length, const PLVector3 *initPosition )
+void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length, const QmMathVector3f *initPosition )
 {
 	game_physics_rope_set_num_particles( self, numParticles );
 
@@ -156,7 +156,7 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self )
 {
 	for ( unsigned int i = 0; i < self->numParticles; ++i )
 	{
-		const PLColour colour = ( self->particles[ i ].fixed ) ? PL_COLOUR_RED : PL_COLOUR_MAGENTA;
+		const QmMathColour4ub colour = ( self->particles[ i ].fixed ) ? PL_COLOUR_RED : PL_COLOUR_MAGENTA;
 		ape_draw_debug_sphere( self->particles[ i ].position, colour, 0.1f );
 
 		if ( i == 0 )
@@ -168,7 +168,7 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self )
 	}
 }
 
-PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, unsigned int particle )
+QmMathVector3f game_physics_rope_get_particle_position( const GamePhysicsRope *self, unsigned int particle )
 {
 	if ( particle >= self->numParticles )
 	{
@@ -179,12 +179,12 @@ PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, 
 	return self->particles[ particle ].position;
 }
 
-PLVector3 game_physics_rope_get_start_position( const GamePhysicsRope *self )
+QmMathVector3f game_physics_rope_get_start_position( const GamePhysicsRope *self )
 {
 	return game_physics_rope_get_particle_position( self, 0 );
 }
 
-PLVector3 game_physics_rope_get_end_position( const GamePhysicsRope *self )
+QmMathVector3f game_physics_rope_get_end_position( const GamePhysicsRope *self )
 {
 	return game_physics_rope_get_particle_position( self, self->numParticles - 1 );
 }

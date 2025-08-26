@@ -113,10 +113,10 @@ namespace forge
 
 			inline FXString get_room_name() { return nameField->getText(); }
 
-			inline PLColourF32 get_room_ambience()
+			inline QmMathColour4f get_room_ambience()
 			{
 				FXColor color = ambienceField->getRGBA();
-				return PL_COLOURF32( PlByteToFloat( FXREDVAL( color ) ),
+				return QM_MATH_COLOUR4F( PlByteToFloat( FXREDVAL( color ) ),
 				                     PlByteToFloat( FXGREENVAL( color ) ),
 				                     PlByteToFloat( FXBLUEVAL( color ) ),
 				                     PlByteToFloat( FXALPHAVAL( color ) ) );

@@ -99,7 +99,7 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 		displayList_ = canvas_;
 	}
 
-	PLVector3 position = PL_VECTOR3( 0.0f, 80.0f, 0.0f );
+	QmMathVector3f position = qm_math_vector3f( 0.0f, 80.0f, 0.0f );
 
 	camera = ape_create_camera( nullptr, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 	ape_camera_set_draw_mode( camera, drawMode_ );
@@ -160,7 +160,7 @@ void Viewport::draw()
 	if ( !ape_is_running() )
 	{
 		PlgSetViewport( 0, 0, w, h );
-		PlgSetClearColour( PLColourRGB( 255, 0, 0 ) );
+		PlgSetClearColour( QM_MATH_COLOUR4UB_RGB( 255, 0, 0 ) );
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 		return;
 	}
@@ -245,7 +245,7 @@ long Viewport::on_timer( FXObject *, FXSelector, void * )
 			int dx = originCursorPos[ 0 ] - mx;
 			int dy = originCursorPos[ 1 ] - my;
 
-			PLVector3 angles = ape_camera_get_angles( camera );
+			QmMathVector3f angles = ape_camera_get_angles( camera );
 			angles.y += ( ( float ) dx ) / ( this->width / 10.0f );
 			angles.x += ( ( float ) dy ) / ( this->height / 10.0f );
 
@@ -272,20 +272,20 @@ long Viewport::on_zoom( FXObject *, FXSelector, void *ptr )
 	}
 	else
 	{
-		PLVector3 pos = ape_camera_get_position( camera );
-		PLVector3 ang = ape_camera_get_angles( camera );
+		QmMathVector3f pos = ape_camera_get_position( camera );
+		QmMathVector3f ang = ape_camera_get_angles( camera );
 
-		PLVector3 forward;
+		QmMathVector3f forward;
 		PlAnglesAxes( ang, nullptr, nullptr, &forward );
 
 		dir /= 50.0f;
 		if ( dir )
 		{
-			pos = PlAddVector3( pos, PlScaleVector3F( forward, dir ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, dir ) );
 		}
 		else
 		{
-			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, dir ) );
+			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( forward, dir ) );
 		}
 
 		ape_camera_set_position( camera, &pos );
@@ -415,8 +415,8 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 	}
 
 	float     speed = ( float ) cameraSpeedSlider->getValue();
-	PLVector3 pos   = ape_camera_get_position( camera );
-	PLVector3 ang   = ape_camera_get_angles( camera );
+	QmMathVector3f pos   = ape_camera_get_position( camera );
+	QmMathVector3f ang   = ape_camera_get_angles( camera );
 
 	bool handled = true;
 	switch ( event->code )
@@ -464,30 +464,30 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case 'w':
 		{
-			PLVector3 forward;
+			QmMathVector3f forward;
 			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = PlSubtractVector3( pos, PlScaleVector3F( forward, speed ) );
+			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( forward, speed ) );
 			break;
 		}
 		case 's':
 		{
-			PLVector3 forward;
+			QmMathVector3f forward;
 			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = PlAddVector3( pos, PlScaleVector3F( forward, speed ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, speed ) );
 			break;
 		}
 		case 'a':
 		{
-			PLVector3 left;
+			QmMathVector3f left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = PlSubtractVector3( pos, PlScaleVector3F( left, speed ) );
+			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( left, speed ) );
 			break;
 		}
 		case 'd':
 		{
-			PLVector3 left;
+			QmMathVector3f left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = PlAddVector3( pos, PlScaleVector3F( left, speed ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, speed ) );
 			break;
 		}
 		case 'q':

@@ -30,7 +30,7 @@ forge::ConsoleFrame::ConsoleFrame( FXComposite *composite )
 
 forge::ConsoleFrame::~ConsoleFrame() = default;
 
-void forge::ConsoleFrame::push_message( int level, const char *msg, const PLColour &colour )
+void forge::ConsoleFrame::push_message( int level, const char *msg, const QmMathColour4ub &colour )
 {
 	logField->appendText( msg, ( int ) strlen( msg ), true );
 	logField->makePositionVisible( logField->getBottomLine() );// given autoscroll doesn't work...

@@ -26,7 +26,7 @@ static void cache_rope()
 
 static void *create_rope( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( RopeEntity );
+	return QM_OS_MEMORY_NEW( RopeEntity );
 }
 
 static void update_bounds( ApeEntity *self )
@@ -34,8 +34,8 @@ static void update_bounds( ApeEntity *self )
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
 
-	PLVector3 startPos = game_physics_rope_get_start_position( &rope->physics );
-	PLVector3 endPos   = game_physics_rope_get_end_position( &rope->physics );
+	QmMathVector3f startPos = game_physics_rope_get_start_position( &rope->physics );
+	QmMathVector3f endPos   = game_physics_rope_get_end_position( &rope->physics );
 
 	self->base.localBounds.mins = startPos;
 	self->base.localBounds.maxs = startPos;
@@ -70,7 +70,7 @@ static void spawn_rope( ApeEntity *self )
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
 
-	PLVector3 position = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	QmMathVector3f position = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	game_physics_rope_setup( &rope->physics, 8, 4.0f, &position );
 
 	rope->startConnection = APE_WORLD_NODE( self );
@@ -104,12 +104,12 @@ static void tick_rope( ApeEntity *self, double delta )
 
 	if ( rope->startConnection != nullptr )
 	{
-		PLVector3 position = ape_world_node_get_local_position( rope->startConnection );
+		QmMathVector3f position = ape_world_node_get_local_position( rope->startConnection );
 		game_physics_rope_attach( &rope->physics, &position, true );
 	}
 	if ( rope->endConnection != nullptr )
 	{
-		PLVector3 position = ape_world_node_get_local_position( rope->endConnection );
+		QmMathVector3f position = ape_world_node_get_local_position( rope->endConnection );
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 

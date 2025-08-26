@@ -16,9 +16,9 @@
  */
 typedef struct GamePhysicsRopeParticle
 {
-	PLVector3 position;
-	PLVector3 oldPosition;
-	PLVector3 velocity;
+	QmMathVector3f position;
+	QmMathVector3f oldPosition;
+	QmMathVector3f velocity;
 
 	bool fixed;
 } GamePhysicsRopeParticle;
@@ -56,7 +56,7 @@ float game_physics_rope_get_length( const GamePhysicsRope *self );
  * @param position 	Position to fix to.
  * @param start 	Whether to attach the start or end.
  */
-void game_physics_rope_attach( GamePhysicsRope *self, const PLVector3 *position, bool start );
+void game_physics_rope_attach( GamePhysicsRope *self, const QmMathVector3f *position, bool start );
 
 /**
  * Dettach the rope, either from the start or end.
@@ -92,7 +92,7 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
  * @param length 		Length of the rope / slack.
  * @param initPosition	Initial position of the rope. All particles will init at this position.
  */
-void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length, const PLVector3 *initPosition );
+void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length, const QmMathVector3f *initPosition );
 
 /**
  * Provides a visual of the rope using the debug drawing API.
@@ -108,7 +108,7 @@ void game_physics_rope_debug_draw( GamePhysicsRope *self );
  * @param particle 	Index of the particle.
  * @return 			Position of the specified segment, or NaN on error.
  */
-PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, unsigned int particle );
+QmMathVector3f game_physics_rope_get_particle_position( const GamePhysicsRope *self, unsigned int particle );
 
 /**
  * Return the start position of the rope.
@@ -116,7 +116,7 @@ PLVector3 game_physics_rope_get_particle_position( const GamePhysicsRope *self, 
  * @param self 	Pointer to instance.
  * @return 		Position.
  */
-PLVector3 game_physics_rope_get_start_position( const GamePhysicsRope *self );
+QmMathVector3f game_physics_rope_get_start_position( const GamePhysicsRope *self );
 
 /**
  * Return the end position of the rope.
@@ -124,11 +124,11 @@ PLVector3 game_physics_rope_get_start_position( const GamePhysicsRope *self );
  * @param self 	Pointer to instance.
  * @return 		Position.
  */
-PLVector3 game_physics_rope_get_end_position( const GamePhysicsRope *self );
+QmMathVector3f game_physics_rope_get_end_position( const GamePhysicsRope *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static inline bool game_physics_get_ground( ApeRoom *room, const PLVector3 *position, ApeCollisionIntersection *result )
+static inline bool game_physics_get_ground( ApeRoom *room, const QmMathVector3f *position, ApeCollisionIntersection *result )
 {
 	PLCollisionRay ray = {};
 	ray.origin         = *position;

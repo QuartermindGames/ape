@@ -6,29 +6,29 @@
 
 #include "game_private.h"
 
-void game_test_cylinder_point_collision_( const PLVector3 *pos )
+void game_test_cylinder_point_collision_( const QmMathVector3f *pos )
 {
 	ComCollisionCylinder cylinder = {};
 	cylinder.height               = 64.0f;
 	cylinder.origin               = qm_math_vector3f( 16.0f, 16.0f, 32.0f );
 	cylinder.radius               = 16.0f;
 
-	PLColour colour;
+	QmMathColour4ub colour;
 	if ( com_collision_cylinder_intersect_point( &cylinder, pos ) )
 	{
-		colour = PL_COLOURU8( 0, 255, 0, 255 );
+		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
 	}
 	else
 	{
-		colour = PL_COLOURU8( 255, 0, 0, 255 );
+		colour = QM_MATH_COLOUR4UB( 255, 0, 0, 255 );
 	}
 
 	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
 }
 
-void game_test_cylinder_polygon_collision_( const PLVector3 *pos )
+void game_test_cylinder_polygon_collision_( const QmMathVector3f *pos )
 {
-	PLVector3 point = *pos;
+	QmMathVector3f point = *pos;
 	point.y -= 32.0f;
 
 	ComCollisionCylinder cylinder = {};
@@ -36,29 +36,29 @@ void game_test_cylinder_polygon_collision_( const PLVector3 *pos )
 	cylinder.origin               = point;
 	cylinder.radius               = 16.0f;
 
-	static constexpr PLVector3 vertices[] = {
+	static constexpr QmMathVector3f vertices[] = {
 	        QM_MATH_VECTOR3F( 0.0f, 16.0f, 0.0f ),
 	        QM_MATH_VECTOR3F( 32.0f, 16.0f, 0.0f ),
 	        QM_MATH_VECTOR3F( 32.0f, 16.0f, 32.0f ),
 	        QM_MATH_VECTOR3F( 0.0f, 16.0f, 32.0f ),
 	};
-	static constexpr unsigned int numVertices = PL_ARRAY_ELEMENTS( vertices );
+	static constexpr unsigned int numVertices = QM_OS_ARRAY_ELEMENTS( vertices );
 
-	PLColour colour;
+	QmMathColour4ub colour;
 	if ( com_collision_cylinder_intersect_polygon( &cylinder, vertices, numVertices, &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) ) )
 	{
-		colour = PL_COLOURU8( 0, 255, 0, 255 );
+		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
 	}
 	else
 	{
-		colour = PL_COLOURU8( 255, 0, 0, 255 );
+		colour = QM_MATH_COLOUR4UB( 255, 0, 0, 255 );
 	}
 
 	ape_draw_debug_polygon( vertices, numVertices, colour );
 	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
 }
 
-bool game_test_fire_decal_( ApeRoom *room, const PLVector3 *pos, const PLVector3 *dir )
+bool game_test_fire_decal_( ApeRoom *room, const QmMathVector3f *pos, const QmMathVector3f *dir )
 {
 	static ApeMaterial *material = nullptr;
 	if ( material == nullptr )

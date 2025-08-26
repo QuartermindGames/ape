@@ -172,7 +172,7 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 	}
 
 #if 0
-	static const PLColourF32 colour = ( PLColourF32 ){ 1.0f, 1.0f, 1.0f, 1.0f };
+	static const QmMathColour4f colour = ( QmMathColour4f ){ 1.0f, 1.0f, 1.0f, 1.0f };
 
 	void *data = nullptr;
 	switch ( type )
@@ -571,14 +571,14 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 	}
 
 	brush->numVertices = face->numVertices;
-	brush->vertices    = PL_NEW_( PLVector3, brush->numVertices );
+	brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
 	for ( unsigned int i = 0; i < brush->numVertices; ++i )
 	{
 		brush->vertices[ i ] = *face->vertices[ i ].position;
 	}
 
 	brush->numFaces               = 1;
-	brush->faces                  = PL_NEW_( ApeBrushFace, brush->numFaces );
+	brush->faces                  = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 	brush->faces[ 0 ].parent      = brush;
 	brush->faces[ 0 ].numVertices = brush->numVertices;
 	brush->faces[ 0 ].flags       = APE_BRUSH_FACE_FLAG_PORTAL;
@@ -706,7 +706,7 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 		ApeAudioReverbPreset reverbPreset = ape_room_get_reverb_preset( room );
 		audioPresetField->setCurrentItem( reverbPreset );
 
-		PLColourF32 ambience = ape_room_get_ambience( room );
+		QmMathColour4f ambience = ape_room_get_ambience( room );
 		ambienceField->setRGBA( FXRGBA(
 		        // sigh...
 		        PlFloatToByte( ambience.r ),

@@ -4,11 +4,11 @@
 
 #include "component_collision.h"
 
-static void *create_collision() { return PL_NEW( GameCollisionComponent ); }
+static void *create_collision() { return QM_OS_MEMORY_NEW( GameCollisionComponent ); }
 static void  destroy_collision( void *data )
 {
 	GameCollisionComponent *collision = data;
-	PL_DELETE( collision );
+	qm_os_memory_free( collision );
 }
 
 static AcmBranch *serialize_collision( void *ptr, AcmBranch *root )

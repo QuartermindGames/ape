@@ -162,7 +162,7 @@ void forge::SurfaceInspector::set_current( ApeBrushFace *face )
 
 	rotationField->setText( std::to_string( this->face->materialAngle.x ).c_str() );
 
-	std::vector< PLVector2 * > uvCoords;
+	std::vector< QmMathVector2f * > uvCoords;
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		uvCoords.push_back( &face->vertices[ i ].textureCoords );
@@ -180,15 +180,15 @@ long forge::SurfaceInspector::on_update( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	PLVector2 scale;
+	QmMathVector2f scale;
 	scale.x = std::strtof( scaleFieldX->getText().text(), nullptr );
 	scale.y = std::strtof( scaleFieldY->getText().text(), nullptr );
 
-	PLVector2 offset;
+	QmMathVector2f offset;
 	offset.x = std::strtof( offsetFieldX->getText().text(), nullptr );
 	offset.y = std::strtof( offsetFieldY->getText().text(), nullptr );
 
-	PLVector3 rotation = {};
+	QmMathVector3f rotation = {};
 	rotation.x         = std::strtof( rotationField->getText().text(), nullptr );
 
 	ape_brush_face_apply_material_coordinates( face, &scale, &offset, &rotation, localSpaceCheck->getCheck() );
@@ -218,9 +218,9 @@ long forge::SurfaceInspector::on_reset( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	static constexpr PLVector2 DEFAULT_SCALE = PL_VECTOR2( 0.5f, 0.5f );
+	static constexpr QmMathVector2f DEFAULT_SCALE = QM_MATH_VECTOR2F( 0.5f, 0.5f );
 
-	PLVector2 scale = com_acm_get_vector2( editorConfig, "defaultSurfaceScale", &DEFAULT_SCALE );
+	QmMathVector2f scale = com_acm_get_vector2( editorConfig, "defaultSurfaceScale", &DEFAULT_SCALE );
 	ape_brush_face_apply_material_coordinates( face, &scale, &pl_vecOrigin2, &pl_vecOrigin3, localSpaceCheck->getCheck() );
 
 	set_current( face );

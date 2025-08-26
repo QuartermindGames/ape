@@ -22,7 +22,7 @@ static constexpr float PLAYER_CAMERA_SIDE     = 10.0f;
 
 static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( SS1PlayerEntity );
+	return QM_OS_MEMORY_NEW( SS1PlayerEntity );
 }
 
 static void setup_default_equipment( ApeEntity *self )
@@ -48,8 +48,8 @@ static void spawn_player_entity( ApeEntity *self )
 	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
 	assert( player != nullptr );
 
-	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
-	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
+	QmMathVector3f pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	// just randomize the initial profession for now
 	unsigned int seed  = qm_os_random_seed_initialize();
@@ -90,9 +90,9 @@ static void spawn_player_entity( ApeEntity *self )
 	player->cameraDistance = PLAYER_CAMERA_DISTANCE;
 	player->cameraSide     = PLAYER_CAMERA_SIDE;
 
-	PLVector3 forward;
+	QmMathVector3f forward;
 	PlAnglesAxes( ang, nullptr, nullptr, &forward );
-	forward              = PlNormalizeVector3( forward );
+	forward              = qm_math_vector3f_normalize( forward );
 	player->cameraAngles = qm_math_vector3f( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
 
 	//TODO: this shouldn't be here...

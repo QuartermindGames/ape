@@ -32,7 +32,7 @@ static void move_action( ApeInputState state, const char *id )
 
 	if ( strcmp( id, "game_turn_left" ) == 0 )
 	{
-		PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+		QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
 		ang.y += 1.0f;
 		ape_world_node_set_angles( APE_WORLD_NODE( entity ), &ang );
 		return;
@@ -40,7 +40,7 @@ static void move_action( ApeInputState state, const char *id )
 
 	if ( strcmp( id, "game_turn_right" ) == 0 )
 	{
-		PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+		QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
 		ang.y -= 1.0f;
 		ape_world_node_set_angles( APE_WORLD_NODE( entity ), &ang );
 		return;
@@ -53,7 +53,7 @@ static void move_action( ApeInputState state, const char *id )
 		return;
 	}
 
-	movementComponent->direction = ( PLVector3 ) {};
+	movementComponent->direction = ( QmMathVector3f ) {};
 	if ( strcmp( id, "game_move_forward" ) == 0 )
 	{
 		movementComponent->direction.z = 1.0f;
@@ -96,15 +96,17 @@ static void spawn_portal_action( ApeInputState state, const char *id )
 		return;
 	}
 
-	PLVector3 pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
 
 	entity = ape_entity_create( APE_WORLD_NODE( room ), "portal", nullptr, nullptr, &pos, &ang );
 	if ( entity != nullptr )
 	{
 		ape_entity_spawn( entity );
 
-		game_debug_( "Spawned portal entity at %s\n", PlPrintVector3( &pos, PL_VAR_F32 ) );
+		char tmp[ 64 ];
+		qm_math_vector3f_print( pos, tmp, sizeof( tmp ) );
+		game_debug_( "Spawned portal entity at %s\n", tmp );
 	}
 }
 

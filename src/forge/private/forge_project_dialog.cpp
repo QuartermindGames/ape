@@ -89,7 +89,7 @@ void forge::ProjectDialog::register_project_callback( const char *path, void *da
 		}
 		else
 		{
-			auto *project = PL_NEW( Project );
+			auto *project = QM_OS_MEMORY_NEW( Project );
 			project->name = name;
 			project->internalName.assign( filename, c - filename );
 

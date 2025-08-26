@@ -22,8 +22,8 @@ typedef struct AirshipEntity
 {
 	GameHealthComponent *healthComponent;
 
-	PLVector3 oldPosition;
-	PLVector3 targetDestination;
+	QmMathVector3f oldPosition;
+	QmMathVector3f targetDestination;
 
 	ApeAudioSample *engineSample;
 	ApeAudioSource *audioSource;
@@ -41,7 +41,7 @@ static void cache_airship()
 
 static void *create_airship( ApeEntity *self, AcmBranch *properties )
 {
-	return PL_NEW( AirshipEntity );
+	return QM_OS_MEMORY_NEW( AirshipEntity );
 }
 
 static void destroy_airship( ApeEntity *self )
@@ -52,7 +52,7 @@ static void destroy_airship( ApeEntity *self )
 	ape_audio_source_destroy( airship->audioSource );
 	ape_audio_sample_release( airship->engineSample );
 
-	PL_DELETE( airship );
+	qm_os_memory_free( airship );
 }
 
 static void update_target_destination( AirshipEntity *self )
@@ -90,16 +90,16 @@ static void tick_airship( ApeEntity *self, double delta )
 
 	AirshipEntity *airship = AIRSHIP_ENTITY( self );
 
-	PLVector3 pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
-	PLVector3 ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
+	QmMathVector3f pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	airship->oldPosition = pos;
 
-	PLVector3 direction = qm_math_vector3f( airship->targetDestination.x - pos.x, 0.0f, airship->targetDestination.z - pos.z );
-	float     distance  = PlVector3Length( direction );
+	QmMathVector3f direction = qm_math_vector3f( airship->targetDestination.x - pos.x, 0.0f, airship->targetDestination.z - pos.z );
+	float     distance  = qm_math_vector3f_length( direction );
 	if ( distance > 0.0f )
 	{
-		direction  = PlNormalizeVector3( direction );
+		direction  = qm_math_vector3f_normalize( direction );
 		float step = MAX_SPEED * delta;
 
 		if ( distance <= step )
@@ -124,7 +124,7 @@ static void tick_airship( ApeEntity *self, double delta )
 	ape_world_node_set_position( APE_WORLD_NODE( self ), &pos );
 	ape_world_node_set_angles( APE_WORLD_NODE( self ), &ang );
 
-	PLVector3 velocity = PlSubtractVector3( airship->oldPosition, pos );
+	QmMathVector3f velocity = qm_math_vector3f_sub( airship->oldPosition, pos );
 	ape_audio_source_set_position( airship->audioSource, &pos );
 	ape_audio_source_set_velocity( airship->audioSource, &velocity );
 

@@ -99,7 +99,7 @@ void game_menu_splash_tick_( const double delta )
 	}
 }
 
-static void draw_rect( float x, float y, float w, float h, const PLColour *colour, ApeMaterial *material )
+static void draw_rect( float x, float y, float w, float h, const QmMathColour4ub *colour, ApeMaterial *material )
 {
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 
@@ -155,6 +155,6 @@ void game_menu_splash_draw_( const ApeViewport *viewport )
 	draw_rect( viewport->width / 2.0f - w / 2.0f, // x
 	           viewport->height / 2.0f - h / 2.0f,// y
 	           w, h,
-	           &PL_COLOURU8( 255, 255, 255, PlFloatToByte( fade ) ),
+	           &QM_MATH_COLOUR4UB( 255, 255, 255, PlFloatToByte( fade ) ),
 	           splash->p.material );
 }

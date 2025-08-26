@@ -44,7 +44,7 @@ static GameMenuOption debugMenuOptions[] = {
 static GameMenu debugMenu = {
         "Debug Menu\n",
         debugMenuOptions,
-        PL_ARRAY_ELEMENTS( debugMenuOptions ),
+        QM_OS_ARRAY_ELEMENTS( debugMenuOptions ),
         &mainMenu,
 };
 
@@ -55,7 +55,7 @@ static GameMenuOption quitMenuOptions[] = {
 static GameMenu confirmQuitMenu = {
         "Are you sure?\n",
         quitMenuOptions,
-        PL_ARRAY_ELEMENTS( quitMenuOptions ),
+        QM_OS_ARRAY_ELEMENTS( quitMenuOptions ),
         &mainMenu,
 };
 
@@ -94,7 +94,7 @@ static GameMenuOption optionsMenuOptions[] = {
 static GameMenu optionsMenu = {
         "Options\n",
         optionsMenuOptions,
-        PL_ARRAY_ELEMENTS( optionsMenuOptions ),
+        QM_OS_ARRAY_ELEMENTS( optionsMenuOptions ),
         &mainMenu,
 };
 
@@ -109,7 +109,7 @@ static GameMenuOption mainMenuOptions[] = {
 static GameMenu mainMenu = {
         "Main Menu\n",
         mainMenuOptions,
-        PL_ARRAY_ELEMENTS( mainMenuOptions ),
+        QM_OS_ARRAY_ELEMENTS( mainMenuOptions ),
 };
 
 static GameMenuOption backgroundMenuOptions[] = {
@@ -119,7 +119,7 @@ static GameMenuOption backgroundMenuOptions[] = {
 static GameMenu backgroundPrompt = {
         .heading    = "Enable 3D menu background?\n",
         .options    = backgroundMenuOptions,
-        .numOptions = PL_ARRAY_ELEMENTS( backgroundMenuOptions ),
+        .numOptions = QM_OS_ARRAY_ELEMENTS( backgroundMenuOptions ),
         .flags      = GAME_MENU_FLAG_PROMPT | GAME_MENU_FLAG_BACKGROUND,
 };
 
@@ -323,7 +323,7 @@ void ss1_menu_tick( double delta )
 	menu_pie_tick( interactPie );
 }
 
-static void draw_dial( int16_t value, float radius, float thickness, float centerX, float centerY, float precision, const PLColour *colour )
+static void draw_dial( int16_t value, float radius, float thickness, float centerX, float centerY, float precision, const QmMathColour4ub *colour )
 {
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
@@ -335,20 +335,22 @@ static void draw_dial( int16_t value, float radius, float thickness, float cente
 
 	unsigned int seed = ( unsigned int ) precision;
 
-	float endAngle = ( ( ( float ) value ) / 100.0f * 2.0f * PL_PI );
+	float endAngle = ( float ) value / 100.0f * 2.0f * PL_PI;
 	for ( float angle = 0.0f; angle <= endAngle; angle += precision )
 	{
 		float x, y;
 
+		float wobble = cosf( angle * ape_get_num_ticks() / 100.0f ) * 2.0f;
+
 		// outer
-		x = centerX + ( radius + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * cosf( angle );
-		y = centerY + ( radius + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * sinf( angle );
+		x = centerX + wobble + ( radius + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * cosf( angle );
+		y = centerY + wobble + ( radius + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * sinf( angle );
 		PlgImmPushVertex( x, y, 0.0f );
 		PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 
 		// inner
-		x = centerX + ( ( radius - thickness ) + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * cosf( angle );
-		y = centerY + ( ( radius - thickness ) + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * sinf( angle );
+		x = centerX + wobble + ( ( radius - thickness ) + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * cosf( angle );
+		y = centerY + wobble + ( ( radius - thickness ) + qm_os_random_float( &seed, RANDOM_VARIATION ) ) * sinf( angle );
 		PlgImmPushVertex( x, y, 0.0f );
 		PlgImmColour( colour->r / 2, colour->g / 2, colour->b / 2, colour->a );
 	}
@@ -363,16 +365,18 @@ static void draw_hud( const ApeViewport *viewport )
 	static constexpr float HEALTH_THICKNESS = 30.0f;
 	static float           updateAggro      = 0.0f;
 
+	float x = viewport->width / 2.0f + HEALTH_RADIUS / 2.0f;
+
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
-	PlTranslateMatrix( qm_math_vector3f( HEALTH_RADIUS + 20.0f, viewport->height - ( HEALTH_RADIUS + 20.0f ), 0.0f ) );
+	PlTranslateMatrix( qm_math_vector3f( x, viewport->height - ( HEALTH_RADIUS + 20.0f ), 0.0f ) );
 	PlRotateMatrix( sinf( ape_get_num_ticks() / 20.0f ) / 40.0f * ( updateAggro + 1.0f ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 
-	draw_dial( health, HEALTH_RADIUS, HEALTH_THICKNESS, 10.0f, 10.0f, 1.0f, &PL_COLOURU8( 0, 0, 0, 255 ) ); // health
-	draw_dial( 100, HEALTH_RADIUS / 2, HEALTH_THICKNESS, 10.0f, 10.0f, 1.0f, &PL_COLOURU8( 0, 0, 0, 255 ) );// stamina
+	draw_dial( health, HEALTH_RADIUS, HEALTH_THICKNESS, 10.0f, 10.0f, 1.0f, &QM_MATH_COLOUR4UB( 0, 0, 0, 255 ) ); // health
+	draw_dial( 100, HEALTH_RADIUS / 2, HEALTH_THICKNESS, 10.0f, 10.0f, 1.0f, &QM_MATH_COLOUR4UB( 0, 0, 0, 255 ) );// stamina
 
-	draw_dial( health, HEALTH_RADIUS, HEALTH_THICKNESS, 0.0f, 0.0f, 1.0f, &PL_COLOURU8( 255, 0, 0, 255 ) ); // health
-	draw_dial( 100, HEALTH_RADIUS / 2, HEALTH_THICKNESS, 0.0f, 0.0f, 1.0f, &PL_COLOURU8( 0, 255, 0, 255 ) );// stamina
+	draw_dial( health, HEALTH_RADIUS, HEALTH_THICKNESS, 0.0f, 0.0f, 1.0f, &QM_MATH_COLOUR4UB( 255, 0, 0, 255 ) ); // health
+	draw_dial( 100, HEALTH_RADIUS / 2, HEALTH_THICKNESS, 0.0f, 0.0f, 1.0f, &QM_MATH_COLOUR4UB( 0, 255, 0, 255 ) );// stamina
 
 	PlPopMatrix();
 }

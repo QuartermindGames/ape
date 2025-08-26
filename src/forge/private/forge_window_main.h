@@ -76,7 +76,7 @@ namespace forge
 			ID_CLOSE_EDITOR,
 		};
 
-		void push_message( int level, const char *msg, const PLColour &colour );
+		void push_message( int level, const char *msg, const QmMathColour4ub &colour );
 
 	private:
 		void create() override;

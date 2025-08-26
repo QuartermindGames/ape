@@ -28,7 +28,7 @@ typedef struct SS1PlayerEntity
 	float     cameraDistance;// distance from the entity and camera
 	float     cameraSide;    // how far the camera should shift left or right
 	float     cameraHeight;  // height from origin of entity
-	PLVector3 cameraAngles;  // orbital rotation around the entity
+	QmMathVector3f cameraAngles;  // orbital rotation around the entity
 } SS1PlayerEntity;
 
 #define SS1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), SS1_PLAYER_CLASS_NAME, SS1PlayerEntity )

@@ -243,7 +243,7 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_VEC2:
 		{
-			const PLVector2 *vector = static_cast< const PLVector2 * >( value );
+			const QmMathVector2f *vector = static_cast< const QmMathVector2f * >( value );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			numSubRows++;
@@ -251,7 +251,7 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_VEC3:
 		{
-			const PLVector3 *vector = static_cast< const PLVector3 * >( value );
+			const QmMathVector3f *vector = static_cast< const QmMathVector3f * >( value );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( vector->z ).c_str() );
@@ -260,7 +260,7 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_VEC4:
 		{
-			const PLVector4 *vector = static_cast< const PLVector4 * >( value );
+			const QmMathVector4f *vector = static_cast< const QmMathVector4f * >( value );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( vector->z ).c_str() );
@@ -282,7 +282,7 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 		}
 		case APE_WORLD_NODE_PROPERTY_TYPE_COLOUR:
 		{
-			const PLColourF32 *colour = ( PLColourF32 * ) value;
+			const QmMathColour4f *colour = ( QmMathColour4f * ) value;
 			table->setItemText( *row, 1, std::to_string( colour->r ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( colour->g ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( colour->b ).c_str() );

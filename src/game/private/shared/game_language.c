@@ -32,7 +32,7 @@ static void parse_language_entry( const char *name, AcmBranch *stringsBranch )
 			continue;
 		}
 
-		char *buf = PL_NEW_( char, strlen( value ) + 1 );
+		char *buf = QM_OS_MEMORY_NEW_( char, strlen( value ) + 1 );
 		strcpy( buf, value );
 
 		char key[ 64 ];
@@ -102,7 +102,7 @@ void game_language_initialize_()
 
 		parse_language_entry( id, stringsBranch );
 
-		GameLanguage *language = PL_NEW( GameLanguage );
+		GameLanguage *language = QM_OS_MEMORY_NEW( GameLanguage );
 		snprintf( language->id, sizeof( language->id ), "%s", id );
 		snprintf( language->description, sizeof( language->description ), "%s", description );
 		PlPushBackVectorArrayElement( languages, language );
@@ -118,8 +118,8 @@ void game_language_initialize_()
 
 void game_language_shutdown_()
 {
-	PlDestroyHashTableEx( languageStringsTable, PlFree );
-	PlDestroyVectorArrayEx( languages, PlFree );
+	PlDestroyHashTableEx( languageStringsTable, qm_os_memory_free );
+	PlDestroyVectorArrayEx( languages, qm_os_memory_free );
 }
 
 const GameLanguage **game_language_get_available( unsigned int *num )

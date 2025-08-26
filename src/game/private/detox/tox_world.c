@@ -40,7 +40,7 @@ static QmMathVector3f pitch_yaw_to_position( float pitch, float yaw )
 	{
 		QmMathVector3f sunPosition = pitch_yaw_to_position( sunPitch, sunYaw );
 		ape_light_set_position( sunLight, &sunPosition );
-		ape_light_set_colour( sunLight, &PL_COLOURF32( DEFAULT_SUN_COLOUR.r,
+		ape_light_set_colour( sunLight, &QM_MATH_COLOUR4F( DEFAULT_SUN_COLOUR.r,
 		                                               DEFAULT_SUN_COLOUR.g,
 		                                               DEFAULT_SUN_COLOUR.b,
 		                                               sunBrightness ) );
@@ -52,7 +52,7 @@ static QmMathVector3f pitch_yaw_to_position( float pitch, float yaw )
 	if ( moonLight != nullptr )
 	{
 		ape_light_set_position( moonLight, &moonPosition );
-		ape_light_set_colour( moonLight, &PL_COLOURF32( DEFAULT_MOON_COLOUR.r,
+		ape_light_set_colour( moonLight, &QM_MATH_COLOUR4F( DEFAULT_MOON_COLOUR.r,
 		                                                DEFAULT_MOON_COLOUR.g,
 		                                                DEFAULT_MOON_COLOUR.b,
 		                                                moonBrightness ) );
@@ -65,13 +65,13 @@ static QmMathVector3f pitch_yaw_to_position( float pitch, float yaw )
 		ape_sky_set_layer_offset( skyLayers[ i ].id, parallax, parallax );
 	}
 
-	ape_world_set_ambience( world, &PL_COLOURF32( PlClamp( 0.05f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
+	ape_world_set_ambience( world, &QM_MATH_COLOUR4F( PlClamp( 0.05f, DEFAULT_SUN_COLOUR.r * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.g * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              PlClamp( 0.05f, DEFAULT_SUN_COLOUR.b * ( sunBrightness / 0.5f ), 0.45f ),
 	                                              1.0f ) );
 
 	// Fog and clear should remain the same as each other, for a good little fade-out
-	PLColourF32 fallbackColour = PL_COLOURF32( PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.r * ( sunBrightness / 0.5f ), 1.0f ),
+	QmMathColour4f fallbackColour = QM_MATH_COLOUR4F( PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.r * ( sunBrightness / 0.5f ), 1.0f ),
 	                                           PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.g * ( sunBrightness / 0.5f ), 1.0f ),
 	                                           PlClamp( 0.0f, DEFAULT_CLEAR_COLOUR.b * ( sunBrightness / 0.5f ), 1.0f ),
 	                                           1.0f );
