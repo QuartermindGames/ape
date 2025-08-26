@@ -160,13 +160,13 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 #if 0// originally had a bunch of fancy crap for only storing unique vertices, but the complexity doesn't seem worth it
 typedef struct VectorIndex
 {
-	const PLVector3 *vec;
+	const QmMathVector3f *vec;
 	unsigned int             pos;
 } VectorIndex;
 
-static unsigned int get_vector_index( const PLVector3 *v, PLHashTable *vectorTable )
+static unsigned int get_vector_index( const QmMathVector3f *v, PLHashTable *vectorTable )
 {
-	const VectorIndex *index = PlLookupHashTableUserData( vectorTable, v, sizeof( PLVector3 ) );
+	const VectorIndex *index = PlLookupHashTableUserData( vectorTable, v, sizeof( QmMathVector3f ) );
 	if ( index == nullptr )
 	{
 		return ( unsigned int ) -1;
@@ -206,7 +206,7 @@ static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone, const Co
 		acm_push_i32( boneBranch, "parent", bone->parent );
 	}
 
-	PLVector3 bonePosition = qm_math_vector3f_scale_float( bone->position, model->scale );
+	QmMathVector3f bonePosition = qm_math_vector3f_scale_float( bone->position, model->scale );
 	acm_push_array_f32( boneBranch, "position", ( float * ) &bonePosition, 3 );
 	acm_push_array_f32( boneBranch, "rotation", ( float * ) &bone->rotation, 3 );
 }
@@ -320,7 +320,7 @@ void cook_model_process( const char *modelName )
 		return;
 	}
 
-	CookModel *model = PL_NEW( CookModel );
+	CookModel *model = QM_OS_MEMORY_NEW( CookModel );
 	AcmBranch *root  = acm_load_file( path, "cookModel" );
 	if ( root != nullptr )
 	{
@@ -348,5 +348,5 @@ void cook_model_process( const char *modelName )
 		WARN( "Failed to open model cook file (%s): %s\n", path, acm_get_error_message() );
 	}
 
-	PL_DELETE( model );
+	qm_os_memory_free( model );
 }

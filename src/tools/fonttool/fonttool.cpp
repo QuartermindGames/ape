@@ -17,6 +17,8 @@
 #include <algorithm>
 #include <string>
 
+#include "qmos/public/qm_os_memory.h"
+
 #include "common_format_fnt.h"
 
 void serialize_font( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height )
@@ -63,7 +65,7 @@ static void on_save_font( PangoFontDescription *fontDescription, const char *des
 		int32_t x = 0, y = 0;
 		int32_t tallest = 0;
 
-		ComFontGlyph *glyphs   = PL_NEW_( ComFontGlyph, MAX_ASCII );
+		ComFontGlyph *glyphs   = QM_OS_MEMORY_NEW_( ComFontGlyph, MAX_ASCII );
 		uint32_t      numChars = 0;
 		for ( uint32_t i = ' '; i < MAX_ASCII; ++i )
 		{
@@ -158,7 +160,7 @@ static void on_save_font( PangoFontDescription *fontDescription, const char *des
 
 		g_object_unref( font );
 
-		PL_DELETE( glyphs );
+		qm_os_memory_free( glyphs );
 	}
 
 	// cleanup

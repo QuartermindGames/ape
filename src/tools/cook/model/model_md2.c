@@ -55,8 +55,8 @@ typedef struct Md2Vertex
 
 typedef struct Md2Frame
 {
-	PLVector3  scale;
-	PLVector3  translate;
+	QmMathVector3f  scale;
+	QmMathVector3f  translate;
 	char       name[ 16 ];
 	Md2Vertex *vertices;
 } Md2Frame;
@@ -107,29 +107,29 @@ static Md2Model *parse_md2( PLFile *file )
 	}
 
 	/* and now read in all the tex coordinates */
-	Md2TexCoord *texCoords = PL_NEW_( Md2TexCoord, header.numST );
+	Md2TexCoord *texCoords = QM_OS_MEMORY_NEW_( Md2TexCoord, header.numST );
 	PlFileSeek( file, header.offsetST, PL_SEEK_SET );
 	PlReadFile( file, texCoords, sizeof( Md2TexCoord ), header.numST );
 
 	/* triangles */
-	Md2Triangle *triangles = PL_NEW_( Md2Triangle, header.numTriangles );
+	Md2Triangle *triangles = QM_OS_MEMORY_NEW_( Md2Triangle, header.numTriangles );
 	PlFileSeek( file, header.offsetTriangles, PL_SEEK_SET );
 	PlReadFile( file, triangles, sizeof( Md2Triangle ), header.numTriangles );
 
 	/* frames */
-	Md2Frame *frames = PL_NEW_( Md2Frame, header.numFrames );
+	Md2Frame *frames = QM_OS_MEMORY_NEW_( Md2Frame, header.numFrames );
 	PlFileSeek( file, header.offsetFrames, PL_SEEK_SET );
 	for ( int32_t i = 0; i < header.numFrames; ++i )
 	{
-		PlReadFile( file, &frames[ i ].scale, sizeof( PLVector3 ), 1 );
-		PlReadFile( file, &frames[ i ].translate, sizeof( PLVector3 ), 1 );
+		PlReadFile( file, &frames[ i ].scale, sizeof( QmMathVector3f ), 1 );
+		PlReadFile( file, &frames[ i ].translate, sizeof( QmMathVector3f ), 1 );
 		PlReadFile( file, &frames[ i ].name, sizeof( char ), sizeof( frames[ i ].name ) );
 
-		frames[ i ].vertices = PL_NEW_( Md2Vertex, header.numVertices );
+		frames[ i ].vertices = QM_OS_MEMORY_NEW_( Md2Vertex, header.numVertices );
 		PlReadFile( file, frames[ i ].vertices, sizeof( Md2Vertex ), header.numVertices );
 	}
 
-	Md2Model *model = PL_NEW( Md2Model );
+	Md2Model *model = QM_OS_MEMORY_NEW( Md2Model );
 
 	model->numFrames = header.numFrames;
 	model->frames    = frames;
@@ -161,13 +161,13 @@ static void model_md2_destroy( Md2Model *self )
 {
 	for ( unsigned int i = 0; i < self->numFrames; ++i )
 	{
-		PL_DELETE( self->frames[ i ].vertices );
+		qm_os_memory_free( self->frames[ i ].vertices );
 	}
 
-	PL_DELETE( self->frames );
-	PL_DELETE( self->triangles );
-	PL_DELETE( self->texCoords );
-	PL_DELETE( self );
+	qm_os_memory_free( self->frames );
+	qm_os_memory_free( self->triangles );
+	qm_os_memory_free( self->texCoords );
+	qm_os_memory_free( self );
 }
 
 static CookModel *md2_to_ape( const Md2Model *model, CookModel *out )
@@ -188,7 +188,7 @@ static CookModel *md2_to_ape( const Md2Model *model, CookModel *out )
 	/* setup the vertex table */
 	for ( int32_t i = 0; i < header->numVertices; ++i )
 	{
-		PLVector3 pos;
+		QmMathVector3f pos;
 		pos.x = ( frames[ 0 ].scale.x * frames[ 0 ].vertices[ i ].v[ 0 ] ) + frames[ 0 ].translate.x;
 		pos.y = ( frames[ 0 ].scale.y * frames[ 0 ].vertices[ i ].v[ 1 ] ) + frames[ 0 ].translate.y;
 		pos.z = ( frames[ 0 ].scale.z * frames[ 0 ].vertices[ i ].v[ 2 ] ) + frames[ 0 ].translate.z;

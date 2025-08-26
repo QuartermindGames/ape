@@ -52,14 +52,14 @@ static void import_obj_geometry( const char *path, const char *worldName )
 
 #if 0
 			// determine the validity of the face
-			PLVector3 r;
+			QmMathVector3f r;
 			for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 			{
 				ObjVertex *va = PlGetVectorArrayElementAt( model->vertices, ( k + 1 ) % faces[ j ]->numEdges );
 				ObjVertex *vb = PlGetVectorArrayElementAt( model->vertices, k );
 				ObjVertex *vc = PlGetVectorArrayElementAt( model->vertices, ( k + 2 ) % faces[ j ]->numEdges );
 
-				PLVector3 n = PlVector3CrossProduct( qm_math_vector3f_sub( va->position, vb->position ),
+				QmMathVector3f n = qm_math_vector3f_cross_product( qm_math_vector3f_sub( va->position, vb->position ),
 				                                     qm_math_vector3f_sub( vb->position, vc->position ) );
 				if ( k == 0 )
 				{
@@ -81,15 +81,15 @@ static void import_obj_geometry( const char *path, const char *worldName )
 				AcmBranch *edgeBranch = acm_push_object( verticesBranch, nullptr );
 				acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
 
-				PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
+				QmMathVector3f *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 				if ( normal != NULL )
 				{
 					acm_push_array_f32( edgeBranch, "normal", ( float * ) normal, 3 );
 				}
-				PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
+				QmMathVector2f *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 				if ( uv != NULL )
 				{
-					acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ) { uv->x, -uv->y }, 2 );
+					acm_push_array_f32( edgeBranch, "uv", ( float * ) &( QmMathVector3f ) { uv->x, -uv->y }, 2 );
 				}
 			}
 		}
@@ -152,8 +152,8 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 	if ( model->numSubObjects > 0 )
 	{
 		// determine the max extent of the room with all the sub objects into account
-		PLVector3 mins = model->subObjects[ 0 ].mins;
-		PLVector3 maxs = model->subObjects[ 0 ].maxs;
+		QmMathVector3f mins = model->subObjects[ 0 ].mins;
+		QmMathVector3f maxs = model->subObjects[ 0 ].maxs;
 		for ( unsigned int i = 1; i < model->numSubObjects; ++i )
 		{
 			if ( mins.x < model->subObjects[ i ].mins.x ) mins.x = model->subObjects[ i ].mins.x;
@@ -213,15 +213,15 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 					// For now, because we've already got the deserialiser written out like it, let's bundle them as explicit values,
 					// but in the longer term we should probably consider the above instead
 
-					PLVector3 *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
+					QmMathVector3f *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					if ( normal != NULL )
 					{
 						acm_push_array_f32( edgeBranch, "normal", ( float * ) normal, 3 );
 					}
-					PLVector2 *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
+					QmMathVector2f *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
 					{
-						acm_push_array_f32( edgeBranch, "uv", ( float * ) &( PLVector3 ) { uv->x, -uv->y }, 2 );
+						acm_push_array_f32( edgeBranch, "uv", ( float * ) &( QmMathVector3f ) { uv->x, -uv->y }, 2 );
 					}
 				}
 			}

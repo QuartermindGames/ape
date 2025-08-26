@@ -17,8 +17,8 @@ PL_EXTERN_C
 typedef struct SmdFrame
 {
 	int       bone;
-	PLVector3 position;
-	PLVector3 rotation;
+	QmMathVector3f position;
+	QmMathVector3f rotation;
 } SmdFrame;
 
 typedef struct SmdBone
@@ -39,9 +39,9 @@ typedef struct SmdVertex
 {
 	SmdBone *defaultBone;
 
-	PLVector3 position;
-	PLVector3 normal;
-	PLVector2 uv;
+	QmMathVector3f position;
+	QmMathVector3f normal;
+	QmMathVector2f uv;
 
 	unsigned int numWeights;
 	SmdWeight    weights[ SMD_MAX_WEIGHTS ];
@@ -76,9 +76,9 @@ void      model_smd_destroy( SmdModel *model );
 
 typedef struct CookModelVertex
 {
-	PLVector3 position;
-	PLVector3 normal;
-	PLVector2 uv;
+	QmMathVector3f position;
+	QmMathVector3f normal;
+	QmMathVector2f uv;
 
 	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
 	unsigned int    numWeights;

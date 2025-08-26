@@ -5,6 +5,8 @@
 #include <plcore/pl.h>
 #include <plcore/pl_math.h>
 
+#include "qmos/public/qm_os_memory.h"
+
 #include "common.h"
 #include "common_project.h"
 

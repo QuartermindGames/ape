@@ -15,17 +15,17 @@ static constexpr unsigned int MAX_FACE_VERTICES = 16;
 
 typedef struct IdBrushFace
 {
-	PLVector3 x, y, z;
+	QmMathVector3f x, y, z;
 
-	PLVector3 vertices[ MAX_FACE_VERTICES ];
-	unsigned int numVertices;
+	QmMathVector3f vertices[ MAX_FACE_VERTICES ];
+	unsigned int   numVertices;
 
-	char textureName[ 64 ];
-	PLVector4 tm[ 2 ];
-	float rotation;
-	PLVector2 scale;
-	PLVector3 normal;
-	float distance; /* distance from center */
+	char           textureName[ 64 ];
+	QmMathVector4f tm[ 2 ];
+	float          rotation;
+	QmMathVector2f scale;
+	QmMathVector3f normal;
+	float          distance; /* distance from center */
 } IdBrushFace;
 
 typedef struct IdBrush
@@ -41,7 +41,7 @@ typedef struct IdProperty
 
 typedef struct IdEntity
 {
-	char name[ 16 ];
+	char          name[ 16 ];
 	PLLinkedList *properties;
 	PLLinkedList *brushes;
 } IdEntity;
@@ -56,9 +56,9 @@ typedef struct IdMap
 
 enum
 {
-	BLOCK_CONTEXT_NONE = 0U,
+	BLOCK_CONTEXT_NONE   = 0U,
 	BLOCK_CONTEXT_ENTITY = 1U,
-	BLOCK_CONTEXT_BRUSH = 2U,
+	BLOCK_CONTEXT_BRUSH  = 2U,
 
 	MAX_BLOCK_LEVELS
 };
@@ -66,7 +66,7 @@ static unsigned int blockLevel = 0;
 
 static void calculate_face_normal( IdBrushFace *face )
 {
-	PLVector3 x, y, z;
+	QmMathVector3f x, y, z;
 	for ( unsigned int i = 0; i < 3; ++i )
 	{
 		PL_VECTOR_I( x, i ) = PL_VECTOR_I( face->x, i ) - PL_VECTOR_I( face->y, i );
@@ -74,8 +74,8 @@ static void calculate_face_normal( IdBrushFace *face )
 		PL_VECTOR_I( z, i ) = PL_VECTOR_I( face->y, i );
 	}
 
-	face->normal = PlNormalizeVector3( PlVector3CrossProduct( x, y ) );
-	face->distance = PlVector3DotProduct( z, face->normal );
+	face->normal   = qm_math_vector3f_normalize( qm_math_vector3f_cross_product( x, y ) );
+	face->distance = qm_math_vector3f_dot_product( z, face->normal );
 }
 
 static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
@@ -87,8 +87,8 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 		return;
 	}
 
-	static IdEntity *currentEntity = NULL;
-	static IdBrush *currentBrush = NULL;
+	static IdEntity *currentEntity = nullptr;
+	static IdBrush  *currentBrush  = nullptr;
 
 	if ( *p == '{' )
 	{
@@ -104,8 +104,8 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 			case BLOCK_CONTEXT_ENTITY:
 			{
 				DPRINT( "entity\n" );
-				IdEntity *entity = calloc( 1, sizeof( IdEntity ) );
-				entity->brushes = PlCreateLinkedList();
+				IdEntity *entity   = calloc( 1, sizeof( IdEntity ) );
+				entity->brushes    = PlCreateLinkedList();
 				entity->properties = PlCreateLinkedList();
 				PlInsertLinkedListNode( map->entities, entity );
 				currentEntity = entity;
@@ -120,8 +120,8 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 					ERROR( "Hit a brush without a valid entity!\n" );
 				}
 
-				IdBrush *brush = PlCAllocA( 1, sizeof( IdBrush ) );
-				brush->faces = PlCreateLinkedList();
+				IdBrush *brush = QM_OS_MEMORY_CALLOC( 1, sizeof( IdBrush ) );
+				brush->faces   = PlCreateLinkedList();
 				PlInsertLinkedListNode( currentEntity->brushes, brush );
 				currentBrush = brush;
 				break;
@@ -149,7 +149,7 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 			case BLOCK_CONTEXT_NONE:
 				/*dprint( "none\n" );*/
 				currentEntity = NULL;
-				currentBrush = NULL;
+				currentBrush  = NULL;
 				break;
 			case BLOCK_CONTEXT_ENTITY:
 				/*dprint( "entity\n" );*/
@@ -168,7 +168,7 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 		case BLOCK_CONTEXT_ENTITY:
 		{
 			/* read in property */
-			IdProperty *property = PlCAllocA( 1, sizeof( IdProperty ) );
+			IdProperty *property = QM_OS_MEMORY_CALLOC( 1, sizeof( IdProperty ) );
 			if ( !PlParseEnclosedString( &p, property->name, sizeof( property->name ) ) )
 			{
 				ERROR( "Failed to parse enclosed string on line %d!\n", lineNum );
@@ -185,13 +185,13 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 			     pl_strcasecmp( property->name, "mapversion" ) == 0 ||
 			     pl_strcasecmp( property->name, "_generator" ) == 0 )
 			{
-				PlFree( property );
+				qm_os_memory_free( property );
 				break;
 			}
 			else if ( pl_strcasecmp( property->name, "classname" ) == 0 )
 			{
 				strncpy( currentEntity->name, property->value, sizeof( currentEntity->name ) );
-				PlFree( property );
+				qm_os_memory_free( property );
 				break;
 			}
 			PlInsertLinkedListNode( currentEntity->properties, property );
@@ -200,14 +200,14 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 		case BLOCK_CONTEXT_BRUSH:
 		{
 			/* read in face */
-			bool status;
-			IdBrushFace *face = PlCAllocA( 1, sizeof( IdBrushFace ) );
-			face->x = PlParseVector( &p, &status );
-			DPRINT( "%s ", PlPrintVector3( &face->x, PL_VAR_I32 ) );
+			bool         status;
+			IdBrushFace *face = QM_OS_MEMORY_CALLOC( 1, sizeof( IdBrushFace ) );
+			face->x           = PlParseVector( &p, &status );
+			//DPRINT( "%s ", PlPrintVector3( &face->x, PL_VAR_I32 ) );
 			face->y = PlParseVector( &p, &status );
-			DPRINT( "%s ", PlPrintVector3( &face->y, PL_VAR_I32 ) );
+			//DPRINT( "%s ", PlPrintVector3( &face->y, PL_VAR_I32 ) );
 			face->z = PlParseVector( &p, &status );
-			DPRINT( "%s ", PlPrintVector3( &face->z, PL_VAR_I32 ) );
+			//DPRINT( "%s ", PlPrintVector3( &face->z, PL_VAR_I32 ) );
 			if ( !status )
 			{
 				ERROR( "Failed to parse vector on line %d!\n", lineNum );
@@ -240,7 +240,7 @@ static void read_map( IdMap *map, const char *path )
 
 	/* now start reading through every line */
 	static unsigned int lineNum = 0;
-	const char *p = ( const char * ) PlGetFileData( file );
+	const char         *p       = ( const char * ) PlGetFileData( file );
 	while ( *p != '\0' )
 	{
 		lineNum++;
@@ -274,15 +274,15 @@ static void read_map( IdMap *map, const char *path )
 /* Based upon the documentation found here.
  * https://github.com/stefanha/map-files/blob/master/MAPFiles.pdf
  * */
-static bool get_intersection( const IdBrushFace *faceA, const IdBrushFace *faceB, PLVector3 *p )
+static bool get_intersection( const IdBrushFace *faceA, const IdBrushFace *faceB, QmMathVector3f *p )
 {
-	float denom = PlVector3DotProduct( faceA->x, PlVector3CrossProduct( faceA->y, faceA->z ) );
+	float denom = qm_math_vector3f_dot_product( faceA->x, qm_math_vector3f_cross_product( faceA->y, faceA->z ) );
 	if ( denom == 0 )
 		return false;
 
-	PLVector3 c1 = PlVector3CrossProduct( faceA->y, faceA->z );
-	PLVector3 c2 = PlVector3CrossProduct( faceA->z, faceA->x );
-	PLVector3 c3 = PlVector3CrossProduct( faceA->x, faceA->y );
+	QmMathVector3f c1 = qm_math_vector3f_cross_product( faceA->y, faceA->z );
+	QmMathVector3f c2 = qm_math_vector3f_cross_product( faceA->z, faceA->x );
+	QmMathVector3f c3 = qm_math_vector3f_cross_product( faceA->x, faceA->y );
 
 	for ( unsigned int i = 0; i < 3; ++i )
 	{

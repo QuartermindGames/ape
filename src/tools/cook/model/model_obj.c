@@ -21,7 +21,7 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 	// Copy it into a buffer we can parse
 	size_t      fileBufSize = PlGetFileSize( file );
 	const char *fileBuf     = PlGetFileData( file );
-	char       *txtBuf      = PL_NEW_( char, fileBufSize + 1 );
+	char       *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
 	PlCloseFile( file );
@@ -65,8 +65,8 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 
 static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject )
 {
-	subObject->mins = ( PLVector3 ){ FLT_MAX, FLT_MAX, FLT_MAX };
-	subObject->maxs = ( PLVector3 ){ FLT_MIN, FLT_MIN, FLT_MIN };
+	subObject->mins = ( QmMathVector3f ){ FLT_MAX, FLT_MAX, FLT_MAX };
+	subObject->maxs = ( QmMathVector3f ){ FLT_MIN, FLT_MIN, FLT_MIN };
 
 	unsigned int numFaces;
 	ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
@@ -99,12 +99,12 @@ ObjModel *model_obj_load( const char *path )
 	// Copy it into a buffer we can parse
 	size_t      fileBufSize = PlGetFileSize( file );
 	const char *fileBuf     = PlGetFileData( file );
-	char       *txtBuf      = PL_NEW_( char, fileBufSize + 1 );
+	char       *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
 	PlCloseFile( file );
 
-	ObjModel     *obj            = PL_NEW( ObjModel );
+	ObjModel     *obj            = QM_OS_MEMORY_NEW( ObjModel );
 	ObjSubObject *subObject      = NULL;
 	unsigned int  materialIndex  = 0;
 	unsigned int  smoothingIndex = 0;
@@ -129,7 +129,7 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 2;
 			char      *end;
-			ObjVertex *vertex  = PL_NEW( ObjVertex );
+			ObjVertex *vertex  = QM_OS_MEMORY_NEW( ObjVertex );
 			vertex->position.x = strtof( c, &end );
 			vertex->position.y = strtof( end, &end );
 			vertex->position.z = strtof( end, &end );
@@ -162,7 +162,7 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 3;
 			char      *end;
-			PLVector3 *normal = PL_NEW( PLVector3 );
+			QmMathVector3f *normal = QM_OS_MEMORY_NEW( QmMathVector3f );
 			normal->x         = strtof( c, &end );
 			normal->y         = strtof( end, &end );
 			normal->z         = strtof( end, NULL );
@@ -179,7 +179,7 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 3;
 			char      *end;
-			PLVector2 *uv = PL_NEW( PLVector2 );
+			QmMathVector2f *uv = QM_OS_MEMORY_NEW( QmMathVector2f );
 			uv->x         = strtof( c, &end );
 			uv->y         = strtof( end, NULL );
 
@@ -199,7 +199,7 @@ ObjModel *model_obj_load( const char *path )
 
 			assert( subObject->faces != NULL );
 
-			ObjFace *face = PL_NEW( ObjFace );
+			ObjFace *face = QM_OS_MEMORY_NEW( ObjFace );
 			PlPushBackVectorArrayElement( subObject->faces, face );
 			for ( ; face->numEdges < OBJ_MAX_EDGES; face->numEdges++ )
 			{
@@ -221,13 +221,13 @@ ObjModel *model_obj_load( const char *path )
 
 			// Calculate the normal of the face
 			unsigned int numNormals;
-			const PLVector3 **vn = ( const PLVector3 ** ) PlGetVectorArrayDataEx( obj->normals, &numNormals );
+			const QmMathVector3f **vn = ( const QmMathVector3f ** ) PlGetVectorArrayDataEx( obj->normals, &numNormals );
 			for ( unsigned int i = 0; i < face->numEdges; ++i )
 			{
-				const PLVector3 *n = vn[ face->indices[ i ][ OBJ_INDEX_NORMAL ] ];
-				face->normal = PlAddVector3( face->normal, *n );
+				const QmMathVector3f *n = vn[ face->indices[ i ][ OBJ_INDEX_NORMAL ] ];
+				face->normal = qm_math_vector3f_add( face->normal, *n );
 			}
-			face->normal = PlNormalizeVector3( face->normal );
+			face->normal = qm_math_vector3f_normalize( face->normal );
 
 #else
 
@@ -256,7 +256,7 @@ ObjModel *model_obj_load( const char *path )
 				unsigned int      numVertices;
 				const ObjVertex **v = ( const ObjVertex ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
 
-				PLVector3 normals[ OBJ_MAX_EDGES ];
+				QmMathVector3f normals[ OBJ_MAX_EDGES ];
 				PL_ZERO_( normals );
 				for ( unsigned int i = 0, idx = 0; i < numTriangles; ++i, idx += 3 )
 				{
@@ -264,13 +264,13 @@ ObjModel *model_obj_load( const char *path )
 					unsigned int y = indices[ idx + 1 ];
 					unsigned int z = indices[ idx + 2 ];
 
-					PLVector3 n = PlgGenerateVertexNormal( v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ]->position,
+					QmMathVector3f n = PlgGenerateVertexNormal( v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ]->position,
 					                                       v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ]->position,
 					                                       v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ]->position );
 
-					normals[ x ] = PlAddVector3( normals[ x ], n );
-					normals[ y ] = PlAddVector3( normals[ y ], n );
-					normals[ z ] = PlAddVector3( normals[ z ], n );
+					normals[ x ] = qm_math_vector3f_add( normals[ x ], n );
+					normals[ y ] = qm_math_vector3f_add( normals[ y ], n );
+					normals[ z ] = qm_math_vector3f_add( normals[ z ], n );
 				}
 
 				face->normal = normals[ 0 ];
@@ -328,7 +328,7 @@ ObjModel *model_obj_load( const char *path )
 		PlSkipLine( &c );
 	}
 
-	PL_DELETE( txtBuf );
+	qm_os_memory_free( txtBuf );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
 	{
@@ -345,16 +345,16 @@ void model_obj_destroy( ObjModel *obj )
 		return;
 	}
 
-	PlDestroyVectorArrayEx( obj->vertices, PlFree );
-	PlDestroyVectorArrayEx( obj->normals, PlFree );
-	PlDestroyVectorArrayEx( obj->textureCoords, PlFree );
+	PlDestroyVectorArrayEx( obj->vertices, qm_os_memory_free );
+	PlDestroyVectorArrayEx( obj->normals, qm_os_memory_free );
+	PlDestroyVectorArrayEx( obj->textureCoords, qm_os_memory_free );
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
 	{
-		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, PlFree );
+		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, qm_os_memory_free );
 	}
 
-	PL_DELETE( obj );
+	qm_os_memory_free( obj );
 }
 
 CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )

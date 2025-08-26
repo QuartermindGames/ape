@@ -88,7 +88,7 @@ void MDL_SerializePlatformMesh( NLNode *parent, const PLGMesh *mesh )
 			NL_PushBackF32( vertexChild, "y", mesh->vertices[ j ].normal.y );
 			NL_PushBackF32( vertexChild, "z", mesh->vertices[ j ].normal.z );
 		}
-		if ( !PlCompareColour( mesh->vertices[ j ].colour, PLColour( 255, 255, 255, 255 ) ) )
+		if ( !PlCompareColour( mesh->vertices[ j ].colour, QmMathColour4ub( 255, 255, 255, 255 ) ) )
 		{
 			vertexChild = NL_PushBackObj( vertex, "colour" );
 			NL_PushBackI8( vertexChild, "r", ( int8_t ) mesh->vertices[ j ].colour.r );

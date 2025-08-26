@@ -14,7 +14,7 @@ typedef struct PskChunkHeader
 
 typedef struct PskPoint
 {
-	PLVector3 point;
+	QmMathVector3f point;
 } PskPoint;
 
 typedef struct PskVertex

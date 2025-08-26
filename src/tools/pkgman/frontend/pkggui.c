@@ -129,7 +129,7 @@ static void CreateNewPackage( void )
 			PlCloseFile( in );
 		}
 
-		PL_DELETE( store );
+		qm_os_memory_free( store );
 		node = PlGetNextLinkedListNode( node );
 	}
 	PlDestroyLinkedList( fileList );

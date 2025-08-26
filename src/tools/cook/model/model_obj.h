@@ -13,8 +13,8 @@ PL_EXTERN_C
 
 typedef struct ObjVertex
 {
-	PLVector3 position;
-	PLVector3 colour;
+	QmMathVector3f position;
+	QmMathVector3f colour;
 } ObjVertex;
 
 typedef struct ObjMaterial
@@ -44,7 +44,7 @@ typedef struct ObjFace
 	unsigned int indices[ OBJ_MAX_EDGES ][ OBJ_MAX_INDEXES ];
 
 	unsigned int numEdges;
-	PLVector3    normal;
+	QmMathVector3f    normal;
 } ObjFace;
 
 typedef struct ObjSubObject
@@ -53,7 +53,7 @@ typedef struct ObjSubObject
 
 	PLVectorArray *faces;// ObjFace
 
-	PLVector3 mins, maxs;// bounds
+	QmMathVector3f mins, maxs;// bounds
 } ObjSubObject;
 
 typedef struct ObjModel
@@ -61,8 +61,8 @@ typedef struct ObjModel
 	bool storesColour;
 
 	PLVectorArray *vertices;     // ObjVertex
-	PLVectorArray *normals;      // PLVector3
-	PLVectorArray *textureCoords;// PLVector2
+	PLVectorArray *normals;      // QmMathVector3f
+	PLVectorArray *textureCoords;// QmMathVector2f
 
 	ObjMaterial  materials[ OBJ_MAX_MATERIALS ];
 	unsigned int numMaterials;

@@ -6,6 +6,9 @@
 #include <plcore/pl_math.h>
 
 #include "acm/acm.h"
+
+#include "qmos/public/qm_os_memory.h"
+
 #include "ape/ape_formats.h"
 
 // uurrgghh...
@@ -52,14 +55,14 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 
 	const char *filename = PlGetFileName( path );
 	// copy the name into a buffer we can switch out the extension
-	char *name = PL_NEW_( char, strlen( filename ) + 1 );
+	char *name = QM_OS_MEMORY_NEW_( char, strlen( filename ) + 1 );
 	strcpy( name, filename );
 
 	// search for the extension
 	char *c = strrchr( name, '.' );
 	if ( c == NULL )
 	{
-		PL_DELETE( name );
+		qm_os_memory_free( name );
 		printf( "Failed to fetch file extension! Skipping...\n" );
 		return;
 	}
@@ -127,7 +130,7 @@ static void GenerateMaterial( const char *path, PL_UNUSED void *user )
 		printf( "Skipped\n" );
 	}
 
-	PL_DELETE( name );
+	qm_os_memory_free( name );
 }
 
 static const char *DEFAULT_DIR = "materials/world";
@@ -142,7 +145,7 @@ static bool LoadSurfacesConfig( const char *path )
 	}
 
 	matGen.numSurfaces   = ( int8_t ) acm_get_num_of_children( root );
-	matGen.surfaceLookup = PL_NEW_( GameMaterialSurface, matGen.numSurfaces );
+	matGen.surfaceLookup = QM_OS_MEMORY_NEW_( GameMaterialSurface, matGen.numSurfaces );
 
 	GameMaterialSurface *surface = matGen.surfaceLookup;
 	AcmBranch           *child   = acm_get_first_child( root );
@@ -155,7 +158,7 @@ static bool LoadSurfacesConfig( const char *path )
 		if ( aliases != NULL )
 		{
 			surface->numAliases = acm_get_num_of_children( aliases );
-			surface->aliases    = PL_NEW_( char *, surface->numAliases );
+			surface->aliases    = QM_OS_MEMORY_NEW_( char *, surface->numAliases );
 			acm_branch_get_string_array( aliases, surface->aliases, surface->numAliases );
 			//for ( uint8_t i = 0; i < surface->numAliases; ++i )
 			//{

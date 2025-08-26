@@ -13,7 +13,7 @@
 
 static SmdModel *parse_smd( const char *path, const char *p )
 {
-	SmdModel *model = PL_NEW( SmdModel );
+	SmdModel *model = QM_OS_MEMORY_NEW( SmdModel );
 
 	bool isValidated = false;
 	while ( *p != '\0' )
@@ -177,21 +177,21 @@ static SmdModel *parse_smd( const char *path, const char *p )
 					int boneIndex = PlParseInteger( &p, nullptr );// bone index
 					//smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].numWeights = PlParseInteger( &p, nullptr );// num weights
 
-					PLVector3 position;
+					QmMathVector3f position;
 					position.x = PlParseFloat( &p, nullptr );
 					position.y = PlParseFloat( &p, nullptr );
 					position.z = PlParseFloat( &p, nullptr );
 
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].position = position;
 
-					PLVector3 normal;
+					QmMathVector3f normal;
 					normal.x = PlParseFloat( &p, nullptr );
 					normal.y = PlParseFloat( &p, nullptr );
 					normal.z = PlParseFloat( &p, nullptr );
 
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].normal = normal;
 
-					PLVector2 uv;
+					QmMathVector2f uv;
 					uv.x = PlParseFloat( &p, nullptr );
 					uv.y = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
 
@@ -236,7 +236,7 @@ SmdModel *model_smd_load( const char *path )
 
 void model_smd_destroy( SmdModel *model )
 {
-	PL_DELETE( model );
+	qm_os_memory_free( model );
 }
 
 static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
