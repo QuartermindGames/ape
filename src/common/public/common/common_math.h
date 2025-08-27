@@ -32,13 +32,13 @@ static inline QmMathVector3f *com_math_interpolate_angles( const QmMathVector3f 
 
 	for ( unsigned int i = 0; i < 3; i++ )
 	{
-		if ( PL_VECTOR3_I( delta, i ) > 180.0f )
+		if ( delta.v[ i ] > 180.0f )
 		{
-			PL_VECTOR3_I( delta, i ) -= 360.0f;
+			delta.v[ i ] -= 360.0f;
 		}
-		else if ( PL_VECTOR3_I( delta, i ) < -180.0f )
+		else if ( delta.v[ i ] < -180.0f )
 		{
-			PL_VECTOR3_I( delta, i ) += 360.0f;
+			delta.v[ i ] += 360.0f;
 		}
 	}
 
