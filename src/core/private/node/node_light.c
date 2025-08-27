@@ -126,17 +126,16 @@ bool ape_light_is_active( const ApeLight *light )
  */
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 {
-	//HACK: the sun is an awkward case...
-	QmMathVector3f origin = ( self->type == APE_LIGHT_TYPE_SUN ) ? pl_vecOrigin3 : plane->origin;
-
-	QmMathVector3f dir = qm_math_vector3f_normalize( qm_math_vector3f_sub( origin, ape_light_get_position( self ) ) );
-	float          dot = qm_math_vector3f_dot_product( plane->normal, dir );
 	if ( self->type == APE_LIGHT_TYPE_SUN )
 	{
-		return ( dot >= 0 );
+		float dot = qm_math_vector3f_dot_product( plane->normal, ape_light_get_position( self ) );
+		return dot <= 0;
 	}
 
 	return ( dot < 0 );
+	QmMathVector3f dir = qm_math_vector3f_sub( plane->origin, ape_light_get_position( self ) );
+	float          dot = qm_math_vector3f_dot_product( plane->normal, dir );
+	return dot < 0;
 }
 
 /**

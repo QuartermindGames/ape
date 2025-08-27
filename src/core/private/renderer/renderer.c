@@ -425,7 +425,11 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 		ApeRoom *room = ape_camera_get_room( camera );
 		if ( room != NULL )
 		{
+			COM_PROFILE_START( "ape_room_draw_" );
+
 			ape_room_draw_( camera, &camera->pvs.rooms[ 0 ], viewport );
+
+			COM_PROFILE_END( "ape_room_draw_" );
 		}
 
 		PlgDepthBufferFunction( PLG_COMPARE_LESS );

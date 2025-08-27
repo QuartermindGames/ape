@@ -195,16 +195,14 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 					continue;
 				}
 
-				//ape_draw_debug_arrow( lightPos, face->bounds.absOrigin, PL_COLOURF32_TO_U8( light->colour ), 2.0f );
-			}
-
 #if 0// ditched for speed...
-			PLCollisionPlane plane = { .normal = face->normal, .origin = face->bounds.absOrigin };
-			if ( light != nullptr && ape_light_test_plane_shadow( light, material, &plane ) )
-			{
-				continue;
-			}
+				PLCollisionPlane plane = { .normal = face->normal, .origin = face->bounds.absOrigin };
+				if ( ape_light_test_plane_shadow( light, material, &plane ) )
+				{
+					continue;
+				}
 #endif
+			}
 
 			if ( PlgIsBoxInsideView( camera->internal, &face->bounds ) )
 			{
@@ -920,8 +918,6 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 		return;
 	}
 
-	COM_PROFILE_FUNCTION_START();
-
 	PlgPushDebugGroupMarker( "room_draw" );
 
 	// deal with the portals first
@@ -986,6 +982,4 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 	}
 
 	PlgPopDebugGroupMarker();
-
-	COM_PROFILE_FUNCTION_END();
 }
