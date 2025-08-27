@@ -124,7 +124,7 @@ static void handle_camera_input( double delta )
 	switch ( ss1_gameState.cameraState )
 	{
 		default:
-		case SS1_CAMERA_STATE_FREE:
+		case GAME_CAMERA_STATE_FREE:
 		{
 			PL_GET_CVAR( "input/mlook", mouseLook );
 			if ( mouseLook != NULL && mouseLook->b_value )
@@ -144,8 +144,8 @@ static void handle_camera_input( double delta )
 			PlAnglesAxes( ang, &left, nullptr, &forward );
 
 			QmMathVector2f leftStick = ape_client_input_get_controller_axis_state( 0, 0 );
-			pos                 = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, ( leftStick.y * 100.0f ) * delta ) );
-			pos                 = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, ( leftStick.x * 100.0f ) * delta ) );
+			pos                      = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, ( leftStick.y * 100.0f ) * delta ) );
+			pos                      = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, ( leftStick.x * 100.0f ) * delta ) );
 
 			ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.camera ) );
 			if ( room != nullptr )
@@ -175,7 +175,7 @@ static void handle_camera_input( double delta )
 							if ( penetrationDepth > 0.0f )
 							{
 								QmMathVector3f collisionDirection = qm_math_vector3f_normalize( qm_math_vector3f_sub( sphere.origin, hits[ i ].intersection ) );
-								pos                          = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( collisionDirection, penetrationDepth ) );
+								pos                               = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( collisionDirection, penetrationDepth ) );
 							}
 						}
 
@@ -190,8 +190,9 @@ static void handle_camera_input( double delta )
 			ape_camera_set_angles( ss1_gameState.camera, &ang );
 			break;
 		}
-		case SS1_CAMERA_STATE_FIRST_PERSON: break;
-		case SS1_CAMERA_STATE_THIRD_PERSON:
+
+		case GAME_CAMERA_STATE_FIRST_PERSON:
+		case GAME_CAMERA_STATE_THIRD_PERSON:
 		{
 			ApeEntity *entity = game_server_get_host_entity_();
 			if ( entity == nullptr )
@@ -246,7 +247,96 @@ static void handle_input( double delta )
 	}
 }
 
-static void camera_tick( double delta )
+static void camera_third_person_tick( ApeCamera *camera, const double delta )
+{
+	ApeEntity *entity = game_server_get_host_entity_();
+	if ( entity == nullptr )
+	{
+		return;
+	}
+
+	SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
+	if ( playerEntity == nullptr )
+	{
+		return;
+	}
+
+	QmMathVector3f cpos = ape_camera_get_position( camera );
+	QmMathVector3f cang = ape_camera_get_angles( camera );
+
+	// entity camera position + view height
+	QmMathVector3f epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	epos.y              = epos.y + playerEntity->cameraHeight;
+	// entity camera angles
+	QmMathVector3f eang = playerEntity->cameraAngles;
+
+	QmMathVector3f forward, left;
+	PlAnglesAxes( eang, &left, nullptr, &forward );
+
+	// push entity position out and to either side
+	QmMathVector3f npos = epos;
+	npos                = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( forward, playerEntity->cameraDistance ) );
+	npos                = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( left, playerEntity->cameraSide ) );
+
+	// now interpolate the position and angles for the camera to the new position
+	cpos = PlLinearInterpolateV3f( cpos, npos, 7.0f * delta );
+	com_math_interpolate_angles( &cang, &eang, 7.0f * delta, &cang );
+
+	// if the camera is hitting anything, move it
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( camera ) );
+	if ( room != nullptr )
+	{
+		PLCollisionRay ray = {};
+		ray.origin         = epos;
+		ray.direction      = qm_math_vector3f_sub( npos, epos );
+
+		ApeCollisionIntersection result = {};
+		if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= playerEntity->cameraDistance )
+		{
+			cpos = result.intersection;
+		}
+	}
+
+	ape_camera_set_position( camera, &cpos );
+	ape_camera_set_angles( camera, &cang );
+}
+
+static void camera_first_person_tick( ApeCamera *camera, const double delta )
+{
+	ApeEntity *entity = game_server_get_host_entity_();
+	if ( entity == nullptr )
+	{
+		return;
+	}
+
+	SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
+	if ( playerEntity == nullptr )
+	{
+		return;
+	}
+
+	QmMathVector3f cpos = ape_camera_get_position( camera );
+	QmMathVector3f cang = ape_camera_get_angles( camera );
+
+	// entity camera position + view height
+	QmMathVector3f epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	epos.y              = epos.y + playerEntity->cameraHeight;
+
+	// entity camera angles
+	QmMathVector3f eang = playerEntity->cameraAngles;
+
+	QmMathVector3f forward, left;
+	PlAnglesAxes( eang, &left, nullptr, &forward );
+
+	// now interpolate the position and angles for the camera to the new position
+	cpos = PlLinearInterpolateV3f( cpos, epos, 7.0f * delta );
+	com_math_interpolate_angles( &cang, &eang, 16.0f * delta, &cang );
+
+	ape_camera_set_position( camera, &cpos );
+	ape_camera_set_angles( camera, &cang );
+}
+
+static void camera_tick( const double delta )
 {
 	ape_audio_clear_listener();
 
@@ -267,57 +357,16 @@ static void camera_tick( double delta )
 
 	ss1_gameState.oldCameraPosition = cpos;
 
-	if ( ss1_gameState.cameraState == SS1_CAMERA_STATE_THIRD_PERSON )
+	switch ( ss1_gameState.cameraState )
 	{
-		ApeEntity *entity = game_server_get_host_entity_();
-		if ( entity == nullptr )
-		{
-			return;
-		}
-
-		if ( strcmp( entity->classDefinition->name, "ss1_player" ) != 0 )
-		{
-			game_warning_( "Player is possessing an entity that isn't a player!\n" );
-			return;
-		}
-
-		SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
-
-		// entity camera position + view height
-		QmMathVector3f epos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-		epos.y         = epos.y + playerEntity->cameraHeight;
-		// entity camera angles
-		QmMathVector3f eang = playerEntity->cameraAngles;
-
-		QmMathVector3f forward, left;
-		PlAnglesAxes( eang, &left, nullptr, &forward );
-
-		// push entity position out and to either side
-		QmMathVector3f npos = epos;
-		npos           = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( forward, playerEntity->cameraDistance ) );
-		npos           = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( left, playerEntity->cameraSide ) );
-
-		// now interpolate the position and angles for the camera to the new position
-		cpos = PlLinearInterpolateV3f( cpos, npos, 7.0f * delta );
-		com_math_interpolate_angles( &cang, &eang, 7.0f * delta, &cang );
-
-		// if the camera is hitting anything, move it
-		ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( camera ) );
-		if ( room != nullptr )
-		{
-			PLCollisionRay ray = {};
-			ray.origin         = epos;
-			ray.direction      = qm_math_vector3f_sub( npos, epos );
-
-			ApeCollisionIntersection result = {};
-			if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= playerEntity->cameraDistance )
-			{
-				cpos = result.intersection;
-			}
-		}
-
-		ape_camera_set_position( camera, &cpos );
-		ape_camera_set_angles( camera, &cang );
+		default:
+			break;
+		case GAME_CAMERA_STATE_FIRST_PERSON:
+			camera_first_person_tick( camera, delta );
+			break;
+		case GAME_CAMERA_STATE_THIRD_PERSON:
+			camera_third_person_tick( camera, delta );
+			break;
 	}
 
 	// this is utterly dumb, but we'll use this to determine a vague "velocity"
@@ -326,7 +375,7 @@ static void camera_tick( double delta )
 	ape_audio_update_listener( &cpos, &cang, &cdiff );
 }
 
-static void world_tick( double delta )
+static void world_tick( const double delta )
 {
 	ApeWorld *world = game_get_current_world();
 	if ( world == nullptr )

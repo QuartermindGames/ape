@@ -5,6 +5,7 @@
 #include "qmos/public/qm_os_random.h"
 
 #include "ss1_game.h"
+#include "entities/entity_player.h"
 
 static void fire_decal( ApeInputState state, const char * )
 {
@@ -32,13 +33,13 @@ static void fire_decal( ApeInputState state, const char * )
 
 	QmMathVector3f pos = ape_camera_get_position( ss1_gameState.camera );
 	QmMathVector3f dir = ape_camera_get_forward( ss1_gameState.camera );
-	dir           = qm_math_vector3f_invert( dir );//TODO: sigh... camera is inverted
+	dir                = qm_math_vector3f_invert( dir );//TODO: sigh... camera is inverted
 
 	// apply some randomisation to the fire direction
 
 	unsigned int seed = qm_os_random_seed_initialize();
 
-	float     spreadAmount = PL_DEG2RAD( 16.0f );
+	float          spreadAmount = PL_DEG2RAD( 16.0f );
 	QmMathVector3f spread       = qm_math_vector3f(
             qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount,
             qm_os_random_uniform_float( &seed, spreadAmount ) * spreadAmount,
@@ -60,7 +61,50 @@ static void toggle_camera( ApeInputState state, PL_UNUSED const char *id )
 	}
 
 	ss1_gameState.oldCameraState = ss1_gameState.cameraState;
-	ss1_gameState.cameraState    = ss1_gameState.cameraState == SS1_CAMERA_STATE_THIRD_PERSON ? SS1_CAMERA_STATE_FREE : SS1_CAMERA_STATE_THIRD_PERSON;
+
+	ss1_gameState.cameraState++;
+	if ( ss1_gameState.cameraState >= GAME_CAMERA_STATE_MAX )
+	{
+		ss1_gameState.cameraState = 0;
+	}
+
+	switch ( ss1_gameState.cameraState )
+	{
+		default:
+		case GAME_CAMERA_STATE_FREE:
+			game_print_( "Free Camera\n" );
+			break;
+		case GAME_CAMERA_STATE_FIRST_PERSON:
+			game_print_( "First-Person Camera\n" );
+			break;
+		case GAME_CAMERA_STATE_THIRD_PERSON:
+			game_print_( "Third-Person Camera\n" );
+			break;
+	}
+
+	// attempt to hide the player model
+
+	ApeEntity *entity = game_server_get_host_entity_();
+	if ( entity == nullptr )
+	{
+		return;
+	}
+
+	SS1PlayerEntity *playerEntity = SS1_PLAYER_ENTITY( entity );
+	if ( playerEntity == nullptr || playerEntity->model == nullptr )
+	{
+		return;
+	}
+
+	ApeWorldNode *worldNode = APE_WORLD_NODE( playerEntity->model );
+	if ( ss1_gameState.cameraState == GAME_CAMERA_STATE_FIRST_PERSON )
+	{
+		worldNode->flags |= APE_WORLD_NODE_FLAG_HIDDEN;
+	}
+	else
+	{
+		worldNode->flags &= ~APE_WORLD_NODE_FLAG_HIDDEN;
+	}
 }
 
 void ss1_actions_register_()

@@ -58,12 +58,14 @@ typedef enum SS1ResourceType : uint8_t
 
 #define SS1_DEFAULT_MOON_COLOUR QM_MATH_COLOUR4F( 0.2f, 0.2f, 0.5f, 0.0f )
 
-typedef enum SS1CameraState
+typedef enum GameCameraState
 {
-	SS1_CAMERA_STATE_FREE,
-	SS1_CAMERA_STATE_FIRST_PERSON,
-	SS1_CAMERA_STATE_THIRD_PERSON,
-} SS1CameraState;
+	GAME_CAMERA_STATE_FREE,
+	GAME_CAMERA_STATE_FIRST_PERSON,
+	GAME_CAMERA_STATE_THIRD_PERSON,
+
+	GAME_CAMERA_STATE_MAX,
+} GameCameraState;
 
 typedef struct SS1GameState
 {
@@ -71,18 +73,18 @@ typedef struct SS1GameState
 
 	GamePlayer players[ SS1_MAX_PLAYERS ];
 
-	ApeCamera     *camera;// our eyes
-	QmMathVector3f      oldCameraPosition;
-	SS1CameraState oldCameraState, cameraState;
+	ApeCamera      *camera;// our eyes
+	QmMathVector3f  oldCameraPosition;
+	GameCameraState oldCameraState, cameraState;
 
 	ApeWorld *world;// world container
 
 	ApeLight *moonLight;
 	float     moonBrightness;
 
-	ApeLight *sunLight;
+	ApeLight      *sunLight;
 	QmMathVector2f sunAngles;
-	float     sunBrightness;
+	float          sunBrightness;
 
 	bool       isFirstLaunch;
 	AcmBranch *config;

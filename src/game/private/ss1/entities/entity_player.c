@@ -96,7 +96,7 @@ static void spawn_player_entity( ApeEntity *self )
 	player->cameraAngles = qm_math_vector3f( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
 
 	//TODO: this shouldn't be here...
-	ss1_gameState.cameraState = SS1_CAMERA_STATE_THIRD_PERSON;
+	ss1_gameState.cameraState = GAME_CAMERA_STATE_THIRD_PERSON;
 
 	setup_default_equipment( self );
 
