@@ -153,7 +153,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 
 static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
 {
-	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	if ( node->flags != APE_WORLD_NODE_FLAG_HIDDEN && node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		const ApeBrush *brush = ( ApeBrush * ) node;
 		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )

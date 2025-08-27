@@ -282,7 +282,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
 
 			const ApeFormatBone *a  = &model->bones[ i ];
-			const QmMathVector3f      pa = get_transformed_bone_position( model, a, mat );
+			const QmMathVector3f pa = get_transformed_bone_position( model, a, mat );
 			ape_draw_debug_sphere( pa, PL_COLOUR_CYAN, 1.0f );
 
 			if ( model->bones[ i ].parent == -1 )
@@ -291,7 +291,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 			}
 
 			const ApeFormatBone *b  = &model->bones[ model->bones[ i ].parent ];
-			const QmMathVector3f      pb = get_transformed_bone_position( model, b, mat );
+			const QmMathVector3f pb = get_transformed_bone_position( model, b, mat );
 			ape_draw_debug_arrow( pa, pb, PL_COLOUR_WHITE, 2.0f );
 		}
 
@@ -365,7 +365,7 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 		ApeModelNode *sceneNode;
 		COM_ITERATE_LINKED_LIST( sceneNode, model->sceneNodes, j )
 		{
-			if ( APE_WORLD_NODE( sceneNode )->room != room )
+			if ( APE_WORLD_NODE( sceneNode )->room != room || APE_WORLD_NODE( sceneNode )->flags == APE_WORLD_NODE_FLAG_HIDDEN )
 			{
 				continue;
 			}

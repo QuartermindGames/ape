@@ -492,6 +492,8 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 	//	acm_push_array_f32( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
 	//	acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
 
+	acm_push_ui32( nodeBranch, "flags", self->flags );
+
 	acm_push_ui32( nodeBranch, "classMagic", self->classType->magic );
 	if ( self->classType->serialize != nullptr )
 	{
@@ -558,6 +560,8 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 	acm_get_array_f32( root, "localTransform", ( float * ) &self->localTransform, 16 );
 	//	acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );
 	//	acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
+
+	self->flags = acm_get_uint( root, "flags", 0 );
 
 	// deal with the children
 	AcmBranch *childrenBranch = acm_get_child_by_name( root, "children" );

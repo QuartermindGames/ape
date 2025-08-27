@@ -140,6 +140,11 @@ typedef struct ApeWorldNodeClass
 	unsigned int flags;
 } ApeWorldNodeClass;
 
+typedef enum ApeWorldNodeFlag
+{
+	PL_BITFLAG( APE_WORLD_NODE_FLAG_HIDDEN, 0 ),
+} ApeWorldNodeFlag;
+
 //TODO: why is this public!?
 typedef struct ApeWorldNode
 {
@@ -173,6 +178,8 @@ typedef struct ApeWorldNode
 #if !defined( APE_NO_EDITOR )
 	QmMathColour4ub selectColour;
 #endif
+
+	unsigned int flags;
 
 	PLPath path;// where we were loaded from, if at all (note this isn't always valid)
 
