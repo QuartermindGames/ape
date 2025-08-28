@@ -5,8 +5,12 @@
 #if defined( GAME_QM2 )
 
 #	include "plcore/pl_array_vector.h"
+
 #	include "qmos/public/qm_os_random.h"
+#	include "qmos/public/qm_os_string.h"
+
 #	include "shared/game_private.h"
+#	include "shared/game_server.h"
 #	include "shared/ai/ai_brain.h"
 #	include "shared/components/component_collision.h"
 #	include "shared/components/component_health.h"
@@ -41,7 +45,16 @@ typedef struct Qm2CreatureBone
 	unsigned int            numChildren;
 
 	QmMathVector3f position;
+	QmMathVector3f angles;
+
+	float length;
 } Qm2CreatureBone;
+
+typedef struct Qm2CreatureSkeleton
+{
+	Qm2CreatureBone bones[ QM2_CREATURE_MAX_BONES ];
+	unsigned int    numBones;
+} Qm2CreatureSkeleton;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Creature Classes
@@ -104,15 +117,18 @@ static void parse_creature_bone( Qm2CreatureClass *creatureClass, AcmBranch *bra
 		else
 		{
 			game_warning_( "Unknown bone type (%s) specified for creature class (%s)!\n", typeName, creatureClass->name );
+			return;
 		}
 	}
 
-	bone->position = com_acm_get_vector3( branch, "position", &pl_vecOrigin3 );
+	bone->position = com_acm_get_vector3( branch, "position", &QM_MATH_VECTOR3F_ZERO );
+	bone->angles   = com_acm_get_vector3( branch, "angles", &QM_MATH_VECTOR3F_ZERO );
 
 	bone->parent = acm_get_uint( branch, "parent", 0 );
 	if ( bone->parent >= QM2_CREATURE_MAX_BONES )
 	{
 		game_warning_( "Invalid parent bone (%u) specified for creature class (%s)!\n", bone->parent, creatureClass->name );
+		return;
 	}
 
 	creatureClass->numBones++;
@@ -129,7 +145,7 @@ static void cache_creature_class( const char *path, void *user )
 
 	Qm2CreatureClass *creatureClass = QM_OS_MEMORY_NEW( Qm2CreatureClass );
 
-	asprintf( &creatureClass->name, "%s", acm_get_string( root, "name", "unnamed" ) );
+	creatureClass->name = qm_os_string_alloc( nullptr, "%s", acm_get_string( root, "name", "unnamed" ) );
 
 	creatureClass->icon = ape_material_cache( acm_get_string( root, "icon", "creatures/creature_fallback_icon.mat.n" ), APE_CACHE_GROUP_WORLD, true );
 
@@ -140,6 +156,19 @@ static void cache_creature_class( const char *path, void *user )
 		{
 			parse_creature_bone( creatureClass, i );
 		}
+	}
+
+	// now go through all the bones and determine the length of each, for IK
+	for ( unsigned int i = 0; i < creatureClass->numBones; ++i )
+	{
+		Qm2CreatureBone *bone       = &creatureClass->bones[ i ];
+		Qm2CreatureBone *parentBone = &creatureClass->bones[ bone->parent ];
+		if ( bone == parentBone )
+		{
+			continue;
+		}
+
+		bone->length = qm_math_vector3f_distance( bone->position, parentBone->position );
 	}
 
 	PlPushBackVectorArrayElement( creatureClasses, creatureClass );
@@ -218,8 +247,7 @@ typedef struct Qm2CreatureEntity
 	GameHealthComponent    *healthComponent;
 	GameCollisionComponent *collisionComponent;
 
-	Qm2CreatureBone bones[ QM2_CREATURE_MAX_BONES ];
-	unsigned int    numBones;
+	Qm2CreatureSkeleton skeleton;
 
 	Qm2CreatureSensor sensors[ QM2_CREATURE_MAX_SENSORS ];
 	unsigned int      numSensors;
@@ -235,6 +263,80 @@ typedef struct Qm2CreatureEntity
 } Qm2CreatureEntity;
 
 #	define QM2_CREATURE_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), QM2_CREATURE_CLASSNAME, Qm2CreatureEntity )
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Creature Bones / Procedural Animation
+/////////////////////////////////////////////////////////////////////////////////////
+
+static unsigned int creature_animation_get_chain( Qm2CreatureSkeleton *skeleton, Qm2CreatureBone *start, Qm2CreatureBone *dst[], unsigned int dstSize )
+{
+	unsigned int numBones = 0;
+
+	Qm2CreatureBone *bone = start;
+	while ( bone != nullptr && numBones < dstSize )
+	{
+		dst[ numBones++ ] = bone;
+		assert( bone->parent < dstSize );
+
+		Qm2CreatureBone *next = &skeleton->bones[ bone->parent ];
+		if ( next == bone )
+		{
+			break;
+		}
+
+		bone = next;
+	}
+
+	return numBones;
+}
+
+static bool creature_animation_solve_ik( Qm2CreatureSkeleton *skeleton, const PLMatrix4 *transform, Qm2CreatureBone *startBone, QmMathVector3f target, const double delta )
+{
+	Qm2CreatureBone *chain[ QM2_CREATURE_MAX_BONES ] = {};
+
+	unsigned int chainSize = creature_animation_get_chain( skeleton, startBone, chain, PL_ARRAY_ELEMENTS( chain ) );
+	if ( chainSize == 0 )
+	{
+		return false;
+	}
+
+	QmMathVector3f rootPos;
+	rootPos = chain[ chainSize - 1 ]->position;
+	rootPos = PlTransformVector3( &rootPos, transform );
+
+	float targetDist = qm_math_vector3f_distance( rootPos, target );
+
+	for ( unsigned int i = 1; i < chainSize; ++i )
+	{
+		QmMathVector3f wposa = PlTransformVector3( &chain[ i ]->position, transform );
+		ape_draw_debug_sphere( wposa, PL_COLOUR_RED, 2.0f );
+
+		QmMathVector3f wposb = PlTransformVector3( &chain[ i - 1 ]->position, transform );
+		ape_draw_debug_sphere( wposb, PL_COLOUR_PURPLE, 2.0f );
+
+		ape_draw_debug_arrow( wposa, wposb, PL_COLOUR_INDIAN_RED, 1.0f );
+	}
+
+	ape_draw_debug_cone( rootPos, qm_math_vector3f( -90.0f, 0.0f, 0.0f ), &PL_COLOUR_RED, 128.0f, 90.0f, 16 );
+
+	return true;
+}
+
+static void creature_animation_draw_skeleton( Qm2CreatureSkeleton *self, const PLMatrix4 *transform )
+{
+	for ( unsigned int i = 0; i < self->numBones; ++i )
+	{
+		QmMathVector3f bonePos = PlTransformVector3( &self->bones[ i ].position, transform );
+		ape_draw_debug_sphere( bonePos, PL_COLOUR_ORANGE, 2.0f );
+
+		Qm2CreatureBone *parent        = &self->bones[ self->bones[ i ].parent ];
+		QmMathVector3f   parentBonePos = PlTransformVector3( &parent->position, transform );
+		ape_draw_debug_arrow( bonePos, parentBonePos, PL_COLOUR_INDIAN_RED, 1.0f );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 static void *create_creature( ApeEntity *self, AcmBranch *properties )
 {
@@ -271,8 +373,8 @@ static void spawn_creature( ApeEntity *self )
 
 	creature->sex = qm_os_random_int( &creature->seed ) % QM2_CREATURE_MAX_SEXES;
 
-	memcpy( creature->bones, creature->class->bones, sizeof( Qm2CreatureBone ) * creature->class->numBones );
-	creature->numBones = creature->class->numBones;
+	memcpy( creature->skeleton.bones, creature->class->bones, sizeof( Qm2CreatureBone ) * creature->class->numBones );
+	creature->skeleton.numBones = creature->class->numBones;
 }
 
 static void tick_creature( ApeEntity *self, double delta )
@@ -287,20 +389,29 @@ static void tick_creature( ApeEntity *self, double delta )
 	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
-	ang.y += 5.0f * delta;
-	ape_world_node_set_angles( APE_WORLD_NODE( self ), &ang );
-
 	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( self ) );
 
-	for ( unsigned int i = 0; i < creature->numBones; ++i )
 	{
-		QmMathVector3f bonePos = PlTransformVector3( &creature->bones[ i ].position, &transform );
-		ape_draw_debug_sphere( bonePos, PL_COLOUR_ORANGE, 2.0f );
+		// test code for experimenting with ik
 
-		Qm2CreatureBone *parent        = &creature->bones[ creature->bones[ i ].parent ];
-		QmMathVector3f   parentBonePos = PlTransformVector3( &parent->position, &transform );
-		ape_draw_debug_arrow( bonePos, parentBonePos, PL_COLOUR_INDIAN_RED, 1.0f );
+		ApeEntity *entity = game_server_get_host_entity_();
+		if ( entity != nullptr )
+		{
+			QmMathVector3f targetPos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+
+			for ( unsigned int i = 0; i < creature->skeleton.numBones; ++i )
+			{
+				if ( creature->skeleton.bones[ i ].type != QM2_CREATURE_BONE_TYPE_HEAD )
+				{
+					continue;
+				}
+
+				creature_animation_solve_ik( &creature->skeleton, &transform, &creature->skeleton.bones[ i ], targetPos, delta );
+			}
+		}
 	}
+
+	//creature_animation_draw_skeleton( &creature->skeleton, &transform );
 
 	ape_draw_debug_sphere( pos, PL_COLOUR_WHITE, 1.0f );
 }

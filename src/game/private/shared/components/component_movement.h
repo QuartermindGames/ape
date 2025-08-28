@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "component_collision.h"
+
 typedef struct GameMovementComponent
 {
 	QmMathVector3f direction;
@@ -18,4 +20,4 @@ typedef struct GameMovementComponent
 	bool isGrounded;
 } GameMovementComponent;
 
-void game_component_movement_tick_( GameMovementComponent *self, ApeEntity *entity, double delta );
+void game_component_movement_tick_( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta );

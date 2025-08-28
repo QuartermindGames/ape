@@ -84,6 +84,7 @@ static void spawn_player_entity( ApeEntity *self )
 
 	player->model = ape_model_node_create( APE_WORLD_NODE( self ), "player_body", "models/characters/character_test.mdl.n" );
 	assert( player->model != nullptr );
+	APE_WORLD_NODE( player->model )->flags |= APE_WORLD_NODE_FLAG_HIDDEN;
 
 	// setup the camera state
 	player->cameraHeight   = PLAYER_CAMERA_HEIGHT;
@@ -96,7 +97,7 @@ static void spawn_player_entity( ApeEntity *self )
 	player->cameraAngles = qm_math_vector3f( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
 
 	//TODO: this shouldn't be here...
-	ss1_gameState.cameraState = GAME_CAMERA_STATE_THIRD_PERSON;
+	ss1_gameState.cameraState = GAME_CAMERA_STATE_FIRST_PERSON;
 
 	setup_default_equipment( self );
 
@@ -110,7 +111,7 @@ static void tick_player_entity( ApeEntity *self, double delta )
 	SS1PlayerEntity *player = SS1_PLAYER_ENTITY( self );
 	assert( player != nullptr );
 
-	game_component_movement_tick_( player->movementComponent, self, delta );
+	game_component_movement_tick_( player->movementComponent, player->collisionComponent, self, delta );
 }
 
 ApeEntityClassDefinition ss1_playerEntityClass = {
