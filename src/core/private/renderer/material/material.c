@@ -989,7 +989,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		QmMathColour4f sunAmbience;
 		if ( ape_rendererState_.camera != nullptr && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
 		{
-			sunAmbience = ( QmMathColour4f ) {};
+			sunAmbience = QM_MATH_COLOUR4F_RGB( 1.0f, 1.0f, 1.0f );
 		}
 		else
 		{
