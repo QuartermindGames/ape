@@ -374,12 +374,6 @@ static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, co
 static void render_selected_wireframe( ApeWorldNode *node, const QmMathColour4ub *colour, bool selected )
 {
 	draw_selection_cube( &node->position, colour, SELECTION_OBJECT_SIZE, true );
-
-	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT && selected )
-	{
-		const ApeLight *light = ( ApeLight * ) node;
-		ape_draw_debug_sphere( node->position, PlColourF32ToU8( &light->colour ), light->radius );
-	}
 }
 
 static void render_selected_objects( ApeEditorInstance *self )
@@ -405,6 +399,11 @@ static void render_selected_objects( ApeEditorInstance *self )
 				render_wireframe_brush( mesh, ( ApeBrush * ) worldNode, &PL_COLOUR_BLUE );
 				break;
 			}
+		}
+
+		if ( worldNode->classType->onDrawEditor != nullptr )
+		{
+			worldNode->classType->onDrawEditor( worldNode, true );
 		}
 	}
 
@@ -511,7 +510,7 @@ QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *
 		return nullptr;
 	}
 
-	size_t    size = frameBuffer->width * frameBuffer->height * 4;
+	size_t           size = frameBuffer->width * frameBuffer->height * 4;
 	QmMathColour4ub *buf  = QM_OS_MEMORY_NEW_( QmMathColour4ub, size );
 	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
 	{
@@ -710,7 +709,7 @@ static void render_transform_widget( ApeEditorInstance *instance )
 	}
 	else
 	{
-		PLMatrix4 transform = ape_world_node_get_transform( selected );
+		PLMatrix4      transform = ape_world_node_get_transform( selected );
 		QmMathVector3f pos       = PlGetMatrix4Translation( &transform );
 		PlTranslateMatrix( pos );
 	}

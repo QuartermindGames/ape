@@ -442,8 +442,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_editor_post_render_scene_();
 
-	ape_draw_debug_mesh_display_();
-
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	currentCamera = nullptr;

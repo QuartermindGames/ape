@@ -826,8 +826,6 @@ void ape_editor_post_render_scene_()
 	ape_grid_draw_( &instance->grid );
 	ape_grid_post_draw_( &instance->grid );
 
-	ape_editor_selection_render_post_( instance );
-
 	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 	{
 		render_plot_polygon( instance );

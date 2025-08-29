@@ -55,7 +55,7 @@ static ApeWorldNode *clone_light( ApeWorldNode *src )
 }
 
 QmMathColour4f ape_light_get_colour( const ApeLight *light ) { return light->colour; }
-void        ape_light_set_colour( ApeLight *light, const QmMathColour4f *colour ) { light->colour = *colour; }
+void           ape_light_set_colour( ApeLight *light, const QmMathColour4f *colour ) { light->colour = *colour; }
 
 QmMathVector3f ape_light_get_position( const ApeLight *self )
 {
@@ -132,7 +132,6 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 		return dot <= 0;
 	}
 
-	return ( dot < 0 );
 	QmMathVector3f dir = qm_math_vector3f_sub( plane->origin, ape_light_get_position( self ) );
 	float          dot = qm_math_vector3f_dot_product( plane->normal, dir );
 	return dot < 0;
@@ -178,6 +177,42 @@ static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
 	return APE_WORLD_NODE( light );
 }
 
+static void light_on_draw_editor( void *self, const bool isSelected )
+{
+	ApeLight *light = self;
+
+	// this sucks, need to convert the colour due to inconsistency
+	QmMathColour4ub colour = qm_math_colour4f_to_colour4ub( light->colour );
+
+	QmMathVector3f position = ape_light_get_position( light );
+	QmMathVector3f angles   = ape_light_get_angles( light );
+
+	ApeLightType type = ape_light_get_type( light );
+
+	if ( !isSelected )
+	{
+		QmMathVector3f forward;
+		PlAnglesAxes( angles, nullptr, nullptr, &forward );
+		QmMathVector3f end = qm_math_vector3f_add( position, qm_math_vector3f_scale_float( forward, 16.0f ) );
+		ape_draw_debug_arrow( position, end, PlColourF32ToU8( &light->colour ), 1.0f );
+	}
+
+	if ( type == APE_LIGHT_TYPE_OMNI && isSelected )
+	{
+		ape_draw_debug_sphere( position, colour, light->radius );
+	}
+	else if ( type == APE_LIGHT_TYPE_SPOT && isSelected )
+	{
+		ape_draw_debug_cone(
+		        position,
+		        angles,
+		        &colour,
+		        light->radius,
+		        light->angle,
+		        16 );
+	}
+}
+
 static ApeWorldNodePropertyEnum lightTypesEnum[] = {
         {"Omni", 0},
         {"Spot", 1},
@@ -207,6 +242,8 @@ const ApeWorldNodeClass ape_lightClass = {
 #if !defined( APE_NO_EDITOR )
 
         .editorIcon = "resources/new_light.gif",
+
+        .onDrawEditor = light_on_draw_editor,
 
 #endif
 };

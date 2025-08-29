@@ -135,6 +135,14 @@ typedef struct ApeWorldNodeClass
 	unsigned int                numProperties;
 
 	const char *editorIcon;
+
+	/**
+	 * This gets called regardless of being selected, or not.
+	 * However, in some cases you might only want your drawn
+	 * elements to show in the situation that it's selected,
+	 * which is what the 'isSelected' flag is for.
+	 */
+	void ( *onDrawEditor )( void *self, bool isSelected );
 #endif
 
 	unsigned int flags;

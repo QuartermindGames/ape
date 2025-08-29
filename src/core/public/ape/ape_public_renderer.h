@@ -292,6 +292,18 @@ void ape_draw_debug_aabb( const PLCollisionAABB *aabb, QmMathColour4ub colour );
 void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const QmMathColour4ub *colour, unsigned int resolution );
 
 /**
+ * Draw a wireframe cone.
+ *
+ * @param origin Origin of the cone.
+ * @param angles Angles of the cone.
+ * @param colour Colour of the cone.
+ * @param range Range or distance, of the cone.
+ * @param radius Radius at the end of the cone.
+ * @param resolution Resolution of the cone.
+ */
+void ape_draw_debug_cone( QmMathVector3f origin, QmMathVector3f angles, const QmMathColour4ub *colour, float range, float radius, unsigned int resolution );
+
+/**
  * Draw the specified plane.
  *
  * @param plane		Plane to draw, will draw from origin.

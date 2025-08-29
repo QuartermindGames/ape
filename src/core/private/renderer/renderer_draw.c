@@ -226,8 +226,8 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	        PL_COLOUR_RED,
 	};
 
-	unsigned int numOutPoints = ( numPoints - 1 ) * 2;
-	QmMathVector3f   *points       = QM_OS_MEMORY_CALLOC( numOutPoints, sizeof( QmMathVector3f ) );
+	unsigned int    numOutPoints = ( numPoints - 1 ) * 2;
+	QmMathVector3f *points       = QM_OS_MEMORY_CALLOC( numOutPoints, sizeof( QmMathVector3f ) );
 
 	/* convert the values we've been provided into points in our graph */
 	for ( unsigned int i = 0, j = 1; j < numPoints; i++, j++ )
@@ -351,8 +351,8 @@ void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float 
 	if ( inset )
 	{
 		QmMathColour4ub tmp = ul;
-		ul           = ll;
-		ll           = tmp;
+		ul                  = ll;
+		ll                  = tmp;
 	}
 
 	// top bit
@@ -487,7 +487,7 @@ void ape_draw_debug_line( QmMathVector3f start, QmMathVector3f end, QmMathColour
 void ape_draw_debug_arrow( QmMathVector3f start, QmMathVector3f end, QmMathColour4ub colour, float scale )
 {
 	QmMathVector3f direction = qm_math_vector3f_sub( end, start );
-	direction           = qm_math_vector3f_normalize( direction );
+	direction                = qm_math_vector3f_normalize( direction );
 
 	QmMathVector3f arrowHead  = qm_math_vector3f_sub( end, qm_math_vector3f_scale_float( direction, scale ) );
 	QmMathVector3f arrowLeft  = qm_math_vector3f_add( arrowHead, qm_math_vector3f_scale_float( qm_math_vector3f_normalize( qm_math_vector3f_cross_product( direction, qm_math_vector3f( 0.0f, 0.0f, 1.0f ) ) ), scale ) );
@@ -632,6 +632,44 @@ void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const QmMath
 	ape_draw_debug_axis( cylinder->origin, ( QmMathVector3f ) {}, 2.0f );
 }
 
+void ape_draw_debug_cone( QmMathVector3f origin, QmMathVector3f angles, const QmMathColour4ub *colour, float range, float radius, unsigned int resolution )
+{
+	static constexpr unsigned int MAX_RESOLUTION = 64;
+
+	if ( resolution == 0 || range == 0.0f )
+	{
+		return;
+	}
+
+	resolution = PL_MIN( resolution, MAX_RESOLUTION - 1 );
+
+	PLMatrix4 mx = PlRotateMatrix4( PL_DEG2RAD( angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
+	PLMatrix4 my = PlRotateMatrix4( PL_DEG2RAD( angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
+	PLMatrix4 mz = PlRotateMatrix4( PL_DEG2RAD( angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
+
+	PLMatrix4 rt = PlMatrix4Identity();
+	rt           = PlMultiplyMatrix4( &rt, &mx );
+	rt           = PlMultiplyMatrix4( &rt, &my );
+	rt           = PlMultiplyMatrix4( &rt, &mz );
+
+	QmMathVector3f vertices[ MAX_RESOLUTION ] = {};
+	for ( unsigned int i = 0; i < resolution; ++i )
+	{
+		float          angle = PL_DEG2RAD( 360.0f * i / resolution );
+		QmMathVector3f pos   = qm_math_vector3f( cosf( angle ) * radius, range, sinf( angle ) * radius );
+		vertices[ i ]        = qm_math_vector3f_add( origin, PlTransformVector3( &pos, &rt ) );
+	}
+
+	for ( unsigned int i = 0; i < resolution; ++i )
+	{
+		const QmMathVector3f *a = &vertices[ i ];
+		const QmMathVector3f *b = &vertices[ i == 0 ? resolution - 1 : i - 1 ];
+
+		ape_draw_debug_line( *a, *b, *colour );
+		ape_draw_debug_line( origin, *a, *colour );
+	}
+}
+
 void ape_draw_debug_plane( const PLCollisionPlane *plane, QmMathColour4ub colour, float scale )
 {
 	QmMathVector3f normal = qm_math_vector3f_normalize( plane->normal );
@@ -650,8 +688,8 @@ void ape_draw_debug_plane( const PLCollisionPlane *plane, QmMathColour4ub colour
 	tangent = qm_math_vector3f_normalize( tangent );
 
 	QmMathVector3f bitangent = qm_math_vector3f_cross_product( normal, tangent );
-	tangent             = qm_math_vector3f_scale_float( tangent, scale );
-	bitangent           = qm_math_vector3f_scale_float( bitangent, scale );
+	tangent                  = qm_math_vector3f_scale_float( tangent, scale );
+	bitangent                = qm_math_vector3f_scale_float( bitangent, scale );
 
 	QmMathVector3f corner1 = qm_math_vector3f_add( plane->origin, qm_math_vector3f_add( tangent, bitangent ) );
 	QmMathVector3f corner2 = qm_math_vector3f_add( plane->origin, qm_math_vector3f_sub( tangent, bitangent ) );

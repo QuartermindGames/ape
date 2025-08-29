@@ -6,6 +6,7 @@
 #include "renderer.h"
 #include "material/material.h"
 #include "camera/camera.h"
+#include "editor/editor.h"
 #include "world/world.h"
 
 //TODO: eventually we should do away with this
@@ -910,6 +911,44 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	COM_PROFILE_FUNCTION_END();
 }
 
+static void draw_room_editor( const ApeCameraVisibleRoom *visibleRoom )
+{
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr )
+	{
+		return;
+	}
+
+	COM_PROFILE_FUNCTION_START();
+
+	for ( unsigned int i = 0; i < visibleRoom->numNodes; ++i )
+	{
+		ApeWorldNode *node = visibleRoom->nodes[ i ];
+		if ( node == nullptr || node->classType->onDrawEditor == nullptr )
+		{
+			continue;
+		}
+
+		node->classType->onDrawEditor( node, false );
+	}
+
+	// sigh...
+	for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
+	{
+		ApeWorldNode *node = APE_WORLD_NODE( visibleRoom->lights[ i ] );
+		if ( node == nullptr || node->classType->onDrawEditor == nullptr )
+		{
+			continue;
+		}
+
+		node->classType->onDrawEditor( node, false );
+	}
+
+	ape_editor_selection_render_post_( instance );
+
+	COM_PROFILE_FUNCTION_END();
+}
+
 //TODO: move into room code
 void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const ApeViewport *viewport )
 {
@@ -980,6 +1019,10 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 			break;
 		}
 	}
+
+	draw_room_editor( visibleRoom );
+
+	ape_draw_debug_mesh_display_();
 
 	PlgPopDebugGroupMarker();
 }

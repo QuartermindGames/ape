@@ -295,7 +295,6 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 			ape_draw_debug_arrow( pa, pb, PL_COLOUR_WHITE, 2.0f );
 		}
 
-		ape_draw_debug_mesh_display_();
 		return;
 	}
 
@@ -427,6 +426,25 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 	qm_os_memory_free( self );
 }
 
+static ApeWorldNode *clone_model_node( ApeWorldNode *src )
+{
+	ApeModelNode *srcModelNode = ( ApeModelNode * ) src;
+	ApeModelNode *dstModelNode = ape_model_node_create( src->parent, src->name, srcModelNode->modelPath );
+	if ( dstModelNode == nullptr )
+	{
+		ape_warning_( "Failed to create model for duplication!\n" );
+		return nullptr;
+	}
+
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( srcModelNode ) );
+	ape_world_node_set_position( APE_WORLD_NODE( dstModelNode ), &pos );
+
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( srcModelNode ) );
+	ape_world_node_set_angles( APE_WORLD_NODE( dstModelNode ), &ang );
+
+	return APE_WORLD_NODE( dstModelNode );
+}
+
 AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 {
 	const ApeModelNode *self = data;
@@ -450,6 +468,7 @@ const ApeWorldNodeClass ape_modelClass = {
         .destroy     = destroy_model_node,
         .serialize   = serialize_model_node,
         .deserialize = deserialize_model_node,
+        .clone       = clone_model_node,
 
 #if !defined( APE_NO_EDITOR )
 
