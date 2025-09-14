@@ -11,15 +11,16 @@
 #include "renderer/post/post.h"
 #include "yin/core_game.h"
 
-static bool guiDraw = true;
+static bool guiDraw            = true;
+static bool guiProfilerOverlay = false;
 
 static float profilerWidth  = 512;
 static float profilerHeight = 256;
 
 ApeGUIState ape_guiState_;
 
-bool ape_gui_initialize_fonts_( void );
-void ape_gui_initialize_draw_( void );
+bool ape_gui_initialize_fonts_();
+void ape_gui_draw_initialize_();
 
 /**
  * Initialize the GUI sub-system.
@@ -29,10 +30,11 @@ bool ape_gui_initialize_( void )
 	PL_ZERO_( ape_guiState_ );
 
 	PlRegisterConsoleVariable( "gui.draw", "Enable/disable drawing of the GUI.", "true", PL_VAR_BOOL, &guiDraw, nullptr, false );
+	PlRegisterConsoleVariable( "gui.profiler", "Enable profiler.", "false", PL_VAR_BOOL, &guiProfilerOverlay, nullptr, false );
 	PlRegisterConsoleVariable( "gui.profilerWidth", "Set the width of the on-screen profiler.", "512", PL_VAR_F32, &profilerWidth, nullptr, true );
 	PlRegisterConsoleVariable( "gui.profilerHeight", "Set the width of the on-screen profiler.", "256", PL_VAR_F32, &profilerHeight, nullptr, true );
 
-	ape_gui_initialize_draw_();
+	ape_gui_draw_initialize_();
 	if ( !ape_gui_initialize_fonts_() )
 	{
 		ape_warning_( "Font initialization failed!\n" );
@@ -45,7 +47,7 @@ bool ape_gui_initialize_( void )
 
 void ape_gui_shutdown_( void )
 {
-	guiShutdownDraw_();
+	ape_gui_draw_shutdown_();
 }
 
 void ape_gui_update_mouse_position_( int x, int y )
@@ -224,9 +226,10 @@ static void draw_profiler( const ApeViewport *viewport )
 
 static void draw_debug_overlay( ApeViewport *viewport )
 {
-	PL_GET_CVAR( "debug/overlay", debugOverlay );
-	if ( debugOverlay->i_value <= 0 )
+	if ( !guiProfilerOverlay )
+	{
 		return;
+	}
 
 	COM_PROFILE_FUNCTION_START();
 
@@ -287,10 +290,7 @@ static void draw_debug_overlay( ApeViewport *viewport )
 
 	gui_font_display( font );
 
-	if ( debugOverlay->i_value > 1 )
-	{
-		draw_profiler( viewport );
-	}
+	draw_profiler( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -357,9 +357,7 @@ void ape_gui_draw_( ApeViewport *viewport )
 		}
 	}
 
-	// todo: this should use GUI
-	PL_GET_CVAR( "debug/overlay", debugOverlay );
-	if ( ape_config_.renderer.showFps && debugOverlay->i_value == 0 )
+	if ( ape_config_.renderer.showFps && !guiProfilerOverlay )
 	{
 		char tmp[ 32 ];
 		snprintf( tmp, sizeof( tmp ), "FPS: %u", ape_viewport_get_framerate( viewport ) );

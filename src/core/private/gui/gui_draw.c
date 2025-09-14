@@ -14,9 +14,9 @@
 
 typedef struct ApeGuiDrawBatch
 {
-	PLGMesh    *mesh;
-	PLGTexture *texture;
-	bool        usedThisFrame;
+	PLGMesh     *mesh;
+	ApeMaterial *material;
+	bool         usedThisFrame;
 } ApeGuiDrawBatch;
 
 /****************************************
@@ -36,7 +36,7 @@ typedef struct ApeGuiCanvas
 
 ApeGuiCanvas *ape_gui_canvas_create( int width, int height )
 {
-	ApeGuiCanvas *canvas    = QM_OS_MEMORY_NEW( ApeGuiCanvas );
+	ApeGuiCanvas *canvas = QM_OS_MEMORY_NEW( ApeGuiCanvas );
 	canvas->width        = width;
 	canvas->height       = height;
 	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
@@ -89,7 +89,7 @@ static PLGCamera *camera;
 
 static PLLinkedList *batches;
 
-void ape_gui_initialize_draw_( void )
+void ape_gui_draw_initialize_()
 {
 	batches = PlCreateLinkedList();
 
@@ -99,17 +99,27 @@ void ape_gui_initialize_draw_( void )
 	camera->far  = 1000.0f;
 }
 
-void guiShutdownDraw_( void )
+static void destroy_batch( void *user )
 {
+	ApeGuiDrawBatch *batch = user;
 }
 
-PLGMesh *ape_gui_get_batch_queue_mesh( PLGTexture *texture )
+void ape_gui_draw_shutdown_()
+{
+	if ( batches != nullptr )
+	{
+		PlDestroyLinkedListEx( batches, destroy_batch );
+		batches = nullptr;
+	}
+}
+
+PLGMesh *ape_gui_get_batch_queue_mesh( ApeMaterial *material )
 {
 	PLLinkedListNode *node = PlGetFirstNode( batches );
 	while ( node != NULL )
 	{
 		ApeGuiDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
-		if ( drawBatch->texture == texture )
+		if ( drawBatch->material == material )
 		{
 			return drawBatch->mesh;
 		}
@@ -120,7 +130,7 @@ PLGMesh *ape_gui_get_batch_queue_mesh( PLGTexture *texture )
 	// Texture isn't in the queue, so create a new batch request
 	ApeGuiDrawBatch *drawBatch = QM_OS_MEMORY_NEW( ApeGuiDrawBatch );
 	drawBatch->mesh            = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
-	drawBatch->texture         = texture;
+	drawBatch->material        = material;
 	PlInsertLinkedListNode( batches, drawBatch );
 	return drawBatch->mesh;
 }
@@ -179,41 +189,18 @@ void gui_canvas_make_active( ApeGuiCanvas *canvas )
 
 void gui_canvas_display( ApeGuiCanvas *canvas )
 {
-	ApeShaderProgram *defaultProgram = ape_get_default_shader( APE_SHADER_DEFAULT );
-	PlgSetShaderUniformValue( defaultProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
-	PlgSetShaderUniformValue( defaultProgram->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
-	ApeShaderProgram *vertexProgram = ape_get_default_shader( APE_SHADER_DEFAULT_VERTEX );
-	PlgSetShaderUniformValue( vertexProgram->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
-	PlgSetShaderUniformValue( vertexProgram->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
-
-	PLLinkedListNode *node = PlGetFirstNode( batches );
-	while ( node != NULL )
+	ApeGuiDrawBatch *drawBatch;
+	COM_ITERATE_LINKED_LIST( drawBatch, batches, i )
 	{
-		ApeGuiDrawBatch *drawBatch = PlGetLinkedListNodeUserData( node );
-		PlgSetTexture( drawBatch->texture, 0 );
-		if ( drawBatch->texture == NULL )
-		{
-			PlgSetShaderProgram( vertexProgram->internal );
-		}
-		else
-		{
-			PlgSetShaderProgram( defaultProgram->internal );
-		}
+		assert( drawBatch != nullptr );
 
-		PlgUploadMesh( drawBatch->mesh );
-		PlgDrawMesh( drawBatch->mesh );
+		ape_material_draw( drawBatch->material, drawBatch->mesh, nullptr );
 
 		ape_guiState_.numTriangles += drawBatch->mesh->num_triangles;
 		ape_guiState_.numBatches++;
-
-		node = PlGetNextLinkedListNode( node );
 	}
 
-	PlPopMatrix();
-
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
-
-	PlgSetTexture( nullptr, 0 );
 
 	// restore
 	PlgSetViewMatrix( &canvas->oldViewMatrix );
@@ -222,8 +209,10 @@ void gui_canvas_display( ApeGuiCanvas *canvas )
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
 }
 
-void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour )
+void ape_gui_draw_filled_rectangle( PLGMesh *mesh, const int x, const int y, const int w, const int h, const int z, const QmMathColour4ub *colour )
 {
+	assert( mesh->primitive == PLG_MESH_TRIANGLES );
+
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
 	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
@@ -236,10 +225,12 @@ void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, i
 }
 
 /**
- * Similar to Draw_FilledRectangle, only more explicit for the frame coords.
+ * Similar to draw_filled_rectangle, only more explicit for the frame coords.
  */
-void ape_gui_draw_quad( PLGMesh *mesh, ApeVector2i tl, ApeVector2i tr, ApeVector2i ll, ApeVector2i lr, int z, const QmMathColour4f *colour )
+void ape_gui_draw_quad( PLGMesh *mesh, const QmMathVector2i tl, const QmMathVector2i tr, const QmMathVector2i ll, const QmMathVector2i lr, const int z, const QmMathColour4f *colour )
 {
+	assert( mesh->primitive == PLG_MESH_TRIANGLES );
+
 	// todo: drawing API should take floating-point colours!
 	QmMathColour4ub bColour = PlColourF32ToU8( colour );
 

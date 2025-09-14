@@ -65,11 +65,14 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 
 static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject )
 {
-	subObject->mins = ( QmMathVector3f ){ FLT_MAX, FLT_MAX, FLT_MAX };
-	subObject->maxs = ( QmMathVector3f ){ FLT_MIN, FLT_MIN, FLT_MIN };
+	static constexpr QmMathVector3f MAX_VECTOR = QM_MATH_VECTOR3F( FLT_MAX, FLT_MAX, FLT_MAX );
+	static constexpr QmMathVector3f MIN_VECTOR = QM_MATH_VECTOR3F( FLT_MIN, FLT_MIN, FLT_MIN );
+
+	subObject->mins = MAX_VECTOR;
+	subObject->maxs = MIN_VECTOR;
 
 	unsigned int numFaces;
-	ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
+	ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
@@ -105,7 +108,7 @@ ObjModel *model_obj_load( const char *path )
 	PlCloseFile( file );
 
 	ObjModel     *obj            = QM_OS_MEMORY_NEW( ObjModel );
-	ObjSubObject *subObject      = NULL;
+	ObjSubObject *subObject      = nullptr;
 	unsigned int  materialIndex  = 0;
 	unsigned int  smoothingIndex = 0;
 
@@ -161,11 +164,11 @@ ObjModel *model_obj_load( const char *path )
 		else if ( *c == 'v' && *( c + 1 ) == 'n' && *( c + 2 ) == ' ' )
 		{
 			c += 3;
-			char      *end;
+			char           *end;
 			QmMathVector3f *normal = QM_OS_MEMORY_NEW( QmMathVector3f );
-			normal->x         = strtof( c, &end );
-			normal->y         = strtof( end, &end );
-			normal->z         = strtof( end, NULL );
+			normal->x              = strtof( c, &end );
+			normal->y              = strtof( end, &end );
+			normal->z              = strtof( end, NULL );
 
 			if ( obj->normals == NULL )
 			{
@@ -178,10 +181,10 @@ ObjModel *model_obj_load( const char *path )
 		else if ( *c == 'v' && *( c + 1 ) == 't' && *( c + 2 ) == ' ' )
 		{
 			c += 3;
-			char      *end;
+			char           *end;
 			QmMathVector2f *uv = QM_OS_MEMORY_NEW( QmMathVector2f );
-			uv->x         = strtof( c, &end );
-			uv->y         = strtof( end, NULL );
+			uv->x              = strtof( c, &end );
+			uv->y              = strtof( end, NULL );
 
 			if ( obj->textureCoords == NULL )
 			{
@@ -265,8 +268,8 @@ ObjModel *model_obj_load( const char *path )
 					unsigned int z = indices[ idx + 2 ];
 
 					QmMathVector3f n = PlgGenerateVertexNormal( v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ]->position,
-					                                       v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ]->position,
-					                                       v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ]->position );
+					                                            v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ]->position,
+					                                            v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ]->position );
 
 					normals[ x ] = qm_math_vector3f_add( normals[ x ], n );
 					normals[ y ] = qm_math_vector3f_add( normals[ y ], n );
@@ -371,7 +374,7 @@ CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )
 		CookModelMesh *mesh = &out->meshes[ i ];
 
 		unsigned int numFaces;
-		ObjFace    **faces = ( ObjFace    **) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
+		ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
 		for ( unsigned int j = 0; j < numFaces; ++j )
 		{
 			// We'll need to convert it into triangles here...
@@ -384,6 +387,6 @@ CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )
 
 static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
 static CookModel *conv_obj( const CookModel *model, CookModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
-static void       destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel       *) model ); }
+static void       destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
 
 const CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "ape_public_gui.h"
-
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_mesh.h>
 
@@ -29,6 +27,8 @@ typedef struct ApeTexture      ApeTexture;
 typedef struct ApeMaterial     ApeMaterial;
 typedef struct ApeRoom         ApeRoom;
 typedef struct ApeWorld        ApeWorld;
+
+typedef struct ApeGuiFont ApeGuiFont;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Viewport API

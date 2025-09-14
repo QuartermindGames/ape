@@ -9,15 +9,14 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-typedef enum PostEffect
+typedef enum ApeRendererPostEffectType
 {
-	POST_EFFECT_FXAA,
-	POST_EFFECT_DOF,
-	POST_EFFECT_BLOOM,
-	POST_EFFECT_DITHER,
+	APE_RENDERER_POST_EFFECT_TYPE_FXAA,
+	APE_RENDERER_POST_EFFECT_TYPE_BLOOM,
+	APE_RENDERER_POST_EFFECT_TYPE_DITHER,
 
 	MAX_POST_EFFECTS
-} PostEffect;
+} ApeRendererPostEffectType;
 
 static const ApePostProcessEffect *postProcessEffects[ MAX_POST_EFFECTS ];
 static bool                        postProcessInit    = false;
@@ -34,9 +33,9 @@ static void register_post_effects( void )
 		return;
 	}
 
-	postProcessEffects[ POST_EFFECT_FXAA ]   = ape_postfx_get_fxaa_();
-	postProcessEffects[ POST_EFFECT_BLOOM ]  = ape_postfx_get_bloom_();
-	postProcessEffects[ POST_EFFECT_DITHER ] = &ape_postDitherEffect_;
+	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_FXAA ]   = ape_postfx_get_fxaa_();
+	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_BLOOM ]  = ape_postfx_get_bloom_();
+	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_DITHER ] = &ape_postDitherEffect_;
 
 	postProcessInit = true;
 }

@@ -550,12 +550,12 @@ void ape_draw_debug_sphere( QmMathVector3f origin, QmMathColour4ub colour, float
 	}
 }
 
-void ape_draw_debug_axis( QmMathVector3f origin, QmMathVector3f angles, float scale )
+void ape_draw_debug_axis( const QmMathVector3f origin, QmMathVector3f angles, const float scale )
 {
 	//TODO: represent angles...
-	ape_draw_debug_arrow( origin, qm_math_vector3f_add( origin, ( QmMathVector3f ) { scale, 0.0f, 0.0f } ), PL_COLOUR_RED, scale / 4.0f );
-	ape_draw_debug_arrow( origin, qm_math_vector3f_add( origin, ( QmMathVector3f ) { 0.0f, scale, 0.0f } ), PL_COLOUR_GREEN, scale / 4.0f );
-	ape_draw_debug_arrow( origin, qm_math_vector3f_add( origin, ( QmMathVector3f ) { 0.0f, 0.0f, scale } ), PL_COLOUR_BLUE, scale / 4.0f );
+	ape_draw_debug_arrow( origin, qm_math_vector3f_add( origin, QM_MATH_VECTOR3F( scale, 0.0f, 0.0f ) ), PL_COLOUR_RED, scale / 4.0f );
+	ape_draw_debug_arrow( origin, qm_math_vector3f_add( origin, QM_MATH_VECTOR3F( 0.0f, scale, 0.0f ) ), PL_COLOUR_GREEN, scale / 4.0f );
+	ape_draw_debug_arrow( origin, qm_math_vector3f_add( origin, QM_MATH_VECTOR3F( 0.0f, 0.0f, scale ) ), PL_COLOUR_BLUE, scale / 4.0f );
 }
 
 void ape_draw_debug_aabb( const PLCollisionAABB *aabb, QmMathColour4ub colour )
@@ -679,11 +679,11 @@ void ape_draw_debug_plane( const PLCollisionPlane *plane, QmMathColour4ub colour
 	QmMathVector3f tangent;
 	if ( fabsf( normal.x ) > fabsf( normal.y ) )
 	{
-		tangent = ( QmMathVector3f ) { -normal.z, 0, normal.x };
+		tangent = QM_MATH_VECTOR3F( -normal.z, 0, normal.x );
 	}
 	else
 	{
-		tangent = ( QmMathVector3f ) { 0, normal.z, -normal.y };
+		tangent = QM_MATH_VECTOR3F( 0, normal.z, -normal.y );
 	}
 	tangent = qm_math_vector3f_normalize( tangent );
 
