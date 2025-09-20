@@ -11,6 +11,15 @@
 #include "renderer/post/post.h"
 #include "yin/core_game.h"
 
+//TODO: eventually this should be used, rather than what we're doing
+#define USE_GUI_CANVAS 0
+
+#if USE_GUI_CANVAS == 1
+
+static ApeGuiCanvas *guiBaseCanvas;
+
+#endif
+
 static bool guiDraw            = true;
 static bool guiProfilerOverlay = false;
 
@@ -35,10 +44,20 @@ bool ape_gui_initialize_( void )
 	PlRegisterConsoleVariable( "gui.profilerHeight", "Set the width of the on-screen profiler.", "256", PL_VAR_F32, &profilerHeight, nullptr, true );
 
 	ape_gui_draw_initialize_();
+
+#if USE_GUI_CANVAS == 1
+
+	guiBaseCanvas = ape_gui_canvas_create( 640, 480 );
+	if ( guiBaseCanvas == nullptr )
+	{
+		ape_error_( true, "Failed to create base canvas!\n" );
+	}
+
+#endif
+
 	if ( !ape_gui_initialize_fonts_() )
 	{
-		ape_warning_( "Font initialization failed!\n" );
-		return false;
+		ape_error_( true, "Font initialization failed!\n" );
 	}
 
 	ape_print_( "GUI initialized!\n" );
@@ -47,7 +66,12 @@ bool ape_gui_initialize_( void )
 
 void ape_gui_shutdown_( void )
 {
-	ape_gui_draw_shutdown_();
+#if USE_GUI_CANVAS == 1
+
+	ape_gui_canvas_destroy( guiBaseCanvas );
+	guiBaseCanvas = nullptr;
+
+#endif
 }
 
 void ape_gui_update_mouse_position_( int x, int y )
@@ -305,10 +329,18 @@ void ape_gui_draw_( ApeViewport *viewport )
 
 	COM_PROFILE_FUNCTION_START();
 
+#if USE_GUI_CANVAS == 0
+
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	// Need to call this again to reset the viewport
-	ape_set_2d_viewport_size_( viewport->width, viewport->height );
+	ape_setup_2d_viewport_( viewport->width, viewport->height );
+
+#else
+
+	ape_gui_canvas_make_active( guiBaseCanvas );
+
+#endif
 
 	float x = ( float ) viewport->x;
 	float y = ( float ) viewport->y;
@@ -371,6 +403,12 @@ void ape_gui_draw_( ApeViewport *viewport )
 	ape_console_draw_( viewport );
 
 	draw_debug_overlay( viewport );
+
+#if USE_GUI_CANVAS == 1
+
+	ape_gui_canvas_display( guiBaseCanvas );
+
+#endif
 
 	COM_PROFILE_FUNCTION_END();
 }

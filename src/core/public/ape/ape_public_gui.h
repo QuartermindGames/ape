@@ -20,9 +20,9 @@ typedef struct ApeMaterial ApeMaterial;
 typedef struct ApeGuiCanvas ApeGuiCanvas;// represents what the GUI draws to
 
 ApeGuiCanvas *ape_gui_canvas_create( int width, int height );
-void          ape_gui_destroy_canvas( ApeGuiCanvas *canvas );
+void          ape_gui_canvas_destroy( ApeGuiCanvas *canvas );
 void          ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height );
-void          ape_gui_get_canvas_size( ApeGuiCanvas *canvas, int *width, int *height );
+void          ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *height );
 PLGTexture   *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas );
 
 /****************************************
@@ -33,8 +33,8 @@ typedef struct ApeGuiFont ApeGuiFont;
 bool ape_gui_initialize_( void );
 void ape_gui_shutdown_( void );
 
-void gui_canvas_make_active( ApeGuiCanvas *canvas );
-void gui_canvas_display( ApeGuiCanvas *canvas );
+void ape_gui_canvas_make_active( ApeGuiCanvas *canvas );
+void ape_gui_canvas_display( ApeGuiCanvas *canvas );
 
 typedef enum GuiMouseButton
 {
@@ -48,7 +48,6 @@ void ape_gui_update_mouse_position_( int x, int y );
 void gui_update_mouse_wheel( float x, float y );
 void guiUpdateMouseButton( GuiMouseButton button, bool isDown );
 
-PLGMesh *ape_gui_get_batch_queue_mesh( ApeMaterial *material );
 void     ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour );
 void     ape_gui_draw_quad( PLGMesh *mesh, QmMathVector2i tl, QmMathVector2i tr, QmMathVector2i ll, QmMathVector2i lr, int z, const QmMathColour4f *colour );
 
