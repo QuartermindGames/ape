@@ -74,7 +74,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	// we use the texture here because supersampling madness...
 	int bw = ( int ) viewportTexture->w / 2;
 	int bh = ( int ) viewportTexture->h / 2;
-	ape_set_2d_viewport_size_( bw, bh );
+	ape_setup_2d_viewport_( bw, bh );
 
 	// draw with filter into bloom render target
 	{
@@ -87,7 +87,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		PlgSetShaderUniformValue( bloomFilterShader->internal, "intensity", &bloomIntensity, false );
 		PlgSetTexture( viewportTexture, 0 );
 
-		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE );
+		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 	}
 
 	// blur
@@ -103,7 +103,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		PlgSetShaderUniformValue( bloomBlurShader->internal, "viewportSize", &QM_MATH_VECTOR2F( ( float ) bw, ( float ) bh ), false );
 		PlgSetTexture( bloomFilterTexture, 0 );
 
-		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE );
+		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 	}
 
 	// final blend
@@ -111,7 +111,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		PLGTexture *bloomBlurTexture = ape_render_target_get_texture( bloomBlurTarget );
 		assert( bloomBlurTexture != nullptr );
 
-		ape_set_2d_viewport_size_( viewport->width, viewport->height );
+		ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 		ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
@@ -126,7 +126,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		}
 		PlgSetTexture( bloomBlurTexture, 0 );
 
-		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
 
 		PlgSetBlendMode( PLG_BLEND_DISABLE );
 	}

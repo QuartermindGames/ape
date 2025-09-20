@@ -279,13 +279,6 @@ static bool tick_game( void )
 	return true;
 }
 
-static bool draw_game( ApeViewport *viewport )
-{
-	ape_camera_make_active( playerCamera );
-	ape_camera_draw_perspective( playerCamera, viewport );
-	return true;
-}
-
 static bool handle_request( ApeGameInterfaceRequest modeRequest, void *user )
 {
 	switch ( modeRequest )

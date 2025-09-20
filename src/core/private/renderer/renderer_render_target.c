@@ -26,7 +26,7 @@ static PLHashTable *renderTargets;
 
 static void destroy_render_target( void *user )
 {
-	ApeRenderTarget *renderTarget = ( ApeRenderTarget * ) user;
+	ApeRenderTarget *renderTarget = user;
 	PlgDestroyTexture( renderTarget->textureAttachment );
 }
 
@@ -63,7 +63,7 @@ void ape_shutdown_render_targets_( void )
 
 ApeRenderTarget *ape_render_target_get_by_key( const char *key )
 {
-	return ( ApeRenderTarget * ) PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
+	return PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
 ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponent, PLGTextureFilter textureAttachmentFilter, bool useMsaa )
@@ -173,7 +173,7 @@ PLGTexture *ape_render_target_get_texture( ApeRenderTarget *renderTarget )
 
 void ape_render_target_bind( ApeRenderTarget *renderTarget, PLGFrameBufferObjectTarget target )
 {
-	PlgBindFrameBuffer( ( renderTarget == NULL ) ? NULL : renderTarget->frameBuffer, target );
+	PlgBindFrameBuffer( ( renderTarget == NULL ) ? nullptr : renderTarget->frameBuffer, target );
 }
 
 PLGFrameBuffer *ape_render_target_get_frame_buffer( ApeRenderTarget *renderTarget )

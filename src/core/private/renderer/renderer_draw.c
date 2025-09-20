@@ -85,24 +85,24 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMath
 	PlPopMatrix();
 }
 
-void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const QmMathColour4ub *colour )
+void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const QmMathColour4ub *colour, float z )
 {
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 	assert( mesh != NULL );
 
-	PlgImmPushVertex( x, y, 0.0f );
+	PlgImmPushVertex( x, y, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 	PlgImmTextureCoord( 0.0f, 1.0f );
 
-	PlgImmPushVertex( x, y + h, 0.0f );
+	PlgImmPushVertex( x, y + h, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 	PlgImmTextureCoord( 0.0f, 0.0f );
 
-	PlgImmPushVertex( x + w, y, 0.0f );
+	PlgImmPushVertex( x + w, y, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 	PlgImmTextureCoord( 1.0f, 1.0f );
 
-	PlgImmPushVertex( x + w, y + h, 0.0f );
+	PlgImmPushVertex( x + w, y + h, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 	PlgImmTextureCoord( 1.0f, 0.0f );
 

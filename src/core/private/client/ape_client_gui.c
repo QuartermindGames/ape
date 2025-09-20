@@ -40,7 +40,7 @@ void ape_shutdown_gui_( void )
 	ape_material_release( baseGuiMat );
 }
 
-void ape_set_2d_viewport_size_( int w, int h )
+void ape_setup_2d_viewport_( int w, int h )
 {
 	PlgSetViewport( 0, 0, w, h );
 	PlgSetupCamera( ape_camera_get_internal( auxCamera ) );
@@ -61,7 +61,7 @@ void ape_draw_menu_( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_START();
 
 	ape_viewport_make_active( viewport );
-	ape_set_2d_viewport_size_( viewport->width, viewport->height );
+	ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
@@ -73,8 +73,6 @@ void ape_draw_menu_( ApeViewport *viewport )
 
 	ape_gui_draw_( viewport );
 
-	PlgSetTexture( nullptr, 0 );
-
 	PlPopMatrix();
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
@@ -84,7 +82,7 @@ void ape_draw_menu_( ApeViewport *viewport )
 
 void ape_console_update_notifications_( double delta );// client_console.c
 
-void ape_tick_gui_( double delta )
+void ape_tick_gui_( const double delta )
 {
 	COM_PROFILE_FUNCTION_START();
 

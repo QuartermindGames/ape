@@ -330,7 +330,7 @@ static void register_console_commands()
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-void ape_initialize_input_( void )
+void ape_input_initialize_( void )
 {
 	inputKeyboard.activeKeyList = PlCreateLinkedList();
 	if ( inputKeyboard.activeKeyList == NULL )
@@ -550,7 +550,7 @@ void ape_begin_input_frame_( void )
 	}
 }
 
-void ape_tick_input_( void )
+void ape_input_tick_( void )
 {
 	if ( !sdlInputInitialized )
 	{

@@ -183,10 +183,10 @@ void ape_initialize_client_( void )
 	PL_ZERO_( clientState );
 	snprintf( clientState.name, sizeof( clientState.name ), "anonymous" );
 
-	ape_initialize_renderer_();
+	ape_renderer_initialize_();
 	ape_audio_initialize_();
 	ape_initialize_gui_();
-	ape_initialize_input_();
+	ape_input_initialize_();
 
 	PlRegisterConsoleCommand( "connect",
 	                          "Attempt to connect to the specified server.",
@@ -231,7 +231,7 @@ void ape_tick_client_( double delta )
 
 	ape_begin_input_frame_();
 
-	ape_tick_input_();
+	ape_input_tick_();
 	ape_tick_gui_( delta );
 	ape_tick_materials_();
 	ape_audio_tick_();

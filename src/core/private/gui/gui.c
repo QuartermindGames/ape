@@ -325,7 +325,7 @@ void ape_gui_draw_( ApeViewport *viewport )
 			PlgSetShaderProgram( program->internal );
 			PlgSetTexture( texture, 0 );
 
-			ape_draw_textured_quad( nullptr, x, y, w, h, &PL_COLOUR_WHITE );
+			ape_draw_textured_quad( nullptr, x, y, w, h, &PL_COLOUR_WHITE, 0 );
 		}
 	}
 

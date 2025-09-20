@@ -144,6 +144,8 @@ ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderP
 
 /**********************************************************/
 
+typedef struct ApeMaterialPass ApeMaterialPass;
+
 typedef enum ApeDefaultMaterial
 {
 	APE_MATERIAL_DEFAULT_FALLBACK,    // fallback for missing materials
@@ -192,6 +194,10 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 unsigned int ape_material_get_flags( const ApeMaterial *self );
 
+ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, unsigned int pass );
+
+ApeShaderProgram *ape_material_pass_get_shader_program( const ApeMaterialPass *self );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Decal Manager
 /////////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +237,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMath
  * Draws a textured quad. *SLOW* so use sparingly.
  * If material is null, this will draw without passing through the material API.
  */
-void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const QmMathColour4ub *colour );
+void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const QmMathColour4ub *colour, float z );
 
 void ape_draw_axis_pivot( QmMathVector3f position, QmMathVector3f rotation, float scale );
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max, ApeGuiFont *font );

@@ -65,7 +65,7 @@ void ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height )
 	ape_render_target_set_size( canvas->renderTarget, width, height );
 }
 
-void ape_gui_get_canvas_size( ApeGuiCanvas *canvas, int *width, int *height )
+void ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *height )
 {
 	if ( width != NULL )
 	{
@@ -163,7 +163,7 @@ static void cleanup_batch_queue( void )
 	ape_guiState_.numBatches       = 0;
 }
 
-void gui_canvas_make_active( ApeGuiCanvas *canvas )
+void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 {
 	// save old state
 	int ox, oy, ow, oh;
@@ -187,7 +187,7 @@ void gui_canvas_make_active( ApeGuiCanvas *canvas )
 	PlgSetTexture( nullptr, 0 );
 }
 
-void gui_canvas_display( ApeGuiCanvas *canvas )
+void ape_gui_canvas_display( ApeGuiCanvas *canvas )
 {
 	ApeGuiDrawBatch *drawBatch;
 	COM_ITERATE_LINKED_LIST( drawBatch, batches, i )

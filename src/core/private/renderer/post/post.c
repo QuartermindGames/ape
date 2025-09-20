@@ -6,9 +6,6 @@
 
 #include "renderer/renderer_render_target.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
 typedef enum ApeRendererPostEffectType
 {
 	APE_RENDERER_POST_EFFECT_TYPE_FXAA,
@@ -39,9 +36,6 @@ static void register_post_effects( void )
 
 	postProcessInit = true;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
 
 void ape_postfx_cleanup_( void )
 {
@@ -109,10 +103,13 @@ void ape_register_postfx_console_variables_( void )
 
 void ape_postfx_draw_( const ApeViewport *viewport )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	assert( viewport->renderTarget != nullptr );
 	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
 	if ( baseTexture == nullptr )
 	{
+		COM_PROFILE_FUNCTION_END();
 		return;
 	}
 
@@ -124,6 +121,7 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 
 	if ( !postProcessEnabled )
 	{
+		COM_PROFILE_FUNCTION_END();
 		return;
 	}
 
@@ -138,6 +136,8 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 
 		postProcessEffects[ i ]->draw( viewport );
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 ApeRenderTarget *ape_postfx_get_render_target( void )

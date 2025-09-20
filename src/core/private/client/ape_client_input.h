@@ -9,7 +9,7 @@ PL_EXTERN_C
 
 typedef struct AcmBranch AcmBranch;
 
-void ape_initialize_input_( void );
+void ape_input_initialize_( void );
 void ape_shutdown_input_( void );
 
 void ape_serialize_input_config_( AcmBranch *root );
@@ -23,7 +23,7 @@ void ape_client_input_handle_mouse_wheel_event( float x, float y );
 void Client_Input_HandleMouseMotionEvent( int x, int y );
 
 void ape_begin_input_frame_( void );
-void ape_tick_input_( void );
+void ape_input_tick_( void );
 void ape_end_input_frame_( void );
 void ape_input_center_mouse( void );
 

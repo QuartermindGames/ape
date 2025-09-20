@@ -39,7 +39,7 @@ static void draw_fxaa_effect( const ApeViewport *viewport )
 		return;
 	}
 
-	ape_draw_textured_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE );
+	ape_draw_textured_quad( fxaaMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

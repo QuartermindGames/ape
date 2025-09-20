@@ -173,6 +173,22 @@ unsigned int ape_material_get_flags( const ApeMaterial *self )
 	return self->flags;
 }
 
+ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, const unsigned int pass )
+{
+	if ( pass >= self->numPasses )
+	{
+		ape_warning_( "Invalid pass index specified (%u >= %u)!\n", pass, self->numPasses );
+		return nullptr;
+	}
+
+	return &self->passes[ pass ];
+}
+
+ApeShaderProgram *ape_material_pass_get_shader_program( const ApeMaterialPass *self )
+{
+	return self->program;
+}
+
 /**
  * Convert the given tag into a compare mode type.
  */

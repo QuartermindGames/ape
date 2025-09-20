@@ -20,6 +20,8 @@
 ApeRendererStats     ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;
 
+static bool rendererDrawSky = true;
+
 static ApeCamera *currentCamera;
 
 static ApeRenderTarget *defaultRenderTarget;
@@ -145,9 +147,11 @@ bool ape_get_capture_state_( void )
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport )
 {
-	PlgSetClearColour( QM_MATH_COLOUR4UB( 0, 0, 0, 255 ) );
+	QmMathColour4ub clearColour = viewport != nullptr ? viewport->clearColour : QM_MATH_COLOUR4UB( 0, 0, 0, 255 );
+	PlgSetClearColour( clearColour );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
+	PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	PlgDepthMask( true );
 
 	PlgSetCullMode( PLG_CULL_POSITIVE );
@@ -155,8 +159,6 @@ void ape_setup_default_draw_state_( const ApeViewport *viewport )
 
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
 	PlgSetShaderProgram( program->internal );
-
-	//PlMatrixMode( PL_MODELVIEW_MATRIX );
 }
 
 void ape_draw_begin_( ApeViewport *viewport )
@@ -164,8 +166,6 @@ void ape_draw_begin_( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_START();
 
 	double newTime = qm_os_time_get_seconds();
-
-	PL_ZERO_( ape_rendererPerformance_ );
 
 	viewport->perf.frameReadings[ viewport->perf.frameIndex++ ] = 1.0 / ( newTime - viewport->perf.oldTime );
 	if ( viewport->perf.frameIndex >= APE_MAX_FPS_READINGS )
@@ -175,12 +175,16 @@ void ape_draw_begin_( ApeViewport *viewport )
 
 	viewport->perf.oldTime = newTime;
 
+	PL_ZERO_( ape_rendererPerformance_ );
+
 	ape_viewport_make_active( viewport );
 
 	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
 	ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
 
 	ape_setup_default_draw_state_( viewport );
+
+	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -340,6 +344,8 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.maxPortalDepth", "Maximum depth that portals can recurse.", "1", PL_VAR_I32, nullptr, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.showPortalVolumes", "Shows the screen-space volume that's produced from a visible portal.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
 
+	PlRegisterConsoleVariable( "renderer.drawSky", "", "true", PL_VAR_BOOL, &rendererDrawSky, nullptr, false );
+
 	ape_material_register_console_variables_();
 
 	ape_register_shader_console_variables_();
@@ -349,7 +355,7 @@ void ape_register_renderer_console_variables_( void )
 	ape_register_postfx_console_variables_();
 }
 
-void ape_initialize_renderer_( void )
+void ape_renderer_initialize_( void )
 {
 	PRINT( "Initializing renderer\n" );
 
@@ -395,10 +401,61 @@ void ape_shutdown_renderer_( void )
 /****************************************
  ****************************************/
 
+/**
+ * For the sky, we draw a simple quad after we've drawn the rest of the scene,
+ * idea being we can discard any pixels that were obscured earlier. The sky
+ * is then entirely done in a fragment shader.
+ *
+ * This is done at the end, so we only have to do it once, but this may need
+ * reworking into room drawing eventually just so it accounts for portals
+ * correctly, but that shouldn't be too much work.
+ */
+static void draw_sky_quad( ApeCamera *camera, const ApeViewport *viewport )
+{
+	if ( !rendererDrawSky )
+	{
+		return;
+	}
+
+	static ApeMaterial *skyMaterial;
+	if ( skyMaterial == nullptr )
+	{
+		skyMaterial = ape_material_cache( "materials/engine/engine_sky.mat.n", APE_CACHE_GROUP_GLOBAL, true );
+	}
+
+	ApeMaterialPass *pass = ape_material_get_pass( skyMaterial, 0 );
+	if ( pass == nullptr )
+	{
+		return;
+	}
+
+	ApeShaderProgram *shader = ape_material_pass_get_shader_program( pass );
+	assert( shader != nullptr );
+
+	float viewPitch = ( camera->base.angles.x + 90.0f ) / 180.0f;
+	PlgSetShaderUniformValue( shader->internal, "viewPitch", &viewPitch, false );
+	PlgSetShaderUniformValue( shader->internal, "viewSize", &QM_MATH_VECTOR2F( viewport->width, viewport->height ), false );
+
+	COM_PROFILE_FUNCTION_START();
+
+	PlgDepthMask( false );
+	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
+
+	ape_setup_2d_viewport_( viewport->width, viewport->height );
+
+	ape_draw_textured_quad( skyMaterial, 0.0f, 0.0f, viewport->width, viewport->height, &PL_COLOUR_WHITE, -10000.0f );
+
+	PlgDepthMask( true );
+	PlgDepthBufferFunction( PLG_COMPARE_LESS );
+
+	PlgSetupCamera( camera->internal );
+
+	COM_PROFILE_FUNCTION_END();
+}
+
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
-	assert( camera != NULL );
-	assert( viewport != NULL );
+	assert( camera != nullptr && viewport != nullptr );
 
 	COM_PROFILE_FUNCTION_START();
 
@@ -406,10 +463,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	//TODO: this should be during tick, not render!
 	ape_camera_build_pvs_( camera, viewport );
-
-	PlgDepthMask( true );
-	PlgSetClearColour( viewport->clearColour );
-	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
 
 	ape_editor_pre_render_scene_( camera );
 
@@ -439,6 +492,8 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
+
+	draw_sky_quad( camera, viewport );
 
 	ape_editor_post_render_scene_();
 

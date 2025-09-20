@@ -107,7 +107,7 @@ typedef struct ApeRendererPassState
 } ApeRendererPassState;
 extern ApeRendererPassState ape_rendererState_;
 
-void ape_initialize_renderer_( void );
+void ape_renderer_initialize_( void );
 void ape_shutdown_renderer_( void );
 
 /**
@@ -129,7 +129,7 @@ void ape_draw_menu_( ApeViewport *viewport );
 void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, const QmMathColour4ub *colour );
 void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, float depth, const QmMathColour4ub *colour, bool inset );
 
-void ape_set_2d_viewport_size_( int w, int h );
+void ape_setup_2d_viewport_( int w, int h );
 void ape_get_2d_viewport_size_( int *width, int *height );
 
 void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const QmMathVector3f *position, float spriteAngle );

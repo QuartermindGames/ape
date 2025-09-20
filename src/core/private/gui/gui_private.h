@@ -6,8 +6,6 @@
 
 #include "ape/ape_public_gui.h"
 
-#include <plgraphics/plg.h>
-
 typedef struct ApeGUIState
 {
 	QmMathVector2i mousePos, mouseOldPos;
@@ -17,5 +15,3 @@ typedef struct ApeGUIState
 	unsigned int numTriangles, lastNumTriangles;// number of triangles drawn this frame
 } ApeGUIState;
 extern ApeGUIState ape_guiState_;
-
-void     ape_gui_draw_shutdown_( void );

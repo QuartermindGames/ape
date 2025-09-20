@@ -99,7 +99,7 @@ void game_menu_splash_tick_( const double delta )
 	}
 }
 
-static void draw_rect( float x, float y, float w, float h, const QmMathColour4ub *colour, ApeMaterial *material )
+static void draw_rect( const float x, const float y, const float w, const float h, const QmMathColour4ub *colour, ApeMaterial *material )
 {
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
 
