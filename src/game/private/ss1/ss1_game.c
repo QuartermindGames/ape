@@ -76,6 +76,8 @@ static bool ss1_initialize()
 		return false;
 	}
 
+	ss1_gameState.cameraState = GAME_CAMERA_STATE_FREE;
+
 	return true;
 }
 
