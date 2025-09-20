@@ -96,9 +96,6 @@ static void spawn_player_entity( ApeEntity *self )
 	forward              = qm_math_vector3f_normalize( forward );
 	player->cameraAngles = qm_math_vector3f( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
 
-	//TODO: this shouldn't be here...
-	ss1_gameState.cameraState = GAME_CAMERA_STATE_FIRST_PERSON;
-
 	setup_default_equipment( self );
 
 	game_entity_place_on_ground( self );

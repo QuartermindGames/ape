@@ -60,10 +60,10 @@ static GameMenu confirmQuitMenu = {
 };
 
 static GameMenuOption startMenuOptions[] = {
-        {"rundown\n",        nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room game/rundown_2" }     },
-        {"test_collision\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_collision" }},
-        {"test_portal\n",    nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_portal" }   },
-        {"test_smoothing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_smoothing" }},
+        {"art_geom_00\n",    nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/art/art_geom_00.rom.n" }},
+        {"test_collision\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_collision" }        },
+        {"test_portal\n",    nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_portal" }           },
+        {"test_smoothing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_smoothing" }        },
 };
 static GameMenu startMenu = {
         "Start Server\n",
@@ -323,7 +323,7 @@ void ss1_menu_tick( double delta )
 	menu_pie_tick( interactPie );
 }
 
-static void draw_dial( int16_t value, float radius, float thickness, float centerX, float centerY, float precision, const QmMathColour4ub *colour )
+static void draw_dial( const int16_t value, const float radius, const float thickness, const float centerX, const float centerY, const float precision, const QmMathColour4ub *colour )
 {
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
@@ -458,7 +458,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 			ape_draw_textured_quad( ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX ),
 			                        0.0f, 0.0f,
 			                        viewport->width, viewport->height,
-			                        &PL_COLOUR_BLACK );
+			                        &PL_COLOUR_BLACK, 0 );
 		}
 
 		gui_font_display( menuFont );
