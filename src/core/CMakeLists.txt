@@ -42,7 +42,6 @@ add_library(ApeCore STATIC
         private/ape_filesystem.c
         private/ape_interface_game.c
         private/ape_image.c
-        private/ape_memory.c
         private/ape_scheduler.c
 
         private/camera/camera.c
@@ -73,6 +72,8 @@ add_library(ApeCore STATIC
         private/audio/audio_xaudio2.cpp
         ${APE_SOURCE_GUI}
         ${APE_SOURCE_EDITORS}
+
+        private/memory/memory.c
 
         private/server/server.c
 

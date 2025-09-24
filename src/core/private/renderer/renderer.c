@@ -151,10 +151,10 @@ void ape_setup_default_draw_state_( const ApeViewport *viewport )
 	PlgSetClearColour( clearColour );
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
-	PlgDepthBufferFunction( PLG_COMPARE_LESS );
+	PlgDepthBufferFunction( APE_RENDERER_DEFAULT_DEPTH_FUNCTION );
 	PlgDepthMask( true );
 
-	PlgSetCullMode( PLG_CULL_POSITIVE );
+	PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
 
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
@@ -410,7 +410,7 @@ void ape_shutdown_renderer_( void )
  * reworking into room drawing eventually just so it accounts for portals
  * correctly, but that shouldn't be too much work.
  */
-static void draw_sky_quad( ApeCamera *camera, const ApeViewport *viewport )
+void ape_renderer_draw_sky_quad_( const ApeCamera *camera, const ApeViewport *viewport )
 {
 	if ( !rendererDrawSky )
 	{
@@ -439,14 +439,12 @@ static void draw_sky_quad( ApeCamera *camera, const ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_START();
 
 	PlgDepthMask( false );
-	PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
 
 	ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 	ape_draw_textured_quad( skyMaterial, 0.0f, 0.0f, viewport->width, viewport->height, &PL_COLOUR_WHITE, -10000.0f );
 
 	PlgDepthMask( true );
-	PlgDepthBufferFunction( PLG_COMPARE_LESS );
 
 	PlgSetupCamera( camera->internal );
 
@@ -473,8 +471,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	if ( !ape_config_.world.skipDraw )
 	{
-		PlgDepthBufferFunction( PLG_COMPARE_LEQUAL );
-
 		ApeRoom *room = ape_camera_get_room( camera );
 		if ( room != NULL )
 		{
@@ -484,8 +480,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 			COM_PROFILE_END( "ape_room_draw_" );
 		}
-
-		PlgDepthBufferFunction( PLG_COMPARE_LESS );
 	}
 
 	if ( ape_config_.renderer.wireframe )
@@ -493,7 +487,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
 
-	draw_sky_quad( camera, viewport );
+	//draw_sky_quad( camera, viewport );
 
 	ape_editor_post_render_scene_();
 

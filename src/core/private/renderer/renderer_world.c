@@ -853,20 +853,11 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 
 	ape_rendererState_.mirror = ape_brush_face_is_mirror( visiblePortal->portalFace );
 
-	PLMatrix4 clipMatrix = PlTranslateMatrix4( visiblePortal->origin );
-	ape_draw_debug_sphere( visiblePortal->origin, PL_COLOUR_RED, 16.0f );
 	QmMathVector4f clipPlane;
-	if ( ape_rendererState_.mirror )
-	{
-		clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
-		clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
-	}
-	else
-	{
-		clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
-		clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
-	}
+	clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
+	clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
 
+	PLMatrix4 clipMatrix = PlTranslateMatrix4( visiblePortal->origin );
 	PlgSetClipPlane( &clipPlane, &clipMatrix, false );
 
 	// now recurse into the next room
@@ -949,6 +940,8 @@ static void draw_room_editor( const ApeCameraVisibleRoom *visibleRoom )
 	COM_PROFILE_FUNCTION_END();
 }
 
+void ape_renderer_draw_sky_quad_( const ApeCamera *camera, const ApeViewport *viewport );
+
 //TODO: move into room code
 void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const ApeViewport *viewport )
 {
@@ -1019,6 +1012,8 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 			break;
 		}
 	}
+
+	ape_renderer_draw_sky_quad_( camera, viewport );
 
 	draw_room_editor( visibleRoom );
 

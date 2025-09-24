@@ -115,6 +115,8 @@ typedef struct ApeMaterialPass
 
 typedef enum ApeShaderProgramGlobalUniform
 {
+	APE_SHADER_UNIFORM_NUM_TICKS,
+
 	APE_SHADER_UNIFORM_FOG_COLOUR,
 	APE_SHADER_UNIFORM_FOG_NEAR,
 	APE_SHADER_UNIFORM_FOG_FAR,

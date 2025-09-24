@@ -683,7 +683,7 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 	}
 
 	const char *tmp;
-	if ( ( tmp = acm_get_string( root, "depthMode", "less" ) ) != nullptr )
+	if ( ( tmp = acm_get_string( root, "depthMode", "lequal" ) ) != nullptr )
 	{
 		materialPass->depthMode = get_compare_mode_by_tag( tmp );
 	}
@@ -937,6 +937,12 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 {
 	ApeWorld *world = game_get_current_world();
 
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ] >= 0 )
+	{
+		double numTicks = ( double ) ape_get_num_ticks();
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ], &numTicks, false );
+	}
+
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
 		QmMathColour4f fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( QmMathColour4f ) {};
@@ -1134,6 +1140,10 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		PlgEnableGraphicsState( PLG_GFX_STATE_BLEND );
 		PlgSetBlendMode( ape_rendererState_.blendModeA, ape_rendererState_.blendModeB );
 	}
+	if ( ape_rendererState_.overrideDepthMode )
+	{
+		PlgDepthBufferFunction( ape_rendererState_.overrideDepthMode );
+	}
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
@@ -1202,7 +1212,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 			}
 			if ( !ape_rendererState_.overrideDepthMode )
 			{
-				//PlgDepthBufferFunction( curPass->depthMode );
+				PlgDepthBufferFunction( curPass->depthMode );
 			}
 
 			set_global_uniforms( curPass->program, curPass, lights != nullptr ? lights[ 0 ] : nullptr );
@@ -1303,12 +1313,17 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 		// reset everything back before the next pass
 
-		//PlgDepthBufferFunction( ape_rendererState_.depthMode );
-		//PlgSetBlendMode( ape_rendererState_.blendModeA, ape_rendererState_.blendModeB );
-	}
+		if ( !ape_rendererState_.overrideDepthMode )
+		{
+			PlgDepthBufferFunction( APE_RENDERER_DEFAULT_DEPTH_FUNCTION );
+		}
+		if ( !ape_rendererState_.overrideBlendMode )
+		{
+			PlgSetBlendMode( PLG_BLEND_DISABLE );
+		}
 
-	PlgSetCullMode( PLG_CULL_POSITIVE );
-	PlgSetBlendMode( PLG_BLEND_DISABLE );
+		PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
+	}
 }
 
 void ape_tick_materials_( void )

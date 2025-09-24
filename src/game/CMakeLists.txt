@@ -24,6 +24,7 @@ set(GAME_SHARED_FILES
         private/shared/entities/entity_player_spawn.c
         private/shared/entities/entity_portal.c
         private/shared/entities/entity_rope.c
+        private/shared/entities/entity_terrain.c
         private/shared/entities/entity_trigger.c
 
         private/shared/integrations/discord/discord.c

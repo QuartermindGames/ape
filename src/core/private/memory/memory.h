@@ -5,9 +5,9 @@
 void ape_memory_initialize_( void );
 void ape_memory_shutdown_( void );
 
-/* ======================================================================
- * Active Cache
- * ====================================================================*/
+/////////////////////////////////////////////////////////////////////////////////////
+// Resource Cache
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum ApeMemoryCachePool
 {
@@ -40,9 +40,9 @@ void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool );
 
 PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool );
 
-/* ======================================================================
- * Reference Counting and Garbage Collection
- * ====================================================================*/
+/////////////////////////////////////////////////////////////////////////////////////
+// Reference Counting and Garbage Collection
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef void ( *ApeMemoryCleanupCallback )( void *userData );
 typedef struct ApeMemoryReference
@@ -63,5 +63,12 @@ void         ape_memory_release( ApeMemoryReference *m );
 int          ape_memory_get_num_references( const ApeMemoryReference *m );
 unsigned int ape_memory_flush_unreferenced_resources( void );
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Temporary Memory
+/////////////////////////////////////////////////////////////////////////////////////
+
 void *ape_memory_temp_alloc( ApeMemoryReference *m, size_t size );
 void  ape_memory_temp_free( ApeMemoryReference *m );
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////

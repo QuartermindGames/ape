@@ -4,18 +4,20 @@
 
 #include <plcore/pl_linkedlist.h>
 
-#include "ape_private.h"
+#include "../ape_private.h"
 
 #if !defined( NDEBUG )
 //#	define DEBUG_MEMORY
 #endif
 
+/////////////////////////////////////////////////////////////////////////////////////
+
 static PLMemoryGroup *cacheMemoryGroups[ APE_MAX_CACHE_POOLS ];
 static PLLinkedList  *cachePoolsList[ APE_MAX_CACHE_POOLS ];
 
-/* ======================================================================
- * Cache Pools
- * ====================================================================*/
+/////////////////////////////////////////////////////////////////////////////////////
+// Resource Cache
+/////////////////////////////////////////////////////////////////////////////////////
 
 static void initialize_cache_pools( void )
 {
@@ -43,7 +45,7 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 		ape_error_( true, "Attempted to cache duplicate data: %s\n", id );
 	}
 
-	ApeMemoryCacheHeader *header = PL_NEW( ApeMemoryCacheHeader );
+	ApeMemoryCacheHeader *header = QM_OS_MEMORY_NEW( ApeMemoryCacheHeader );
 	snprintf( header->description, sizeof( header->description ), "%s", id );
 	header->id       = PlGenerateHashSDBM( id );
 	header->pool     = pool;
@@ -111,12 +113,12 @@ static void remove_from_cache( uint32_t id, uint8_t pool )
 
 	ape_print_( "Removed \"%s\" from cache\n", header->description );
 
-	PL_DELETE( header );
+	qm_os_memory_free( header );
 }
 
-/* ======================================================================
- * Reference Counting and Garbage Collection
- * ====================================================================*/
+/////////////////////////////////////////////////////////////////////////////////////
+// Reference Counting and Garbage Collection
+/////////////////////////////////////////////////////////////////////////////////////
 
 static PLLinkedList *mmReferenceList;
 
@@ -126,6 +128,8 @@ static PLLinkedList *mmReferenceList;
 
 static bool free_reference( ApeMemoryReference *m, bool force )
 {
+	return false;
+
 #if 0
 #	if defined( DEBUG_MEMORY )
 	PRINT_DEBUG( "%s, numRefs = %d, ttl = %u\n",
@@ -288,7 +292,7 @@ void ape_memory_release( ApeMemoryReference *m )
 	m->numReferences--;
 	if ( m->numReferences <= 0 )
 	{
-		m->timeToLive = ( ape_get_num_ticks() + 1024 );
+		m->timeToLive = ape_get_num_ticks() + 1024;
 	}
 }
 
@@ -297,13 +301,13 @@ int ape_memory_get_num_references( const ApeMemoryReference *m )
 	return m->numReferences;
 }
 
-/* ======================================================================
- * Temporary Buffer Allocation
- * ====================================================================*/
+/////////////////////////////////////////////////////////////////////////////////////
+// Temporary Memory
+/////////////////////////////////////////////////////////////////////////////////////
 
 static void cleanup_temp_alloc_callback( void *userData )
 {
-	PL_DELETE( userData );
+	qm_os_memory_free( userData );
 }
 
 /**
@@ -312,7 +316,7 @@ static void cleanup_temp_alloc_callback( void *userData )
  */
 void *ape_memory_temp_alloc( ApeMemoryReference *m, size_t size )
 {
-	void *buf = PlMAllocA( size );
+	void *buf = QM_OS_MEMORY_MALLOC_( size );
 	ape_memory_setup_reference( "temp", 0, m, cleanup_temp_alloc_callback, buf );
 	return buf;
 }

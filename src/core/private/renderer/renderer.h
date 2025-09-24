@@ -39,6 +39,9 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
+static constexpr PLGCompareFunction APE_RENDERER_DEFAULT_DEPTH_FUNCTION = PLG_COMPARE_LEQUAL;
+static constexpr PLGCullMode        APE_RENDERER_DEFAULT_CULL_FUNCTION  = PLG_CULL_POSITIVE;
+
 static constexpr unsigned int APE_LIGHTMAP_SIZE = 64;
 
 typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
