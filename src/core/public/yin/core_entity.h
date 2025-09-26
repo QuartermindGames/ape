@@ -23,6 +23,12 @@ typedef struct ApeEntity
 	void                           *classData;                  // pointer to the unique data of the class
 	struct PLHashTable             *componentTable;             // list of components
 
+#if !defined( APE_NO_EDITOR )
+
+	ApeMaterial *editorSprite;
+
+#endif
+
 	PLLinkedListNode *worldListNode;// position in world entity list
 } ApeEntity;
 
@@ -49,11 +55,6 @@ typedef struct ApeEntityClassDefinition
 	const char *name;       // general identifier
 	const char *description;// for the editor
 
-	bool excludeInEditor;
-
-	ApeEntityProperty *propertyList;
-	unsigned int       numProperties;
-
 	void ( *cacheFunction )( void );                                    // called upon registration
 	void *( *createFunction )( ApeEntity *self, AcmBranch *properties );// *required* called upon entity allocation, this is when the class should be allocated and returned
 	void ( *destroyFunction )( ApeEntity *self );                       // called when the entity is free'd, which should be done for the class too
@@ -61,8 +62,21 @@ typedef struct ApeEntityClassDefinition
 	void ( *tickFunction )( ApeEntity *self, double delta );            // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self, ApeLight *light, int flags );
 
+	void ( *onUpdateProperty )( ApeEntity *self, ApeEntityProperty *property );
+
 	AcmBranch *( *serializeFunction )( ApeEntity *self );
 	void ( *deserializeFunction )( ApeEntity *self, AcmBranch *root );
+
+#if !defined( APE_NO_EDITOR )
+
+	ApeEntityProperty *propertyList;
+	unsigned int       numProperties;
+
+	bool excludeInEditor;
+
+	const char *editorSpritePath;
+
+#endif
 } ApeEntityClassDefinition;
 
 typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )( void );

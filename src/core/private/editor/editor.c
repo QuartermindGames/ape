@@ -397,8 +397,8 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 
 	// transform the dir relative to the grid
 	QmMathVector3f gridDir = qm_math_vector3f_scale_float( left, dir->x );
-	gridDir           = qm_math_vector3f_add( gridDir, qm_math_vector3f_scale_float( up, dir->y ) );
-	gridDir           = qm_math_vector3f_add( gridDir, qm_math_vector3f_scale_float( forward, dir->z ) );
+	gridDir                = qm_math_vector3f_add( gridDir, qm_math_vector3f_scale_float( up, dir->y ) );
+	gridDir                = qm_math_vector3f_add( gridDir, qm_math_vector3f_scale_float( forward, dir->z ) );
 
 	switch ( self->geometryMode )
 	{
@@ -509,7 +509,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 				}
 
 				QmMathVector3f pos = ape_world_node_get_position( node );
-				pos           = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
+				pos                = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
 				ape_world_node_set_position( node, &pos );
 			}
 		}
@@ -708,7 +708,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 	QmMathVector2f cursor;
 	if ( self->numPolygonPoints > 0 )
 	{
-		QmMathColour4ub   colour                                            = PL_COLOUR_WHITE;
+		QmMathColour4ub colour                                            = PL_COLOUR_WHITE;
 		QmMathVector3f  points[ ( APE_BRUSH_MAX_FACE_VERTICES * 2 ) + 1 ] = {};
 		QmMathVector3f *point                                             = points;
 		if ( ape_grid_get_cursor_position( &self->grid, &cursor ) != nullptr )
@@ -854,14 +854,25 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 
 		origin = node->position;
 
-		float     depth;
+		float          depth;
 		QmMathVector2f screenPos = PlConvertWorldToScreen( &origin, viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
 		if ( depth <= 0.0f )
 		{
 			continue;
 		}
 
-		ApeMaterial *material = nodeIcons[ node->type ];
+		ApeMaterial *material = nullptr;
+		if ( node->type == APE_WORLD_NODE_TYPE_ENTITY )
+		{
+			// as usual, entities are a special case and can set their own icon
+			material = ( ( ApeEntity * ) node )->editorSprite != nullptr ? ( ( ApeEntity * ) node )->editorSprite : nodeIcons[ APE_WORLD_NODE_TYPE_ENTITY ];
+		}
+		else
+		{
+			material = nodeIcons[ node->type ];
+		}
+
+		assert( material != nullptr );
 
 		const float pixelScale = material != nullptr ? ape_material_get_width( material ) : 64.0f;
 		float       scale      = PlClamp( 0.0f, ( pixelScale * 2.0f ) - ( depth * ( ( pixelScale ) / 100.0f ) ) * iconFade, 64.0f );
@@ -906,7 +917,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 				colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
 			}
 
-			ape_draw_textured_quad( nodeIcons[ node->type ], screenPos.x - ( scale / 2.0f ), screenPos.y, scale, -scale, &colour, 0 );
+			ape_draw_textured_quad( material, screenPos.x - ( scale / 2.0f ), screenPos.y, scale, -scale, &colour, 0 );
 		}
 	}
 }
@@ -963,7 +974,7 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 				QmMathVector3f worldPos = ape_grid_transform_point( &editorInstance->grid, &pos );
 
-				float     w;
+				float          w;
 				QmMathVector2f screenPos = PlConvertWorldToScreen( &worldPos, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &w, true );
 				if ( w > 0.f )
 				{
@@ -1301,7 +1312,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 
 	// because the grid operates in 2D space, we need to transform all the vertices into 3D space
 	// and use this time to determine the order too...so we can reverse for edge loop if needed
-	float      signedArea = 0.0f;
+	float           signedArea = 0.0f;
 	QmMathVector3f *vertices   = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numPolygonPoints );
 	for ( unsigned int i = 0; i < self->numPolygonPoints; ++i )
 	{

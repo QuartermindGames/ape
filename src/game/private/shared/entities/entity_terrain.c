@@ -76,4 +76,6 @@ ApeEntityClassDefinition game_terrainEntityClass_ = {
         .createFunction  = create_terrain,
         .destroyFunction = destroy_terrain,
         .spawnFunction   = spawn_terrain,
+
+        .editorSpritePath = "materials/editor/icons/icon_terrain.mat.n",
 };

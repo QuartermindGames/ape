@@ -91,6 +91,8 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 	{
 		definition->cacheFunction();
 	}
+
+	ape_print_( "Registered \"%s\" entity class\n", definition->name );
 }
 
 const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses )
@@ -132,6 +134,14 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 		entity->worldListNode = PlInsertLinkedListNode( world->entities, entity );
 	}
 
+#if !defined( APE_NO_EDITOR )
+	const char *editorSpritePath = classDefinition->editorSpritePath;
+	if ( editorSpritePath != nullptr )
+	{
+		entity->editorSprite = ape_material_cache( editorSpritePath, APE_CACHE_GROUP_EDITOR, true );
+	}
+#endif
+
 	return entity;
 }
 
@@ -157,6 +167,11 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 	if ( self->classDefinition->destroyFunction != nullptr )
 	{
 		self->classDefinition->destroyFunction( self );
+	}
+
+	if ( self->editorSprite != nullptr )
+	{
+		ape_material_release( self->editorSprite );
 	}
 
 	PlDestroyHashTable( self->componentTable );
@@ -216,6 +231,8 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 	assert( definition->destroyFunction != nullptr );
 
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
+
+	ape_print_( "Registered \"%s\" entity component\n", definition->name );
 }
 
 void *ape_entity_add_component( ApeEntity *self, const char *name )

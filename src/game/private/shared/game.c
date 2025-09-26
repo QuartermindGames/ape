@@ -81,6 +81,7 @@ extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
 extern ApeEntityClassDefinition game_triggerEntityClass_;
 extern ApeEntityClassDefinition game_ropeEntityClass_;
 extern ApeEntityClassDefinition game_portalEntityClass_;
+extern ApeEntityClassDefinition game_terrainEntityClass_;
 #if defined( GAME_SS1 )
 extern ApeEntityClassDefinition ss1_airshipEntityClass;
 extern ApeEntityClassDefinition ss1_pawnEntityClass;
@@ -101,6 +102,7 @@ static void register_standard_entity_components()
 	ape_register_entity_class( &game_triggerEntityClass_ );
 	ape_register_entity_class( &game_ropeEntityClass_ );
 	ape_register_entity_class( &game_portalEntityClass_ );
+	ape_register_entity_class( &game_terrainEntityClass_ );
 #if defined( GAME_SS1 )
 	ape_register_entity_class( &ss1_airshipEntityClass );
 	ape_register_entity_class( &ss1_pawnEntityClass );
