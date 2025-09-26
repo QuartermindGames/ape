@@ -6,6 +6,10 @@
 
 #include "entity_terrain.h"
 
+//TEMP
+static constexpr char TERRAIN_TEST_HEIGHTMAP[] = "heightmaps/test.png";
+static constexpr char TERRAIN_TEST_MATERIAL[]  = "materials/terrain/terrain_test.mat.n";
+
 static void *create_terrain( ApeEntity *self, AcmBranch *properties )
 {
 	return QM_OS_MEMORY_NEW( GameTerrainEntity );
@@ -23,9 +27,7 @@ static void spawn_terrain( ApeEntity *self )
 	GameTerrainEntity *terrain = GAME_TERRAIN_ENTITY( self );
 	assert( terrain != nullptr );
 
-	//TEMP
-	static constexpr char TERRAIN_TEST_HEIGHTMAP[] = "heightmaps/test.png";
-	static constexpr char TERRAIN_TEST_MATERIAL[]  = "materials/terrain/terrain_test.mat.n";
+	PLImage *image = nullptr;
 
 	ApeMaterial *material = ape_material_cache( TERRAIN_TEST_MATERIAL, APE_CACHE_GROUP_WORLD, false );
 	if ( material == nullptr )
@@ -35,8 +37,7 @@ static void spawn_terrain( ApeEntity *self )
 	}
 
 	// before we can do anything, we need to load in the heightmap image
-	PLImage *image = PlLoadImage( TERRAIN_TEST_HEIGHTMAP );
-	if ( image == nullptr )
+	if ( ( image = PlLoadImage( TERRAIN_TEST_HEIGHTMAP ) ) == nullptr )
 	{
 		game_warning_( "Failed to load heightmap (%s): %s\n", TERRAIN_TEST_HEIGHTMAP, PlGetError() );
 		goto ABORT;
@@ -49,6 +50,9 @@ static void spawn_terrain( ApeEntity *self )
 		goto ABORT;
 	}
 
+	// ensure brush isn't saved
+	APE_WORLD_NODE( brush )->flags |= APE_WORLD_NODE_FLAG_DISCARD;
+
 	brush->numFaces = GAME_TERRAIN_NUM_TILES;
 	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 
@@ -59,6 +63,8 @@ static void spawn_terrain( ApeEntity *self )
 		face->numVertices  = 4;
 		face->material     = material;
 	}
+
+	return;
 
 ABORT:
 	if ( image != nullptr )

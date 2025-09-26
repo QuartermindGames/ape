@@ -150,7 +150,8 @@ typedef struct ApeWorldNodeClass
 
 typedef enum ApeWorldNodeFlag
 {
-	PL_BITFLAG( APE_WORLD_NODE_FLAG_HIDDEN, 0 ),
+	PL_BITFLAG( APE_WORLD_NODE_FLAG_HIDDEN, 0 ), // shouldn't be displayed visually
+	PL_BITFLAG( APE_WORLD_NODE_FLAG_DISCARD, 1 ),// if marked, won't be serialized and will be discarded
 } ApeWorldNodeFlag;
 
 //TODO: why is this public!?

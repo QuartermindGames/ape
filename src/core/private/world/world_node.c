@@ -476,6 +476,12 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 {
 	assert( self->classType != nullptr );
 
+	if ( self->flags & APE_WORLD_NODE_FLAG_DISCARD )
+	{
+		// not a type that's saved
+		return nullptr;
+	}
+
 	AcmBranch *nodeBranch = acm_push_object( root, "node" );
 
 	if ( *self->name != '\0' )
@@ -508,6 +514,14 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 		COM_ITERATE_LINKED_LIST( child, self->children, i )
 		{
 			ape_world_node_serialize( child, childBranch );
+		}
+
+		// this is a little silly, but because some children
+		// might be skipped, we may end up with zero children
+		// after the fact
+		if ( acm_get_num_of_children( childBranch ) == 0 )
+		{
+			acm_branch_destroy( childBranch );
 		}
 	}
 
