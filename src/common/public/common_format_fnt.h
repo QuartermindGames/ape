@@ -7,7 +7,7 @@
 PL_EXTERN_C
 
 #define COM_FORMAT_FONT_MAGIC   PL_MAGIC_TO_NUM( 'O', 'S', 'F', 'N' )
-#define COM_FORMAT_FONT_VERSION 1
+#define COM_FORMAT_FONT_VERSION 2
 
 typedef struct ComFontGlyph
 {
@@ -16,6 +16,8 @@ typedef struct ComFontGlyph
 	uint16_t y;
 	uint16_t w;
 	uint16_t h;
+
+	QmMathVector4i rect;
 } ComFontGlyph;
 
 PL_EXTERN_C_END

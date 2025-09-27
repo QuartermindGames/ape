@@ -33,7 +33,7 @@ static PLVectorArray *cachedFonts;
 static PLHashTable   *cachedFontsTable;
 static ApeGuiFont    *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
-static float     fontSlant        = 0.0f;
+static float          fontSlant        = 0.0f;
 static QmMathVector2f fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
 
 static uint32_t decode_utf8_char( const char **string )
@@ -133,6 +133,20 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 		font->glyphs[ i ].y         = PL_READUINT16( file, false, NULL );
 		font->glyphs[ i ].w         = PL_READUINT16( file, false, NULL );
 		font->glyphs[ i ].h         = PL_READUINT16( file, false, NULL );
+
+		if ( version >= 2 )
+		{
+			font->glyphs[ i ].rect.x = PlReadInt16( file, false, nullptr );
+			font->glyphs[ i ].rect.y = PlReadInt16( file, false, nullptr );
+			font->glyphs[ i ].rect.z = PL_READUINT16( file, false, nullptr );
+			font->glyphs[ i ].rect.w = PL_READUINT16( file, false, nullptr );
+		}
+		else
+		{
+			font->glyphs[ i ].rect.z = font->glyphs[ i ].w;
+			font->glyphs[ i ].rect.w = font->glyphs[ i ].h;
+		}
+
 		PlInsertHashTableNode( font->glyphTable, &font->glyphs[ i ].codepoint, sizeof( uint32_t ), &font->glyphs[ i ] );
 
 		// for now, just determine line spacing and tab width based on the w/h of a space...
@@ -281,7 +295,7 @@ void gui_font_get_string_pixel_size( const ApeGuiFont *self, float scale, const 
 			continue;
 		}
 
-		w += ( ( float ) glyph->w ) * scale;
+		w += ( float ) ( glyph->rect.z - glyph->rect.x ) * scale;
 	}
 
 	if ( dw != NULL ) { *dw = w; }
@@ -368,13 +382,13 @@ void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, 
 		}
 		if ( c == '\n' )
 		{
-			ny += ( self->lineSpacing * scale );
+			ny += self->lineSpacing * scale;
 			nx = x;
 			continue;
 		}
 		if ( c == '\t' )
 		{
-			nx += ( self->tabWidth * scale ) * 4.0f;
+			nx += self->tabWidth * scale * 4.0f;
 			continue;
 		}
 
@@ -390,7 +404,7 @@ void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, 
 		}
 
 		gui_font_draw_glyph( self, nx, ny, scale, &currentColour, glyph );
-		nx += ( ( float ) glyph->w ) * scale;
+		nx += ( float ) ( glyph->rect.z - glyph->rect.x ) * scale;
 	}
 
 	if ( ox != NULL ) *ox = nx;

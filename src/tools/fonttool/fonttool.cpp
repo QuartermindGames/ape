@@ -23,6 +23,8 @@
 
 void serialize_font( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height )
 {
+	assert( width > 0 && height > 0 && numGlyphs > 0 );
+
 	uint32_t magic = COM_FORMAT_FONT_MAGIC;
 	fwrite( &magic, sizeof( uint32_t ), 1, file );
 	uint16_t version = COM_FORMAT_FONT_VERSION;
@@ -36,6 +38,16 @@ void serialize_font( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs,
 		fwrite( &glyphs[ i ].y, sizeof( uint16_t ), 1, file );
 		fwrite( &glyphs[ i ].w, sizeof( uint16_t ), 1, file );
 		fwrite( &glyphs[ i ].h, sizeof( uint16_t ), 1, file );
+
+		int16_t ix = ( int16_t ) glyphs[ i ].rect.x;
+		fwrite( &ix, sizeof( int16_t ), 1, file );
+		int16_t iy = ( int16_t ) glyphs[ i ].rect.y;
+		fwrite( &iy, sizeof( int16_t ), 1, file );
+
+		uint16_t iw = ( uint16_t ) glyphs[ i ].rect.z;
+		fwrite( &iw, sizeof( uint16_t ), 1, file );
+		uint16_t ih = ( uint16_t ) glyphs[ i ].rect.w;
+		fwrite( &ih, sizeof( uint16_t ), 1, file );
 	}
 
 	fwrite( &width, sizeof( uint16_t ), 1, file );
@@ -57,9 +69,9 @@ static void on_save_font( PangoFontDescription *fontDescription, const char *des
 
 		// first determine the size we need for the surface
 
-		static constexpr int32_t  MAX_WIDTH = 512;
+		static constexpr int32_t  MAX_WIDTH = 2048;
 		static constexpr uint32_t MAX_ASCII = 512;
-		static constexpr int32_t  PADDING   = 4;
+		static constexpr int32_t  PADDING   = 8;
 
 		int32_t width = 8, height = 8;
 		int32_t x = 0, y = 0;
@@ -72,40 +84,66 @@ static void on_save_font( PangoFontDescription *fontDescription, const char *des
 			char buf[ 7 ] = {};
 			int  len      = g_unichar_to_utf8( i, buf );
 
-			PangoRectangle rect;
 			pango_layout_set_text( layout, buf, len );
-			pango_layout_get_extents( layout, nullptr, &rect );
-			pango_extents_to_pixels( &rect, nullptr );
+
+			// okay, fonts suck... we need to query both of these
+			// and fetch the biggest between them because neither
+			// seems entirely accurate to the actual pixel size
+			PangoRectangle rect, lr;
+			pango_layout_get_pixel_extents( layout, &rect, &lr );
+
+			// we're storing these now so we can support
+			// non-monospaced fonts
+			glyphs[ numChars ].rect.x = rect.x;
+			glyphs[ numChars ].rect.y = rect.y;
+			glyphs[ numChars ].rect.z = lr.width;
+			glyphs[ numChars ].rect.w = lr.height;
+
+			if ( lr.width > rect.width )
+			{
+				rect.width = lr.width;
+			}
+			if ( lr.height > rect.height )
+			{
+				rect.height = lr.height;
+			}
 
 			glyphs[ numChars ].codepoint = i;
+
+			glyphs[ numChars ].w = rect.width + PADDING;
+			glyphs[ numChars ].h = rect.height + PADDING;
+
+			if ( x + glyphs[ numChars ].w > width )
+			{
+				width += glyphs[ numChars ].w;
+				if ( width > MAX_WIDTH )
+				{
+					width = MAX_WIDTH;
+				}
+			}
+
+			if ( x + glyphs[ numChars ].w >= MAX_WIDTH )
+			{
+				y += tallest;
+				x = tallest = PADDING;
+			}
 
 			glyphs[ numChars ].x = x;
 			glyphs[ numChars ].y = y;
 
-			glyphs[ numChars ].w = ( rect.width );
-			x += ( glyphs[ numChars ].w + PADDING );
-			if ( x > width )
-			{
-				if ( width > MAX_WIDTH )
-				{
-					y += ( tallest + PADDING );
-					x = tallest = 0;
-				}
+			x += glyphs[ numChars ].w;
 
-				width += ( glyphs[ numChars ].w + PADDING );
-			}
-
-			glyphs[ numChars ].h = ( rect.height );
 			if ( glyphs[ numChars ].h > tallest )
 			{
-				tallest = ( rect.height );
+				tallest = glyphs[ numChars ].h;
 			}
-			if ( ( y + glyphs[ numChars ].h ) > height )
+
+			if ( y + glyphs[ numChars ].h > height )
 			{
 				height += tallest;
 			}
 
-			printf( "%s %u : %d %d (%d %d)\n", buf,
+			printf( "%s %u : %d %d %d %d\n", buf,
 			        glyphs[ numChars ].codepoint,
 			        glyphs[ numChars ].x, glyphs[ numChars ].y,
 			        glyphs[ numChars ].w, glyphs[ numChars ].h );
@@ -133,7 +171,7 @@ static void on_save_font( PangoFontDescription *fontDescription, const char *des
 
 			cairo_set_source_rgb( cairo, 1.0, 1.0, 1.0 );
 #endif
-			cairo_move_to( cairo, glyphs[ i ].x, glyphs[ i ].y );
+			cairo_move_to( cairo, glyphs[ i ].x - glyphs[ i ].rect.x, glyphs[ i ].y );
 
 			char buf[ 7 ];
 			int  len = g_unichar_to_utf8( glyphs[ i ].codepoint, buf );
