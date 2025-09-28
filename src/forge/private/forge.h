@@ -55,6 +55,9 @@ void forge_print_( const char *message, ... );
 void forge_warning_( const char *message, ... );
 void forge_error_( bool die, const char *message, ... );
 
+char *forge_dialog_save( void *self, const char *title, const char *extension, const char *origin );
+char *forge_dialog_open( void *self, const char *title, const char *extension, const char *origin );
+
 ApeRoom *forge_new_room_( const char *path );
 ApeRoom *forge_load_room_( const char *path );
 

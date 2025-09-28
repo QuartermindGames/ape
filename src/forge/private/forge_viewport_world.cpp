@@ -98,6 +98,8 @@ worldViewportMap[] = {
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_MOVE_NODE_TO_ROOM, forge::WorldViewport::on_move_node_to_room ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_EXPORT, forge::WorldViewport::on_export ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_IMPORT, forge::WorldViewport::on_import ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_OPEN_PROPERTIES, forge::WorldViewport::on_open_properties ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL, forge::WorldViewport::on_create_node ),
@@ -232,6 +234,9 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				new FXMenuCommand( popup, FXString( "Create " ) + identifier, icon, this, ID_CREATE_NODE + i );
 			}
 
+			new FXMenuSeparator( popup );
+			new FXMenuCommand( popup, "Import...", load_fx_icon( getApp(), "resources/open.gif" ), this, ID_IMPORT );
+
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX: break;
@@ -345,6 +350,12 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 			else
 			{
 				moveToMenu->disable();
+			}
+
+			if ( numSelectedNodes == 1 )
+			{
+				new FXMenuCommand( popup, "Export...", load_fx_icon( getApp(), "resources/save.gif" ), this, ID_EXPORT );
+				new FXMenuSeparator( popup );
 			}
 
 			new FXMenuCommand( popup, "Properties...", nullptr, this, ID_OPEN_PROPERTIES );
@@ -821,6 +832,97 @@ long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector sel
 	}
 
 	return FALSE;
+}
+
+long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
+{
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
+		forge_warning_( "Invalid mode selected for export!\n" );
+		return false;
+	}
+
+	unsigned int numSelected = PlGetNumLinkedListNodes( instance->selectedObjects );
+	if ( numSelected != 1 )
+	{
+		forge_warning_( "Invalid number of nodes selected for export!\n" );
+		return false;
+	}
+
+	std::string origin = std::string( com_project_get_local_path() ) + "/dev/<export>";
+
+	char *filename = forge_dialog_save( this, "Save Export", ".node", origin.c_str() );
+	if ( filename == nullptr )
+	{
+		return false;
+	}
+
+	ApeWorldNode *node = ( ApeWorldNode * ) PlGetLinkedListNodeUserData( PlGetFirstNode( instance->selectedObjects ) );
+	assert( node != nullptr );
+
+	AcmBranch *root = ape_world_node_serialize( node, nullptr );
+	if ( root != nullptr )
+	{
+		if ( !acm_write_file( filename, root, ACM_FILE_TYPE_BINARY ) )
+		{
+			FXMessageBox::warning( this, MBOX_OK, "Warning", "%s", acm_get_error_message() );
+		}
+
+		acm_branch_destroy( root );
+	}
+	else
+	{
+		FXMessageBox::warning( this, MBOX_OK, "Warning", "Failed to serialize object!" );
+	}
+
+	qm_os_memory_free( filename );
+
+	return true;
+}
+
+long forge::WorldViewport::on_import( FXObject *, FXSelector, void * )
+{
+	std::string origin = std::string( com_project_get_local_path() ) + "/dev/<export>";
+
+	char *filename = forge_dialog_open( this, "Open Export", ".node", origin.c_str() );
+	if ( filename == nullptr )
+	{
+		return false;
+	}
+
+	AcmBranch *root = acm_load_file( filename, "node" );
+	if ( root != nullptr )
+	{
+		ApeWorldNode *node = ape_world_node_deserialize( nullptr, root );
+		if ( node != nullptr )
+		{
+			ApeEditorInstance *instance = editor->get_internal();
+			assert( instance != nullptr );
+
+			ApeRoom *room = ape_camera_get_room( instance->camera );
+			assert( room != nullptr );
+
+			QmMathVector3f pos = ape_grid_transform_point( &instance->grid, &instance->grid.cursor );
+			ape_world_node_set_position( node, &pos );
+
+			ape_world_node_attach( node, APE_WORLD_NODE( room ) );
+		}
+		else
+		{
+			FXMessageBox::warning( this, MBOX_OK, "Warning", "Failed to deserialize export!" );
+		}
+	}
+	else
+	{
+		FXMessageBox::warning( this, MBOX_OK, "Warning", "Failed to load export: %s\n", acm_get_error_message() );
+	}
+
+	qm_os_memory_free( filename );
+
+	return true;
 }
 
 long forge::WorldViewport::on_open_properties( FXObject *, FXSelector, void * )

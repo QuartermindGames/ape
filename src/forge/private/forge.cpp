@@ -6,6 +6,8 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_driver_interface.h>
 
+#include "qmos/public/qm_os_string.h"
+
 #include "forge.h"
 #include "forge_window_main.h"
 #include "forge_project_dialog.h"
@@ -74,6 +76,46 @@ void forge_error_( bool die, const char *message, ... )
 	{
 		abort();
 	}
+}
+
+char *forge_dialog_save( void *self, const char *title, const char *extension, const char *origin )
+{
+	size_t extensionSize = strlen( extension );
+	char   pattern[ extensionSize + 2 ];
+	snprintf( pattern, sizeof( pattern ), "*%s", extension );
+
+	FXString saveName = FXFileDialog::getSaveFilename( ( FXWindow * ) self, title, origin, pattern );
+	if ( saveName.empty() )
+	{
+		return nullptr;
+	}
+
+	// ensure the extension is appended, if missing
+	char *filename;
+	if ( saveName.length() >= extensionSize && strcmp( &saveName[ saveName.length() - extensionSize ], extension ) != 0 )
+	{
+		filename = qm_os_string_alloc( nullptr, "%s%s", saveName.text(), extension );
+	}
+	else
+	{
+		filename = qm_os_string_alloc( nullptr, "%s", saveName.text() );
+	}
+
+	return filename;
+}
+
+char *forge_dialog_open( void *self, const char *title, const char *extension, const char *origin )
+{
+	char pattern[ strlen( extension ) + 2 ];
+	snprintf( pattern, sizeof( pattern ), "*%s", extension );
+
+	FXString openName = FXFileDialog::getOpenFilename( ( FXWindow * ) self, title, origin, pattern );
+	if ( openName.empty() )
+	{
+		return nullptr;
+	}
+
+	return qm_os_string_alloc( nullptr, "%s", openName.text() );
 }
 
 ApeRoom *forge_new_room_( const char *path )
