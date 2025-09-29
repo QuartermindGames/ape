@@ -942,6 +942,14 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		double numTicks = ( double ) ape_get_num_ticks();
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ], &numTicks, false );
 	}
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_VIEW_SIZE ] >= 0 )
+	{
+		int w, h;
+		ape_get_2d_viewport_size_( &w, &h );
+
+		QmMathVector2f viewSize = qm_math_vector2f( ( float ) w, ( float ) h );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_VIEW_SIZE ], &viewSize, false );
+	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
@@ -955,7 +963,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ] >= 0 )
 	{
-		float fogFar = ( ( ape_config_.renderer.fogFarOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogFarOverride : world->fogFar;
+		float fogFar = ape_config_.renderer.fogFarOverride > -1.f || world == NULL ? ape_config_.renderer.fogFarOverride : world->fogFar;
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &fogFar, false );
 	}
 

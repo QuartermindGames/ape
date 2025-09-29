@@ -20,8 +20,6 @@
 ApeRendererStats     ape_rendererPerformance_ = {};
 ApeRendererPassState ape_rendererState_;
 
-static bool rendererDrawSky = true;
-
 static ApeCamera *currentCamera;
 
 static ApeRenderTarget *defaultRenderTarget;
@@ -344,8 +342,6 @@ void ape_register_renderer_console_variables_( void )
 	PlRegisterConsoleVariable( "renderer.maxPortalDepth", "Maximum depth that portals can recurse.", "1", PL_VAR_I32, nullptr, nullptr, true );
 	PlRegisterConsoleVariable( "renderer.showPortalVolumes", "Shows the screen-space volume that's produced from a visible portal.", "false", PL_VAR_BOOL, nullptr, nullptr, false );
 
-	PlRegisterConsoleVariable( "renderer.drawSky", "", "true", PL_VAR_BOOL, &rendererDrawSky, nullptr, false );
-
 	ape_material_register_console_variables_();
 
 	ape_register_shader_console_variables_();
@@ -401,56 +397,6 @@ void ape_shutdown_renderer_( void )
 /****************************************
  ****************************************/
 
-/**
- * For the sky, we draw a simple quad after we've drawn the rest of the scene,
- * idea being we can discard any pixels that were obscured earlier. The sky
- * is then entirely done in a fragment shader.
- *
- * This is done at the end, so we only have to do it once, but this may need
- * reworking into room drawing eventually just so it accounts for portals
- * correctly, but that shouldn't be too much work.
- */
-void ape_renderer_draw_sky_quad_( const ApeCamera *camera, const ApeViewport *viewport )
-{
-	if ( !rendererDrawSky )
-	{
-		return;
-	}
-
-	static ApeMaterial *skyMaterial;
-	if ( skyMaterial == nullptr )
-	{
-		skyMaterial = ape_material_cache( "materials/engine/engine_sky.mat.n", APE_CACHE_GROUP_GLOBAL, true );
-	}
-
-	ApeMaterialPass *pass = ape_material_get_pass( skyMaterial, 0 );
-	if ( pass == nullptr )
-	{
-		return;
-	}
-
-	ApeShaderProgram *shader = ape_material_pass_get_shader_program( pass );
-	assert( shader != nullptr );
-
-	float viewPitch = ( camera->base.angles.x + 90.0f ) / 180.0f;
-	PlgSetShaderUniformValue( shader->internal, "viewPitch", &viewPitch, false );
-	PlgSetShaderUniformValue( shader->internal, "viewSize", &QM_MATH_VECTOR2F( viewport->width, viewport->height ), false );
-
-	COM_PROFILE_FUNCTION_START();
-
-	PlgDepthMask( false );
-
-	ape_setup_2d_viewport_( viewport->width, viewport->height );
-
-	ape_draw_textured_quad( skyMaterial, 0.0f, 0.0f, viewport->width, viewport->height, &PL_COLOUR_WHITE, -10000.0f );
-
-	PlgDepthMask( true );
-
-	PlgSetupCamera( camera->internal );
-
-	COM_PROFILE_FUNCTION_END();
-}
-
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 {
 	assert( camera != nullptr && viewport != nullptr );
@@ -486,8 +432,6 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 	{
 		PlgDisableGraphicsState( PLG_GFX_STATE_WIREFRAME );
 	}
-
-	//draw_sky_quad( camera, viewport );
 
 	ape_editor_post_render_scene_();
 

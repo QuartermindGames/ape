@@ -21,6 +21,7 @@ static unsigned int hotReloadTicks    = HOT_RELOAD_TICKS_DEFAULT;
 
 static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
         [APE_SHADER_UNIFORM_NUM_TICKS] = "u_numTicks",
+        [APE_SHADER_UNIFORM_VIEW_SIZE] = "u_viewSize",
 
         [APE_SHADER_UNIFORM_FOG_COLOUR] = "fogColour",
         [APE_SHADER_UNIFORM_FOG_NEAR]   = "fogNear",
