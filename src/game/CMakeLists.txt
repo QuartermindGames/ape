@@ -30,6 +30,7 @@ set(GAME_SHARED_FILES
         private/shared/integrations/discord/discord.c
 
         private/shared/menu/menu_chat.c
+        private/shared/menu/menu_compass.c
         private/shared/menu/menu_pie.c
         private/shared/menu/menu_splash.c
 )

@@ -4,13 +4,14 @@
 
 #include "menu.h"
 
-#include "../../shared/menu/menu.h"
-#include "../../shared/menu/menu_pie.h"
+#include "shared/menu/menu.h"
+#include "shared/menu/menu_pie.h"
+#include "shared/menu/menu_compass.h"
 
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
 static ApeGuiFont *menuFont;
 
-static const char *menuTitleFontPath = "guis/fonts/anarchist-mustache/anarchist_mustache_96.fnt";
+static const char *menuTitleFontPath = "guis/fonts/cinzel_decorative_black_64.fnt";
 static ApeGuiFont *menuTitleFont;
 
 SS1MenuState ss1_menuState_;
@@ -260,6 +261,8 @@ void ss1_menu_initialize( void )
 		game_error_( "Failed to load title font (%s)!\n", menuTitleFontPath );
 	}
 
+	game_menu_compass_initialize_( menuTitleFont );
+
 	// mmm delicious pie
 	interactPie = menu_pie_create();
 	menu_pie_add_option( interactPie, "testing 1", ape_material_cache( "materials/ui/pie/cursor.mat.n", APE_CACHE_GROUP_WORLD, true ), nullptr );
@@ -317,10 +320,16 @@ void ss1_menu_shutdown()
 	ape_gui_font_destroy( menuFont );
 }
 
-void ss1_menu_tick( double delta )
+void ss1_menu_tick( const double delta )
 {
 	game_menu_splash_tick_( delta );
 	menu_pie_tick( interactPie );
+
+	ApeCamera *camera = ss1_gameState.camera;
+	if ( camera != nullptr )
+	{
+		game_menu_compass_tick_( camera, delta );
+	}
 }
 
 static void draw_dial( const int16_t value, const float radius, const float thickness, const float centerX, const float centerY, const float precision, const QmMathColour4ub *colour )
@@ -360,6 +369,8 @@ static void draw_dial( const int16_t value, const float radius, const float thic
 
 static void draw_hud( const ApeViewport *viewport )
 {
+	game_menu_compass_draw_( viewport );
+
 	static const int       health           = 100;
 	static constexpr float HEALTH_RADIUS    = 70.0f;
 	static constexpr float HEALTH_THICKNESS = 30.0f;
@@ -402,9 +413,9 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		static constexpr char title[] = "Nihlexa";
 
 		gui_font_set_shadow_offset( 2.0f, 2.0f );
-		gui_font_set_slant( 20.0f );
+		//gui_font_set_slant( 20.0f );
 		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, MENU_SCALE, &PL_COLOUR_WHITE, title, strlen( title ), true );
-		gui_font_set_slant( 0.0f );
+		//gui_font_set_slant( 0.0f );
 
 		y = 200.0f;
 
