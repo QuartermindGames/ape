@@ -25,10 +25,13 @@ void ape_renderer_world_register_console_variables_()
 
 static void draw_face_wireframe( const ApeBrushFace *face )
 {
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		const ApeBrushFaceVertex *a = face->edgeLoop[ i ];
-		PlgImmPushVertex( a->position->x, a->position->y, a->position->z );
+		PlgImmPushVertex( brush->vertices[ a->posIndex ].x, brush->vertices[ a->posIndex ].y, brush->vertices[ a->posIndex ].z );
 		if ( ape_brush_face_is_portal( face ) )
 		{
 			PlgImmColour( 255, 0, 255, 255 );
@@ -38,8 +41,8 @@ static void draw_face_wireframe( const ApeBrushFace *face )
 			PlgImmColour( 255, 255, 255, 255 );
 		}
 
-		const ApeBrushFaceVertex *b = ( ( i + 1 ) < face->numVertices ) ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
-		PlgImmPushVertex( b->position->x, b->position->y, b->position->z );
+		const ApeBrushFaceVertex *b = i + 1 < face->numVertices ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
+		PlgImmPushVertex( brush->vertices[ b->posIndex ].x, brush->vertices[ b->posIndex ].y, brush->vertices[ b->posIndex ].z );
 		if ( ape_brush_face_is_portal( face ) )
 		{
 			PlgImmColour( 255, 0, 255, 255 );
@@ -282,7 +285,7 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 			PLGMesh *mesh        = worldNode->mesh;
 			mesh->numSubMeshes   = numSubMeshes[ 0 ];
 			mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-			mesh->subMeshes      = subMeshes[ 0 ];
+			mesh->subMeshCounts  = subMeshes[ 0 ];
 
 			ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
 
@@ -413,12 +416,15 @@ static QmMathVector3f get_projection( const ApeLight *light, const QmMathVector3
 
 static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLight *light, bool start, unsigned int *indices )
 {
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
 
 		// get the projected position (if start, just uses the initial position)
-		const QmMathVector3f ppos = start ? *vertex->position : get_projection( light, vertex->position, &face->bounds.absOrigin );
+		const QmMathVector3f ppos = start ? brush->vertices[ vertex->posIndex ] : get_projection( light, &brush->vertices[ vertex->posIndex ], &face->bounds.absOrigin );
 
 		indices[ i ] = PlgImmPushVertex( ppos.x, ppos.y, ppos.z );
 	}
@@ -557,7 +563,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
 	mesh->numSubMeshes   = numSubMeshes[ 0 ];
 	mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-	mesh->subMeshes      = subMeshes[ 0 ];
+	mesh->subMeshCounts  = subMeshes[ 0 ];
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
 	assert( material != nullptr );
@@ -730,12 +736,15 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 	PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( portal->parent ) );
 	PlMultiMatrix( &transform );
 
+	ApeBrush *brush = portal->parent;
+	assert( brush != nullptr );
+
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
 		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
 		//TODO: handle transforms for the brush in software here
-		PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+		PlgImmPushVertex( brush->vertices[ vertex->posIndex ].x, brush->vertices[ vertex->posIndex ].y, brush->vertices[ vertex->posIndex ].z );
 		PlgImmColour( 0, 0, 0, 0 );
 	}
 
@@ -754,6 +763,9 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 
 static void draw_wireframe_portal_face( const ApeBrushFace *portal )
 {
+	ApeBrush *brush = portal->parent;
+	assert( brush != nullptr );
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 
@@ -767,7 +779,7 @@ static void draw_wireframe_portal_face( const ApeBrushFace *portal )
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
 		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
-		PlgImmPushVertex( vertex->position->x, vertex->position->y, vertex->position->z );
+		PlgImmPushVertex( brush->vertices[ vertex->posIndex ].x, brush->vertices[ vertex->posIndex ].y, brush->vertices[ vertex->posIndex ].z );
 		PlgImmColour( 0, 255, 0, 255 );
 	}
 
@@ -940,8 +952,6 @@ static void draw_room_editor( const ApeCameraVisibleRoom *visibleRoom )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ape_renderer_draw_sky_quad_( const ApeCamera *camera, const ApeViewport *viewport );
-
 //TODO: move into room code
 void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const ApeViewport *viewport )
 {
@@ -1012,8 +1022,6 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 			break;
 		}
 	}
-
-	ape_renderer_draw_sky_quad_( camera, viewport );
 
 	draw_room_editor( visibleRoom );
 

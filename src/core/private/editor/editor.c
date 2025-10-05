@@ -263,6 +263,9 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
+		ApeBrush *brush = face->parent;
+		assert( brush != nullptr );
+
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
 			unsigned int  numAdjacentFaces = 0;
@@ -272,7 +275,7 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 			{
 				for ( unsigned int l = 0; l < adjacentFace->numVertices; ++l )
 				{
-					if ( com_math_vector_check_epsilon( face->vertices[ j ].position, adjacentFace->vertices[ l ].position ) )
+					if ( com_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ], &brush->vertices[ adjacentFace->vertices[ l ].posIndex ] ) )
 					{
 						adjacentFaces[ numAdjacentFaces++ ] = adjacentFace;
 					}
@@ -296,9 +299,9 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 				const ApeBrushFace *adjFace = adjacentFaces[ k ];
 				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
 				{
-					const QmMathVector3f *a = adjFace->edgeLoop[ l ]->position;
-					const QmMathVector3f *b = adjFace->edgeLoop[ l + 1 ]->position;
-					const QmMathVector3f *c = adjFace->edgeLoop[ ( l + 2 ) % adjFace->numVertices ]->position;
+					const QmMathVector3f *a = &brush->vertices[ adjFace->edgeLoop[ l ]->posIndex ];
+					const QmMathVector3f *b = &brush->vertices[ adjFace->edgeLoop[ l + 1 ]->posIndex ];
+					const QmMathVector3f *c = &brush->vertices[ adjFace->edgeLoop[ ( l + 2 ) % adjFace->numVertices ]->posIndex ];
 
 					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
 
@@ -420,7 +423,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 					{
 						for ( unsigned int k = 0; k < brush->faces[ j ].numVertices; ++k )
 						{
-							if ( brush->faces[ j ].vertices[ k ].position == vertex )
+							if ( &brush->vertices[ brush->faces[ j ].vertices[ k ].posIndex ] == vertex )
 							{
 								ape_brush_face_compute_normal( &brush->faces[ j ] );
 								break;
@@ -448,17 +451,16 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 			ApeBrushFace *face;
 			COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 			{
+				ApeBrush *brush = face->parent;
+				assert( brush != nullptr );
+
 				for ( unsigned int j = 0; j < face->numVertices; ++j )
 				{
-					intptr_t ptr = ( intptr_t ) &face->vertices[ j ].position;
-					PlInsertHashTableNode( vertexTable, &ptr, sizeof( intptr_t ), face->vertices[ j ].position );
+					intptr_t ptr = ( intptr_t ) &brush->vertices[ face->vertices[ j ].posIndex ];
+					PlInsertHashTableNode( vertexTable, &ptr, sizeof( intptr_t ), &brush->vertices[ face->vertices[ j ].posIndex ] );
 				}
 
-				ApeBrush *brush = face->parent;
-				if ( brush != nullptr )
-				{
-					ape_brush_mark_parent_dirty( brush );
-				}
+				ape_brush_mark_parent_dirty( brush );
 			}
 
 			QmMathVector3f *vertex;

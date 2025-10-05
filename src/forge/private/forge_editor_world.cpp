@@ -574,7 +574,7 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 	brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
 	for ( unsigned int i = 0; i < brush->numVertices; ++i )
 	{
-		brush->vertices[ i ] = *face->vertices[ i ].position;
+		brush->vertices[ i ] = face->parent->vertices[ face->vertices[ i ].posIndex ];
 	}
 
 	brush->numFaces               = 1;
@@ -586,7 +586,7 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 	for ( unsigned int i = 0; i < brush->numVertices; ++i )
 	{
 		ApeBrushFaceVertex *vertex = &brush->faces[ 0 ].vertices[ i ];
-		vertex->position           = &brush->vertices[ i ];
+		vertex->posIndex           = i;
 		vertex->colour             = face->vertices[ i ].colour;
 		vertex->textureCoords      = face->vertices[ i ].textureCoords;
 

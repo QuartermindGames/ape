@@ -109,12 +109,15 @@ void ape_grid_decrease_size( void )
 
 void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
 {
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
 	assert( face->numVertices > 0 );
-	PlTranslateMatrix( *face->vertices[ 0 ].position );
+	PlTranslateMatrix( brush->vertices[ face->vertices[ 0 ].posIndex ] );
 
 	static constexpr QmMathVector3f UP = QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f );
 

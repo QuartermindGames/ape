@@ -247,9 +247,9 @@ static QmMathVector4f get_face_screen_rect( const ApeBrushFace *face, const ApeC
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		QmMathVector3f vertex = PlTransformVector3( face->vertices[ i ].position, &transform );
+		QmMathVector3f vertex = PlTransformVector3( &face->parent->vertices[ face->vertices[ i ].posIndex ], &transform );
 
-		float     depth;
+		float          depth;
 		QmMathVector2f screenPos = PlConvertWorldToScreen( &vertex, &viewProj, ( int[] ) { 0, 0, viewport->width, viewport->height }, &depth, true );
 
 		if ( screenPos.x < rect.x )
@@ -433,7 +433,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 				visiblePortal->origin     = faceOrigin;
 
 				visiblePortal->normal = brush->faces[ i ].normal;
-				QmMathVector4f tmp         = PlTransformVector4( &QM_MATH_VECTOR4F( visiblePortal->normal.x,
+				QmMathVector4f tmp    = PlTransformVector4( &QM_MATH_VECTOR4F( visiblePortal->normal.x,
 				                                                               visiblePortal->normal.y,
 				                                                               visiblePortal->normal.z, 0.0f ),
 				                                            &transform );
@@ -506,7 +506,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 	{
 		PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
 		PLMatrix4       transform         = ape_world_node_get_transform( worldNode );
-		QmMathVector3f       pos               = PlGetMatrix4Translation( &transform );
+		QmMathVector3f  pos               = PlGetMatrix4Translation( &transform );
 		ape_draw_debug_axis( pos, worldNode->angles, 16.0f );
 		ape_draw_debug_aabb( &worldNode->bounds, PL_COLOUR_PURPLE );
 		ape_draw_debug_aabb( &transformedBounds, PL_COLOUR_ORANGE );

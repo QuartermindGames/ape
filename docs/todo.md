@@ -1,19 +1,7 @@
 # Todo
 
 ## Features
-- ~~**forge:** Add a filter menu to the material browser~~
-- **core:** Introduce flags for shaders to indicate support for lighting
-- ~~**core:** Expose node properties to the editor~~
-  - **core:** Allow us to modify and save node properties (possibly need to revise API)
-- ~~Add a way to move the grid around~~
-- ~~Vertex editing~~
 - Extrude for brushes
-- ~~Move for brushes~~
-- Implement a new tab type with close button, so we can easily close editors
-- Make the console correctly hide/show, and resize with a window
-
-## Bugs
-- ~~**forge**: Crash when deleting some objects such as lights (probably due to queue)~~
 
 ## Per-pixel audio maps
 A 16x16 texture (or tiny relative to parent texture) that outlines on a per-pixel basis what sound should be used.
@@ -22,13 +10,13 @@ This means that if you have a texture that transitions or has both a wood and me
 System can also be expanded to support height-maps once introduced.
 
 ## Queue
+- **core**: emissive materials
+- **forge/core**: autosave current world on error
+- **forge**: implement a new tab type with close button, so we can easily close editors
+- **forge**: make the console correctly hide/show, and resize with a window
 - Initial Lua mock-up
-- ~~Restrict vertices for stencil shadows based on point of intersection~~
-  - ~~If point doesn't cross/intersect, we should have a reasonable limit~~
 - ~~Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms~~
   - Recursion for portals/mirrors isn't working right
-  - ~~Can't combine stencil shadow volumes with mirrors~~ (for now we'll just disable shadows in mirrors)
-- ~~We don't have spotlights...~~
 - Prototype 'eyes' for QM2 & QM1
   - Plane with two layers, the second layer representing pupil will take offset for eye movement. Maybe the first layer acts as a mask?
   - Add some logic for swapping out first texture, so we can convey different expressions

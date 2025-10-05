@@ -816,7 +816,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 
 #endif
 
-				const unsigned int idx = PlgAddMeshVertex( self->mesh, vertex->position, &vertex->normal, &colour, &vertex->textureCoords );
+				const unsigned int idx = PlgAddMeshVertex( self->mesh, &brush->vertices[ vertex->posIndex ], &vertex->normal, &colour, &vertex->textureCoords );
 
 				// these have to be set seperate for now, need an api for it
 				self->mesh->vertices[ idx ].tangent   = face->tangent;

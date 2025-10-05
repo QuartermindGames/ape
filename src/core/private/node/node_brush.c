@@ -138,7 +138,7 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 		dstBrush->faces[ j ].numVertices = srcBrush->faces[ j ].numVertices;
 		for ( unsigned int k = 0; k < dstBrush->faces[ j ].numVertices; ++k )
 		{
-			dstBrush->faces[ j ].vertices[ k ].position      = &dstBrush->vertices[ srcBrush->faces[ j ].vertices[ k ].position - srcBrush->vertices ];
+			dstBrush->faces[ j ].vertices[ k ].posIndex      = srcBrush->faces[ j ].vertices[ k ].posIndex;
 			dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
 			dstBrush->faces[ j ].vertices[ k ].normal        = srcBrush->faces[ j ].vertices[ k ].normal;
 
@@ -199,14 +199,17 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 {
 	face->normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
 
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
 	assert( face->numVertices >= 3 );
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		unsigned int j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
 
-		const QmMathVector3f *current = face->edgeLoop[ i ]->position;
-		const QmMathVector3f *next    = face->edgeLoop[ j ]->position;
-		const QmMathVector3f *prev    = face->edgeLoop[ ( i == 0 ) ? face->numVertices - 1 : ( i - 1 ) ]->position;
+		const QmMathVector3f *current = &brush->vertices[ face->edgeLoop[ i ]->posIndex ];
+		const QmMathVector3f *next    = &brush->vertices[ face->edgeLoop[ j ]->posIndex ];
+		const QmMathVector3f *prev    = &brush->vertices[ face->edgeLoop[ i == 0 ? face->numVertices - 1 : i - 1 ]->posIndex ];
 
 		QmMathVector3f edge1 = qm_math_vector3f( next->x - current->x, next->y - current->y, next->z - current->z );
 		QmMathVector3f edge2 = qm_math_vector3f( prev->x - current->x, prev->y - current->y, prev->z - current->z );
@@ -233,12 +236,15 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 
 #if 1
 
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
 	ApeBrushFaceVertex *v0 = face->edgeLoop[ 0 ];
 	ApeBrushFaceVertex *v1 = face->edgeLoop[ 1 ];
 	ApeBrushFaceVertex *v2 = face->edgeLoop[ 2 ];
 
-	QmMathVector3f edge1 = qm_math_vector3f_sub( *v1->position, *v0->position );
-	QmMathVector3f edge2 = qm_math_vector3f_sub( *v2->position, *v0->position );
+	QmMathVector3f edge1 = qm_math_vector3f_sub( brush->vertices[ v1->posIndex ], brush->vertices[ v0->posIndex ] );
+	QmMathVector3f edge2 = qm_math_vector3f_sub( brush->vertices[ v2->posIndex ], brush->vertices[ v0->posIndex ] );
 
 	QmMathVector2f deltaUV1 = qm_math_vector2f_sub( v1->textureCoords, v0->textureCoords );
 	QmMathVector2f deltaUV2 = qm_math_vector2f_sub( v2->textureCoords, v0->textureCoords );
@@ -295,26 +301,29 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 	unsigned int height = ape_material_get_height( material );
 	assert( height > 0 );
 
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
 	QmMathVector3f verticies[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
 	if ( computeLocal )
 	{
 		QmMathVector3f origin = {};
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			origin = qm_math_vector3f_add( origin, *face->edgeLoop[ i ]->position );
+			origin = qm_math_vector3f_add( origin, brush->vertices[ face->edgeLoop[ i ]->posIndex ] );
 		}
 
 		origin = qm_math_vector3f_div_float( origin, face->numVertices );
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			verticies[ i ] = qm_math_vector3f_sub( *face->edgeLoop[ i ]->position, origin );
+			verticies[ i ] = qm_math_vector3f_sub( brush->vertices[ face->edgeLoop[ i ]->posIndex ], origin );
 		}
 	}
 	else
 	{
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			verticies[ i ] = *face->edgeLoop[ i ]->position;
+			verticies[ i ] = brush->vertices[ face->edgeLoop[ i ]->posIndex ];
 		}
 	}
 
@@ -521,19 +530,27 @@ void ape_brush_face_compute_bounds( ApeBrushFace *face )
 {
 	assert( face->numVertices > 0 );
 
-	face->bounds.mins = qm_math_vector3f( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
-	face->bounds.maxs = qm_math_vector3f( face->vertices[ 0 ].position->x, face->vertices[ 0 ].position->y, face->vertices[ 0 ].position->z );
+	ApeBrush *brush = face->parent;
+	assert( brush != nullptr );
+
+	face->bounds.mins = qm_math_vector3f( brush->vertices[ face->vertices[ 0 ].posIndex ].x,
+	                                      brush->vertices[ face->vertices[ 0 ].posIndex ].y,
+	                                      brush->vertices[ face->vertices[ 0 ].posIndex ].z );
+	face->bounds.maxs = qm_math_vector3f( brush->vertices[ face->vertices[ 0 ].posIndex ].x,
+	                                      brush->vertices[ face->vertices[ 0 ].posIndex ].y,
+	                                      brush->vertices[ face->vertices[ 0 ].posIndex ].z );
+
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		for ( unsigned int j = 0; j < 3; ++j )
 		{
-			if ( PL_VECTOR3_I( *face->vertices[ i ].position, j ) > PL_VECTOR3_I( face->bounds.maxs, j ) )
+			if ( PL_VECTOR3_I( brush->vertices[ face->vertices[ i ].posIndex ], j ) > PL_VECTOR3_I( face->bounds.maxs, j ) )
 			{
-				PL_VECTOR3_I( face->bounds.maxs, j ) = PL_VECTOR3_I( *face->vertices[ i ].position, j );
+				PL_VECTOR3_I( face->bounds.maxs, j ) = PL_VECTOR3_I( brush->vertices[ face->vertices[ i ].posIndex ], j );
 			}
-			if ( PL_VECTOR3_I( *face->vertices[ i ].position, j ) < PL_VECTOR3_I( face->bounds.mins, j ) )
+			if ( PL_VECTOR3_I( brush->vertices[ face->vertices[ i ].posIndex ], j ) < PL_VECTOR3_I( face->bounds.mins, j ) )
 			{
-				PL_VECTOR3_I( face->bounds.mins, j ) = PL_VECTOR3_I( *face->vertices[ i ].position, j );
+				PL_VECTOR3_I( face->bounds.mins, j ) = PL_VECTOR3_I( brush->vertices[ face->vertices[ i ].posIndex ], j );
 			}
 		}
 	}
@@ -623,8 +640,8 @@ static void build_block_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 	for ( unsigned int i = 0; i < numVertices; ++i )
 	{
 		// sort out the top and bottom
-		self->faces[ 0 ].vertices[ i ].position = &self->vertices[ i ];
-		self->faces[ 1 ].vertices[ i ].position = &self->vertices[ i + numVertices ];
+		self->faces[ 0 ].vertices[ i ].posIndex = i;
+		self->faces[ 1 ].vertices[ i ].posIndex = i + numVertices;
 		if ( signedArea < 0.0f )
 		{
 			self->faces[ 0 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 0 ].vertices[ i ];
@@ -643,21 +660,15 @@ static void build_block_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 
 		unsigned int next = ( i + 1 ) % numVertices;
 
-		QmMathVector3f *quad[ 4 ];
-		quad[ 0 ] = &self->vertices[ i ];
-		quad[ 1 ] = &self->vertices[ next ];
-		quad[ 2 ] = &self->vertices[ i + numVertices ];
-		quad[ 3 ] = &self->vertices[ next + numVertices ];
-
 		self->faces[ i + 2 ].numVertices            = 4;
-		self->faces[ i + 2 ].vertices[ 0 ].position = quad[ 0 ];
-		self->faces[ i + 2 ].vertices[ 1 ].position = quad[ 1 ];
-		self->faces[ i + 2 ].vertices[ 2 ].position = quad[ 3 ];
-		self->faces[ i + 2 ].vertices[ 3 ].position = quad[ 2 ];
+		self->faces[ i + 2 ].vertices[ 0 ].posIndex = i;
+		self->faces[ i + 2 ].vertices[ 1 ].posIndex = next;
+		self->faces[ i + 2 ].vertices[ 2 ].posIndex = next + numVertices;
+		self->faces[ i + 2 ].vertices[ 3 ].posIndex = i + numVertices;
 
 		for ( unsigned int j = 0; j < 4; ++j )
 		{
-			self->faces[ i + 2 ].edgeLoop[ j ] = ( signedArea < 0.0f ) ? &self->faces[ i + 2 ].vertices[ j ] : &self->faces[ i + 2 ].vertices[ 3 - j ];
+			self->faces[ i + 2 ].edgeLoop[ j ] = signedArea < 0.0f ? &self->faces[ i + 2 ].vertices[ j ] : &self->faces[ i + 2 ].vertices[ 3 - j ];
 		}
 	}
 }
@@ -673,7 +684,7 @@ static void build_plane_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 	self->faces[ 0 ].numVertices = self->numVertices;
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
 	{
-		self->faces[ 0 ].vertices[ i ].position = &self->vertices[ i ];
+		self->faces[ 0 ].vertices[ i ].posIndex = i;
 		if ( signedArea > 0.0f )
 		{
 			self->faces[ 0 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 0 ].vertices[ i ];
@@ -778,7 +789,7 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 		{
 			const ApeBrushFaceVertex *vertex       = &face->vertices[ j ];
 			AcmBranch                *vertexBranch = acm_push_object( verticesBranch, "vertex" );
-			acm_push_i16( vertexBranch, "position", vertex->position - brush->vertices );
+			acm_push_i16( vertexBranch, "position", ( int16_t ) vertex->posIndex );
 			com_acm_push_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
 			com_acm_push_vector3( vertexBranch, "normal", &vertex->normal, true );
 			acm_push_array_f32( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
@@ -828,9 +839,9 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 				vertexBranch = acm_get_first_child( vertexBranch );
 				for ( unsigned int j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
 				{
-					int16_t vertexIndex = ACM_GET_INT( vertexIndex, vertexBranch, "position", 0 );
-					assert( vertexIndex <= self->numVertices );
-					self->faces[ i ].vertices[ j ].position      = &self->vertices[ vertexIndex ];
+					self->faces[ i ].vertices[ j ].posIndex = ACM_GET_INT( self->faces[ i ].vertices[ j ].posIndex, vertexBranch, "position", 0 );
+					assert( self->faces[ i ].vertices[ j ].posIndex <= self->numVertices );
+
 					self->faces[ i ].vertices[ j ].textureCoords = com_acm_get_vector2( vertexBranch, "uv", &( QmMathVector2f ) {} );
 					self->faces[ i ].vertices[ j ].normal        = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
 					self->faces[ i ].vertices[ j ].colour        = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );

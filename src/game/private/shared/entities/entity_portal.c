@@ -151,7 +151,7 @@ static void spawn_portal( ApeEntity *self )
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		ApeBrushFaceVertex *vertex = &face->vertices[ i ];
-		vertex->position           = &brush->vertices[ i ];
+		vertex->posIndex           = i;
 		vertex->colour             = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
 
 		face->edgeLoop[ i ] = vertex;
