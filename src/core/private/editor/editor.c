@@ -299,9 +299,9 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 				const ApeBrushFace *adjFace = adjacentFaces[ k ];
 				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
 				{
-					const QmMathVector3f *a = &brush->vertices[ adjFace->edgeLoop[ l ]->posIndex ];
-					const QmMathVector3f *b = &brush->vertices[ adjFace->edgeLoop[ l + 1 ]->posIndex ];
-					const QmMathVector3f *c = &brush->vertices[ adjFace->edgeLoop[ ( l + 2 ) % adjFace->numVertices ]->posIndex ];
+					const QmMathVector3f *a = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l ] ].posIndex ];
+					const QmMathVector3f *b = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l + 1 ] ].posIndex ];
+					const QmMathVector3f *c = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ ( l + 2 ) % adjFace->numVertices ] ].posIndex ];
 
 					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
 

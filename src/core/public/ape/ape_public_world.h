@@ -240,6 +240,7 @@ void           ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs );
 
 ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type );
+ApeWorldNode *ape_world_node_get_parent_by_pointer( const ApeWorldNode *self, const ApeWorldNode *lookup );
 
 /**
  * Travels up the tree until it encounters a room.
@@ -366,11 +367,11 @@ typedef enum ApeBrushFaceFlag
 
 typedef struct ApeBrushFaceVertex
 {
-	QmMathVector3f *position;
-	QmMathVector2f  textureCoords;
-	QmMathVector2f  lightmapCoords;
-	QmMathVector3f  normal;
-	QmMathColour4f  colour;
+	unsigned int   posIndex;
+	QmMathVector2f textureCoords;
+	QmMathVector2f lightmapCoords;
+	QmMathVector3f normal;
+	QmMathColour4f colour;
 } ApeBrushFaceVertex;
 
 ////////////////////////////////////////////////////////////////////
@@ -381,7 +382,6 @@ static constexpr unsigned int APE_BRUSH_FACE_MAX_PATH = sizeof( PLPath );
 
 typedef struct ApeBrushFace
 {
-	int            materialIndex;
 	ApeMaterial   *material;
 	QmMathVector2f materialScale;
 	QmMathVector3f materialOffset;
@@ -394,9 +394,9 @@ typedef struct ApeBrushFace
 	QmMathColour4f  colour;
 	QmMathColour4ub selectColour;
 
-	ApeBrushFaceVertex *edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];// represents the actual draw order
-	ApeBrushFaceVertex  vertices[ APE_BRUSH_MAX_FACE_VERTICES ];// list of vertices
-	unsigned int        numVertices;
+	unsigned int       edgeLoopOrder[ APE_BRUSH_MAX_FACE_VERTICES ];// represents the actual draw order
+	ApeBrushFaceVertex vertices[ APE_BRUSH_MAX_FACE_VERTICES ];     // list of vertices
+	unsigned int       numVertices;
 
 	PLCollisionAABB  bounds;
 	PLCollisionPlane plane;
@@ -458,6 +458,8 @@ void ape_brush_compute_face_normals( ApeBrush *self );
 
 void ape_brush_mark_parent_dirty( ApeBrush *self );
 
+void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, unsigned int numBrushes );
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -492,7 +494,6 @@ typedef struct ApeWorld
 #define APE_WORLD_ROOM_VERSION   1
 #define APE_WORLD_ROOM_EXTENSION "rom.n"
 
-#define APE_WORLD_BRUSH_VERSION   1
 #define APE_WORLD_BRUSH_EXTENSION "brs.n"
 
 /// Create an entirely new empty world handle.

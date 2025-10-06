@@ -146,7 +146,7 @@ static void render_brush_face_selection( const ApeBrush *brush )
 		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 		for ( unsigned int j = 0; j < brush->faces[ i ].numVertices; ++j )
 		{
-			const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
+			const ApeBrushFaceVertex *vertex = &brush->faces[ i ].vertices[ brush->faces[ i ].edgeLoopOrder[ j ] ];
 			PlgImmPushVertex( brush->vertices[ vertex->posIndex ].x,
 			                  brush->vertices[ vertex->posIndex ].y,
 			                  brush->vertices[ vertex->posIndex ].z );
@@ -168,7 +168,7 @@ static void render_brush_selection( const ApeBrush *brush )
 		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 		for ( unsigned int j = 0; j < brush->faces[ i ].numVertices; ++j )
 		{
-			const ApeBrushFaceVertex *vertex = brush->faces[ i ].edgeLoop[ j ];
+			const ApeBrushFaceVertex *vertex = &brush->faces[ i ].vertices[ brush->faces[ i ].edgeLoopOrder[ j ] ];
 			PlgImmPushVertex( brush->vertices[ vertex->posIndex ].x,
 			                  brush->vertices[ vertex->posIndex ].y,
 			                  brush->vertices[ vertex->posIndex ].z );
@@ -335,13 +335,13 @@ static void render_selected_faces( ApeEditorInstance *self )
 
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
-			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
+			const ApeBrushFaceVertex *v0 = &face->vertices[ face->edgeLoopOrder[ j ] ];
 			PlgImmPushVertex( brush->vertices[ v0->posIndex ].x,
 			                  brush->vertices[ v0->posIndex ].y,
 			                  brush->vertices[ v0->posIndex ].z );
 			PlgImmColour( 0, 0, 255, 255 );
 
-			const ApeBrushFaceVertex *v1 = j + 1 < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
+			const ApeBrushFaceVertex *v1 = j + 1 < face->numVertices ? &face->vertices[ face->edgeLoopOrder[ j + 1 ] ] : &face->vertices[ face->edgeLoopOrder[ 0 ] ];
 			PlgImmPushVertex( brush->vertices[ v1->posIndex ].x,
 			                  brush->vertices[ v1->posIndex ].y,
 			                  brush->vertices[ v1->posIndex ].z );
@@ -358,13 +358,13 @@ static void render_selected_faces( ApeEditorInstance *self )
 
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			const ApeBrushFaceVertex *v0 = face->edgeLoop[ i ];
+			const ApeBrushFaceVertex *v0 = &face->vertices[ face->edgeLoopOrder[ i ] ];
 			PlgImmPushVertex( brush->vertices[ v0->posIndex ].x,
 			                  brush->vertices[ v0->posIndex ].y,
 			                  brush->vertices[ v0->posIndex ].z );
 			PlgImmColour( 255, 255, 0, 255 );
 
-			const ApeBrushFaceVertex *v1 = ( i + 1 ) < face->numVertices ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
+			const ApeBrushFaceVertex *v1 = i + 1 < face->numVertices ? &face->vertices[ face->edgeLoopOrder[ i + 1 ] ] : &face->vertices[ face->edgeLoopOrder[ 0 ] ];
 			PlgImmPushVertex( brush->vertices[ v1->posIndex ].x,
 			                  brush->vertices[ v1->posIndex ].y,
 			                  brush->vertices[ v1->posIndex ].z );
@@ -382,13 +382,13 @@ static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, co
 		const ApeBrushFace *face = &brush->faces[ i ];
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
-			const ApeBrushFaceVertex *v0 = face->edgeLoop[ j ];
+			const ApeBrushFaceVertex *v0 = &face->vertices[ face->edgeLoopOrder[ j ] ];
 			PlgImmPushVertex( brush->vertices[ v0->posIndex ].x,
 			                  brush->vertices[ v0->posIndex ].y,
 			                  brush->vertices[ v0->posIndex ].z );
 			PlgColour4bv( lineMesh, colour );
 
-			const ApeBrushFaceVertex *v1 = j + 1 < face->numVertices ? face->edgeLoop[ j + 1 ] : face->edgeLoop[ 0 ];
+			const ApeBrushFaceVertex *v1 = j + 1 < face->numVertices ? &face->vertices[ face->edgeLoopOrder[ j + 1 ] ] : &face->vertices[ face->edgeLoopOrder[ 0 ] ];
 			PlgImmPushVertex( brush->vertices[ v1->posIndex ].x,
 			                  brush->vertices[ v1->posIndex ].y,
 			                  brush->vertices[ v1->posIndex ].z );

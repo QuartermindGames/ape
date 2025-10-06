@@ -593,7 +593,7 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 #if 0
 		brush->faces[ 0 ].edgeLoop[ i ] = &brush->faces[ 0 ].vertices[ ( brush->numVertices - 1 ) - i ];
 #else
-		brush->faces[ 0 ].edgeLoop[ i ] = vertex;
+		brush->faces[ 0 ].edgeLoopOrder[ i ] = i;
 #endif
 	}
 

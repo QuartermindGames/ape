@@ -166,7 +166,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 					QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
 					for ( unsigned int j = 0; j < face->numVertices; ++j )
 					{
-						vertices[ j ] = brush->vertices[ face->edgeLoop[ j ]->posIndex ];
+						vertices[ j ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
 					}
 
 					if ( !com_collision_ray_intersect_polygon( ray, vertices, face->numVertices, &intersection ) )
@@ -318,7 +318,7 @@ static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeColl
 					QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
 					for ( unsigned int j = 0; j < face->numVertices; ++j )
 					{
-						vertices[ j ] = brush->vertices[ face->edgeLoop[ j ]->posIndex ];
+						vertices[ j ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
 					}
 
 					ApeCollisionIntersection *hit = &hits[ *numHits ];

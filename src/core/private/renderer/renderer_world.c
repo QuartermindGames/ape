@@ -30,7 +30,7 @@ static void draw_face_wireframe( const ApeBrushFace *face )
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		const ApeBrushFaceVertex *a = face->edgeLoop[ i ];
+		const ApeBrushFaceVertex *a = &face->vertices[ face->edgeLoopOrder[ i ] ];
 		PlgImmPushVertex( brush->vertices[ a->posIndex ].x, brush->vertices[ a->posIndex ].y, brush->vertices[ a->posIndex ].z );
 		if ( ape_brush_face_is_portal( face ) )
 		{
@@ -41,7 +41,7 @@ static void draw_face_wireframe( const ApeBrushFace *face )
 			PlgImmColour( 255, 255, 255, 255 );
 		}
 
-		const ApeBrushFaceVertex *b = i + 1 < face->numVertices ? face->edgeLoop[ i + 1 ] : face->edgeLoop[ 0 ];
+		const ApeBrushFaceVertex *b = i + 1 < face->numVertices ? &face->vertices[ face->edgeLoopOrder[ i + 1 ] ] : &face->vertices[ face->edgeLoopOrder[ 0 ] ];
 		PlgImmPushVertex( brush->vertices[ b->posIndex ].x, brush->vertices[ b->posIndex ].y, brush->vertices[ b->posIndex ].z );
 		if ( ape_brush_face_is_portal( face ) )
 		{
@@ -421,7 +421,7 @@ static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLi
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		const ApeBrushFaceVertex *vertex = face->edgeLoop[ i ];
+		const ApeBrushFaceVertex *vertex = &face->vertices[ face->edgeLoopOrder[ i ] ];
 
 		// get the projected position (if start, just uses the initial position)
 		const QmMathVector3f ppos = start ? brush->vertices[ vertex->posIndex ] : get_projection( light, &brush->vertices[ vertex->posIndex ], &face->bounds.absOrigin );
@@ -742,7 +742,7 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
-		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
+		const ApeBrushFaceVertex *vertex = &portal->vertices[ portal->edgeLoopOrder[ j ] ];
 		//TODO: handle transforms for the brush in software here
 		PlgImmPushVertex( brush->vertices[ vertex->posIndex ].x, brush->vertices[ vertex->posIndex ].y, brush->vertices[ vertex->posIndex ].z );
 		PlgImmColour( 0, 0, 0, 0 );
@@ -778,7 +778,7 @@ static void draw_wireframe_portal_face( const ApeBrushFace *portal )
 
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
-		const ApeBrushFaceVertex *vertex = portal->edgeLoop[ j ];
+		const ApeBrushFaceVertex *vertex = &portal->vertices[ portal->edgeLoopOrder[ j ] ];
 		PlgImmPushVertex( brush->vertices[ vertex->posIndex ].x, brush->vertices[ vertex->posIndex ].y, brush->vertices[ vertex->posIndex ].z );
 		PlgImmColour( 0, 255, 0, 255 );
 	}

@@ -222,8 +222,8 @@ static bool decal_build_rect( ApeDecal *self )
 	// and now, clip it
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
-		const QmMathVector3f a = brush->vertices[ face->edgeLoop[ i ]->posIndex ];
-		const QmMathVector3f b = brush->vertices[ face->edgeLoop[ ( i + 1 ) % face->numVertices ]->posIndex ];
+		const QmMathVector3f a = brush->vertices[ face->vertices[ face->edgeLoopOrder[ i ] ].posIndex ];
+		const QmMathVector3f b = brush->vertices[ face->vertices[ face->edgeLoopOrder[ ( i + 1 ) % face->numVertices ] ].posIndex ];
 
 		QmMathVector3f edgeNormal = qm_math_vector3f_sub( b, a );
 		edgeNormal                = qm_math_vector3f_cross_product( self->normal, edgeNormal );

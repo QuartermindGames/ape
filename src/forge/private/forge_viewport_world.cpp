@@ -98,6 +98,7 @@ worldViewportMap[] = {
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_MOVE_NODE_TO_ROOM, forge::WorldViewport::on_move_node_to_room ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_MERGE, forge::WorldViewport::on_merge ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_EXPORT, forge::WorldViewport::on_export ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_IMPORT, forge::WorldViewport::on_import ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_OPEN_PROPERTIES, forge::WorldViewport::on_open_properties ),
@@ -352,10 +353,37 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				moveToMenu->disable();
 			}
 
+			FXMenuCommand *mergeCommand = new FXMenuCommand( popup, "Merge Brushes", nullptr, this, ID_MERGE );
+			mergeCommand->disable();
+
+			FXMenuCommand *exportCommand = new FXMenuCommand( popup, "Export...", load_fx_icon( getApp(), "resources/save.gif" ), this, ID_EXPORT );
+			exportCommand->disable();
+
+			new FXMenuSeparator( popup );
+
 			if ( numSelectedNodes == 1 )
 			{
-				new FXMenuCommand( popup, "Export...", load_fx_icon( getApp(), "resources/save.gif" ), this, ID_EXPORT );
-				new FXMenuSeparator( popup );
+				exportCommand->enable();
+			}
+			else
+			{
+				unsigned int numBrushes = 0;
+
+				ApeWorldNode *node;
+				COM_ITERATE_LINKED_LIST( node, instance->selectedObjects, i )
+				{
+					if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+					{
+						continue;
+					}
+
+					numBrushes++;
+				}
+
+				if ( numBrushes > 0 )
+				{
+					mergeCommand->enable();
+				}
 			}
 
 			new FXMenuCommand( popup, "Properties...", nullptr, this, ID_OPEN_PROPERTIES );
@@ -834,6 +862,63 @@ long forge::WorldViewport::on_toggle_face_flag( FXObject *object, FXSelector sel
 	return FALSE;
 }
 
+long forge::WorldViewport::on_merge( FXObject *, FXSelector, void * )
+{
+	ApeEditorInstance *instance = editor->get_internal();
+	assert( instance != nullptr );
+
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
+		forge_warning_( "Invalid mode for merge!\n" );
+		return false;
+	}
+
+	unsigned int numSelected = PlGetNumLinkedListNodes( instance->selectedObjects );
+	if ( numSelected <= 1 )
+	{
+		forge_warning_( "Invalid number of objects selected for merge!\n" );
+		return false;
+	}
+
+	unsigned int numBrushes = 0;
+	ApeBrush    *brush      = nullptr;
+	ApeBrush   **brushes    = QM_OS_MEMORY_NEW_( ApeBrush *, numSelected );
+
+	ApeWorldNode *node;
+	COM_ITERATE_LINKED_LIST( node, instance->selectedObjects, i )
+	{
+		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		if ( brush == nullptr )
+		{
+			brush = ( ApeBrush * ) node;
+			continue;
+		}
+
+		brushes[ numBrushes++ ] = ( ApeBrush * ) node;
+	}
+
+	if ( brush != nullptr && numBrushes > 0 )
+	{
+		ape_brush_merge_brushes( brush, brushes, numBrushes );
+	}
+	else
+	{
+		forge_warning_( "Unable to continue, invalid number of brushes selected!\n" );
+	}
+
+	qm_os_memory_free( brushes );
+
+	// clear and then add the head brush back to the selection
+	ape_editor_clear_selection( instance );
+	ape_editor_add_object_to_selection( instance, brush );
+
+	return true;
+}
+
 long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
 {
 	ApeEditorInstance *instance = editor->get_internal();
@@ -841,7 +926,7 @@ long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
 
 	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
 	{
-		forge_warning_( "Invalid mode selected for export!\n" );
+		forge_warning_( "Invalid mode for export!\n" );
 		return false;
 	}
 

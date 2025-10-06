@@ -141,9 +141,7 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 			dstBrush->faces[ j ].vertices[ k ].posIndex      = srcBrush->faces[ j ].vertices[ k ].posIndex;
 			dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
 			dstBrush->faces[ j ].vertices[ k ].normal        = srcBrush->faces[ j ].vertices[ k ].normal;
-
-			// and now for the edge loop...
-			dstBrush->faces[ j ].edgeLoop[ k ] = &dstBrush->faces[ j ].vertices[ srcBrush->faces[ j ].edgeLoop[ k ] - srcBrush->faces[ j ].vertices ];
+			dstBrush->faces[ j ].edgeLoopOrder[ k ]          = srcBrush->faces[ j ].edgeLoopOrder[ k ];
 		}
 
 		dstBrush->faces[ j ].tangent   = srcBrush->faces[ j ].tangent;
@@ -207,9 +205,9 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 	{
 		unsigned int j = ( i + 1 ) % face->numVertices;// next vertex index (wraps around)
 
-		const QmMathVector3f *current = &brush->vertices[ face->edgeLoop[ i ]->posIndex ];
-		const QmMathVector3f *next    = &brush->vertices[ face->edgeLoop[ j ]->posIndex ];
-		const QmMathVector3f *prev    = &brush->vertices[ face->edgeLoop[ i == 0 ? face->numVertices - 1 : i - 1 ]->posIndex ];
+		const QmMathVector3f *current = &brush->vertices[ face->vertices[ face->edgeLoopOrder[ i ] ].posIndex ];
+		const QmMathVector3f *next    = &brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
+		const QmMathVector3f *prev    = &brush->vertices[ face->vertices[ face->edgeLoopOrder[ i == 0 ? face->numVertices - 1 : i - 1 ] ].posIndex ];
 
 		QmMathVector3f edge1 = qm_math_vector3f( next->x - current->x, next->y - current->y, next->z - current->z );
 		QmMathVector3f edge2 = qm_math_vector3f( prev->x - current->x, prev->y - current->y, prev->z - current->z );
@@ -239,9 +237,9 @@ static void compute_brush_face_tangents( ApeBrushFace *face )
 	ApeBrush *brush = face->parent;
 	assert( brush != nullptr );
 
-	ApeBrushFaceVertex *v0 = face->edgeLoop[ 0 ];
-	ApeBrushFaceVertex *v1 = face->edgeLoop[ 1 ];
-	ApeBrushFaceVertex *v2 = face->edgeLoop[ 2 ];
+	ApeBrushFaceVertex *v0 = &face->vertices[ face->edgeLoopOrder[ 0 ] ];
+	ApeBrushFaceVertex *v1 = &face->vertices[ face->edgeLoopOrder[ 1 ] ];
+	ApeBrushFaceVertex *v2 = &face->vertices[ face->edgeLoopOrder[ 2 ] ];
 
 	QmMathVector3f edge1 = qm_math_vector3f_sub( brush->vertices[ v1->posIndex ], brush->vertices[ v0->posIndex ] );
 	QmMathVector3f edge2 = qm_math_vector3f_sub( brush->vertices[ v2->posIndex ], brush->vertices[ v0->posIndex ] );
@@ -310,20 +308,20 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 		QmMathVector3f origin = {};
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			origin = qm_math_vector3f_add( origin, brush->vertices[ face->edgeLoop[ i ]->posIndex ] );
+			origin = qm_math_vector3f_add( origin, brush->vertices[ face->vertices[ face->edgeLoopOrder[ i ] ].posIndex ] );
 		}
 
 		origin = qm_math_vector3f_div_float( origin, face->numVertices );
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			verticies[ i ] = qm_math_vector3f_sub( brush->vertices[ face->edgeLoop[ i ]->posIndex ], origin );
+			verticies[ i ] = qm_math_vector3f_sub( brush->vertices[ face->vertices[ face->edgeLoopOrder[ i ] ].posIndex ], origin );
 		}
 	}
 	else
 	{
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
-			verticies[ i ] = brush->vertices[ face->edgeLoop[ i ]->posIndex ];
+			verticies[ i ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ i ] ].posIndex ];
 		}
 	}
 
@@ -351,8 +349,8 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 		coord.x    = rotX;
 		coord.y    = rotY;
 
-		face->edgeLoop[ i ]->textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
-		face->edgeLoop[ i ]->textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
+		face->vertices[ face->edgeLoopOrder[ i ] ].textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
+		face->vertices[ face->edgeLoopOrder[ i ] ].textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
 	}
 }
 
@@ -609,9 +607,9 @@ void ape_brush_flip_face_( ApeBrushFace *face )
 	unsigned int end   = face->numVertices - 1;
 	while ( start < end )
 	{
-		ApeBrushFaceVertex *temp = face->edgeLoop[ start ];
-		face->edgeLoop[ start ]  = face->edgeLoop[ end ];
-		face->edgeLoop[ end ]    = temp;
+		unsigned int temp            = face->edgeLoopOrder[ start ];
+		face->edgeLoopOrder[ start ] = face->edgeLoopOrder[ end ];
+		face->edgeLoopOrder[ end ]   = temp;
 
 		start++;
 		end--;
@@ -644,13 +642,13 @@ static void build_block_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 		self->faces[ 1 ].vertices[ i ].posIndex = i + numVertices;
 		if ( signedArea < 0.0f )
 		{
-			self->faces[ 0 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 0 ].vertices[ i ];
-			self->faces[ 1 ].edgeLoop[ i ]                   = &self->faces[ 1 ].vertices[ i ];
+			self->faces[ 0 ].edgeLoopOrder[ numVertices - 1 - i ] = i;
+			self->faces[ 1 ].edgeLoopOrder[ i ]                   = i;
 		}
 		else
 		{
-			self->faces[ 0 ].edgeLoop[ i ]                   = &self->faces[ 0 ].vertices[ i ];
-			self->faces[ 1 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 1 ].vertices[ i ];
+			self->faces[ 0 ].edgeLoopOrder[ i ]                   = i;
+			self->faces[ 1 ].edgeLoopOrder[ numVertices - 1 - i ] = i;
 		}
 
 		// extrude the vertices for the top
@@ -668,7 +666,7 @@ static void build_block_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 
 		for ( unsigned int j = 0; j < 4; ++j )
 		{
-			self->faces[ i + 2 ].edgeLoop[ j ] = signedArea < 0.0f ? &self->faces[ i + 2 ].vertices[ j ] : &self->faces[ i + 2 ].vertices[ 3 - j ];
+			self->faces[ i + 2 ].edgeLoopOrder[ j ] = signedArea < 0.0f ? j : 3 - j;
 		}
 	}
 }
@@ -687,11 +685,11 @@ static void build_plane_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 		self->faces[ 0 ].vertices[ i ].posIndex = i;
 		if ( signedArea > 0.0f )
 		{
-			self->faces[ 0 ].edgeLoop[ numVertices - 1 - i ] = &self->faces[ 0 ].vertices[ i ];
+			self->faces[ 0 ].edgeLoopOrder[ numVertices - 1 - i ] = i;
 		}
 		else
 		{
-			self->faces[ 0 ].edgeLoop[ i ] = &self->faces[ 0 ].vertices[ i ];
+			self->faces[ 0 ].edgeLoopOrder[ i ] = i;
 		}
 	}
 }
@@ -754,6 +752,118 @@ void ape_brush_mark_parent_dirty( ApeBrush *self )
 	ape_world_node_mark_dirty_( parent );
 }
 
+void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, const unsigned int numBrushes )
+{
+	assert( numBrushes > 0 && brushes != nullptr );
+
+	for ( unsigned int i = 0; i < numBrushes; ++i )
+	{
+		ApeBrush *brush = brushes[ i ];
+		assert( brush != nullptr && brush != self );
+
+		if ( ape_world_node_get_parent_by_pointer( APE_WORLD_NODE( self ), APE_WORLD_NODE( brush ) ) )
+		{
+			ape_warning_( "Cannot merge brush, as it is a parent of the brush it's being merged into!\n" );
+			brushes[ i ] = nullptr;
+			continue;
+		}
+
+		// add the new vertices onto the end of the list
+		QmMathVector3f *vertices = qm_os_memory_realloc( self->vertices, sizeof( QmMathVector3f ) * ( self->numVertices + brush->numVertices ) );
+		if ( vertices == nullptr )
+		{
+			ape_warning_( "Failed to merge brushes: %s\n", PlGetError() );
+			brushes[ i ] = nullptr;
+			return;
+		}
+
+		self->vertices = vertices;
+		for ( unsigned int j = 0; j < brush->numVertices; ++j )
+		{
+			self->vertices[ self->numVertices + j ] = brush->vertices[ j ];
+		}
+
+		self->numVertices += brush->numVertices;
+
+		// and now for faces
+		ApeBrushFace *faces = qm_os_memory_realloc( self->faces, sizeof( ApeBrushFace ) * ( self->numFaces + brush->numFaces ) );
+		if ( faces == nullptr )
+		{
+			ape_warning_( "Failed to merge brushes: %s\n", PlGetError() );
+			brushes[ i ] = nullptr;
+			continue;
+		}
+
+		self->faces = faces;
+		for ( unsigned int j = 0; j < brush->numFaces; ++j )
+		{
+			ApeBrushFace *src = &brush->faces[ j ];
+			assert( src != nullptr );
+
+			ApeBrushFace *dst = &self->faces[ self->numFaces + j ];
+			assert( dst != nullptr );
+
+			*dst = *src;
+
+			dst->destination = nullptr;
+
+			// we're taking ownership of the ptr now
+			// if it's valid, anyway...
+			if ( src->ptr != nullptr )
+			{
+				qm_os_shared_ptr_set( dst->ptr, dst );
+				src->ptr = nullptr;
+			}
+
+			dst->parent = self;
+
+			for ( unsigned int k = 0; k < src->numVertices; ++k )
+			{
+				//TODO: do we do material references per face!?
+
+				dst->vertices[ k ].posIndex = src->vertices[ k ].posIndex + self->numVertices - brush->numVertices;
+				dst->edgeLoopOrder[ k ]     = src->edgeLoopOrder[ k ];
+			}
+		}
+
+		self->numFaces += brush->numFaces;
+	}
+
+	ApeWorldNode *parent = APE_WORLD_NODE( ape_world_node_get_room( APE_WORLD_NODE( self ) ) );
+	if ( parent == nullptr )
+	{
+		parent = ape_world_node_get_root( APE_WORLD_NODE( self ) );
+	}
+
+	assert( parent != nullptr );
+
+	// destroy all the original brushes at the end
+	// here, otherwise we might lose children
+	for ( unsigned int i = 0; i < numBrushes; ++i )
+	{
+		ApeBrush *brush = brushes[ i ];
+
+		// any we weren't able to merge are just null now, so skip those
+		if ( brush == nullptr )
+		{
+			continue;
+		}
+
+		ApeWorldNode *node = APE_WORLD_NODE( brush );
+		ApeWorldNode *child;
+		COM_ITERATE_LINKED_LIST( child, node->children, i )
+		{
+			// move all children to the parent of the brush
+			ape_world_node_attach( child, parent );
+		}
+
+		ape_world_node_destroy( node );
+	}
+
+	ape_brush_compute_bounds( self );
+	ape_brush_mark_parent_dirty( self );
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 static AcmBranch *serialize_brush( void *self, AcmBranch *root )
@@ -794,7 +904,7 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 			com_acm_push_vector3( vertexBranch, "normal", &vertex->normal, true );
 			acm_push_array_f32( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
 
-			acm_push_i16( edgeBranch, "vertex", face->edgeLoop[ j ] - face->vertices );
+			acm_push_i16( edgeBranch, "vertex", face->edgeLoopOrder[ j ] );
 		}
 	}
 
@@ -851,7 +961,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 				acm_get_array_i16( branch, "edgeLoop", edgeLoop, self->faces[ i ].numVertices );
 				for ( unsigned int j = 0; j < self->faces[ i ].numVertices; ++j )
 				{
-					self->faces[ i ].edgeLoop[ j ] = &self->faces[ i ].vertices[ edgeLoop[ j ] ];
+					self->faces[ i ].edgeLoopOrder[ j ] = edgeLoop[ j ];
 				}
 			}
 			else

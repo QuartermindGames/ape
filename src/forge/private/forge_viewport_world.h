@@ -34,6 +34,7 @@ namespace forge
 
 			ID_MOVE_NODE_TO_ROOM,
 
+			ID_MERGE,
 			ID_EXPORT,
 			ID_IMPORT,
 			ID_OPEN_PROPERTIES,
@@ -65,6 +66,7 @@ namespace forge
 
 		long on_toggle_face_flag( FXObject *, FXSelector, void * );
 
+		long on_merge( FXObject *, FXSelector, void * );
 		long on_export( FXObject *, FXSelector, void * );
 		long on_import( FXObject *, FXSelector, void * );
 		long on_open_properties( FXObject *, FXSelector, void * );

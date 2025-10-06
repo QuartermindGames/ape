@@ -374,6 +374,24 @@ ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNod
 	return parent;
 }
 
+ApeWorldNode *ape_world_node_get_parent_by_pointer( const ApeWorldNode *self, const ApeWorldNode *lookup )
+{
+	assert( self != lookup );
+
+	ApeWorldNode *parent = self->parent;
+	while ( parent != nullptr )
+	{
+		if ( parent == lookup )
+		{
+			return parent;
+		}
+
+		parent = parent->parent;
+	}
+
+	return nullptr;
+}
+
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
 {
 	// if we want the parent room of a room, well that's us
@@ -405,7 +423,7 @@ ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self )
 		next = next->parent;
 	}
 
-	return ( root->type == APE_WORLD_NODE_TYPE_ROOT ) ? root : nullptr;
+	return root->type == APE_WORLD_NODE_TYPE_ROOT ? root : nullptr;
 }
 
 ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *name )
@@ -777,7 +795,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 			const ApeBrushFace *face = &brush->faces[ j ];
 			for ( unsigned int k = 0; k < face->numVertices; ++k )
 			{
-				const ApeBrushFaceVertex *vertex = face->edgeLoop[ k ];
+				const ApeBrushFaceVertex *vertex = &face->vertices[ face->edgeLoopOrder[ k ] ];
 
 #if !defined( APE_NO_EDITOR )
 

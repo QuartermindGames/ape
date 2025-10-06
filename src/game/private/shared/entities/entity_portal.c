@@ -154,7 +154,7 @@ static void spawn_portal( ApeEntity *self )
 		vertex->posIndex           = i;
 		vertex->colour             = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
 
-		face->edgeLoop[ i ] = vertex;
+		face->edgeLoopOrder[ i ] = i;
 	}
 
 	portal->surface = face;
