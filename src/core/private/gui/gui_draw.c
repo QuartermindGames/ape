@@ -10,13 +10,6 @@
 
 static PLGCamera *camera;
 
-typedef struct ApeGuiDrawBatch
-{
-	PLGMesh     *mesh;
-	ApeMaterial *material;
-	bool         usedThisFrame;
-} ApeGuiDrawBatch;
-
 typedef struct ApeGuiCanvas
 {
 	ApeRenderTarget *renderTarget;
@@ -26,8 +19,6 @@ typedef struct ApeGuiCanvas
 
 	PLMatrix4 viewMatrix, oldViewMatrix;
 	int       oldViewport[ 4 ];
-
-	PLLinkedList *batches;
 } ApeGuiCanvas;
 
 static ApeGuiCanvas *guiCanvasCurrent;
@@ -39,30 +30,7 @@ ApeGuiCanvas *ape_gui_canvas_create( int width, int height )
 	canvas->height       = height;
 	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
 
-	canvas->batches = PlCreateLinkedList();
-	if ( canvas->batches == nullptr )
-	{
-		ape_error_( true, "Failed to create batch list for GUI: %s\n", PlGetError() );
-	}
-
 	return canvas;
-}
-
-static void destroy_batch( void *user )
-{
-	ApeGuiDrawBatch *batch = user;
-
-	if ( batch->mesh != nullptr )
-	{
-		PlgDestroyMesh( batch->mesh );
-	}
-
-	if ( batch->material != nullptr )
-	{
-		ape_material_release( batch->material );
-	}
-
-	qm_os_memory_free( batch );
 }
 
 void ape_gui_canvas_destroy( ApeGuiCanvas *canvas )
@@ -73,8 +41,6 @@ void ape_gui_canvas_destroy( ApeGuiCanvas *canvas )
 	}
 
 	ape_render_target_release( canvas->renderTarget );
-
-	PlDestroyLinkedListEx( canvas->batches, destroy_batch );
 
 	qm_os_memory_free( canvas );
 }
@@ -117,48 +83,6 @@ void ape_gui_draw_initialize_()
 	camera->far  = 1000.0f;
 }
 
-PLGMesh *get_batch_queue_mesh( ApeGuiCanvas *canvas, ApeMaterial *material )
-{
-	ApeGuiDrawBatch *drawBatch;
-	COM_ITERATE_LINKED_LIST( drawBatch, canvas->batches, i )
-	{
-		if ( drawBatch->material == material )
-		{
-			return drawBatch->mesh;
-		}
-	}
-
-	// texture isn't in the queue, so create a new batch request
-	drawBatch           = QM_OS_MEMORY_NEW( ApeGuiDrawBatch );
-	drawBatch->mesh     = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
-	drawBatch->material = material;
-	PlInsertLinkedListNode( canvas->batches, drawBatch );
-	return drawBatch->mesh;
-}
-
-static void cleanup_batch_queue( ApeGuiCanvas *canvas )
-{
-	ApeGuiDrawBatch *drawBatch;
-	COM_ITERATE_LINKED_LIST( drawBatch, canvas->batches, i )
-	{
-		if ( drawBatch->mesh->num_triangles == 0 )
-		{
-			destroy_batch( drawBatch );
-
-			// remove it from the list
-			PlDestroyLinkedListNode( i );
-			continue;
-		}
-
-		PlgClearMesh( drawBatch->mesh );
-	}
-
-	ape_guiState_.lastNumTriangles = ape_guiState_.numTriangles;
-	ape_guiState_.numTriangles     = 0;
-	ape_guiState_.lastNumBatches   = ape_guiState_.numBatches;
-	ape_guiState_.numBatches       = 0;
-}
-
 void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 {
 	if ( canvas == nullptr )
@@ -169,8 +93,6 @@ void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 
 		guiCanvasCurrent = nullptr;
 	}
-
-	cleanup_batch_queue( canvas );
 
 	// store old state
 	PlgGetViewport( &canvas->oldViewport[ 0 ], &canvas->oldViewport[ 1 ], &canvas->oldViewport[ 2 ], &canvas->oldViewport[ 3 ] );
@@ -188,17 +110,6 @@ void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 
 void ape_gui_canvas_display( ApeGuiCanvas *canvas )
 {
-	ApeGuiDrawBatch *drawBatch;
-	COM_ITERATE_LINKED_LIST( drawBatch, canvas->batches, i )
-	{
-		assert( drawBatch != nullptr );
-
-		ape_material_draw( drawBatch->material, drawBatch->mesh, nullptr );
-
-		ape_guiState_.numTriangles += drawBatch->mesh->num_triangles;
-		ape_guiState_.numBatches++;
-	}
-
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
