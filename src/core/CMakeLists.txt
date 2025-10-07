@@ -66,11 +66,15 @@ add_library(ApeCore STATIC
         private/world/world_node.c
 
         ${YIN_CORE_CLIENT}
+
         private/audio/audio.c
         private/audio/audio_openal.c
         private/audio/audio_format_vorbis.c
         private/audio/audio_format_wav.c
         private/audio/audio_xaudio2.cpp
+
+        private/script/script.c
+
         ${APE_SOURCE_GUI}
         ${APE_SOURCE_EDITORS}
 
@@ -106,10 +110,15 @@ else ()
 endif ()
 
 target_link_libraries(ApeCore
-        OpenAL
+        # qmfw libraries
         qm-os
+        # platform libraries
         plcore
         plgraphics
+        # ape libraries
         ApeCommon
         acm
+        # other
+        OpenAL
+        lua
 )

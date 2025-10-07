@@ -13,6 +13,7 @@
 #include "server/server.h"
 #include "net/net.h"
 #include "editor/editor.h"
+#include "script/script.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -52,8 +53,8 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		return;
 	}
 
-	static const unsigned int MAX_COMMANDS = 256;
-	unsigned int              numCommands  = acm_get_num_of_children( branch );
+	static constexpr unsigned int MAX_COMMANDS = 256;
+	unsigned int                  numCommands  = acm_get_num_of_children( branch );
 	if ( numCommands == 0 )
 	{
 		return;
@@ -184,6 +185,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	ape_initialize_scheduler_();
 	ape_memory_initialize_();
 	ape_initialize_net_();
+	ape_script_manager_initialize_();
 	ape_initialize_server_();
 	ape_initialize_client_();
 	ape_initialize_game_();
@@ -211,6 +213,7 @@ void ape_shutdown( void )
 	ape_shutdown_client_();
 	ape_shutdown_server_();
 	ape_shutdown_console_();
+	ape_script_manager_shutdown_();
 	ape_memory_shutdown_();
 	ape_shutdown_scheduler_();
 	ape_shutdown_net_();
