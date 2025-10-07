@@ -233,7 +233,7 @@ bool ape_gui_initialize_fonts_( void )
 	return true;
 }
 
-void guiGetCharacterPixelSize( const ApeGuiFont *font, float scale, uint32_t character, float *dw, float *dh )
+void ape_gui_font_get_character_pixel_size( const ApeGuiFont *font, const float scale, const uint32_t character, float *dw, float *dh )
 {
 	const ComFontGlyph *glyph = PlLookupHashTableUserData( font->glyphTable, &character, sizeof( uint32_t ) );
 	if ( glyph == NULL )
@@ -247,10 +247,10 @@ void guiGetCharacterPixelSize( const ApeGuiFont *font, float scale, uint32_t cha
 	if ( dh != NULL ) { *dh = ( float ) glyph->h * scale; }
 }
 
-float guiGetCharacterPixelWidth( const ApeGuiFont *font, float scale, uint32_t character )
+float ape_gui_font_get_character_pixel_width( const ApeGuiFont *font, const float scale, const uint32_t character )
 {
 	float w;
-	guiGetCharacterPixelSize( font, scale, character, &w, nullptr );
+	ape_gui_font_get_character_pixel_size( font, scale, character, &w, nullptr );
 	return w;
 }
 
@@ -314,9 +314,9 @@ void gui_font_draw_glyph( const ApeGuiFont *font, float x, float y, float scale,
 	y = roundf( y );
 
 	unsigned int vX = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x, y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + ( ( float ) glyph->w * scale ) + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + ( ( float ) glyph->w * scale ), y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx + tw, ty + th ) );
+	unsigned int vY = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x, y + ( float ) glyph->h * scale, 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + ( float ) glyph->w * scale + fontSlant, y, 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( font->mesh, &QM_MATH_VECTOR3F( x + ( float ) glyph->w * scale, y + ( ( float ) glyph->h * scale ), 0 ), &pl_vecOrigin3, colour, &QM_MATH_VECTOR2F( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( font->mesh, vX, vY, vZ );
 	PlgAddMeshTriangle( font->mesh, vZ, vY, vW );

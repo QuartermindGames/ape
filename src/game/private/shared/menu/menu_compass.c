@@ -58,8 +58,6 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 		float yc = fabsf( y - yo ) / h - h * 2.0f;
 		float dc = scale * ( qm_math_vector2f_length( QM_MATH_VECTOR2F( 1.0f, 1.0f ) ) - qm_math_vector2f_length( QM_MATH_VECTOR2F( xc, yc ) ) );
 
-		game_print_( "dc = %f\n", dc );
-
 		QmMathColour4ub colour = qm_math_colour4ub( 255, 255, 255, 255 );
 
 		float cw, ch;

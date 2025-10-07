@@ -437,7 +437,7 @@ bool ape_console_handle_text_event_( const char *key )
 static void draw_input_field( const ApeViewport *viewport, ApeGuiFont *font )
 {
 	const float ch = gui_font_get_line_spacing( font ) * consoleFontScale;
-	const float cw = guiGetCharacterPixelWidth( font, consoleFontScale, '>' );
+	const float cw = ape_gui_font_get_character_pixel_width( font, consoleFontScale, '>' );
 	gui_font_draw_character( font, consoleFontScale, ( float ) viewport->height - ch, consoleFontScale, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */

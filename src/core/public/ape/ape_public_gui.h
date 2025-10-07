@@ -95,8 +95,8 @@ void ape_gui_font_destroy( ApeGuiFont *font );
  */
 ApeGuiFont *gui_font_load( const char *path );
 
-void  guiGetCharacterPixelSize( const ApeGuiFont *font, float scale, uint32_t character, float *dw, float *dh );
-float guiGetCharacterPixelWidth( const ApeGuiFont *font, float scale, uint32_t character );
+void  ape_gui_font_get_character_pixel_size( const ApeGuiFont *font, float scale, uint32_t character, float *dw, float *dh );
+float ape_gui_font_get_character_pixel_width( const ApeGuiFont *font, float scale, uint32_t character );
 
 /**
  * @brief Sets the font slant angle for the GUI.
