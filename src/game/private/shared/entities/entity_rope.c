@@ -8,10 +8,16 @@
 
 #define ROPE_CLASS_NAME "rope"
 
+static constexpr float ROPE_DEFAULT_LENGTH        = 32.0f;
+static constexpr int   ROPE_DEFAULT_NUM_PARTICLES = 8;
+
 typedef struct RopeEntity
 {
-	ApeWorldNode *startConnection;
 	ApeWorldNode *endConnection;
+	char          endConnectionName[ 64 ];
+
+	int   numParticles;
+	float length;
 
 	GamePhysicsRope physics;
 } RopeEntity;
@@ -26,7 +32,11 @@ static void cache_rope()
 
 static void *create_rope( ApeEntity *self, AcmBranch *properties )
 {
-	return QM_OS_MEMORY_NEW( RopeEntity );
+	RopeEntity *rope   = QM_OS_MEMORY_NEW( RopeEntity );
+	rope->numParticles = ROPE_DEFAULT_NUM_PARTICLES;
+	rope->length       = ROPE_DEFAULT_LENGTH;
+
+	return rope;
 }
 
 static void update_bounds( ApeEntity *self )
@@ -71,14 +81,9 @@ static void spawn_rope( ApeEntity *self )
 	assert( rope != nullptr );
 
 	QmMathVector3f position = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
-	game_physics_rope_setup( &rope->physics, 8, 4.0f, &position );
+	game_physics_rope_setup( &rope->physics, rope->numParticles, rope->length, &position );
+	game_physics_rope_attach( &rope->physics, &position, true );
 
-	rope->startConnection = APE_WORLD_NODE( self );
-	if ( rope->startConnection != nullptr )
-	{
-		position = ape_world_node_get_local_position( rope->startConnection );
-		game_physics_rope_attach( &rope->physics, &position, true );
-	}
 	if ( rope->endConnection != nullptr )
 	{
 		position = ape_world_node_get_local_position( rope->endConnection );
@@ -102,14 +107,12 @@ static void tick_rope( ApeEntity *self, double delta )
 	RopeEntity *rope = ROPE_ENTITY( self );
 	assert( rope != nullptr );
 
-	if ( rope->startConnection != nullptr )
-	{
-		QmMathVector3f position = ape_world_node_get_local_position( rope->startConnection );
-		game_physics_rope_attach( &rope->physics, &position, true );
-	}
+	QmMathVector3f position = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	game_physics_rope_attach( &rope->physics, &position, true );
+
 	if ( rope->endConnection != nullptr )
 	{
-		QmMathVector3f position = ape_world_node_get_local_position( rope->endConnection );
+		position = ape_world_node_get_local_position( rope->endConnection );
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
@@ -129,6 +132,33 @@ static void draw_rope( ApeEntity *self, ApeLight *light, int flags )
 	assert( rope != nullptr );
 }
 
+static void serialize_rope( ApeEntity *self, AcmBranch *root )
+{
+	RopeEntity *rope = ROPE_ENTITY( self );
+	assert( rope != nullptr );
+
+	acm_push_f32( root, "length", rope->length );
+	acm_push_i32( root, "numParticles", rope->numParticles );
+	acm_push_string( root, "endConnection", rope->endConnectionName, true );
+}
+
+static void deserialize_rope( ApeEntity *self, AcmBranch *root )
+{
+	RopeEntity *rope = ROPE_ENTITY( self );
+	assert( rope != nullptr );
+
+	rope->length       = acm_get_f32( root, "length", ROPE_DEFAULT_LENGTH );
+	rope->numParticles = acm_get_int( root, "numParticles", ROPE_DEFAULT_NUM_PARTICLES );
+	snprintf( rope->endConnectionName, sizeof( rope->endConnectionName ), "%s", acm_get_string( root, "endConnection", "" ) );
+}
+
+static ApeEditorProperty properties[] = {
+        APE_EDITOR_PROPERTY_STRING( "Next Connection", "Next entity that the rope connects to.", RopeEntity, endConnectionName ),
+
+        APE_EDITOR_PROPERTY_BASIC( "Length", "Length of the rope.", RopeEntity, length, FLOAT ),
+        APE_EDITOR_PROPERTY_BASIC( "Particles", "Number of particles making up the rope.", RopeEntity, numParticles, INTEGER ),
+};
+
 ApeEntityClassDefinition game_ropeEntityClass_ = {
         .name           = ROPE_CLASS_NAME,
         .description    = "Physics-driven rope handler."
@@ -138,4 +168,10 @@ ApeEntityClassDefinition game_ropeEntityClass_ = {
         .spawnFunction  = spawn_rope,
         .tickFunction   = tick_rope,
         .drawFunction   = draw_rope,
+
+        .serializeFunction   = serialize_rope,
+        .deserializeFunction = deserialize_rope,
+
+        .properties    = properties,
+        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
 };

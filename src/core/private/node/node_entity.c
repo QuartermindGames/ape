@@ -286,7 +286,7 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 	const ApeEntityClassDefinition *classDefinition = entity->classDefinition;
 	if ( classDefinition->serializeFunction != nullptr )
 	{
-		classDefinition->serializeFunction( entity );
+		classDefinition->serializeFunction( entity, root );
 	}
 
 	// attempt to serialize components

@@ -69,7 +69,7 @@ static GameMenuOption startMenuOptions[] = {
 static GameMenu startMenu = {
         "Start Server\n",
         startMenuOptions,
-        PL_ARRAY_ELEMENTS( startMenuOptions ),
+        QM_OS_ARRAY_ELEMENTS( startMenuOptions ),
         &mainMenu,
 };
 
@@ -279,7 +279,7 @@ void ss1_menu_initialize( void )
              .fadeOutTime  = 2.0f,
 	         },
 	};
-	game_menu_splash_setup_queue_( splashes, PL_ARRAY_ELEMENTS( splashes ) );
+	game_menu_splash_setup_queue_( splashes, QM_OS_ARRAY_ELEMENTS( splashes ) );
 
 	// iterate over and init the menus
 	initialize_menu( &mainMenu );

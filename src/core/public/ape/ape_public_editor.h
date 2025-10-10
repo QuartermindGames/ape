@@ -21,24 +21,69 @@ typedef enum ApeEditorMode
 #define APE_EDITOR_MAX_VIEWPORTS      1
 #define APE_EDITOR_MAX_VIEW_BOOKMARKS 16
 
-typedef struct ApeEditorField
-{
-	char        name[ 64 ];
-	char        description[ 128 ];
-	ComDataType type;
-	uintptr_t   varOffset;
-} ApeEditorField;
+/////////////////////////////////////////////////////////////////////////////////////
+// Object Properties
+/////////////////////////////////////////////////////////////////////////////////////
 
-#define APE_ENTITY_COMPONENT_BEGIN_PROPERTIES() static ApeEditorField x_editorVariables[] = {
-#define APE_ENTITY_COMPONENT_END_PROPERTIES() \
-	}                                         \
-	;                                         \
-	static unsigned int x_numEditorVariables = QM_OS_ARRAY_ELEMENTS( x_editorVariables );
-#define APE_ENTITY_COMPONENT_PROPERTY( TYPE, VAR, DESC, VARTYPE ) \
-	{ #VAR, DESC, VARTYPE, PL_OFFSETOF( TYPE, VAR ) },
-#define APE_ENTITY_HOOK_PROPERTIES( CBTABLE )        \
-	( CBTABLE ).editorFields    = x_editorVariables; \
-	( CBTABLE ).numEditorFields = x_numEditorVariables
+typedef enum ApeEditorPropertyType
+{
+	// DO NOT CHANGE THE ORDER OF THESE!!!
+	APE_EDITOR_PROPERTY_TYPE_INVALID = 0,
+	APE_EDITOR_PROPERTY_TYPE_FLOAT,
+	APE_EDITOR_PROPERTY_TYPE_VEC2,
+	APE_EDITOR_PROPERTY_TYPE_VEC3,
+	APE_EDITOR_PROPERTY_TYPE_VEC4,
+	APE_EDITOR_PROPERTY_TYPE_ENUM,
+	APE_EDITOR_PROPERTY_TYPE_COLOUR,
+	APE_EDITOR_PROPERTY_TYPE_INTEGER,
+	APE_EDITOR_PROPERTY_TYPE_STRING,
+	APE_EDITOR_PROPERTY_TYPE_PATH,
+	APE_EDITOR_PROPERTY_TYPE_BOOLEAN,
+
+	APE_EDITOR_MAX_PROPERTY_TYPES,
+} ApeEditorPropertyType;
+
+typedef struct ApeEditorPropertyEnum
+{
+	const char  *name;
+	unsigned int value;
+} ApeEditorPropertyEnum;
+
+typedef struct ApeEditorProperty
+{
+	const char           *name;
+	const char           *description;
+	uintptr_t             offset;
+	ApeEditorPropertyType type;
+
+	union
+	{
+		struct
+		{
+			ApeEditorPropertyEnum *enums;
+			unsigned int           numEnums;
+		} enumType;
+		struct
+		{
+			unsigned int maxSize;
+		} stringType;
+	};
+} ApeEditorProperty;
+
+#define APE_EDITOR_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
+	{ NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_##PROP }
+#define APE_EDITOR_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                                                                            \
+	{                                                                                                                                  \
+		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_STRING, .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) } \
+	}
+#define APE_EDITOR_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                           \
+	{                                                                                                                      \
+		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                          \
+			                                                                               QM_OS_ARRAY_ELEMENTS( ENUMS ) } \
+	}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum ApeEditorGeometryMode
 {

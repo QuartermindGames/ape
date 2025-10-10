@@ -5,6 +5,10 @@ if (WIN32)
     set(APP_ICON_RESOURCE_WINDOWS "forge.rc")
 endif ()
 
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(GTK4 REQUIRED gtk4)
+#pkg_check_modules(ADWAITA REQUIRED libadwaita-1)
+
 add_library(Forge STATIC
         private/forge.cpp
         private/forge_about_dialog.cpp
@@ -58,10 +62,9 @@ target_link_libraries(Forge
 
         FOX-1.6
         acm
-        #[[
-        ${GTK4_LIBRARIES}
-        ${ADWAITA_LIBRARIES}
-        ]]
+
+        #${GTK4_LIBRARIES}
+        #${ADWAITA_LIBRARIES}
 )
 target_include_directories(Forge PRIVATE
         ../kernel/plcore/include
@@ -69,9 +72,8 @@ target_include_directories(Forge PRIVATE
         ../common/public
         ../acm/public
         ../core/public
-        #[[
-        ${GTK4_INCLUDE_DIRS}
-        ${ADWAITA_INCLUDE_DIRS}
-        ]]
+
+        #${GTK4_INCLUDE_DIRS}
+        #${ADWAITA_INCLUDE_DIRS}
 )
 #target_compile_definitions(Forge PRIVATE USE_GTK=1)

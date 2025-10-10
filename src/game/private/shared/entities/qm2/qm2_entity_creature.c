@@ -294,7 +294,7 @@ static bool creature_animation_solve_ik( Qm2CreatureSkeleton *skeleton, const PL
 {
 	Qm2CreatureBone *chain[ QM2_CREATURE_MAX_BONES ] = {};
 
-	unsigned int chainSize = creature_animation_get_chain( skeleton, startBone, chain, PL_ARRAY_ELEMENTS( chain ) );
+	unsigned int chainSize = creature_animation_get_chain( skeleton, startBone, chain, QM_OS_ARRAY_ELEMENTS( chain ) );
 	if ( chainSize == 0 )
 	{
 		return false;

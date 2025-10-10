@@ -124,7 +124,7 @@ static const ApeScriptLuaExport scriptCoreExports[] = {
 static const ApeScriptLuaInterface scriptCoreInterface = {
         .name       = "core",
         .exports    = scriptCoreExports,
-        .numExports = PL_ARRAY_ELEMENTS( scriptCoreExports ),
+        .numExports = QM_OS_ARRAY_ELEMENTS( scriptCoreExports ),
 };
 
 void ape_script_manager_register_interface( const ApeScriptLuaInterface *interface )

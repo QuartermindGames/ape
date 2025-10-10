@@ -14,7 +14,6 @@ typedef struct PLLinkedList  PLLinkedList;
 
 typedef struct AcmBranch AcmBranch;
 
-/* external elements */
 typedef struct ApeMaterial ApeMaterial;
 typedef struct ApeCamera   ApeCamera;
 typedef struct ApeViewport ApeViewport;
@@ -23,6 +22,8 @@ typedef struct ApeEntity   ApeEntity;// core_entity.h
 typedef struct ApeRoom     ApeRoom;  // world.h
 typedef struct ApeBrush    ApeBrush;
 typedef struct ApeWorld    ApeWorld;
+
+typedef struct ApeEditorProperty ApeEditorProperty;
 
 /* ======================================================================
  * WORLD INTERFACE
@@ -55,51 +56,6 @@ typedef enum ApeWorldNodeType
 	APE_WORLD_MAX_NODE_TYPES
 } ApeWorldNodeType;
 
-typedef enum ApeWorldNodePropertyType
-{
-	// DO NOT CHANGE THE ORDER OF THESE!!!
-	APE_WORLD_NODE_PROPERTY_TYPE_INVALID = 0,
-	APE_WORLD_NODE_PROPERTY_TYPE_FLOAT,
-	APE_WORLD_NODE_PROPERTY_TYPE_VEC2,
-	APE_WORLD_NODE_PROPERTY_TYPE_VEC3,
-	APE_WORLD_NODE_PROPERTY_TYPE_VEC4,
-	APE_WORLD_NODE_PROPERTY_TYPE_ENUM,
-	APE_WORLD_NODE_PROPERTY_TYPE_COLOUR,
-	APE_WORLD_NODE_PROPERTY_TYPE_INTEGER,
-	APE_WORLD_NODE_PROPERTY_TYPE_STRING,
-	APE_WORLD_NODE_PROPERTY_TYPE_PATH,
-	APE_WORLD_NODE_PROPERTY_TYPE_BOOLEAN,
-
-	APE_WORLD_NODE_MAX_PROPERTY_TYPES,
-} ApeWorldNodePropertyType;
-
-typedef struct ApeWorldNodePropertyEnum
-{
-	const char  *name;
-	unsigned int value;
-} ApeWorldNodePropertyEnum;
-
-typedef struct ApeWorldNodeProperty
-{
-	const char              *name;
-	const char              *description;
-	uintptr_t                offset;
-	ApeWorldNodePropertyType type;
-
-	union
-	{
-		struct
-		{
-			ApeWorldNodePropertyEnum *enums;
-			unsigned int              numEnums;
-		} enumType;
-		struct
-		{
-			unsigned int maxSize;
-		} stringType;
-	};
-} ApeWorldNodeProperty;
-
 typedef enum ApeWorldNodeClassFlag
 {
 	PL_BITFLAG( APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR, 0 ),
@@ -131,8 +87,8 @@ typedef struct ApeWorldNodeClass
 	ApeWorldNodeClassNetDeserializeFunction netDeserializeFunction;
 
 #if !defined( APE_NO_EDITOR )
-	const ApeWorldNodeProperty *properties;
-	unsigned int                numProperties;
+	const ApeEditorProperty *properties;
+	unsigned int             numProperties;
 
 	const char *editorIcon;
 
@@ -209,7 +165,7 @@ const ApeWorldNodeClass **ape_world_node_get_classes( unsigned int *numClasses )
  * @param numProperties	Total number of properties available.
  * @return				Pointer to the list of properties.
  */
-const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProperties );
+const ApeEditorProperty *ape_world_node_get_properties( unsigned int *numProperties );
 
 /**
  * Returns the list of properties for the given node type.
@@ -218,9 +174,9 @@ const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProp
  * @param type			World node class type.
  * @return				Pointer to the list of properties.
  */
-const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type );
+const ApeEditorProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type );
 
-void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeWorldNodeProperty *property );
+void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeEditorProperty *property );
 
 bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );

@@ -42,14 +42,6 @@ typedef struct ApeEntityComponent
 #define APE_ENT_CLASS( SELF, CLASSNAME, TYPE ) ( strcmp( ( SELF )->classDefinition->name, ( CLASSNAME ) ) == 0 ) ? ( ( TYPE * ) ( ( SELF )->classData ) ) : nullptr
 #define APE_ENT_COMPONENT( SELF, TYPE )        ( ( TYPE * ) ( ( SELF )->data ) )
 
-typedef struct ApeEntityProperty
-{
-	const char    *name;
-	const char    *description;
-	void          *var;
-	PLVariableType type;
-} ApeEntityProperty;
-
 typedef struct ApeEntityClassDefinition
 {
 	const char *name;       // general identifier
@@ -62,15 +54,15 @@ typedef struct ApeEntityClassDefinition
 	void ( *tickFunction )( ApeEntity *self, double delta );            // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self, ApeLight *light, int flags );
 
-	void ( *onUpdateProperty )( ApeEntity *self, ApeEntityProperty *property );
+	void ( *onUpdateProperty )( ApeEntity *self, ApeEditorProperty *property );
 
-	AcmBranch *( *serializeFunction )( ApeEntity *self );
+	void ( *serializeFunction )( ApeEntity *self, AcmBranch *root );
 	void ( *deserializeFunction )( ApeEntity *self, AcmBranch *root );
 
 #if !defined( APE_NO_EDITOR )
 
-	ApeEntityProperty *propertyList;
-	unsigned int       numProperties;
+	const ApeEditorProperty *properties;
+	unsigned int             numProperties;
 
 	bool excludeInEditor;
 
@@ -103,6 +95,13 @@ typedef struct ApeEntityComponentDefinition
 
 	AcmBranch *( *serializeFunction )( void *ptr, AcmBranch *root );
 	void *( *deserializeFunction )( void *ptr, AcmBranch *root );
+
+#if !defined( APE_NO_EDITOR )
+
+	const ApeEditorProperty *properties;
+	unsigned int             numProperties;
+
+#endif
 } ApeEntityComponentDefinition;
 
 typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );

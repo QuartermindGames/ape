@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <list>
+
 namespace forge
 {
 	class PropertiesDialog : public FXDialogBox
@@ -25,7 +27,22 @@ namespace forge
 		PropertiesDialog() = default;
 
 	private:
-		void add_property( unsigned int *row, const ApeWorldNodeProperty *property );
+		enum class TablePropertyScope : uint8_t
+		{
+			GLOBAL,
+			ENTITY,
+		};
+
+		struct TableProperty
+		{
+			const ApeEditorProperty *internal;
+			void                    *ptr;
+			TablePropertyScope       scope;
+		};
+
+		std::list< TableProperty > properties_;
+
+		void add_property( unsigned int *row, const ApeEditorProperty *internalProperty, TablePropertyScope scope );
 
 		ApeWorldNode *node{};
 		FXTable      *table{};

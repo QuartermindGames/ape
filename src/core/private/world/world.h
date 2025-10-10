@@ -11,44 +11,6 @@
 #include "audio/audio.h"
 #include "camera/camera.h"
 
-#define WORLD_PROP_TAG_LENGTH 64
-
-#define APE_WORLD_NODE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
-	{ NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_##PROP }
-#define APE_WORLD_NODE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                                                                            \
-	{                                                                                                                                      \
-		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_STRING, .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) } \
-	}
-#define APE_WORLD_NODE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                        \
-	{                                                                                                                       \
-		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_WORLD_NODE_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                       \
-			                                                                                   QM_OS_ARRAY_ELEMENTS( ENUMS ) } \
-	}
-
-#if 1 /* original values, used for prototype */
-#	define WORLD_DEFAULT_AMBIENCE    QM_MATH_COLOUR4F( 0.25f, 0.25f, 0.25f, 1.0f )
-#	define WORLD_DEFAULT_CLEARCOLOUR QM_MATH_COLOUR4F( 0.1f, 0.5f, 1.0f, 1.0f )
-#else
-#	define WORLD_DEFAULT_AMBIENCE    QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f )
-#	define WORLD_DEFAULT_CLEARCOLOUR QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f )
-#endif
-
-typedef struct ApeWorldVertex
-{
-	QmMathVector3f      position;
-	QmMathVector3f      colour;
-	PLVectorArray *adjacentFaces;
-} ApeWorldVertex;
-
-typedef struct ApeRoomZone
-{
-	// we're not using our typical AABB type here, just because these are *always* absolute!
-	QmMathVector3f mins, maxs;
-
-	PLLinkedList *worldNodes;
-	PLLinkedList *portals;
-} ApeRoomZone;
-
 typedef struct ApeRoom
 {
 	// This should always come first!
@@ -63,7 +25,7 @@ typedef struct ApeRoom
 	struct PLHashTable *taggedSurfaceLookup;
 
 	ApeAudioReverbPreset reverbPreset;// default reverb for the room
-	QmMathVector3f            gravity;     // default gravity for the room
+	QmMathVector3f       gravity;     // default gravity for the room
 
 	unsigned int numVisits;
 

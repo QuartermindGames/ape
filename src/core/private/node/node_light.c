@@ -219,17 +219,17 @@ static void light_on_draw_editor( void *self, const bool isSelected )
 	}
 }
 
-static ApeWorldNodePropertyEnum lightTypesEnum[] = {
+static ApeEditorPropertyEnum lightTypesEnum[] = {
         {"Omni", 0},
         {"Spot", 1},
         {"Sun",  2},
 };
 
-static ApeWorldNodeProperty properties[] = {
-        APE_WORLD_NODE_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
-        APE_WORLD_NODE_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
-        APE_WORLD_NODE_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
-        APE_WORLD_NODE_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
+static ApeEditorProperty properties[] = {
+        APE_EDITOR_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
+        APE_EDITOR_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
+        APE_EDITOR_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
+        APE_EDITOR_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
 };
 
 const ApeWorldNodeClass ape_lightClass = {
@@ -242,10 +242,10 @@ const ApeWorldNodeClass ape_lightClass = {
 
         .clone = clone_light,
 
+#if !defined( APE_NO_EDITOR )
+
         .properties    = properties,
         .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
-
-#if !defined( APE_NO_EDITOR )
 
         .editorIcon = "resources/new_light.gif",
 

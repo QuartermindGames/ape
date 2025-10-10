@@ -461,7 +461,7 @@ const char *ape_room_get_save_path( const ApeRoom *self )
 
 #endif
 
-static ApeWorldNodePropertyEnum reverbPresetsEnum[] = {
+static ApeEditorPropertyEnum reverbPresetsEnum[] = {
         {"None",             0 },
         {"Forest",           1 },
         {"Default",          2 },
@@ -495,9 +495,9 @@ static ApeWorldNodePropertyEnum reverbPresetsEnum[] = {
         {"Plate",            30},
 };
 
-static const ApeWorldNodeProperty properties[] = {
-        APE_WORLD_NODE_PROPERTY_BASIC( "Ambience", "Set the ambient light level.", ApeRoom, ambientLight, COLOUR ),
-        APE_WORLD_NODE_PROPERTY_ENUM( "Reverb", "Type of reverb to fallback to for the given room.", ApeRoom, reverbPreset, reverbPresetsEnum ),
+static const ApeEditorProperty properties[] = {
+        APE_EDITOR_PROPERTY_BASIC( "Ambience", "Set the ambient light level.", ApeRoom, ambientLight, COLOUR ),
+        APE_EDITOR_PROPERTY_ENUM( "Reverb", "Type of reverb to fallback to for the given room.", ApeRoom, reverbPreset, reverbPresetsEnum ),
 };
 
 const ApeWorldNodeClass ape_roomClass = {

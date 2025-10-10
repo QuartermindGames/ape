@@ -5,9 +5,7 @@
 #include "qmos/public/qm_os_random.h"
 
 #include "ss1/ss1_game.h"
-
-#include "ape/ape_public_model.h"
-
+#include "core/public/ape/ape_public_model.h"//TODO: this include should be UP
 #include "shared/components/component_health.h"
 
 static constexpr float MIN_HEIGHT = 4096.0f;
@@ -89,6 +87,7 @@ static void tick_airship( ApeEntity *self, double delta )
 	delta = game_get_delta_mod_( delta );
 
 	AirshipEntity *airship = AIRSHIP_ENTITY( self );
+	assert( airship != nullptr );
 
 	QmMathVector3f pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
@@ -96,7 +95,7 @@ static void tick_airship( ApeEntity *self, double delta )
 	airship->oldPosition = pos;
 
 	QmMathVector3f direction = qm_math_vector3f( airship->targetDestination.x - pos.x, 0.0f, airship->targetDestination.z - pos.z );
-	float     distance  = qm_math_vector3f_length( direction );
+	float          distance  = qm_math_vector3f_length( direction );
 	if ( distance > 0.0f )
 	{
 		direction  = qm_math_vector3f_normalize( direction );

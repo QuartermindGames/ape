@@ -49,27 +49,27 @@ const ApeWorldNodeClass **ape_world_node_get_classes( unsigned int *numClasses )
 	return nodeClasses;
 }
 
-const ApeWorldNodeProperty *ape_world_node_get_properties( unsigned int *numProperties )
+const ApeEditorProperty *ape_world_node_get_properties( unsigned int *numProperties )
 {
-	static const ApeWorldNodeProperty properties[] = {
-	        APE_WORLD_NODE_PROPERTY_STRING( "Name", "Name of the node.", ApeWorldNode, name ),
-	        APE_WORLD_NODE_PROPERTY_BASIC( "Position", "Position of the node in 3D space.", ApeWorldNode, position, VEC3 ),
-	        APE_WORLD_NODE_PROPERTY_BASIC( "Angles", "Angles of the node in 3D space.", ApeWorldNode, angles, VEC3 ),
-	        APE_WORLD_NODE_PROPERTY_BASIC( "Scale", "Scale of the node in 3D space.", ApeWorldNode, scale, VEC3 ),
+	static const ApeEditorProperty properties[] = {
+	        APE_EDITOR_PROPERTY_STRING( "Name", "Name of the node.", ApeWorldNode, name ),
+	        APE_EDITOR_PROPERTY_BASIC( "Position", "Position of the node in 3D space.", ApeWorldNode, position, VEC3 ),
+	        APE_EDITOR_PROPERTY_BASIC( "Angles", "Angles of the node in 3D space.", ApeWorldNode, angles, VEC3 ),
+	        APE_EDITOR_PROPERTY_BASIC( "Scale", "Scale of the node in 3D space.", ApeWorldNode, scale, VEC3 ),
 	};
 	*numProperties = QM_OS_ARRAY_ELEMENTS( properties );
 
 	return properties;
 }
 
-const ApeWorldNodeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type )
+const ApeEditorProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type )
 {
 	const ApeWorldNodeClass *nodeClass = nodeClasses[ type ];
 	*numProperties                     = nodeClass->numProperties;
 	return nodeClass->properties;
 }
 
-void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeWorldNodeProperty *property )
+void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeEditorProperty *property )
 {
 	return ( char * ) self + property->offset;
 }

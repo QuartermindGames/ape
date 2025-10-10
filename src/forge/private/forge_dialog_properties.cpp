@@ -3,6 +3,8 @@
 #include "forge.h"
 #include "forge_dialog_properties.h"
 
+#include "yin/core_entity.h"
+
 FXDEFMAP( forge::PropertiesDialog )
 propertiesMap[] = {
         FXMAPFUNC( SEL_CHANGED, forge::PropertiesDialog::ID_TABLE, forge::PropertiesDialog::on_table ),
@@ -34,40 +36,35 @@ forge::PropertiesDialog::PropertiesDialog( FXWindow *parent, ApeWorldNode *node 
 	table->setDefRowHeight( 24 );
 
 	FXHorizontalFrame *bottomFrame = new FXHorizontalFrame( frame, LAYOUT_FILL_X | FRAME_NONE );
-	//bottomFrame->setPadLeft( 0 );
-	//bottomFrame->setPadRight( 0 );
-	//bottomFrame->setPadBottom( 0 );
-	//bottomFrame->setPadTop( 0 );
-
 	new FXButton( bottomFrame, "Close", nullptr, this, ID_CANCEL, LAYOUT_RIGHT | FRAME_RAISED | FRAME_THICK );
 	//new FXButton( bottomFrame, "Apply", nullptr, this, ID_ACCEPT, LAYOUT_RIGHT | FRAME_RAISED | FRAME_THICK );
 
 	set_node( node );
 }
 
-static unsigned int get_sub_rows_for_properties( const ApeWorldNodeProperty *properties, unsigned int numProperties )
+static unsigned int get_sub_rows_for_properties( const ApeEditorProperty *properties, const unsigned int numProperties )
 {
-	unsigned int numRows = 0;
+	unsigned int numSubRows = 0;
 	for ( unsigned int i = 0; i < numProperties; ++i )
 	{
 		switch ( properties[ i ].type )
 		{
 			default:
 				break;
-			case APE_WORLD_NODE_PROPERTY_TYPE_VEC2:
-				numRows++;
+			case APE_EDITOR_PROPERTY_TYPE_VEC2:
+				numSubRows++;
 				break;
-			case APE_WORLD_NODE_PROPERTY_TYPE_VEC3:
-				numRows += 2;
+			case APE_EDITOR_PROPERTY_TYPE_VEC3:
+				numSubRows += 2;
 				break;
-			case APE_WORLD_NODE_PROPERTY_TYPE_COLOUR:
-			case APE_WORLD_NODE_PROPERTY_TYPE_VEC4:
-				numRows += 3;
+			case APE_EDITOR_PROPERTY_TYPE_COLOUR:
+			case APE_EDITOR_PROPERTY_TYPE_VEC4:
+				numSubRows += 3;
 				break;
 		}
 	}
 
-	return numRows;
+	return numSubRows;
 }
 
 void forge::PropertiesDialog::set_node( ApeWorldNode *node )
@@ -79,6 +76,8 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 		return;
 	}
 
+	properties_.clear();
+
 	table->clearItems();
 
 	this->node = node;
@@ -87,16 +86,26 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 		return;
 	}
 
-	unsigned int                numBaseProperties;
-	const ApeWorldNodeProperty *baseProperties = ape_world_node_get_properties( &numBaseProperties );
+	unsigned int             numBaseProperties;
+	const ApeEditorProperty *baseProperties = ape_world_node_get_properties( &numBaseProperties );
 	assert( numBaseProperties > 0 );
 
-	unsigned int                numProperties;
-	const ApeWorldNodeProperty *properties = ape_world_node_get_class_properties( &numProperties, node->type );
+	unsigned int             numClassProperties;
+	const ApeEditorProperty *classProperties = ape_world_node_get_class_properties( &numClassProperties, node->type );
 
-	unsigned int numRows = numBaseProperties + numProperties;
-	numRows += get_sub_rows_for_properties( baseProperties, numBaseProperties );
-	numRows += get_sub_rows_for_properties( properties, numProperties );
+	unsigned int             numEntityProperties = 0;
+	const ApeEditorProperty *entityProperties    = nullptr;
+	if ( node->type == APE_WORLD_NODE_TYPE_ENTITY )
+	{
+		ApeEntity *entity   = ( ApeEntity * ) node;
+		numEntityProperties = entity->classDefinition->numProperties;
+		entityProperties    = entity->classDefinition->properties;
+	}
+
+	unsigned int numRows = 0;
+	numRows += get_sub_rows_for_properties( baseProperties, numBaseProperties ) + numBaseProperties;
+	numRows += get_sub_rows_for_properties( classProperties, numClassProperties ) + numClassProperties;
+	numRows += get_sub_rows_for_properties( entityProperties, numEntityProperties ) + numEntityProperties;
 
 	table->setTableSize( numRows, 3 );
 
@@ -110,106 +119,113 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 
 	table->setColumnJustify( 1, FXHeaderItem::LEFT );
 
+	properties_.resize( numRows );
+
 	unsigned int row = 0;
 	for ( unsigned int i = 0; i < numBaseProperties; ++i, ++row )
 	{
-		add_property( &row, &baseProperties[ i ] );
+		add_property( &row, &baseProperties[ i ], TablePropertyScope::GLOBAL );
 	}
-
-	for ( unsigned int i = 0; i < numProperties; ++i, ++row )
+	for ( unsigned int i = 0; i < numClassProperties; ++i, ++row )
 	{
-		add_property( &row, &properties[ i ] );
+		add_property( &row, &classProperties[ i ], TablePropertyScope::GLOBAL );
+	}
+	for ( unsigned int i = 0; i < numEntityProperties; ++i, ++row )
+	{
+		add_property( &row, &entityProperties[ i ], TablePropertyScope::ENTITY );
 	}
 }
 
 long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 {
-	FXTablePos  *pos  = ( FXTablePos * ) ptr;
+	FXTablePos *pos = static_cast< FXTablePos * >( ptr );
+	assert( pos != nullptr );
+
 	FXTableItem *item = table->getItem( pos->row, pos->col );
-	if ( item == nullptr || item->getText().empty() )
+	assert( item != nullptr );
+
+	const TableProperty *tableProperty = ( const TableProperty * ) item->getData();
+	if ( tableProperty == nullptr )
 	{
 		return false;
 	}
 
-	const ApeWorldNodeProperty *property = ( const ApeWorldNodeProperty * ) item->getData();
-	if ( property == nullptr )
-	{
-		return false;
-	}
-
-	ptr = ape_world_node_get_property_pointer( node, property );
-	assert( ptr != nullptr );
+	const ApeEditorProperty *editorProperty = tableProperty->internal;
+	assert( editorProperty != nullptr );
 
 	// we have to do this dumb shit, otherwise trying to use the item string directly doesn't work
 	FXString string = item->getText();
 
 	const char *text = string.text();
-	switch ( property->type )
+	switch ( editorProperty->type )
 	{
 		default:
-		case APE_WORLD_NODE_PROPERTY_TYPE_INVALID:
-			forge_warning_( "Unhandled property type (%u)!\n", property->type );
+		case APE_EDITOR_PROPERTY_TYPE_INVALID:
+			forge_warning_( "Unhandled property type (%u)!\n", editorProperty->type );
 			break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_FLOAT:
-			*( float * ) ptr = strtof( text, nullptr );
+		case APE_EDITOR_PROPERTY_TYPE_FLOAT:
+			*( float * ) tableProperty->ptr = strtof( text, nullptr );
 			break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_VEC2:
+		case APE_EDITOR_PROPERTY_TYPE_VEC2:
 		{
 			for ( unsigned int i = 0; i < 2; ++i )
 			{
-				item                     = table->getItem( pos->row + i, pos->col );
-				string                   = item->getText();
-				*( ( float * ) ptr + i ) = strtof( string.text(), nullptr );
+				item                                    = table->getItem( pos->row + i, pos->col );
+				string                                  = item->getText();
+				*( ( float * ) tableProperty->ptr + i ) = strtof( string.text(), nullptr );
 			}
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_VEC3:
+		case APE_EDITOR_PROPERTY_TYPE_VEC3:
 		{
 			for ( unsigned int i = 0; i < 3; ++i )
 			{
-				item                     = table->getItem( pos->row + i, pos->col );
-				string                   = item->getText();
-				*( ( float * ) ptr + i ) = strtof( string.text(), nullptr );
+				item                                    = table->getItem( pos->row + i, pos->col );
+				string                                  = item->getText();
+				*( ( float * ) tableProperty->ptr + i ) = strtof( string.text(), nullptr );
 			}
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_COLOUR:
-		case APE_WORLD_NODE_PROPERTY_TYPE_VEC4:
+		case APE_EDITOR_PROPERTY_TYPE_COLOUR:
+		case APE_EDITOR_PROPERTY_TYPE_VEC4:
 		{
 			for ( unsigned int i = 0; i < 4; ++i )
 			{
-				item                     = table->getItem( pos->row + i, pos->col );
-				string                   = item->getText();
-				*( ( float * ) ptr + i ) = strtof( string.text(), nullptr );
+				item                                    = table->getItem( pos->row + i, pos->col );
+				string                                  = item->getText();
+				*( ( float * ) tableProperty->ptr + i ) = strtof( string.text(), nullptr );
 			}
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_ENUM:
+		case APE_EDITOR_PROPERTY_TYPE_ENUM:
 		{
-			for ( unsigned int i = 0; i < property->enumType.numEnums; ++i )
+			for ( unsigned int i = 0; i < editorProperty->enumType.numEnums; ++i )
 			{
-				if ( strcmp( text, property->enumType.enums[ i ].name ) != 0 )
+				if ( strcmp( text, editorProperty->enumType.enums[ i ].name ) != 0 )
 				{
 					continue;
 				}
 
-				*( uint32_t * ) ptr = property->enumType.enums[ i ].value;
+				*( uint32_t * ) tableProperty->ptr = editorProperty->enumType.enums[ i ].value;
 			}
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_INTEGER:
-			*( ( int32_t * ) ptr ) = strtol( text, nullptr, 10 );
+		case APE_EDITOR_PROPERTY_TYPE_INTEGER:
+			*( ( int32_t * ) tableProperty->ptr ) = strtol( text, nullptr, 10 );
 			break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_STRING: break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_PATH: break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_BOOLEAN:
+		case APE_EDITOR_PROPERTY_TYPE_STRING:
+		case APE_EDITOR_PROPERTY_TYPE_PATH:
+			//TODO: path should work differently, eventually... probably when we migrate to gtk
+			snprintf( ( char * ) tableProperty->ptr, editorProperty->stringType.maxSize, "%s", text );
+			break;
+		case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
 			if ( strcmp( text, "True" ) == 0 )
 			{
-				*( bool * ) ptr = true;
+				*( bool * ) tableProperty->ptr = true;
 			}
 			else
 			{
-				*( bool * ) ptr = false;
+				*( bool * ) tableProperty->ptr = false;
 			}
 			break;
 	}
@@ -221,46 +237,58 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 	return true;
 }
 
-void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNodeProperty *property )
+void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorProperty *internalProperty, TablePropertyScope scope )
 {
-	//FXHorizontalFrame *inputFrame = new FXHorizontalFrame( table, LAYOUT_FILL_X | FRAME_NONE );
+	TableProperty property = {};
+	property.internal      = internalProperty;
+	property.scope         = scope;
 
-	void *value = ape_world_node_get_property_pointer( node, property );
-	table->setItemData( *row, 1, ( void * ) property );
+	if ( scope == TablePropertyScope::ENTITY )
+	{
+		// for an entity, the offset is relative to the class data address
+		property.ptr = ( char * ) ( ( ApeEntity * ) node )->classData + internalProperty->offset;
+	}
+	else
+	{
+		// but for any other type of node, the offset is relative to the node address
+		property.ptr = ape_world_node_get_property_pointer( node, internalProperty );
+	}
+
+	assert( property.ptr != nullptr );
 
 	unsigned int numSubRows = 0;
-	switch ( property->type )
+	switch ( internalProperty->type )
 	{
 		default:
 			assert( 0 );
 			break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_FLOAT:
+		case APE_EDITOR_PROPERTY_TYPE_FLOAT:
 		{
 			char buf[ 128 ];
-			snprintf( buf, sizeof( buf ), "%f", *static_cast< const float * >( value ) );
+			snprintf( buf, sizeof( buf ), "%f", *static_cast< const float * >( property.ptr ) );
 			table->setItemText( *row, 1, buf );
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_VEC2:
+		case APE_EDITOR_PROPERTY_TYPE_VEC2:
 		{
-			const QmMathVector2f *vector = static_cast< const QmMathVector2f * >( value );
+			const QmMathVector2f *vector = static_cast< const QmMathVector2f * >( property.ptr );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			numSubRows++;
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_VEC3:
+		case APE_EDITOR_PROPERTY_TYPE_VEC3:
 		{
-			const QmMathVector3f *vector = static_cast< const QmMathVector3f * >( value );
+			const QmMathVector3f *vector = static_cast< const QmMathVector3f * >( property.ptr );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( vector->z ).c_str() );
 			numSubRows += 2;
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_VEC4:
+		case APE_EDITOR_PROPERTY_TYPE_VEC4:
 		{
-			const QmMathVector4f *vector = static_cast< const QmMathVector4f * >( value );
+			const QmMathVector4f *vector = static_cast< const QmMathVector4f * >( property.ptr );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( vector->z ).c_str() );
@@ -268,21 +296,21 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 			numSubRows += 3;
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_ENUM:
+		case APE_EDITOR_PROPERTY_TYPE_ENUM:
 		{
 			FXString options;
-			for ( unsigned int i = 0; i < property->enumType.numEnums; ++i )
+			for ( unsigned int i = 0; i < internalProperty->enumType.numEnums; ++i )
 			{
-				options += property->enumType.enums[ i ].name;
+				options += internalProperty->enumType.enums[ i ].name;
 				options += "\n";
 			}
 
-			table->setItem( *row, 1, new FXComboTableItem( options, nullptr, ( void * ) property ) );
+			table->setItem( *row, 1, new FXComboTableItem( options, nullptr, ( void * ) internalProperty ) );
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_COLOUR:
+		case APE_EDITOR_PROPERTY_TYPE_COLOUR:
 		{
-			const QmMathColour4f *colour = ( QmMathColour4f * ) value;
+			const QmMathColour4f *colour = ( QmMathColour4f * ) property.ptr;
 			table->setItemText( *row, 1, std::to_string( colour->r ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( colour->g ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( colour->b ).c_str() );
@@ -290,27 +318,27 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 			numSubRows += 3;
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_INTEGER:
+		case APE_EDITOR_PROPERTY_TYPE_INTEGER:
 		{
 			char buf[ 128 ];
-			snprintf( buf, sizeof( buf ), "%d", *static_cast< const int * >( value ) );
+			snprintf( buf, sizeof( buf ), "%d", *static_cast< const int * >( property.ptr ) );
 			table->setItemText( *row, 1, buf );
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_STRING:
+		case APE_EDITOR_PROPERTY_TYPE_STRING:
 		{
-			table->setItemText( *row, 1, static_cast< const char * >( value ) );
+			table->setItemText( *row, 1, static_cast< const char * >( property.ptr ) );
 			break;
 		}
-		case APE_WORLD_NODE_PROPERTY_TYPE_PATH: break;
-		case APE_WORLD_NODE_PROPERTY_TYPE_BOOLEAN:
+		case APE_EDITOR_PROPERTY_TYPE_PATH: break;
+		case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
 		{
-			table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) property ) );
+			table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) internalProperty ) );
 			break;
 		}
 	}
 
-	static const char *icons[ APE_WORLD_NODE_MAX_PROPERTY_TYPES ] = {
+	static const char *icons[ APE_EDITOR_MAX_PROPERTY_TYPES ] = {
 	        nullptr,                     // invalid
 	        "resources/integer.gif",     // float
 	        "resources/transform.gif",   // vec2
@@ -324,15 +352,17 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeWorldNod
 	        "resources/boolean.png",     // boolean
 	};
 
-	if ( icons[ property->type ] != nullptr )
+	if ( icons[ internalProperty->type ] != nullptr )
 	{
-		table->setItemIcon( *row, 0, load_fx_icon( getApp(), icons[ property->type ] ) );
+		table->setItemIcon( *row, 0, load_fx_icon( getApp(), icons[ internalProperty->type ] ) );
 		table->setItemIconPosition( *row, 0, FXTableItem::AFTER );
 	}
 
+	properties_.emplace_back( property );
+	table->setItemData( *row, 1, &properties_.back() );
 
-	table->setItemText( *row, 0, property->name );
-	table->setItemText( *row, 2, property->description );
+	table->setItemText( *row, 0, internalProperty->name );
+	table->setItemText( *row, 2, internalProperty->description );
 
 	for ( unsigned int i = 0; i < numSubRows + 1; ++i )
 	{

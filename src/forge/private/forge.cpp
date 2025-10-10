@@ -104,8 +104,100 @@ char *forge_dialog_save( void *self, const char *title, const char *extension, c
 	return filename;
 }
 
+#if USE_GTK
+
+typedef struct ForgeDialog
+{
+	char      *filename;
+	gboolean   isCompleted;
+	GMainLoop *loop;
+} ForgeDialog;
+
+static void on_dialog_response( GtkDialog *dialog, const gint responseId, const gpointer userData )
+{
+	ForgeDialog *forgeDialog = ( ForgeDialog * ) userData;
+	if ( responseId == GTK_RESPONSE_ACCEPT )
+	{
+		forgeDialog->isCompleted = TRUE;
+	}
+
+	gtk_window_destroy( GTK_WINDOW( dialog ) );
+}
+
+#endif
+
 char *forge_dialog_open( void *self, const char *title, const char *extension, const char *origin )
 {
+#if USE_GTK
+
+	GtkWidget *dialog = gtk_file_chooser_dialog_new( title,
+	                                                 NULL,
+	                                                 GTK_FILE_CHOOSER_ACTION_OPEN,
+	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
+	                                                 "_Open", GTK_RESPONSE_ACCEPT,
+	                                                 NULL );
+
+	if ( origin != nullptr )
+	{
+		g_autoptr( GFile ) folder = g_file_new_for_path( origin );
+		if ( folder != nullptr )
+		{
+			gtk_file_chooser_set_current_folder( GTK_FILE_CHOOSER( dialog ), folder, nullptr );
+		}
+	}
+
+	GtkFileFilter *filter;
+	if ( extension != nullptr )
+	{
+		char pattern[ strlen( extension ) + 3 ];
+		snprintf( pattern, sizeof( pattern ), "*%s", extension );
+
+		filter = gtk_file_filter_new();
+		gtk_file_filter_set_name( filter, "Supported Files" );
+		gtk_file_filter_add_pattern( filter, pattern );
+		gtk_file_chooser_add_filter( GTK_FILE_CHOOSER( dialog ), filter );
+		gtk_file_chooser_set_filter( GTK_FILE_CHOOSER( dialog ), filter );
+	}
+
+	filter = gtk_file_filter_new();
+	gtk_file_filter_set_name( filter, "All Files" );
+	gtk_file_filter_add_pattern( filter, "*" );
+	gtk_file_chooser_add_filter( GTK_FILE_CHOOSER( dialog ), filter );
+
+	ForgeDialog data = {};
+	data.loop        = g_main_loop_new( nullptr, FALSE );
+
+	g_signal_connect( dialog, "response", G_CALLBACK( on_dialog_response ), &data );
+	g_signal_connect( dialog, "destroy", G_CALLBACK( gtk_window_destroy ), &data );
+
+	gtk_widget_show( dialog );
+
+	while ( !data.isCompleted )
+	{
+		g_main_context_iteration( nullptr, TRUE );
+	}
+
+	g_main_loop_unref( data.loop );
+
+	if ( data.filename == nullptr )
+	{
+		return nullptr;
+	}
+
+	if ( extension != nullptr )
+	{
+		char *filename;
+		if ( strlen( data.filename ) >= strlen( extension ) &&
+		     strcmp( &data.filename[ strlen( data.filename ) - strlen( extension ) ], extension ) != 0 )
+		{
+			filename = qm_os_string_alloc( nullptr, "%s%s", data.filename, extension );
+		}
+
+		g_free( data.filename );
+	}
+
+#else
+
 	char pattern[ strlen( extension ) + 2 ];
 	snprintf( pattern, sizeof( pattern ), "*%s", extension );
 
@@ -116,6 +208,8 @@ char *forge_dialog_open( void *self, const char *title, const char *extension, c
 	}
 
 	return qm_os_string_alloc( nullptr, "%s", openName.text() );
+
+#endif
 }
 
 ApeRoom *forge_new_room_( const char *path )

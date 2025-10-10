@@ -29,6 +29,12 @@
 #include <fx.h>
 #include <fxkeys.h>
 
+#if defined( USE_GTK )
+
+#	include <adwaita.h>
+
+#endif
+
 #define FORGE_APP_VERSION "v0.1.0"
 
 static inline constexpr const char *FORGE_APP_NAME  = "forge";
