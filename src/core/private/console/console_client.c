@@ -145,7 +145,7 @@ void ape_console_update_notifications_( double delta )
 
 		if ( notification->time >= consoleMaxNotificationTime )
 		{
-			for ( unsigned int j = i; j < consoleNumNotifications; ++j )
+			for ( unsigned int j = i; j < consoleNumNotifications - 1; ++j )
 			{
 				consoleNotifications[ j ] = consoleNotifications[ j + 1 ];
 			}
@@ -367,7 +367,8 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 
 			if ( inputBuffer[ 0 ] != '\0' )
 			{
-				ape_print_( inputBuffer );
+				ape_print_( "%s\n", inputBuffer );
+
 				PlParseConsoleString( inputBuffer );
 
 				// shuffle everything back and then tack it onto our history list
