@@ -43,4 +43,13 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self );
 
 QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst );
 
+/////////////////////////////////////////////////////////////////////////////////////
+
+// this feature is only available in debug builds for performance reasons
+#if !defined( NDEBUG )
+void ape_editor_validate_properties_( const ApeEditorProperty *properties, unsigned int numProperties );
+#else
+#	define ape_editor_validate_properties_( X, Y )
+#endif
+
 PL_EXTERN_C_END

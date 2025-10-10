@@ -43,6 +43,33 @@ typedef enum ApeEditorPropertyType
 	APE_EDITOR_MAX_PROPERTY_TYPES,
 } ApeEditorPropertyType;
 
+// if you decide to refactor the below,
+// mind that the validation will need updating!
+
+typedef float          ApeFloatProperty;
+typedef QmMathVector2f ApeVec2Property;
+typedef QmMathVector3f ApeVec3Property;
+typedef QmMathVector4f ApeVec4Property;
+typedef unsigned int   ApeEnumProperty;
+typedef QmMathColour4f ApeColour4fProperty;
+typedef int            ApeIntegerProperty;
+typedef char           ApeStringProperty;
+typedef bool           ApeBooleanProperty;
+
+#if !defined( NDEBUG )
+#	define APE_PROPERTY_GET_TYPENAME( X ) _Generic( ( X ), \
+		    ApeFloatProperty: "ApeFloatProperty",           \
+		    ApeVec2Property: "ApeVec2Property",             \
+		    ApeVec3Property: "ApeVec3Property",             \
+		    ApeVec4Property: "ApeVec4Property",             \
+		    ApeEnumProperty: "ApeEnumProperty",             \
+		    ApeColour4fProperty: "ApeColour4fProperty",     \
+		    ApeIntegerProperty: "ApeIntegerProperty",       \
+		    ApeStringProperty *: "ApeStringProperty",       \
+		    ApeBooleanProperty: "ApeBooleanProperty",       \
+		    default: "invalid" )
+#endif
+
 typedef struct ApeEditorPropertyEnum
 {
 	const char  *name;
@@ -52,6 +79,7 @@ typedef struct ApeEditorPropertyEnum
 typedef struct ApeEditorProperty
 {
 	const char           *name;
+	const char           *internalName;
 	const char           *description;
 	uintptr_t             offset;
 	ApeEditorPropertyType type;
@@ -68,19 +96,65 @@ typedef struct ApeEditorProperty
 			unsigned int maxSize;
 		} stringType;
 	};
+
+#if !defined( NDEBUG )
+	const char *typeName;
+#endif
 } ApeEditorProperty;
 
-#define APE_EDITOR_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
-	{ NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_##PROP }
-#define APE_EDITOR_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                                                                            \
-	{                                                                                                                                  \
-		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_STRING, .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) } \
-	}
-#define APE_EDITOR_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )                                                           \
-	{                                                                                                                      \
-		NAME, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_ENUM, .enumType = { ENUMS,                          \
-			                                                                               QM_OS_ARRAY_ELEMENTS( ENUMS ) } \
-	}
+#if !defined( NDEBUG )
+#	define APE_EDITOR_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
+		{ NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_##PROP, .typeName = APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ) }
+#else
+#	define APE_EDITOR_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
+		{ NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_EDITOR_PROPERTY_TYPE_##PROP }
+#endif
+#if !defined( NDEBUG )
+#	define APE_EDITOR_PROPERTY_STRING( NAME, DESC, TYPE, VAR )           \
+		{                                                                 \
+		        NAME,                                                     \
+		        #VAR,                                                     \
+		        DESC,                                                     \
+		        PL_OFFSETOF( TYPE, VAR ),                                 \
+		        APE_EDITOR_PROPERTY_TYPE_STRING,                          \
+		        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) },  \
+		        APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ), \
+		}
+#else
+#	define APE_EDITOR_PROPERTY_STRING( NAME, DESC, TYPE, VAR )          \
+		{                                                                \
+		        NAME,                                                    \
+		        #VAR,                                                    \
+		        DESC,                                                    \
+		        PL_OFFSETOF( TYPE, VAR ),                                \
+		        APE_EDITOR_PROPERTY_TYPE_STRING,                         \
+		        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) }, \
+		}
+#endif
+#if !defined( NDEBUG )
+#	define APE_EDITOR_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )      \
+		{                                                                 \
+		        NAME,                                                     \
+		        #VAR,                                                     \
+		        DESC,                                                     \
+		        PL_OFFSETOF( TYPE, VAR ),                                 \
+		        APE_EDITOR_PROPERTY_TYPE_ENUM,                            \
+		        .enumType = { ENUMS,                                      \
+                             QM_OS_ARRAY_ELEMENTS( ENUMS ) },            \
+		        APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ), \
+}
+#else
+#	define APE_EDITOR_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS ) \
+		{                                                            \
+		        NAME,                                                \
+		        #VAR,                                                \
+		        DESC,                                                \
+		        PL_OFFSETOF( TYPE, VAR ),                            \
+		        APE_EDITOR_PROPERTY_TYPE_ENUM,                       \
+		        .enumType = { ENUMS,                                 \
+                             QM_OS_ARRAY_ELEMENTS( ENUMS ) },       \
+		}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

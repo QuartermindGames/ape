@@ -46,10 +46,24 @@ static void destroy_player_spawn( ApeEntity *self )
 	qm_os_memory_free( spawnEntity );
 }
 
+static ApeEditorPropertyEnum teamsEnum[] = {
+        {"Red",   0},
+        {"Green", 1},
+        {"Blue",  2},
+        {"Pink",  3},
+};
+
+static ApeEditorProperty spawnProperties[] = {
+        APE_EDITOR_PROPERTY_ENUM( "Team", "Team index this spawn is associated with.", GamePlayerSpawnEntity, team, teamsEnum ),
+};
+
 ApeEntityClassDefinition game_playerSpawnEntityClass_ = {
         .name            = GAME_PLAYER_SPAWN_CLASS_NAME,
         .description     = "Creates a marker indicating where the player can spawn.",
         .createFunction  = create_player_spawn,
         .destroyFunction = destroy_player_spawn,
         .spawnFunction   = spawn_player_spawn,
+
+        .properties    = spawnProperties,
+        .numProperties = QM_OS_ARRAY_ELEMENTS( spawnProperties ),
 };

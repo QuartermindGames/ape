@@ -6,7 +6,7 @@
 
 typedef struct GamePlayerSpawnEntity
 {
-	unsigned int team;
+	ApeEnumProperty team;
 
 	PLLinkedListNode *listNode;
 } GamePlayerSpawnEntity;

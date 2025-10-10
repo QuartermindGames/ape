@@ -14,10 +14,10 @@ static constexpr int   ROPE_DEFAULT_NUM_PARTICLES = 8;
 typedef struct RopeEntity
 {
 	ApeWorldNode *endConnection;
-	char          endConnectionName[ 64 ];
 
-	int   numParticles;
-	float length;
+	ApeStringProperty  endConnectionName[ 64 ];
+	ApeIntegerProperty numParticles;
+	ApeFloatProperty   length;
 
 	GamePhysicsRope physics;
 } RopeEntity;
@@ -132,26 +132,6 @@ static void draw_rope( ApeEntity *self, ApeLight *light, int flags )
 	assert( rope != nullptr );
 }
 
-static void serialize_rope( ApeEntity *self, AcmBranch *root )
-{
-	RopeEntity *rope = ROPE_ENTITY( self );
-	assert( rope != nullptr );
-
-	acm_push_f32( root, "length", rope->length );
-	acm_push_i32( root, "numParticles", rope->numParticles );
-	acm_push_string( root, "endConnection", rope->endConnectionName, true );
-}
-
-static void deserialize_rope( ApeEntity *self, AcmBranch *root )
-{
-	RopeEntity *rope = ROPE_ENTITY( self );
-	assert( rope != nullptr );
-
-	rope->length       = acm_get_f32( root, "length", ROPE_DEFAULT_LENGTH );
-	rope->numParticles = acm_get_int( root, "numParticles", ROPE_DEFAULT_NUM_PARTICLES );
-	snprintf( rope->endConnectionName, sizeof( rope->endConnectionName ), "%s", acm_get_string( root, "endConnection", "" ) );
-}
-
 static ApeEditorProperty properties[] = {
         APE_EDITOR_PROPERTY_STRING( "Next Connection", "Next entity that the rope connects to.", RopeEntity, endConnectionName ),
 
@@ -168,9 +148,6 @@ ApeEntityClassDefinition game_ropeEntityClass_ = {
         .spawnFunction  = spawn_rope,
         .tickFunction   = tick_rope,
         .drawFunction   = draw_rope,
-
-        .serializeFunction   = serialize_rope,
-        .deserializeFunction = deserialize_rope,
 
         .properties    = properties,
         .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
