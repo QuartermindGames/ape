@@ -111,8 +111,8 @@ void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize )
 	}
 
 	size_t fileSize = PlGetFileSize( file );
-	*outSize = fileSize + 1;
-	char *buf = QM_OS_MEMORY_NEW_( char, *outSize );
+	*outSize        = fileSize + 1;
+	char *buf       = QM_OS_MEMORY_NEW_( char, *outSize );
 	memcpy( buf, PlGetFileData( file ), fileSize );
 
 	PlCloseFile( file );
@@ -138,10 +138,10 @@ char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
 	*size = PL_READUINT16( file, false, &status );
 	assert( status );
 	if ( *size == 0 || !status )
-		return NULL;
+		return nullptr;
 
-	char *buf = QM_OS_MEMORY_NEW_( char, ( *size ) + 1 );
-	size_t rb = PlReadFile( file, buf, sizeof( char ), *size );
+	char  *buf = QM_OS_MEMORY_NEW_( char, ( *size ) + 1 );
+	size_t rb  = PlReadFile( file, buf, sizeof( char ), *size );
 	assert( rb == *size );
 	return buf;
 }
@@ -149,14 +149,14 @@ char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
 char *ss_acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion )
 {
 	if ( version < minVersion || version > maxVersion )
-		return NULL;
+		return nullptr;
 
 	return ss_acl_fs_parse_string( file, size );
 }
 
 uint8_t ss_acl_fs_parse_byte( PLFile *file )
 {
-	bool status;
+	bool    status;
 	uint8_t i = PL_READUINT8( file, &status );
 	assert( status );
 	return i;
@@ -173,7 +173,7 @@ uint8_t ss_acl_fs_parse_byte_ex( PLFile *file, unsigned int version, unsigned in
 int ss_acl_fs_parse_int( PLFile *file )
 {
 	bool status;
-	int i = PlReadInt32( file, false, &status );
+	int  i = PlReadInt32( file, false, &status );
 	assert( status );
 	return i;
 }
@@ -188,7 +188,7 @@ int ss_acl_fs_parse_int_ex( PLFile *file, unsigned int version, unsigned int min
 
 float ss_acl_fs_parse_float( PLFile *file )
 {
-	bool status;
+	bool  status;
 	float f = PlReadFloat32( file, false, &status );
 	assert( status && !isnan( f ) );
 	return f;
@@ -204,11 +204,7 @@ float acl_fs_parse_float_ex( PLFile *file, unsigned int version, unsigned int mi
 
 QmMathVector3f ss_acl_fs_parse_vector( PLFile *file )
 {
-	return ( QmMathVector3f ){
-	        ss_acl_fs_parse_float( file ),
-	        ss_acl_fs_parse_float( file ),
-	        ss_acl_fs_parse_float( file ),
-	};
+	return qm_math_vector3f( ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ) );
 }
 
 QmMathVector3f acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const QmMathVector3f *fallback )
@@ -221,12 +217,7 @@ QmMathVector3f acl_fs_parse_vector_ex( PLFile *file, unsigned int version, unsig
 
 QmMathVector4f ss_acl_fs_parse_vector4( PLFile *file )
 {
-	return ( QmMathVector4f ){
-	        ss_acl_fs_parse_float( file ),
-	        ss_acl_fs_parse_float( file ),
-	        ss_acl_fs_parse_float( file ),
-	        ss_acl_fs_parse_float( file ),
-	};
+	return qm_math_vector4f( ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ) );
 }
 
 QmMathVector4f ss_acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const QmMathVector4f *fallback )
@@ -239,7 +230,7 @@ QmMathVector4f ss_acl_fs_parse_vector4_ex( PLFile *file, unsigned int version, u
 
 PLMatrix3 ss_acl_fs_parse_mat3( PLFile *file )
 {
-	return ( PLMatrix3 ){
+	return ( PLMatrix3 ) {
 	        // forward
 	        .m[ 0 ] = ss_acl_fs_parse_float( file ),
 	        .m[ 1 ] = ss_acl_fs_parse_float( file ),
@@ -257,12 +248,8 @@ PLMatrix3 ss_acl_fs_parse_mat3( PLFile *file )
 
 QmMathColour4ub ss_acl_fs_parse_colour( PLFile *file )
 {
-	bool status;
-	QmMathColour4ub c = ( QmMathColour4ub ){
-	        PL_READUINT8( file, &status ),
-	        PL_READUINT8( file, &status ),
-	        PL_READUINT8( file, &status ),
-	        PL_READUINT8( file, &status ) };
+	bool            status;
+	QmMathColour4ub c = qm_math_colour4ub( PL_READUINT8( file, &status ), PL_READUINT8( file, &status ), PL_READUINT8( file, &status ), PL_READUINT8( file, &status ) );
 	assert( status );
 	return c;
 }
