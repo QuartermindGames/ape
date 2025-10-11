@@ -305,7 +305,9 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorPr
 				options += "\n";
 			}
 
+			const ApeEnumProperty *enumProperty = ( ApeEnumProperty * ) property.ptr;
 			table->setItem( *row, 1, new FXComboTableItem( options, nullptr, ( void * ) internalProperty ) );
+			table->setItemText( *row, 1, internalProperty->enumType.enums[ *enumProperty ].name );
 			break;
 		}
 		case APE_EDITOR_PROPERTY_TYPE_COLOUR:
