@@ -23,7 +23,7 @@ typedef struct ApeRoom     ApeRoom;  // world.h
 typedef struct ApeBrush    ApeBrush;
 typedef struct ApeWorld    ApeWorld;
 
-typedef struct ApeEditorProperty ApeEditorProperty;
+typedef struct ApeProperty ApeProperty;
 
 /* ======================================================================
  * WORLD INTERFACE
@@ -87,7 +87,7 @@ typedef struct ApeWorldNodeClass
 	ApeWorldNodeClassNetDeserializeFunction netDeserializeFunction;
 
 #if !defined( APE_NO_EDITOR )
-	const ApeEditorProperty *properties;
+	const ApeProperty *properties;
 	unsigned int             numProperties;
 
 	const char *editorIcon;
@@ -165,7 +165,7 @@ const ApeWorldNodeClass **ape_world_node_get_classes( unsigned int *numClasses )
  * @param numProperties	Total number of properties available.
  * @return				Pointer to the list of properties.
  */
-const ApeEditorProperty *ape_world_node_get_properties( unsigned int *numProperties );
+const ApeProperty *ape_world_node_get_properties( unsigned int *numProperties );
 
 /**
  * Returns the list of properties for the given node type.
@@ -174,9 +174,9 @@ const ApeEditorProperty *ape_world_node_get_properties( unsigned int *numPropert
  * @param type			World node class type.
  * @return				Pointer to the list of properties.
  */
-const ApeEditorProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type );
+const ApeProperty *ape_world_node_get_class_properties( unsigned int *numProperties, ApeWorldNodeType type );
 
-void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeEditorProperty *property );
+void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeProperty *property );
 
 bool ape_world_node_has_magic( const ApeWorldNode *self );
 bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expectedType );

@@ -42,7 +42,7 @@ forge::PropertiesDialog::PropertiesDialog( FXWindow *parent, ApeWorldNode *node 
 	set_node( node );
 }
 
-static unsigned int get_sub_rows_for_properties( const ApeEditorProperty *properties, const unsigned int numProperties )
+static unsigned int get_sub_rows_for_properties( const ApeProperty *properties, const unsigned int numProperties )
 {
 	unsigned int numSubRows = 0;
 	for ( unsigned int i = 0; i < numProperties; ++i )
@@ -51,14 +51,14 @@ static unsigned int get_sub_rows_for_properties( const ApeEditorProperty *proper
 		{
 			default:
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_VEC2:
+			case APE_PROPERTY_TYPE_VEC2:
 				numSubRows++;
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_VEC3:
+			case APE_PROPERTY_TYPE_VEC3:
 				numSubRows += 2;
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_COLOUR:
-			case APE_EDITOR_PROPERTY_TYPE_VEC4:
+			case APE_PROPERTY_TYPE_COLOUR:
+			case APE_PROPERTY_TYPE_VEC4:
 				numSubRows += 3;
 				break;
 		}
@@ -87,14 +87,14 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 	}
 
 	unsigned int             numBaseProperties;
-	const ApeEditorProperty *baseProperties = ape_world_node_get_properties( &numBaseProperties );
+	const ApeProperty *baseProperties = ape_world_node_get_properties( &numBaseProperties );
 	assert( numBaseProperties > 0 );
 
 	unsigned int             numClassProperties;
-	const ApeEditorProperty *classProperties = ape_world_node_get_class_properties( &numClassProperties, node->type );
+	const ApeProperty *classProperties = ape_world_node_get_class_properties( &numClassProperties, node->type );
 
 	unsigned int             numEntityProperties = 0;
-	const ApeEditorProperty *entityProperties    = nullptr;
+	const ApeProperty *entityProperties    = nullptr;
 	if ( node->type == APE_WORLD_NODE_TYPE_ENTITY )
 	{
 		ApeEntity *entity   = ( ApeEntity * ) node;
@@ -150,7 +150,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 		return false;
 	}
 
-	const ApeEditorProperty *editorProperty = tableProperty->internal;
+	const ApeProperty *editorProperty = tableProperty->internal;
 	assert( editorProperty != nullptr );
 
 	// we have to do this dumb shit, otherwise trying to use the item string directly doesn't work
@@ -160,13 +160,13 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 	switch ( editorProperty->type )
 	{
 		default:
-		case APE_EDITOR_PROPERTY_TYPE_INVALID:
+		case APE_PROPERTY_TYPE_INVALID:
 			forge_warning_( "Unhandled property type (%u)!\n", editorProperty->type );
 			break;
-		case APE_EDITOR_PROPERTY_TYPE_FLOAT:
+		case APE_PROPERTY_TYPE_FLOAT:
 			*( float * ) tableProperty->ptr = strtof( text, nullptr );
 			break;
-		case APE_EDITOR_PROPERTY_TYPE_VEC2:
+		case APE_PROPERTY_TYPE_VEC2:
 		{
 			for ( unsigned int i = 0; i < 2; ++i )
 			{
@@ -176,7 +176,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			}
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_VEC3:
+		case APE_PROPERTY_TYPE_VEC3:
 		{
 			for ( unsigned int i = 0; i < 3; ++i )
 			{
@@ -186,8 +186,8 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			}
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_COLOUR:
-		case APE_EDITOR_PROPERTY_TYPE_VEC4:
+		case APE_PROPERTY_TYPE_COLOUR:
+		case APE_PROPERTY_TYPE_VEC4:
 		{
 			for ( unsigned int i = 0; i < 4; ++i )
 			{
@@ -197,7 +197,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			}
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_ENUM:
+		case APE_PROPERTY_TYPE_ENUM:
 		{
 			for ( unsigned int i = 0; i < editorProperty->enumType.numEnums; ++i )
 			{
@@ -210,15 +210,15 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			}
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_INTEGER:
+		case APE_PROPERTY_TYPE_INTEGER:
 			*( ( int32_t * ) tableProperty->ptr ) = strtol( text, nullptr, 10 );
 			break;
-		case APE_EDITOR_PROPERTY_TYPE_STRING:
-		case APE_EDITOR_PROPERTY_TYPE_PATH:
+		case APE_PROPERTY_TYPE_STRING:
+		case APE_PROPERTY_TYPE_PATH:
 			//TODO: path should work differently, eventually... probably when we migrate to gtk
 			snprintf( ( char * ) tableProperty->ptr, editorProperty->stringType.maxSize, "%s", text );
 			break;
-		case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
+		case APE_PROPERTY_TYPE_BOOLEAN:
 			if ( strcmp( text, "True" ) == 0 )
 			{
 				*( bool * ) tableProperty->ptr = true;
@@ -237,7 +237,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 	return true;
 }
 
-void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorProperty *internalProperty, TablePropertyScope scope )
+void forge::PropertiesDialog::add_property( unsigned int *row, const ApeProperty *internalProperty, TablePropertyScope scope )
 {
 	TableProperty property = {};
 	property.internal      = internalProperty;
@@ -262,33 +262,33 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorPr
 		default:
 			assert( 0 );
 			break;
-		case APE_EDITOR_PROPERTY_TYPE_FLOAT:
+		case APE_PROPERTY_TYPE_FLOAT:
 		{
 			char buf[ 128 ];
 			snprintf( buf, sizeof( buf ), "%f", *static_cast< const float * >( property.ptr ) );
 			table->setItemText( *row, 1, buf );
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_VEC2:
+		case APE_PROPERTY_TYPE_VEC2:
 		{
-			const QmMathVector2f *vector = static_cast< const QmMathVector2f * >( property.ptr );
+			const ApeVec2Property *vector = static_cast< const ApeVec2Property * >( property.ptr );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			numSubRows++;
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_VEC3:
+		case APE_PROPERTY_TYPE_VEC3:
 		{
-			const QmMathVector3f *vector = static_cast< const QmMathVector3f * >( property.ptr );
+			const ApeVec3Property *vector = static_cast< const ApeVec3Property * >( property.ptr );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( vector->z ).c_str() );
 			numSubRows += 2;
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_VEC4:
+		case APE_PROPERTY_TYPE_VEC4:
 		{
-			const QmMathVector4f *vector = static_cast< const QmMathVector4f * >( property.ptr );
+			const ApeVec4Property *vector = static_cast< const ApeVec4Property * >( property.ptr );
 			table->setItemText( *row, 1, std::to_string( vector->x ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( vector->y ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( vector->z ).c_str() );
@@ -296,7 +296,7 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorPr
 			numSubRows += 3;
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_ENUM:
+		case APE_PROPERTY_TYPE_ENUM:
 		{
 			FXString options;
 			for ( unsigned int i = 0; i < internalProperty->enumType.numEnums; ++i )
@@ -310,9 +310,9 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorPr
 			table->setItemText( *row, 1, internalProperty->enumType.enums[ *enumProperty ].name );
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_COLOUR:
+		case APE_PROPERTY_TYPE_COLOUR:
 		{
-			const QmMathColour4f *colour = ( QmMathColour4f * ) property.ptr;
+			const ApeColour4fProperty *colour = ( ApeColour4fProperty * ) property.ptr;
 			table->setItemText( *row, 1, std::to_string( colour->r ).c_str() );
 			table->setItemText( *row + 1, 1, std::to_string( colour->g ).c_str() );
 			table->setItemText( *row + 2, 1, std::to_string( colour->b ).c_str() );
@@ -320,27 +320,27 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeEditorPr
 			numSubRows += 3;
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_INTEGER:
+		case APE_PROPERTY_TYPE_INTEGER:
 		{
 			char buf[ 128 ];
 			snprintf( buf, sizeof( buf ), "%d", *static_cast< const int * >( property.ptr ) );
 			table->setItemText( *row, 1, buf );
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_STRING:
+		case APE_PROPERTY_TYPE_STRING:
 		{
 			table->setItemText( *row, 1, static_cast< const char * >( property.ptr ) );
 			break;
 		}
-		case APE_EDITOR_PROPERTY_TYPE_PATH: break;
-		case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
+		case APE_PROPERTY_TYPE_PATH: break;
+		case APE_PROPERTY_TYPE_BOOLEAN:
 		{
 			table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) internalProperty ) );
 			break;
 		}
 	}
 
-	static const char *icons[ APE_EDITOR_MAX_PROPERTY_TYPES ] = {
+	static const char *icons[ APE_PROPERTY_MAX_TYPES ] = {
 	        nullptr,                     // invalid
 	        "resources/integer.gif",     // float
 	        "resources/transform.gif",   // vec2

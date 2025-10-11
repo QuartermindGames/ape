@@ -1031,13 +1031,13 @@ static void on_change_room( void *self, ApeRoom *currentRoom, ApeRoom *newRoom )
 	}
 }
 
-static ApeEditorPropertyEnum brushTypeEnums[] = {
+static ApePropertyEnum brushTypeEnums[] = {
         {"Solid", 0},
         {"Air",   1},
 };
 
-static const ApeEditorProperty properties[] = {
-        APE_EDITOR_PROPERTY_ENUM( "Type", "Type of brush, which can either be solid or air.", ApeBrush, type, brushTypeEnums ),
+static const ApeProperty properties[] = {
+        APE_PROPERTY_ENUM( "Type", "Type of brush, which can either be solid or air.", ApeBrush, type, brushTypeEnums ),
 };
 
 const ApeWorldNodeClass ape_brushClass = {

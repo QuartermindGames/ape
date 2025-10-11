@@ -132,11 +132,11 @@ static void draw_rope( ApeEntity *self, ApeLight *light, int flags )
 	assert( rope != nullptr );
 }
 
-static ApeEditorProperty properties[] = {
-        APE_EDITOR_PROPERTY_STRING( "Next Connection", "Next entity that the rope connects to.", RopeEntity, endConnectionName ),
+static ApeProperty properties[] = {
+        APE_PROPERTY_STRING( "Next Connection", "Next entity that the rope connects to.", RopeEntity, endConnectionName ),
 
-        APE_EDITOR_PROPERTY_BASIC( "Length", "Length of the rope.", RopeEntity, length, FLOAT ),
-        APE_EDITOR_PROPERTY_BASIC( "Particles", "Number of particles making up the rope.", RopeEntity, numParticles, INTEGER ),
+        APE_PROPERTY_BASIC( "Length", "Length of the rope.", RopeEntity, length, FLOAT ),
+        APE_PROPERTY_BASIC( "Particles", "Number of particles making up the rope.", RopeEntity, numParticles, INTEGER ),
 };
 
 ApeEntityClassDefinition game_ropeEntityClass_ = {

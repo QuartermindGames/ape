@@ -35,14 +35,14 @@ namespace forge
 
 		struct TableProperty
 		{
-			const ApeEditorProperty *internal;
+			const ApeProperty *internal;
 			void                    *ptr;
 			TablePropertyScope       scope;
 		};
 
 		std::list< TableProperty > properties_;
 
-		void add_property( unsigned int *row, const ApeEditorProperty *internalProperty, TablePropertyScope scope );
+		void add_property( unsigned int *row, const ApeProperty *internalProperty, TablePropertyScope scope );
 
 		ApeWorldNode *node{};
 		FXTable      *table{};

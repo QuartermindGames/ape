@@ -219,17 +219,17 @@ static void light_on_draw_editor( void *self, const bool isSelected )
 	}
 }
 
-static ApeEditorPropertyEnum lightTypesEnum[] = {
+static ApePropertyEnum lightTypesEnum[] = {
         {"Omni", 0},
         {"Spot", 1},
         {"Sun",  2},
 };
 
-static ApeEditorProperty properties[] = {
-        APE_EDITOR_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
-        APE_EDITOR_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
-        APE_EDITOR_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
-        APE_EDITOR_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
+static ApeProperty properties[] = {
+        APE_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
+        APE_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
+        APE_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
+        APE_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
 };
 
 const ApeWorldNodeClass ape_lightClass = {

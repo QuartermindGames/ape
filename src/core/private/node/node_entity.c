@@ -293,7 +293,7 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 	{
 		for ( unsigned int i = 0; i < classDefinition->numProperties; ++i )
 		{
-			const ApeEditorProperty *property = &classDefinition->properties[ i ];
+			const ApeProperty *property = &classDefinition->properties[ i ];
 
 			void *ptr = ( char * ) entity->classData + property->offset;
 			switch ( property->type )
@@ -301,32 +301,32 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 				default:
 					ape_error_( false, "Failed to serialize property type (%u)!\n", property->type );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_FLOAT:
+				case APE_PROPERTY_TYPE_FLOAT:
 					acm_push_f32( root, property->internalName, *( ApeFloatProperty * ) ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_VEC2:
+				case APE_PROPERTY_TYPE_VEC2:
 					com_acm_push_vector2( root, property->internalName, ptr, true );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_VEC3:
+				case APE_PROPERTY_TYPE_VEC3:
 					com_acm_push_vector3( root, property->internalName, ptr, true );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_VEC4:
+				case APE_PROPERTY_TYPE_VEC4:
 					com_acm_push_vector4( root, property->internalName, ptr, true );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_COLOUR:
+				case APE_PROPERTY_TYPE_COLOUR:
 					com_acm_push_colour4f( root, property->internalName, ptr, true );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_ENUM:
+				case APE_PROPERTY_TYPE_ENUM:
 					acm_push_ui32( root, property->internalName, *( ApeEnumProperty * ) ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_INTEGER:
+				case APE_PROPERTY_TYPE_INTEGER:
 					acm_push_i32( root, property->internalName, *( ApeIntegerProperty * ) ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_STRING:
-				case APE_EDITOR_PROPERTY_TYPE_PATH:
+				case APE_PROPERTY_TYPE_STRING:
+				case APE_PROPERTY_TYPE_PATH:
 					acm_push_string( root, property->internalName, ptr, true );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
+				case APE_PROPERTY_TYPE_BOOLEAN:
 					acm_push_bool( root, property->internalName, *( ApeBooleanProperty * ) ptr );
 					break;
 			}
@@ -410,7 +410,7 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 	{
 		for ( unsigned int i = 0; i < classDefinition->numProperties; ++i )
 		{
-			const ApeEditorProperty *property = &classDefinition->properties[ i ];
+			const ApeProperty *property = &classDefinition->properties[ i ];
 
 			void *ptr = ( char * ) entity->classData + property->offset;
 			switch ( property->type )
@@ -418,32 +418,32 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 				default:
 					ape_error_( false, "Failed to deserialize property type (%u)!\n", property->type );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_FLOAT:
+				case APE_PROPERTY_TYPE_FLOAT:
 					*( ApeFloatProperty * ) ptr = acm_get_f32( root, property->internalName, *( float * ) ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_VEC2:
+				case APE_PROPERTY_TYPE_VEC2:
 					*( ApeVec2Property * ) ptr = com_acm_get_vector2( root, property->internalName, ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_VEC3:
+				case APE_PROPERTY_TYPE_VEC3:
 					*( ApeVec3Property * ) ptr = com_acm_get_vector3( root, property->internalName, ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_VEC4:
+				case APE_PROPERTY_TYPE_VEC4:
 					*( ApeVec4Property * ) ptr = com_acm_get_vector4( root, property->internalName, ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_COLOUR:
+				case APE_PROPERTY_TYPE_COLOUR:
 					*( ApeColour4fProperty * ) ptr = com_acm_get_colour_f32( root, property->internalName, ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_ENUM:
+				case APE_PROPERTY_TYPE_ENUM:
 					*( ApeEnumProperty * ) ptr = acm_get_uint( root, property->internalName, *( ApeEnumProperty * ) ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_INTEGER:
+				case APE_PROPERTY_TYPE_INTEGER:
 					*( ApeIntegerProperty * ) ptr = acm_get_int( root, property->internalName, *( ApeIntegerProperty * ) ptr );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_STRING:
-				case APE_EDITOR_PROPERTY_TYPE_PATH:
+				case APE_PROPERTY_TYPE_STRING:
+				case APE_PROPERTY_TYPE_PATH:
 					acm_push_string( root, property->internalName, ptr, true );
 					break;
-				case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
+				case APE_PROPERTY_TYPE_BOOLEAN:
 					*( ApeBooleanProperty * ) ptr = acm_get_bool( root, property->internalName, *( bool * ) ptr );
 					break;
 			}

@@ -47,7 +47,7 @@ QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *
 
 // this feature is only available in debug builds for performance reasons
 #if !defined( NDEBUG )
-void ape_editor_validate_properties_( const ApeEditorProperty *properties, unsigned int numProperties );
+void ape_editor_validate_properties_( const ApeProperty *properties, unsigned int numProperties );
 #else
 #	define ape_editor_validate_properties_( X, Y )
 #endif

@@ -1442,7 +1442,7 @@ void ape_editor_clear_plot_points( ApeEditorInstance *instance )
 
 #if !defined( NDEBUG )
 
-void ape_editor_validate_properties_( const ApeEditorProperty *properties, const unsigned int numProperties )
+void ape_editor_validate_properties_( const ApeProperty *properties, const unsigned int numProperties )
 {
 	for ( unsigned int i = 0; i < numProperties; ++i )
 	{
@@ -1452,32 +1452,32 @@ void ape_editor_validate_properties_( const ApeEditorProperty *properties, const
 			default:
 				ape_error_( true, "Encountered invalid property type during validation (%u)!\n" );
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_FLOAT:
+			case APE_PROPERTY_TYPE_FLOAT:
 				typeName = "ApeFloatProperty";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_VEC2:
+			case APE_PROPERTY_TYPE_VEC2:
 				typeName = "ApeVec2Property";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_VEC3:
+			case APE_PROPERTY_TYPE_VEC3:
 				typeName = "ApeVec3Property";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_VEC4:
+			case APE_PROPERTY_TYPE_VEC4:
 				typeName = "ApeVec4Property";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_ENUM:
+			case APE_PROPERTY_TYPE_ENUM:
 				typeName = "ApeEnumProperty";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_COLOUR:
+			case APE_PROPERTY_TYPE_COLOUR:
 				typeName = "ApeColour4fProperty";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_INTEGER:
+			case APE_PROPERTY_TYPE_INTEGER:
 				typeName = "ApeIntegerProperty";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_STRING:
-			case APE_EDITOR_PROPERTY_TYPE_PATH:
+			case APE_PROPERTY_TYPE_STRING:
+			case APE_PROPERTY_TYPE_PATH:
 				typeName = "ApeStringProperty";
 				break;
-			case APE_EDITOR_PROPERTY_TYPE_BOOLEAN:
+			case APE_PROPERTY_TYPE_BOOLEAN:
 				typeName = "ApeBooleanProperty";
 				break;
 		}
