@@ -205,6 +205,8 @@ static void check_for_controllers( void )
 
 		numControllers++;
 	}
+
+	SDL_free( joysticks );
 }
 
 static void unregister_controller( unsigned int slot )
