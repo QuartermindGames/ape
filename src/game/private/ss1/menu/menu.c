@@ -247,7 +247,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 	}
 }
 
-void ss1_menu_initialize( void )
+void ss1_menu_initialize_( void )
 {
 	menuFont = gui_font_load( menuFontPath );
 	if ( menuFont == nullptr )
@@ -315,7 +315,7 @@ void ss1_menu_initialize( void )
 	ape_client_input_register_action( "menu_toggle", &( ApeInputButton ) { INPUT_START }, 1, &( ApeInputKey ) { APE_INPUT_KEY_ESCAPE }, 0, handle_menu_action );
 }
 
-void ss1_menu_shutdown()
+void ss1_menu_shutdown_()
 {
 	ape_gui_font_destroy( menuFont );
 }
@@ -410,11 +410,9 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		float x = 50.0f;
 		float y = 64.0f;
 
-		static constexpr char title[] = "Nihlexa";
-
 		gui_font_set_shadow_offset( 2.0f, 2.0f );
 		//gui_font_set_slant( 20.0f );
-		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, MENU_SCALE, &PL_COLOUR_WHITE, title, strlen( title ), true );
+		gui_font_draw_string( menuTitleFont, x, y, &x, nullptr, MENU_SCALE, &PL_COLOUR_WHITE, QM1_GAME_TITLE, strlen( QM1_GAME_TITLE ), true );
 		//gui_font_set_slant( 0.0f );
 
 		y = 200.0f;

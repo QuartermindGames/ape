@@ -17,7 +17,7 @@ typedef enum SS1MenuState
 
 extern SS1MenuState ss1_menuState_;
 
-void ss1_menu_initialize( void );
-void ss1_menu_shutdown();
+void ss1_menu_initialize_( void );
+void ss1_menu_shutdown_();
 void ss1_menu_tick( double delta );
 void ss1_menu_draw( const ApeViewport *viewport );

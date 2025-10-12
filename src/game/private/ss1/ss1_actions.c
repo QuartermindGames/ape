@@ -5,7 +5,8 @@
 #include "qmos/public/qm_os_random.h"
 
 #include "ss1_game.h"
-#include "entities/entity_player.h"
+
+#include "shared/entities/qm1/qm1_entity_player.h"
 
 static void fire_decal( ApeInputState state, const char * )
 {

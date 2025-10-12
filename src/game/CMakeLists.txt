@@ -19,6 +19,10 @@ set(GAME_SHARED_FILES
         private/shared/components/component_inventory.c
         private/shared/components/component_movement.c
 
+        private/shared/entities/qm1/qm1_entity_airship.c
+        private/shared/entities/qm1/qm1_entity_pawn.c
+        private/shared/entities/qm1/qm1_entity_player.c
+
         private/shared/entities/qm2/qm2_entity_creature.c
 
         private/shared/entities/entity_player_spawn.c
@@ -62,16 +66,14 @@ else ()
 endif ()
 
 #############################################
-# SS1
+# QM1
 #############################################
 set(SS1_SOURCES
         ${GAME_SHARED_FILES}
 
-        private/ss1/entities/entity_airship.c
-        private/ss1/entities/entity_pawn.c
-        private/ss1/entities/entity_player.c
-
         private/ss1/menu/menu.c
+
+        private/ss1/qm1_character.c
 
         private/ss1/ss1_actions.c
         private/ss1/ss1_game.c

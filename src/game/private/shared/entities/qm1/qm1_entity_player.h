@@ -14,8 +14,8 @@ typedef enum SS1PlayerAudioChannel
 
 typedef struct SS1PlayerEntity
 {
-	GamePlayer       *player;
-	SS1ProfessionType profession;
+	GamePlayer   *player;
+	Qm1Character *character;
 
 	struct GameHealthComponent    *healthComponent;
 	struct GameMovementComponent  *movementComponent;
@@ -25,9 +25,9 @@ typedef struct SS1PlayerEntity
 	struct ApeAudioSource *audioSources[ SS1_PLAYER_MAX_AUDIO_CHANNELS ];
 	struct ApeModelNode   *model;
 
-	float     cameraDistance;// distance from the entity and camera
-	float     cameraSide;    // how far the camera should shift left or right
-	float     cameraHeight;  // height from origin of entity
+	float          cameraDistance;// distance from the entity and camera
+	float          cameraSide;    // how far the camera should shift left or right
+	float          cameraHeight;  // height from origin of entity
 	QmMathVector3f cameraAngles;  // orbital rotation around the entity
 } SS1PlayerEntity;
 

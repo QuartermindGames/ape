@@ -38,8 +38,6 @@ bool game_server_client_validate_( PL_UNUSED ApeServerClient *clientHandle )
 	return true;
 }
 
-static void spawn_player( GamePlayer *self );
-
 static void assign_client_to_player( GameServerClient *client )
 {
 	if ( numPlayers >= GAME_MAX_PLAYERS )
@@ -74,7 +72,8 @@ static void assign_client_to_player( GameServerClient *client )
 	player->serverClient = client;
 	client->playerSlot   = player;
 
-	spawn_player( player );
+	// we used to spawn the player entity here too,
+	// but that's now left up to the game-specific logic to figure out instead
 }
 
 void game_server_client_connected_( ApeServerClient *clientHandle )
@@ -241,50 +240,6 @@ void game_server_print_( ApeServerClient *clientHandle, const char *message )
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Player
-// TODO: should probably go out into its own source file eventually
-
-static void spawn_player( GamePlayer *self )
-{
-	static const char *playerClassName;
-	if ( playerClassName == nullptr )
-	{
-		AcmBranch *root = com_project_get_config();
-		assert( root != nullptr );
-		playerClassName = acm_get_string( root, "playerClassName", nullptr );
-	}
-
-	if ( playerClassName == nullptr )
-	{
-		game_warning_( "Player spawn class not specified in config (see \"playerClassName\")!\n" );
-		return;
-	}
-
-	// lookup a spawn point...
-	//TODO: this is all placeholder logic
-
-	PLLinkedList *playerSpawns = game_player_spawn_get_spawn_points();
-	if ( playerSpawns == nullptr )
-	{
-		game_warning_( "Unable to spawn player, no spawn points!\n" );
-		return;
-	}
-
-	ApeEntity *entity = PlGetLinkedListNodeUserData( PlGetFirstNode( playerSpawns ) );
-	ApeRoom   *room   = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
-	if ( room == nullptr )
-	{
-		game_warning_( "Encountered a player spawn outside a room!\n" );
-		return;
-	}
-
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
-
-	self->entity = ape_entity_create( APE_WORLD_NODE( room ), playerClassName, "player", nullptr, &pos, &ang );
-
-	ape_entity_spawn( self->entity );
-	self->serverClient->state = GAME_SERVER_CLIENT_STATE_SPAWNED;
-}
 
 const char *game_player_get_name_( const GamePlayer *self )
 {

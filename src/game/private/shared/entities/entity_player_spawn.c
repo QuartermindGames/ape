@@ -15,13 +15,7 @@ PLLinkedList *game_player_spawn_get_spawn_points()
 
 static void *create_player_spawn( ApeEntity *self, AcmBranch *properties )
 {
-	return QM_OS_MEMORY_NEW( GamePlayerSpawnEntity );
-}
-
-static void spawn_player_spawn( ApeEntity *self )
-{
-	GamePlayerSpawnEntity *spawnEntity = PLAYER_SPAWN_ENTITY( self );
-	assert( spawnEntity != nullptr );
+	GamePlayerSpawnEntity *spawnEntity = QM_OS_MEMORY_NEW( GamePlayerSpawnEntity );
 
 	if ( playerSpawnPoints == nullptr )
 	{
@@ -29,6 +23,8 @@ static void spawn_player_spawn( ApeEntity *self )
 	}
 
 	spawnEntity->listNode = PlInsertLinkedListNode( playerSpawnPoints, self );
+
+	return spawnEntity;
 }
 
 static void destroy_player_spawn( ApeEntity *self )
@@ -62,7 +58,6 @@ ApeEntityClassDefinition game_playerSpawnEntityClass_ = {
         .description     = "Creates a marker indicating where the player can spawn.",
         .createFunction  = create_player_spawn,
         .destroyFunction = destroy_player_spawn,
-        .spawnFunction   = spawn_player_spawn,
 
         .properties    = spawnProperties,
         .numProperties = QM_OS_ARRAY_ELEMENTS( spawnProperties ),

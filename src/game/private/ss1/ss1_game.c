@@ -4,49 +4,19 @@
 
 #include "menu/menu.h"
 
-#include "../shared/integrations/integrations.h"
-#include "../shared/physics/physics.h"
-#include "../shared/game_team.h"
-#include "../shared/components/component_movement.h"
+#include "shared/integrations/integrations.h"
+#include "shared/physics/physics.h"
+#include "shared/game_team.h"
+#include "shared/components/component_movement.h"
+#include "shared/entities/entity_player_spawn.h"
 
-#include "entities/entity_player.h"
+#include "../shared/entities/qm1/qm1_entity_player.h"
 
 SS1GameState ss1_gameState;
 
 #define SS1_CONFIG "game_ss1"
 
-const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ] = {
-        [SS1_PROFESSION_SHAMAN] = {
-                                   .name            = "Shaman",
-                                   .description     = "Healer",
-                                   .maxHealth       = 100,
-                                   .maxForwardSpeed = 10.0f,
-                                   .maxStrafeSpeed  = 10.0f,
-                                   },
-        [SS1_PROFESSION_MACHINIST] = {
-                                   .name            = "Machinist",
-                                   .description     = "Engineer",
-                                   .maxHealth       = 100,
-                                   .maxForwardSpeed = 10.0f,
-                                   .maxStrafeSpeed  = 10.0f,
-                                   },
-        [SS1_PROFESSION_TRICKSTER] = {
-                                   .name            = "Trickster",
-                                   .description     = "Spy",
-                                   .maxHealth       = 100,
-                                   .maxForwardSpeed = 10.0f,
-                                   .maxStrafeSpeed  = 10.0f,
-                                   },
-        [SS1_PROFESSION_POUNDER] = {
-                                   .name            = "Pounder",
-                                   .description     = "Heavy",
-                                   .maxHealth       = 200,
-                                   .maxForwardSpeed = 10.0f,
-                                   .maxStrafeSpeed  = 10.0f,
-                                   },
-};
-
-static unsigned int teamResourcePools[ SS1_MAX_TEAMS ][ SS1_MAX_RESOURCE_TYPES ];
+static unsigned int teamResourcePools[ QM1_GAME_MAX_TEAMS ][ SS1_MAX_RESOURCE_TYPES ];
 
 void ss1_actions_register_();
 
@@ -58,16 +28,16 @@ static bool ss1_initialize()
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
-	for ( unsigned int i = 0; i < SS1_MAX_PROFESSIONS; ++i )
+	for ( unsigned int i = 0; i < QM1_CHARACTER_MAX_PROFESSIONS; ++i )
 	{
-		assert( ss1_professions[ i ].name != nullptr && ss1_professions[ i ].description != nullptr );
+		assert( qm1_professions_[ i ].name != nullptr && qm1_professions_[ i ].description != nullptr );
 	}
 #endif
 
 	ss1_gameState.config        = com_get_config( SS1_CONFIG );
 	ss1_gameState.isFirstLaunch = acm_get_bool( ss1_gameState.config, "isFirstLaunch", true );
 
-	ss1_menu_initialize();
+	ss1_menu_initialize_();
 
 	ss1_gameState.camera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( ss1_gameState.camera == nullptr )
@@ -106,7 +76,7 @@ static bool ss1_shutdown()
 		ss1_gameState.world = nullptr;
 	}
 
-	ss1_menu_shutdown();
+	ss1_menu_shutdown_();
 
 	game_integrations_discord_shutdown_();
 
@@ -448,7 +418,7 @@ static void ss1_tick( double delta )
 #endif
 }
 
-static bool ss1_draw( ApeViewport *viewport )
+static bool ss1_draw( const ApeViewport *viewport )
 {
 	ape_camera_make_active( ss1_gameState.camera );
 	ape_camera_draw_perspective( ss1_gameState.camera, viewport );
@@ -461,16 +431,43 @@ static bool ss1_draw_menu( const ApeViewport *viewport )
 	return true;
 }
 
+static void spawn_characters()
+{
+	// create all the characters for each spawn point
+	PLLinkedList *playerSpawns = game_player_spawn_get_spawn_points();
+	if ( playerSpawns == nullptr )
+	{
+		game_warning_( "Unable to spawn player entities, no spawn points!\n" );
+		return;
+	}
+
+	ApeEntity *spawnEntity;
+	COM_ITERATE_LINKED_LIST( spawnEntity, playerSpawns, i )
+	{
+		ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( spawnEntity ) );
+		if ( room == nullptr )
+		{
+			game_warning_( "Encountered a player spawn outside a room!\n" );
+			continue;
+		}
+
+		QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( spawnEntity ) );
+		QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( spawnEntity ) );
+
+		ape_entity_create( APE_WORLD_NODE( room ), "ss1_player", "player", nullptr, &pos, &ang );
+	}
+}
+
 static void ss1_spawn_world( ApeRoom *room )
 {
 	game_world_simulation_initialize( &ss1_gameState.simulation );
 
-	game_team_init( SS1_MAX_TEAMS );
+	game_team_init( QM1_GAME_MAX_TEAMS );
 
 	game_menu_set_active( nullptr );
 
 	// setup the team resource pools
-	for ( unsigned int i = 0; i < SS1_MAX_TEAMS; ++i )
+	for ( unsigned int i = 0; i < QM1_GAME_MAX_TEAMS; ++i )
 	{
 		PL_ZERO_( teamResourcePools[ i ] );
 		game_team_set_resource_pools( i, teamResourcePools[ i ], SS1_MAX_RESOURCE_TYPES );
@@ -503,7 +500,9 @@ static void ss1_spawn_world( ApeRoom *room )
 	const char *c = G_STR_( "Invading %s" );
 	char        buf[ 128 ];
 	snprintf( buf, sizeof( buf ), c, path );
-	game_integrations_discord_update_activity_( buf, nullptr, "qm1-logo", SS1_GAME_TITLE );
+	game_integrations_discord_update_activity_( buf, nullptr, "qm1-logo", QM1_GAME_TITLE );
+
+	spawn_characters();
 }
 
 static void on_destroy_room( ApeRoom *room )

@@ -127,7 +127,7 @@ static void check_for_controllers( void )
 {
 	int             num;
 	SDL_JoystickID *joysticks = SDL_GetJoysticks( &num );
-	if ( joysticks == nullptr || num == 0 )
+	if ( joysticks == nullptr )
 	{
 		return;
 	}

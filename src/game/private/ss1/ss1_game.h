@@ -7,7 +7,7 @@
 #include "../shared/game_client.h"
 #include "../shared/game_world_simulation.h"
 
-#define SS1_GAME_TITLE "embrace INC."
+static constexpr char QM1_GAME_TITLE[] = "Nihlexa";
 
 #define SS1_GAME_MILESTONE     "ss1_proto_1"
 #define SS1_GAME_VERSION_MAJOR 0
@@ -19,30 +19,17 @@
 #define SS1_MAX_TEAM_NAME   32
 #define SS1_MAX_PLAYER_NAME 32
 
-#define SS1_MAX_TEAMS   2
-#define SS1_MAX_PLAYERS 64
+static constexpr unsigned int QM1_GAME_MAX_TEAMS      = 4;
+static constexpr unsigned int QM1_GAME_MAX_PLAYERS    = 4;
+static constexpr unsigned int QM1_GAME_MAX_CHARACTERS = 8;
 
-typedef enum SS1ProfessionType : uint8_t
+#include "qm1_character.h"
+
+typedef struct Qm1Team
 {
-	SS1_PROFESSION_SHAMAN,   // medic
-	SS1_PROFESSION_MACHINIST,// engineer
-	SS1_PROFESSION_TRICKSTER,// spy
-	SS1_PROFESSION_POUNDER,  // soldier
-
-	SS1_MAX_PROFESSIONS
-} SS1ProfessionType;
-
-typedef struct SS1Profession
-{
-	const char *name;
-	const char *description;
-
-	float maxForwardSpeed;
-	float maxStrafeSpeed;
-
-	unsigned int maxHealth;
-} SS1Profession;
-extern const SS1Profession ss1_professions[ SS1_MAX_PROFESSIONS ];
+	Qm1Character characters[ QM1_GAME_MAX_CHARACTERS ];
+	unsigned int numCharacters;
+} Qm1Team;
 
 typedef enum SS1ResourceType : uint8_t
 {
@@ -60,9 +47,10 @@ typedef enum SS1ResourceType : uint8_t
 
 typedef enum GameCameraState
 {
-	GAME_CAMERA_STATE_FREE,
-	GAME_CAMERA_STATE_FIRST_PERSON,
-	GAME_CAMERA_STATE_THIRD_PERSON,
+	GAME_CAMERA_STATE_FREE,        // free camera
+	GAME_CAMERA_STATE_FIXED,       // game has control over it
+	GAME_CAMERA_STATE_FIRST_PERSON,// first-person w/ input
+	GAME_CAMERA_STATE_THIRD_PERSON,// third-person w/ input
 
 	GAME_CAMERA_STATE_MAX,
 } GameCameraState;
@@ -71,7 +59,7 @@ typedef struct SS1GameState
 {
 	GameWorldSimulation simulation;
 
-	GamePlayer players[ SS1_MAX_PLAYERS ];
+	GamePlayer players[ QM1_GAME_MAX_PLAYERS ];
 
 	ApeCamera      *camera;// our eyes
 	QmMathVector3f  oldCameraPosition;

@@ -95,7 +95,7 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 	if ( collision != nullptr )
 	{
 		static constexpr float SPHERE_SIZE = 4.0f;
-		ape_draw_debug_sphere( pos, QM_MATH_COLOUR4UB( 255, 255, 0, 255 ), SPHERE_SIZE );
+		//ape_draw_debug_sphere( pos, QM_MATH_COLOUR4UB( 255, 255, 0, 255 ), SPHERE_SIZE );
 
 		ground_check( self, collision, entity );
 
@@ -126,7 +126,7 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 						}
 					}
 
-					ape_draw_debug_axis( hits[ i ].intersection, pl_vecOrigin3, SPHERE_SIZE );
+					//ape_draw_debug_axis( hits[ i ].intersection, pl_vecOrigin3, SPHERE_SIZE );
 				}
 
 				qm_os_memory_free( hits );
