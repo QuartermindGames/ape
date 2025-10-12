@@ -27,9 +27,14 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	float scale     = 1.0f;
+	float scale = 1.0f;
+
 	const float w = 256.0f * scale;
-	const float h = 128.0f * scale;
+
+	static constexpr float MAX_HEIGHT = 200.0f;
+	static constexpr float MIN_HEIGHT = 30.0f;
+
+	const float h = PlClamp( MIN_HEIGHT, MAX_HEIGHT * ( -compassAngles.x / MAX_HEIGHT ) + MAX_HEIGHT / 2.0f * scale, MAX_HEIGHT );
 
 	const float x = w / 2.0f + 32.0f;
 	const float y = viewport->height - w / 2.0f + 32.0f;
@@ -49,7 +54,11 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 			continue;
 		}
 
-		float height = ( i % 3 ? 2.0f : 16.0f );
+		static constexpr float MAX_PIN_HEIGHT = 16.0f;
+		static constexpr float MIN_PIN_HEIGHT = 2.0f;
+
+		float height = i % 3 ? MIN_PIN_HEIGHT : MAX_PIN_HEIGHT;
+		height       = height - height * h / MAX_HEIGHT / 2.0f;
 
 		PlgImmPushVertex( xo, yo, 0.0f );
 		PlgImmColour( 255, 255, 255, 255 );
