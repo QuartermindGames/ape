@@ -182,6 +182,8 @@ ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self )
 
 void ape_viewport_make_active( ApeViewport *self )
 {
+	ape_render_target_bind( self->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
+
 	// we've got to do this here again, because set_viewport_size isn't called quite so often via the regular launcher,
 	// though to be honest, it probably shouldn't be called as often from the editor either...
 	update_render_target_size( self );

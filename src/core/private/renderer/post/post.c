@@ -88,7 +88,7 @@ void ape_register_postfx_console_variables_( void )
 	/* urrrughgdshghfhksd, but yeah... */
 	register_post_effects();
 
-	PlRegisterConsoleVariable( "postfx", "Toggles post-processing pipeline.", "true", PL_VAR_BOOL, &postProcessEnabled, NULL, true );
+	PlRegisterConsoleVariable( "postfx", "Toggles post-processing pipeline.", "true", PL_VAR_BOOL, &postProcessEnabled, nullptr, true );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
@@ -113,34 +113,43 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 		return;
 	}
 
-	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
-
-	PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
-	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
-	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
-
 	if ( !postProcessEnabled )
 	{
 		COM_PROFILE_FUNCTION_END();
 		return;
 	}
 
+	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
+	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+
+	PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
+	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
+	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
+
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
-		ape_render_target_bind( nullptr, PLG_FRAMEBUFFER_DEFAULT );
-
 		if ( postProcessEffects[ i ] == nullptr )
 		{
 			continue;
 		}
 
 		postProcessEffects[ i ]->draw( viewport );
+
+		ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 	}
+
+	// bind the viewport render target again
+	ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	COM_PROFILE_FUNCTION_END();
 }
 
-ApeRenderTarget *ape_postfx_get_render_target( void )
+ApeRenderTarget *ape_postfx_get_render_target_( void )
 {
 	return ppRenderTarget;
+}
+
+bool ape_postfx_is_enabled_()
+{
+	return postProcessEnabled;
 }

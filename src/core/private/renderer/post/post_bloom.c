@@ -65,7 +65,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	// this is currently pretty shit due to limitations in the plgraphics implementation,
 	// so we have to do it in more passes than we should
 
-	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target();
+	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
 	PLGTexture *viewportTexture = ape_render_target_get_texture( postRenderTarget );
@@ -114,7 +114,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
-		ape_render_target_bind( ape_postfx_get_render_target(), PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_bind( ape_postfx_get_render_target_(), PLG_FRAMEBUFFER_DEFAULT );
 
 		if ( bloomAdditive )
 		{
@@ -124,9 +124,12 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 		{
 			PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
 		}
+
 		PlgSetTexture( bloomBlurTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
+
+		PlgSetTexture( nullptr, 0 );
 
 		PlgSetBlendMode( PLG_BLEND_DISABLE );
 	}

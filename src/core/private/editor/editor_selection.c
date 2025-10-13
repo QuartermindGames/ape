@@ -257,7 +257,6 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 		unsigned int sh = viewport->height / 2;
 		ape_viewport_set_size( selectionViewport, sw, sh );
 		ape_viewport_make_active( selectionViewport );
-		ape_render_target_bind( selectionViewport->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 	}
@@ -314,7 +313,6 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 
 	if ( !ape_config_.renderer.showSelectionBuffer )
 	{
-		ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
 		ape_viewport_make_active( viewport );
 	}
 }

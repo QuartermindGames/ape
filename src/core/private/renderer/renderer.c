@@ -177,9 +177,6 @@ void ape_draw_begin_( ApeViewport *viewport )
 
 	ape_viewport_make_active( viewport );
 
-	ApeRenderTarget *target = ape_viewport_get_render_target( viewport );
-	ape_render_target_bind( target, PLG_FRAMEBUFFER_DEFAULT );
-
 	ape_setup_default_draw_state_( viewport );
 
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL );
@@ -189,7 +186,7 @@ void ape_draw_begin_( ApeViewport *viewport )
 
 static void write_screenshot( void )
 {
-	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
+	ApeRenderTarget *renderTarget = ape_postfx_get_render_target_();
 	if ( renderTarget == NULL )
 	{
 		return;
@@ -254,6 +251,11 @@ static void write_screenshot( void )
 
 void ape_draw_end_( ApeViewport *viewport )
 {
+	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DEFAULT );
+
+	PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
+	PlgBlitFrameBuffers( src, src->width, src->height, nullptr, viewport->width, viewport->height, true );
+
 	ape_rendererPerformance_.numBatches    = 0;
 	ape_rendererPerformance_.numTriangles  = 0;
 	ape_rendererPerformance_.numFacesDrawn = 0;

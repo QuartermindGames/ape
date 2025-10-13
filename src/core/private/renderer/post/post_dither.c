@@ -44,7 +44,7 @@ static void draw_dither_effect( const ApeViewport *viewport )
 		return;
 	}
 
-	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target();
+	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
 	PLGTexture *viewportTexture = ape_render_target_get_texture( postRenderTarget );
@@ -71,8 +71,12 @@ static void draw_dither_effect( const ApeViewport *viewport )
 		ape_shader_set_active_( ditherFilterShader );
 
 		PlgSetTexture( viewportTexture, 0 );
+
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
+
+		PlgSetTexture( nullptr, 0 );
 	}
+
 	{
 		PLGTexture *ditherTexture = ape_render_target_get_texture( ditherFilterTarget );
 		assert( ditherTexture != nullptr );
@@ -81,8 +85,12 @@ static void draw_dither_effect( const ApeViewport *viewport )
 		ape_render_target_bind( postRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
+
 		PlgSetTexture( ditherTexture, 0 );
+
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
+
+		PlgSetTexture( nullptr, 0 );
 	}
 }
 

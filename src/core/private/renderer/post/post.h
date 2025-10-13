@@ -24,4 +24,6 @@ void ape_postfx_draw_( const ApeViewport *viewport );
 const ApePostProcessEffect *ape_postfx_get_bloom_( void );
 const ApePostProcessEffect *ape_postfx_get_fxaa_( void );
 
-ApeRenderTarget *ape_postfx_get_render_target( void );
+ApeRenderTarget *ape_postfx_get_render_target_( void );
+
+bool ape_postfx_is_enabled_();

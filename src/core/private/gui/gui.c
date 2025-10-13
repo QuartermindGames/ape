@@ -23,6 +23,9 @@ static ApeGuiCanvas *guiBaseCanvas;
 static bool guiDraw            = true;
 static bool guiProfilerOverlay = false;
 
+static constexpr char POST_MATERIAL_PATH[] = "materials/engine/engine_viewport.mat.n";
+static ApeMaterial   *postMaterial;
+
 static float profilerWidth  = 512;
 static float profilerHeight = 256;
 
@@ -54,6 +57,12 @@ bool ape_gui_initialize_( void )
 	}
 
 #endif
+
+	postMaterial = ape_material_cache( POST_MATERIAL_PATH, APE_CACHE_GROUP_GLOBAL, false );
+	if ( postMaterial == nullptr )
+	{
+		ape_warning_( "Failed to find viewport material (%s); post-processing effects will not work!\n", POST_MATERIAL_PATH );
+	}
 
 	if ( !ape_gui_initialize_fonts_() )
 	{
@@ -331,9 +340,8 @@ void ape_gui_draw_( ApeViewport *viewport )
 
 #if USE_GUI_CANVAS == 0
 
-	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
-
 	// Need to call this again to reset the viewport
+	ape_viewport_make_active( viewport );
 	ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 #else
@@ -347,18 +355,9 @@ void ape_gui_draw_( ApeViewport *viewport )
 	float w = ( float ) viewport->width;
 	float h = ( float ) viewport->height;
 
-	ApeRenderTarget *renderTarget = ape_postfx_get_render_target();
-	if ( renderTarget != nullptr )
+	if ( ape_postfx_is_enabled_() && postMaterial != nullptr )
 	{
-		PLGTexture *texture = ape_render_target_get_texture( renderTarget );
-		if ( texture != nullptr )
-		{
-			ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT );
-			PlgSetShaderProgram( program->internal );
-			PlgSetTexture( texture, 0 );
-
-			ape_draw_textured_quad( nullptr, x, y, w, h, &PL_COLOUR_WHITE, 0 );
-		}
+		ape_draw_textured_quad( postMaterial, x, y, w, h, &PL_COLOUR_WHITE, 0 );
 	}
 
 	//TODO: whaa... these have nothing to do with the gui!?

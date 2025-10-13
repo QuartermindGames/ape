@@ -1318,20 +1318,13 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 		{
 			ape_rendererPerformance_.numTriangles += mesh->num_verts / 2;
 		}
-
-		// reset everything back before the next pass
-
-		if ( !ape_rendererState_.overrideDepthMode )
-		{
-			PlgDepthBufferFunction( APE_RENDERER_DEFAULT_DEPTH_FUNCTION );
-		}
-		if ( !ape_rendererState_.overrideBlendMode )
-		{
-			PlgSetBlendMode( PLG_BLEND_DISABLE );
-		}
-
-		PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
 	}
+
+	// reset everything back before the next pass
+	PlgDepthBufferFunction( APE_RENDERER_DEFAULT_DEPTH_FUNCTION );
+	PlgSetBlendMode( PLG_BLEND_DISABLE );
+
+	PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
 }
 
 void ape_tick_materials_( void )
