@@ -42,7 +42,7 @@ add_dependencies(Forge
         plcore
         plgraphics
         pl_gl_driver
-        ApeCore
+        ape-core
         FOX-1.6)
 
 if (NOT UNIX)

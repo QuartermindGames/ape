@@ -50,8 +50,8 @@ if (MINGW)
 
             plcore
             plgraphics
-            ApeCommon
-            ApeCore
+            ape-common
+            ape-core
     )
 else ()
     set(GAME_LINK_LIBS
@@ -60,8 +60,8 @@ else ()
 
             plcore
             plgraphics
-            ApeCommon
-            ApeCore
+            ape-common
+            ape-core
     )
 endif ()
 

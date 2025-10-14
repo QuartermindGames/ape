@@ -38,7 +38,7 @@ set(APE_SOURCE_EDITORS
         private/editor/editor_selection.c
 )
 
-add_library(ApeCore STATIC
+add_library(ape-core STATIC
         private/ape.c
         private/ape_filesystem.c
         private/ape_interface_game.c
@@ -84,39 +84,39 @@ add_library(ApeCore STATIC
 
         private/ape_test.c
 )
-add_dependencies(ApeCore
+add_dependencies(ape-core
         plcore
         plgraphics
         pl_gl_driver
 )
 
-target_include_directories(ApeCore PRIVATE
+target_include_directories(ape-core PRIVATE
         private/
         ../game/public/
 )
-target_include_directories(ApeCore PUBLIC
+target_include_directories(ape-core PUBLIC
         public/
 )
 
-set_target_properties(ApeCore PROPERTIES
+set_target_properties(ape-core PROPERTIES
         FOLDER "Engine"
         PREFIX ""
 )
 
 if (WIN32)
-    target_link_libraries(ApeCore SDL2_dll)
+    target_link_libraries(ape-core SDL2_dll)
 else ()
-    target_link_libraries(ApeCore SDL3)
+    target_link_libraries(ape-core SDL3)
 endif ()
 
-target_link_libraries(ApeCore
+target_link_libraries(ape-core
         # qmfw libraries
         qm-os
         # platform libraries
         plcore
         plgraphics
         # ape libraries
-        ApeCommon
+        ape-common
         acm
         # other
         OpenAL

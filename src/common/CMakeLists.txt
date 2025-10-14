@@ -1,4 +1,4 @@
-add_library(ApeCommon STATIC
+add_library(ape-common STATIC
         private/common.c
         private/common_collision.c
         private/common_math.c
@@ -7,15 +7,16 @@ add_library(ApeCommon STATIC
         private/pack/pack_pkg.c
 )
 
-target_include_directories(ApeCommon PRIVATE private ../3rdparty/miniz/)
-target_include_directories(ApeCommon PUBLIC public/)
+target_include_directories(ape-common PRIVATE private ../3rdparty/miniz/)
+target_include_directories(ape-common PUBLIC public/)
 
-set_target_properties(ApeCommon PROPERTIES
+set_target_properties(ape-common PROPERTIES
         FOLDER "Engine"
         PREFIX ""
 )
-target_compile_definitions(ApeCommon PRIVATE COMMON_DLL=1)
-target_link_libraries(ApeCommon acm 
+target_compile_definitions(ape-common PRIVATE COMMON_DLL=1)
+target_link_libraries(ape-common
+        acm
         qm-os 
         plcore
 )

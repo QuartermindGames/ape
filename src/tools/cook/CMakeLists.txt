@@ -11,6 +11,6 @@ add_executable(cook
 )
 
 target_link_libraries(cook
-        ApeCommon
-        ApeCore
+        ape-common
+        ape-core
 )
