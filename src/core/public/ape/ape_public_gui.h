@@ -90,10 +90,11 @@ void ape_gui_font_destroy( ApeGuiFont *font );
  * to the newly loaded GuiFont. If the font file cannot be opened or
  * deserialized, a warning message will be logged and a null pointer will be returned.
  *
- * @param path 	The file path to the font file to be loaded.
- * @return 		A pointer to the loaded GuiFont structure, or nullptr if loading failed.
+ * @param path 		The file path to the font file to be loaded.
+ * @param fallback	If the font isn't found, allows you to specify a fallback.
+ * @return 			A pointer to the loaded GuiFont structure, or nullptr if loading failed.
  */
-ApeGuiFont *gui_font_load( const char *path );
+ApeGuiFont *gui_font_load( const char *path, ApeGuiFont *fallback );
 
 void  ape_gui_font_get_character_pixel_size( const ApeGuiFont *font, float scale, uint32_t character, float *dw, float *dh );
 float ape_gui_font_get_character_pixel_width( const ApeGuiFont *font, float scale, uint32_t character );

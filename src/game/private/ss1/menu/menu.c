@@ -249,17 +249,8 @@ static void handle_menu_action( ApeInputState state, const char *id )
 
 void ss1_menu_initialize_( void )
 {
-	menuFont = gui_font_load( menuFontPath );
-	if ( menuFont == nullptr )
-	{
-		game_error_( "Failed to load menu font (%s)!\n", menuFontPath );
-	}
-
-	menuTitleFont = gui_font_load( menuTitleFontPath );
-	if ( menuTitleFont == nullptr )
-	{
-		game_error_( "Failed to load title font (%s)!\n", menuTitleFontPath );
-	}
+	menuFont = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
+	menuTitleFont = gui_font_load( menuTitleFontPath, gui_get_default_font( GUI_FONT_DEFAULT_LARGE ) );
 
 	game_menu_compass_initialize_( menuTitleFont );
 

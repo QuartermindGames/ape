@@ -21,11 +21,7 @@ static ChatMessage            chatMessages[ 16 ];
 
 void game_menu_chat_initialize_()
 {
-	chatFont = gui_font_load( chatFontPath );
-	if ( chatFont == nullptr )
-	{
-		chatFont = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
-	}
+	chatFont = gui_font_load( chatFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
 }
 
 void game_menu_chat_shutdown_()

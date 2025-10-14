@@ -192,13 +192,13 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	return font;
 }
 
-ApeGuiFont *gui_font_load( const char *path )
+ApeGuiFont *gui_font_load( const char *path, ApeGuiFont *fallback )
 {
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
 		ape_warning_( "Failed to load font: %s\n", PlGetError() );
-		return nullptr;
+		return fallback;
 	}
 
 	ApeGuiFont *font = font_deserialize( file );
@@ -221,7 +221,7 @@ bool ape_gui_initialize_fonts_( void )
 	};
 	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
 	{
-		defaultFonts[ i ] = gui_font_load( fontPaths[ i ] );
+		defaultFonts[ i ] = gui_font_load( fontPaths[ i ], nullptr );
 		assert( defaultFonts[ i ] != NULL );
 		if ( defaultFonts[ i ] == NULL )
 		{
