@@ -9,6 +9,7 @@ set(YIN_CORE_CLIENT
         private/renderer/post/post.c
         private/renderer/post/post_bloom.c
         private/renderer/post/post_dither.c
+        private/renderer/post/post_dof.c
         private/renderer/post/post_fxaa.c
 
         private/renderer/renderer_batch.c

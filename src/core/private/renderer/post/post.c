@@ -10,6 +10,7 @@ typedef enum ApeRendererPostEffectType
 {
 	APE_RENDERER_POST_EFFECT_TYPE_FXAA,
 	APE_RENDERER_POST_EFFECT_TYPE_BLOOM,
+	APE_RENDERER_POST_EFFECT_TYPE_DOF,
 	APE_RENDERER_POST_EFFECT_TYPE_DITHER,
 
 	MAX_POST_EFFECTS
@@ -22,6 +23,7 @@ static bool                        postProcessEnabled = true;
 static ApeRenderTarget *ppRenderTarget = nullptr;
 
 extern ApePostProcessEffect ape_postDitherEffect_;
+extern ApePostProcessEffect ape_postDofEffect_;
 
 static void register_post_effects( void )
 {
@@ -33,6 +35,7 @@ static void register_post_effects( void )
 	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_FXAA ]   = ape_postfx_get_fxaa_();
 	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_BLOOM ]  = ape_postfx_get_bloom_();
 	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_DITHER ] = &ape_postDitherEffect_;
+	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_DOF ]    = &ape_postDofEffect_;
 
 	postProcessInit = true;
 }
@@ -106,12 +109,6 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_START();
 
 	assert( viewport->renderTarget != nullptr );
-	PLGTexture *baseTexture = ape_render_target_get_texture( viewport->renderTarget );
-	if ( baseTexture == nullptr )
-	{
-		COM_PROFILE_FUNCTION_END();
-		return;
-	}
 
 	if ( !postProcessEnabled )
 	{
