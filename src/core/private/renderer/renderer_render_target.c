@@ -38,7 +38,7 @@ void ape_initialize_render_targets_( void )
 	renderTargets = PlCreateHashTable();
 	if ( renderTargets == NULL )
 	{
-		ape_error_( true, "Failed to create render target hash table: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create render target hash table: %s\n", PlGetError() );
 	}
 }
 
@@ -53,7 +53,7 @@ void ape_shutdown_render_targets_( void )
 
 		int numReferences = ape_memory_get_num_references( &renderTarget->reference );
 		if ( numReferences > 0 )
-			ape_print_( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
+			ape_console_print_( "%s with %u references on shutdown!\n", renderTarget->id, numReferences );
 
 		node = PlGetNextHashTableNode( node );
 	}
@@ -76,7 +76,7 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 	{
 		if ( flags == 0 )
 		{
-			PRINT_DEBUG( "Placeholder render target \"%s\" was already generated, returning existing\n", key );
+			ape_console_verbose_( "Placeholder render target \"%s\" was already generated, returning existing\n", key );
 			ape_memory_add_reference( &renderTarget->reference );
 			return renderTarget;
 		}
@@ -86,12 +86,12 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 			renderTarget->frameBuffer = PlgCreateFrameBuffer( width, height, flags, numSamples );
 			if ( renderTarget->frameBuffer == NULL )
 			{
-				ape_warning_( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
+				ape_console_warning_( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
 				return NULL;
 			}
 		}
 
-		PRINT_DEBUG( "Render target already exists, updating size\n" );
+		ape_console_verbose_( "Render target already exists, updating size\n" );
 		ape_render_target_set_size( renderTarget, width, height );
 		ape_memory_add_reference( &renderTarget->reference );
 		return renderTarget;
@@ -104,19 +104,19 @@ ApeRenderTarget *ape_render_target_create( const char *key, unsigned int width, 
 		frameBuffer = PlgCreateFrameBuffer( width, height, flags, numSamples );
 		if ( frameBuffer == NULL )
 		{
-			ape_warning_( "Failed to create specified framebuffer: %s\n", PlGetError() );
+			ape_console_warning_( "Failed to create specified framebuffer: %s\n", PlGetError() );
 			return NULL;
 		}
 
 		textureAttachment = PlgGetFrameBufferTextureAttachment( frameBuffer, textureAttachmentComponent, textureAttachmentFilter, PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE );
 		if ( textureAttachment == NULL )
 		{
-			ape_warning_( "Failed to create texture attachment, \"%s\":\n", key, PlGetError() );
+			ape_console_warning_( "Failed to create texture attachment, \"%s\":\n", key, PlGetError() );
 		}
 	}
 	else
 	{
-		PRINT_DEBUG( "Creating placeholder render target, \"%s\"\n", key );
+		ape_console_verbose_( "Creating placeholder render target, \"%s\"\n", key );
 		frameBuffer       = NULL;
 		textureAttachment = NULL;
 	}
@@ -145,7 +145,7 @@ void ape_render_target_set_size( ApeRenderTarget *renderTarget, unsigned int wid
 {
 	if ( !PlgSetFrameBufferSize( renderTarget->frameBuffer, width, height ) )
 	{
-		ape_warning_( "Failed to resize framebuffer: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to resize framebuffer: %s\n", PlGetError() );
 	}
 
 	if ( renderTarget->textureAttachment != NULL )

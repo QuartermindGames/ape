@@ -14,11 +14,4 @@ void ape_tick_client_( double delta );
 void ape_initiate_client_connection_( const char *ip, unsigned short port );
 void ape_client_disconnect_( void );
 
-#define CLIENT_PRINT( FORMAT, ... ) \
-	Console_Print( APE_LOG_CLIENT_INFORMATION, FORMAT, ##__VA_ARGS__ )
-#define CLIENT_PRINT_WARNING( FORMAT, ... ) \
-	Console_Print( APE_LOG_CLIENT_WARNING, FORMAT, ##__VA_ARGS__ )
-#define YINENGINE_CLIENT_PRINT_ERROR( FORMAT, ... ) \
-	Console_Print( YINENGINE_LOG_CLIENT_ERROR, FORMAT, ##__VA_ARGS__ )
-
 PL_EXTERN_C_END

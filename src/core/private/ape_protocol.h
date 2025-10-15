@@ -29,7 +29,7 @@ static inline const void *ape_protocol_validate_message( const ApeProtocolMessag
 {
 	if ( src->receivedBytes != dstSize )
 	{
-		ape_warning_( "Invalid message size for \"%s\" (%u != %u)!\n", src->receivedBytes, dstSize );
+		ape_console_warning_( "Invalid message size for \"%s\" (%u != %u)!\n", src->receivedBytes, dstSize );
 		return nullptr;
 	}
 

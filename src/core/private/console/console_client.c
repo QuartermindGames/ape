@@ -367,7 +367,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 
 			if ( inputBuffer[ 0 ] != '\0' )
 			{
-				ape_print_( "%s\n", inputBuffer );
+				ape_console_print_( "%s\n", inputBuffer );
 
 				PlParseConsoleString( inputBuffer );
 

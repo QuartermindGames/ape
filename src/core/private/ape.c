@@ -61,7 +61,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 	else if ( numCommands >= MAX_COMMANDS )
 	{
-		ape_warning_( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
+		ape_console_warning_( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
 		numCommands = ( MAX_COMMANDS - 1 );
 	}
 
@@ -91,55 +91,6 @@ ApeConfig ape_config_;
 AcmBranch *ape_get_config( void ) { return engineConfig; }
 AcmBranch *ape_get_user_config( void ) { return userConfig; }
 
-void ape_print_( const char *message, ... )
-{
-	va_list args;
-	va_start( args, message );
-	char buf[ 2048 ];
-	vsnprintf( buf, sizeof( buf ), message, args );
-	va_end( args );
-
-	PlLogMessage( Console_GetLogLevel( APE_LOG_INFORMATION ), buf );
-}
-
-void ape_verbose_( const char *message, ... )
-{
-	va_list args;
-	va_start( args, message );
-	char buf[ 2048 ];
-	vsnprintf( buf, sizeof( buf ), message, args );
-	va_end( args );
-
-	PlLogMessage( Console_GetLogLevel( APE_LOG_VERBOSE ), buf );
-}
-
-void ape_warning_( const char *message, ... )
-{
-	va_list args;
-	va_start( args, message );
-	char buf[ 2048 ];
-	vsnprintf( buf, sizeof( buf ), message, args );
-	va_end( args );
-
-	PlLogMessage( Console_GetLogLevel( APE_LOG_WARNING ), "$cFF0000FFWARNING: $cFFFFFFFF%s", buf );
-}
-
-void ape_error_( bool die, const char *message, ... )
-{
-	va_list args;
-	va_start( args, message );
-	char buf[ 2048 ];
-	vsnprintf( buf, sizeof( buf ), message, args );
-	va_end( args );
-
-	PlLogMessage( Console_GetLogLevel( APE_LOG_ERROR ), "$cFF0000FFERROR: $cFFFFFFFF%s", buf );
-
-	if ( die )
-	{
-		abort();
-	}
-}
-
 bool ape_is_dedicated()
 {
 	return engineTerminalMode;
@@ -156,16 +107,16 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	// Call this first, so we can buffer console output
 	ape_initialize_console_();
 
-	ape_print_( ENGINE_NAME " %d (%s / (%s:%s, %s)), " COM_COPYRIGHT "\n",
+	ape_console_print_( ENGINE_NAME " %d (%s / (%s:%s, %s)), " COM_COPYRIGHT "\n",
 	            VERSION_MAJOR,
 	            ENGINE_VERSION_STR,
 	            GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
-	ape_print_( "Current working directory: \"%s\"\n", PlGetWorkingDirectory() );
+	ape_console_print_( "Current working directory: \"%s\"\n", PlGetWorkingDirectory() );
 
 	engineTerminalMode = PlHasCommandLineArgument( "cmd" );
 	if ( engineTerminalMode )
 	{
-		ape_print_( "Operating in command-line mode!\n" );
+		ape_console_print_( "Operating in command-line mode!\n" );
 	}
 
 	ape_console_register_variables_( engineTerminalMode );
@@ -180,7 +131,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 	ape_fs_setup_config( engineConfig );
 
-	ape_print_( "Initializing core services...\n" );
+	ape_console_print_( "Initializing core services...\n" );
 
 	ape_initialize_scheduler_();
 	ape_memory_initialize_();
@@ -191,7 +142,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	ape_initialize_game_();
 	ape_initialize_editor_();
 
-	ape_print_( "Initialization complete!\n" );
+	ape_console_print_( "Initialization complete!\n" );
 
 	lastTime = qm_os_time_get_seconds();
 
@@ -204,7 +155,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 void ape_shutdown( void )
 {
-	ape_print_( "Shutting down...\n" );
+	ape_console_print_( "Shutting down...\n" );
 
 	ss_acl_flush_tasks_();
 
@@ -267,7 +218,7 @@ void ape_tick_frame()
 	// but regardless, it makes me feel better having it here...
 	if ( numTicks == INT64_MAX )
 	{
-		ape_warning_( "Hit maximum tick limit, resetting!\n" );
+		ape_console_warning_( "Hit maximum tick limit, resetting!\n" );
 		numTicks = 0;
 	}
 	else

@@ -41,7 +41,7 @@ static ApeWorldNode *clone_light( ApeWorldNode *src )
 	ApeLight *dstLight = ape_create_light( src->parent, &src->position, &srcLight->colour, srcLight->radius, srcLight->type, srcLight->flags );
 	if ( dstLight == nullptr )
 	{
-		ape_warning_( "Failed to create light for duplication!\n" );
+		ape_console_warning_( "Failed to create light for duplication!\n" );
 		return nullptr;
 	}
 

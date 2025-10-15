@@ -100,7 +100,7 @@ ApeDecalManager *ape_decal_manager_create_()
 	manager->decalList = PlCreateLinkedList();
 	if ( manager->decalList == nullptr )
 	{
-		ape_warning_( "Failed to create decals list: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to create decals list: %s\n", PlGetError() );
 
 		qm_os_memory_free( manager );
 		manager = nullptr;
@@ -255,7 +255,7 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 	unsigned int numDecals = PlGetNumLinkedListNodes( self->decalList );
 	if ( numDecals >= MAX_DECALS )
 	{
-		ape_warning_( "Failed to create decal, hit decal limit (%u >= %u)!\n", numDecals, MAX_DECALS );
+		ape_console_warning_( "Failed to create decal, hit decal limit (%u >= %u)!\n", numDecals, MAX_DECALS );
 		return nullptr;
 	}
 

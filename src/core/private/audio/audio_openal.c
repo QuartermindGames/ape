@@ -45,7 +45,7 @@ static void handle_al_error( unsigned int err, const char *file, int line )
 			break;
 	}
 
-	ape_warning_( "Encountered an OpenAL error: %s (%u) (%s:%u)\n", desc, err, file, line );
+	ape_console_warning_( "Encountered an OpenAL error: %s (%u) (%s:%u)\n", desc, err, file, line );
 
 	assert( err == AL_NO_ERROR );
 }
@@ -97,14 +97,14 @@ static bool initialize_openal( void )
 	xalDevice = alcOpenDevice( nullptr );
 	if ( xalDevice == NULL )
 	{
-		ape_warning_( "Failed to open default OpenAL device!\n" );
+		ape_console_warning_( "Failed to open default OpenAL device!\n" );
 		return false;
 	}
 
 	xalContext = alcCreateContext( xalDevice, nullptr );
 	if ( xalContext == NULL )
 	{
-		ape_warning_( "Failed to create OpenAL context!\n" );
+		ape_console_warning_( "Failed to create OpenAL context!\n" );
 		shutdown_openal();
 		return false;
 	}
@@ -113,7 +113,7 @@ static bool initialize_openal( void )
 	status = alcMakeContextCurrent( xalContext );
 	if ( !status )
 	{
-		ape_warning_( "Failed to make OpenAL context current!\n" );
+		ape_console_warning_( "Failed to make OpenAL context current!\n" );
 		shutdown_openal();
 		return false;
 	}
@@ -122,7 +122,7 @@ static bool initialize_openal( void )
 	XAL_CALL( status = alcIsExtensionPresent( xalDevice, "ALC_EXT_EFX" ) );
 	if ( status )
 	{
-		ape_print_( "ALC_EXT_EFX detected\n" );
+		ape_console_print_( "ALC_EXT_EFX detected\n" );
 
 		XAL_CALL( alGenEffects = alGetProcAddress( "alGenEffects" ) );
 		XAL_CALL( alDeleteEffects = alGetProcAddress( "alDeleteEffects" ) );
@@ -141,7 +141,7 @@ static bool initialize_openal( void )
 	XAL_CALL( status = alIsExtensionPresent( "AL_SOFT_buffer_samples" ) );
 	if ( status )
 	{
-		ape_print_( "AL_SOFT_buffer_samples detected\n" );
+		ape_console_print_( "AL_SOFT_buffer_samples detected\n" );
 		xalExtensions[ XAL_EXTENSION_SOFT_BUFFER_SAMPLES ] = true;
 	}
 
@@ -176,7 +176,7 @@ static bool initialize_openal( void )
 	activeSources = PlCreateLinkedList();
 	if ( activeSources == nullptr )
 	{
-		ape_error_( true, "Failed to create active sources list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create active sources list: %s\n", PlGetError() );
 	}
 
 	return true;
@@ -184,7 +184,7 @@ static bool initialize_openal( void )
 
 static void shutdown_openal( void )
 {
-	ape_print_( "Shutting down OpenAL interface\n" );
+	ape_console_print_( "Shutting down OpenAL interface\n" );
 
 	//TODO: need to make sure *all* sources are wiped out and references released...
 
@@ -269,7 +269,7 @@ static bool al_cache_sample( ApeAudioSample *sample )
 	switch ( sample->type )
 	{
 		default:
-			ape_warning_( "Invalid or unsupported sample type (%u) for OpenAL!\n", sample->type );
+			ape_console_warning_( "Invalid or unsupported sample type (%u) for OpenAL!\n", sample->type );
 			return false;
 		case APE_AUDIO_SAMPLE_FORMAT_MONO8:
 			format = AL_FORMAT_MONO8;
@@ -301,7 +301,7 @@ static void al_emit_sample( ApeAudioSample *sample, const QmMathVector3f *positi
 	ApeAudioSource *source = get_free_temporary_source();
 	if ( source == nullptr )
 	{
-		ape_warning_( "Failed to get a free audio source!\n" );
+		ape_console_warning_( "Failed to get a free audio source!\n" );
 		return;
 	}
 

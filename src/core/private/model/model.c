@@ -38,7 +38,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 	const char *materialPath = acm_get_string( root, "material", nullptr );
 	if ( materialPath == nullptr )
 	{
-		ape_warning_( "No material provided for mesh!\n" );
+		ape_console_warning_( "No material provided for mesh!\n" );
 		return nullptr;
 	}
 
@@ -74,7 +74,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 	}
 	else
 	{
-		ape_warning_( "Mesh has no indices!\n" );
+		ape_console_warning_( "Mesh has no indices!\n" );
 	}
 
 	return mesh;
@@ -85,7 +85,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	unsigned int version = acm_get_uint( root, "version", ( unsigned int ) -1 );
 	if ( version == ( unsigned int ) -1 || version > APE_FORMAT_MODEL_VERSION )
 	{
-		ape_warning_( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
+		ape_console_warning_( "Invalid model version, %d, expected %u!\n", version, APE_FORMAT_MODEL_VERSION );
 		return nullptr;
 	}
 
@@ -97,13 +97,13 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		numFloatElements = acm_get_uint( branch, "numFloatElements", 0 );
 		if ( numFloatElements == 0 )
 		{
-			ape_warning_( "Invalid number of float elements per vertex descriptor!\n" );
+			ape_console_warning_( "Invalid number of float elements per vertex descriptor!\n" );
 			return nullptr;
 		}
 	}
 	else
 	{
-		ape_warning_( "Mesh has no vertex descriptor!\n" );
+		ape_console_warning_( "Mesh has no vertex descriptor!\n" );
 		return nullptr;
 	}
 
@@ -120,21 +120,21 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		}
 		else
 		{
-			ape_warning_( "Invalid number (%u) of positions in model!\n", numVertices );
+			ape_console_warning_( "Invalid number (%u) of positions in model!\n", numVertices );
 			numVertices = 0;
 		}
 	}
 
 	if ( numVertices == 0 )
 	{
-		ape_warning_( "Mesh has no vertices!\n" );
+		ape_console_warning_( "Mesh has no vertices!\n" );
 		return nullptr;
 	}
 
 	model->cache = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, 0, numVertices );
 	if ( model->cache == nullptr )
 	{
-		ape_warning_( "Failed to create cache for model: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to create cache for model: %s\n", PlGetError() );
 		return nullptr;
 	}
 
@@ -150,12 +150,12 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	AcmBranch *meshArray = acm_get_child_by_name( root, "meshes" );
 	if ( meshArray == NULL || ( ( model->numMaterials = acm_get_num_of_children( meshArray ) ) == 0 ) )
 	{
-		ape_warning_( "No meshes for model!\n" );
+		ape_console_warning_( "No meshes for model!\n" );
 		return nullptr;
 	}
 	if ( model->numMaterials >= APE_FORMAT_MODEL_MAX_MATERIALS )
 	{
-		ape_warning_( "Unexpected number of meshes (%u >= %u)!\n", model->numMaterials, APE_FORMAT_MODEL_MAX_MATERIALS );
+		ape_console_warning_( "Unexpected number of meshes (%u >= %u)!\n", model->numMaterials, APE_FORMAT_MODEL_MAX_MATERIALS );
 		model->numMaterials = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
 	}
 
@@ -167,7 +167,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 			assert( meshNode != NULL );
 			if ( deserialize_mesh( model, &model->meshes[ i ], meshNode ) == nullptr )
 			{
-				ape_warning_( "Failed to deserialize mesh %u!\n", i );
+				ape_console_warning_( "Failed to deserialize mesh %u!\n", i );
 				break;
 			}
 
@@ -181,7 +181,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		model->numBones = acm_get_num_of_children( bonesList );
 		if ( model->numBones >= APE_FORMAT_MODEL_MAX_BONES )
 		{
-			ape_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
+			ape_console_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
 			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
 		}
 
@@ -203,7 +203,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		unsigned int rootBone = acm_get_uint( root, "rootBone", 0 );
 		if ( rootBone >= model->numBones )
 		{
-			ape_warning_( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
+			ape_console_warning_( "Invalid root bone (%u), defaulting to 0!\n", rootBone );
 			rootBone = 0;
 		}
 		model->rootBone = &model->bones[ rootBone ];
@@ -228,7 +228,7 @@ ApeModel *ape_model_load( const char *path )
 	AcmBranch *root = com_acm_load_file( path, "model" );
 	if ( root == NULL )
 	{
-		ape_warning_( "Invalid model: %s (%s)\n", acm_get_error_message(), path );
+		ape_console_warning_( "Invalid model: %s (%s)\n", acm_get_error_message(), path );
 		return nullptr;
 	}
 
@@ -243,7 +243,7 @@ ApeModel *ape_model_load( const char *path )
 		qm_os_memory_free( model );
 		model = nullptr;
 
-		ape_warning_( "Failed to load model, \"%s\"!\n", path );
+		ape_console_warning_( "Failed to load model, \"%s\"!\n", path );
 	}
 
 	acm_branch_destroy( root );
@@ -396,7 +396,7 @@ ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, con
 	ApeModel *model = ape_model_load( path );
 	if ( model == nullptr )
 	{
-		ape_warning_( "Failed to load the specified model (%s) for node!\n", path );
+		ape_console_warning_( "Failed to load the specified model (%s) for node!\n", path );
 		return nullptr;
 	}
 
@@ -432,7 +432,7 @@ static ApeWorldNode *clone_model_node( ApeWorldNode *src )
 	ApeModelNode *dstModelNode = ape_model_node_create( src->parent, src->name, srcModelNode->modelPath );
 	if ( dstModelNode == nullptr )
 	{
-		ape_warning_( "Failed to create model for duplication!\n" );
+		ape_console_warning_( "Failed to create model for duplication!\n" );
 		return nullptr;
 	}
 

@@ -83,13 +83,13 @@ void ape_renderer_batch_initialize_()
 	batches = PlCreateLinkedList();
 	if ( batches == nullptr )
 	{
-		ape_error_( true, "Failed to create batches list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create batches list: %s\n", PlGetError() );
 	}
 
 	batchLookup = PlCreateHashTable();
 	if ( batchLookup == nullptr )
 	{
-		ape_error_( true, "Failed to create batch lookup table: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create batch lookup table: %s\n", PlGetError() );
 	}
 }
 

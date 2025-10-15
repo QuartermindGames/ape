@@ -57,7 +57,7 @@ static void process_server_message()
 	{
 		if ( messageHeader->type != APE_PROTOCOL_MESSAGE_TYPE_VALIDATED )
 		{
-			ape_warning_( "Invalid message type received: %u\n", messageHeader->type );
+			ape_console_warning_( "Invalid message type received: %u\n", messageHeader->type );
 			clientState.state = CLIENT_SERVER_STATE_REJECTED;
 			return;
 		}
@@ -74,7 +74,7 @@ static void process_server_message()
 	switch ( messageHeader->type )
 	{
 		default:
-			ape_warning_( "Unhandled client message (%u)!\n", messageHeader->type );
+			ape_console_warning_( "Unhandled client message (%u)!\n", messageHeader->type );
 			break;
 		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
 		{
@@ -102,7 +102,7 @@ static void handle_connection_state( void )
 			if ( state == NET_CONNECTION_FAILED )
 			{
 				ape_client_disconnect_();
-				CLIENT_PRINT_WARNING( "Connection failed!\n" );
+				ape_console_warning_( "Connection failed!\n" );
 			}
 			return;
 		}
@@ -122,7 +122,7 @@ static void handle_connection_state( void )
 
 		clientState.isConnected = true;
 		clientState.state       = CLIENT_SERVER_STATE_VALIDATING;
-		CLIENT_PRINT( "Connected successfully!\n" );
+		ape_console_print_( "Connected successfully!\n" );
 		return;
 	}
 
@@ -155,13 +155,13 @@ static void handle_connection_state( void )
 		else if ( messageHeader->length > APE_PROTOCOL_MESSAGE_SIZE )
 		{
 			// boom
-			ape_warning_( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, APE_PROTOCOL_MESSAGE_SIZE );
+			ape_console_warning_( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, APE_PROTOCOL_MESSAGE_SIZE );
 			ape_client_disconnect_();
 		}
 
 		if ( clientState.state == CLIENT_SERVER_STATE_REJECTED )
 		{
-			ape_warning_( "Client rejected by server, disconnecting\n" );
+			ape_console_warning_( "Client rejected by server, disconnecting\n" );
 			ape_client_disconnect_();
 		}
 	}
@@ -178,7 +178,7 @@ static void connect_command( PL_UNUSED unsigned int argc, char **argv )
 
 void ape_initialize_client_( void )
 {
-	CLIENT_PRINT( "Initializing client\n" );
+	ape_console_print_( "Initializing client\n" );
 
 	PL_ZERO_( clientState );
 	snprintf( clientState.name, sizeof( clientState.name ), "anonymous" );
@@ -257,11 +257,11 @@ void ape_initiate_client_connection_( const char *ip, unsigned short port )
 	clientState.netSocket = ape_net_open_socket_( ip, port, false );
 	if ( clientState.netSocket == NULL )
 	{
-		CLIENT_PRINT_WARNING( "Failed to open client socket!\n" );
+		ape_console_warning_( "Failed to open client socket!\n" );
 		return;
 	}
 
-	CLIENT_PRINT( "Initiated connection to %s, pending...\n", ip );
+	ape_console_print_( "Initiated connection to %s, pending...\n", ip );
 }
 
 void ape_client_disconnect_( void )
@@ -288,7 +288,7 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 {
 	if ( !ape_is_client_connected() )
 	{
-		ape_warning_( "Attempted to send message while disconnected!\n" );
+		ape_console_warning_( "Attempted to send message while disconnected!\n" );
 		return false;
 	}
 
@@ -301,7 +301,7 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 	ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ) + totalSize, .type = APE_PROTOCOL_MESSAGE_TYPE_GAME };
 	if ( !ape_net_send_( clientState.netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
 	{
-		ape_warning_( "Failed to send message header!\n" );
+		ape_console_warning_( "Failed to send message header!\n" );
 		return false;
 	}
 
@@ -312,7 +312,7 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 			continue;
 		}
 
-		ape_warning_( "Failed to send message buffer (%u)!\n", i );
+		ape_console_warning_( "Failed to send message buffer (%u)!\n", i );
 		return false;
 	}
 

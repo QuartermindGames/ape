@@ -107,14 +107,14 @@ void ape_audio_initialize_( void )
 		return;
 	}
 
-	ape_print_( "Initializing audio\n" );
+	ape_console_print_( "Initializing audio\n" );
 
 	// initialise the driver interface (TODO: allow us to pick the backend we want)
 	const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void );
 	audioDriverInterface = ape_audio_get_driver_interface_();
 	if ( audioDriverInterface == nullptr || !audioDriverInterface->initialize() )
 	{
-		ape_warning_( "Failed to initialize audio driver!\n" );
+		ape_console_warning_( "Failed to initialize audio driver!\n" );
 		return;
 	}
 
@@ -163,14 +163,14 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	const char *extension = PlGetFileExtension( path );
 	if ( extension == nullptr )
 	{
-		ape_warning_( "Failed to get audio file extension (%s)!\n", path );
+		ape_console_warning_( "Failed to get audio file extension (%s)!\n", path );
 		return nullptr;
 	}
 
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == nullptr )
 	{
-		ape_warning_( "Failed to open audio file (%s): %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to open audio file (%s): %s\n", path, PlGetError() );
 		return nullptr;
 	}
 
@@ -188,7 +188,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	if ( sample == nullptr )
 	{
 		// this comes over a little shit given we're just checking the extension, but meh...
-		ape_warning_( "Unknown audio format (%s)!\n", path );
+		ape_console_warning_( "Unknown audio format (%s)!\n", path );
 		return nullptr;
 	}
 
@@ -196,7 +196,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	{
 		if ( !audioDriverInterface->cacheSample( sample ) )
 		{
-			ape_warning_( "Driver upload for audio sample failed!\n" );
+			ape_console_warning_( "Driver upload for audio sample failed!\n" );
 			destroy_sample( sample );
 			return nullptr;
 		}
@@ -208,7 +208,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	ape_memory_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
 	ape_memory_add_reference( &sample->reference );
 
-	PRINT_DEBUG( "Cached sound, \"%s\"\n", path );
+	ape_console_verbose_( "Cached sound, \"%s\"\n", path );
 
 	return sample;
 }
@@ -255,7 +255,7 @@ void ape_audio_pause_( bool pause )
 
 	audioPaused = pause;
 
-	PRINT_DEBUG( "Audio %s\n", audioPaused ? "paused" : "unpaused" );
+	ape_console_verbose_( "Audio %s\n", audioPaused ? "paused" : "unpaused" );
 }
 
 /****************************************
@@ -306,12 +306,12 @@ void ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSa
 {
 	if ( audioSource == nullptr )
 	{
-		ape_warning_( "Passed an invalid audio source handle, ignoring!\n" );
+		ape_console_warning_( "Passed an invalid audio source handle, ignoring!\n" );
 		return;
 	}
 	if ( audioSample == nullptr )
 	{
-		ape_warning_( "Passed an invalid audio sample handle, ignoring!\n" );
+		ape_console_warning_( "Passed an invalid audio sample handle, ignoring!\n" );
 		return;
 	}
 }

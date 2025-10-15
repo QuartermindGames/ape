@@ -15,13 +15,13 @@ ApeWorld *ape_world_create( void )
 	world->entities = PlCreateLinkedList();
 	if ( world->entities == nullptr )
 	{
-		ape_error_( true, "Failed to create world entity list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create world entity list: %s\n", PlGetError() );
 	}
 
 	world->roomLookup = PlCreateHashTable();
 	if ( world->roomLookup == nullptr )
 	{
-		ape_error_( true, "Failed to create world room lookup: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create world room lookup: %s\n", PlGetError() );
 	}
 
 	return world;
@@ -93,24 +93,24 @@ static void on_attach_child( void *self, ApeWorldNode *child )
 {
 	if ( child->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
-		ape_warning_( "Attached a node other than a room to the root!\n" );
+		ape_console_warning_( "Attached a node other than a room to the root!\n" );
 		return;
 	}
 
 	const char *path = ape_room_get_path( ( ApeRoom * ) child );
 	if ( path == nullptr || *path == '\0' )
 	{
-		ape_warning_( "Attached a room with no path!\n" );
+		ape_console_warning_( "Attached a room with no path!\n" );
 		return;
 	}
 
 	if ( PlInsertHashTableNode( ( ( ApeWorld * ) self )->roomLookup, path, strlen( path ), ( ApeRoom * ) child ) == nullptr )
 	{
-		ape_warning_( "Attempted to add duplicate room (%s)!\n", path );
+		ape_console_warning_( "Attempted to add duplicate room (%s)!\n", path );
 		return;
 	}
 
-	PRINT_DEBUG( "Added \"%s\" to world lookup\n", path );
+	ape_console_verbose_( "Added \"%s\" to world lookup\n", path );
 }
 
 static void on_dettach_child( void *self, ApeWorldNode *child )
@@ -129,13 +129,13 @@ static void on_dettach_child( void *self, ApeWorldNode *child )
 	PLHashTableNode *node = PlLookupHashTableNode( ( ( ApeWorld * ) self )->roomLookup, path, strlen( path ) );
 	if ( node == nullptr )
 	{
-		ape_warning_( "Attempted to remove a room that wasn't in the lookup list (%s)!\n", path );
+		ape_console_warning_( "Attempted to remove a room that wasn't in the lookup list (%s)!\n", path );
 		return;
 	}
 
 	PlDestroyHashTableNode( node );
 
-	PRINT_DEBUG( "Removed \"%s\" from world lookup\n", path );
+	ape_console_verbose_( "Removed \"%s\" from world lookup\n", path );
 }
 
 ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path )
@@ -148,7 +148,7 @@ ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path )
 	const char *seperator = strrchr( path, ':' );
 	if ( seperator == nullptr )
 	{
-		ape_warning_( "Failed to find seperator in given path (%s), invalid tag name?\n", path );
+		ape_console_warning_( "Failed to find seperator in given path (%s), invalid tag name?\n", path );
 		return nullptr;
 	}
 
@@ -159,7 +159,7 @@ ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path )
 	ApeRoom *room = ape_world_get_room_by_path( self, roomPath );
 	if ( room == nullptr )
 	{
-		ape_warning_( "Failed to get room by path (%s)!\n", path );
+		ape_console_warning_( "Failed to get room by path (%s)!\n", path );
 		return nullptr;
 	}
 
@@ -167,7 +167,7 @@ ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path )
 	ApeBrushFace *face        = ape_room_get_tagged_surface( room, surfaceName );
 	if ( face == nullptr )
 	{
-		ape_warning_( "Failed to get tagged surface (%s)!\n", surfaceName );
+		ape_console_warning_( "Failed to get tagged surface (%s)!\n", surfaceName );
 		return nullptr;
 	}
 

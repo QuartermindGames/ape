@@ -30,7 +30,7 @@ static void print_world_name( const char *path, void * )
 	//TODO: just print the name of the world itself?
 
 	const char *name = ( name = strrchr( path, '/' ) ) != nullptr ? name + 1 : path;
-	ape_print_( "%s\n", name );
+	ape_console_print_( "%s\n", name );
 }
 
 static void list_rooms_command( unsigned int, char ** )
@@ -45,7 +45,7 @@ const ApeGameInterfaceImport *ape_gameInterface;
 
 void ape_initialize_game_( void )
 {
-	ape_print_( "Initializing game...\n" );
+	ape_console_print_( "Initializing game...\n" );
 
 	PlRegisterConsoleCommand( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
 	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
@@ -53,23 +53,23 @@ void ape_initialize_game_( void )
 	ape_gameInterface = ape_game_get_interface();
 	if ( ape_gameInterface == nullptr )
 	{
-		ape_error_( true, "Failed to get game interface!\n" );
+		ape_console_error_( true, "Failed to get game interface!\n" );
 	}
 	else if ( ape_gameInterface->version != APE_GAME_INTERFACE_VERSION )
 	{
-		ape_error_( true, "Unsupported game interface version (%u != %u)!\n", ape_gameInterface->version, APE_GAME_INTERFACE_VERSION );
+		ape_console_error_( true, "Unsupported game interface version (%u != %u)!\n", ape_gameInterface->version, APE_GAME_INTERFACE_VERSION );
 	}
 	else if ( *ape_gameInterface->identifier == '\0' )
 	{
-		ape_error_( true, "No identifier provided for game interface!\n" );
+		ape_console_error_( true, "No identifier provided for game interface!\n" );
 	}
 
 	if ( !game_initialize() )
 	{
-		ape_error_( true, "Failed to initialize game!\n" );
+		ape_console_error_( true, "Failed to initialize game!\n" );
 	}
 
-	ape_print_( "Game initialized!\n" );
+	ape_console_print_( "Game initialized!\n" );
 }
 
 void ape_shutdown_game_( void )

@@ -30,10 +30,16 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 
 	char identifier[ 4 ];
 	if ( PlReadFile( filePtr, identifier, sizeof( char ), 4 ) != 4 )
-		PRINT_ERROR( "Failed to read in identifier for \"%s\"!\nPL: %s\n", path, PlGetError() );
+	{
+		ape_console_warning_( "Failed to read in identifier for \"%s\"!\nPL: %s\n", path, PlGetError() );
+		return nullptr;
+	}
 
 	if ( !( identifier[ 0 ] == 'G' && identifier[ 1 ] == 'F' && identifier[ 2 ] == 'X' && identifier[ 3 ] == '0' ) )
-		PRINT_ERROR( "Invalid identifier for \"%s\", expected GFX0!\n", path );
+	{
+		ape_console_warning_( "Invalid identifier for \"%s\", expected GFX0!\n", path );
+		return nullptr;
+	}
 
 	bool status;
 	uint8_t flags = PlReadInt8( filePtr, &status );
@@ -41,7 +47,10 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 	uint16_t height = PlReadInt16( filePtr, false, &status );
 	uint16_t numBlocks = PlReadInt16( filePtr, false, &status );
 	if ( !status )
-		PRINT_ERROR( "Failed to read header for \"%s\"!\n", path );
+	{
+		ape_console_warning_( "Failed to read header for \"%s\"!\n", path );
+		return nullptr;
+	}
 
 	PLImageFormat imageFormat;
 	PLColourFormat colourFormat;
@@ -58,7 +67,10 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 
 	PLImage *image = PlCreateImage( NULL, width, height, 0, colourFormat, imageFormat );
 	if ( image == NULL )
-		PRINT_ERROR( "Failed to create image handle!\nPL: %s\n", PlGetError() );
+	{
+		ape_console_warning_( "Failed to create image handle!\nPL: %s\n", PlGetError() );
+		return nullptr;
+	}
 
 	uint32_t pixelSize = width * height;
 	if ( numBlocks == 0 )
@@ -79,7 +91,9 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 		{
 			uint8_t blockFlags = PlReadInt8( filePtr, &status );
 			if ( !status )
-				PRINT_ERROR( "Failed to read in block %d header in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
+			{
+				ape_console_error_( true, "Failed to read in block %d header in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
+			}
 
 			/* fetch the number of channels and then create our colour store */
 			uint8_t colour[ 4 ] = { 0, 0, 0, 255 };
@@ -102,7 +116,9 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 
 			void *pixelOffsets = QM_OS_MEMORY_CALLOC( numBlockPixels, offsetSize );
 			if ( PlReadFile( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels )
-				PRINT_ERROR( "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
+			{
+				ape_console_error_( true, "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
+			}
 
 			for ( unsigned int j = 0; j < numBlockPixels; ++j )
 			{
@@ -121,7 +137,9 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 				}
 
 				if ( po >= image->size )
-					PRINT_ERROR( "Invalid pixel offset %d in block %d, in \"%s\"!\n", i, j );
+				{
+					ape_console_error_( true, "Invalid pixel offset %d in block %d, in \"%s\"!\n", i, j );
+				}
 
 				unsigned int numChannels = ( imageFormat == PL_IMAGEFORMAT_RGBA8 ) ? 4 : 3;
 				memcpy( &image->data[ 0 ][ po * numChannels ], colour, numChannels );

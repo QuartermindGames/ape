@@ -35,13 +35,13 @@ static bool Audio_XAudio2_Initialize()
 	HRESULT result = CoInitializeEx( nullptr, COINIT_MULTITHREADED );
 	if ( result != S_OK && result != S_FALSE && result != RPC_E_CHANGED_MODE )
 	{
-		PRINT_WARNING( "COINIT_MULTITHREADED failed (%X)!\n", result );
+		ape_console_warning_( "COINIT_MULTITHREADED failed (%X)!\n", result );
 		return false;
 	}
 
 	if ( FAILED( XAudio2Create( &audioEngineInstance, 0, XAUDIO2_DEFAULT_PROCESSOR ) ) )
 	{
-		PRINT_WARNING( "Failed to create XAudio2 instance!\n" );
+		ape_console_warning_( "Failed to create XAudio2 instance!\n" );
 		return false;
 	}
 
@@ -54,7 +54,7 @@ static bool Audio_XAudio2_Initialize()
 	             nullptr,
 	             AudioCategory_GameEffects ) ) )
 	{
-		PRINT_WARNING( "Failed to create mastering voice!\n" );
+		ape_console_warning_( "Failed to create mastering voice!\n" );
 		return false;
 	}
 
@@ -72,7 +72,7 @@ static bool Audio_XAudio2_Initialize()
 	// now we're going to try initializing X3DAudio
 	PRINT( "Setting up X3DAudio... " );
 	if ( FAILED( X3DAudioInitialize( SPEAKER_STEREO, X3DAUDIO_SPEED_OF_SOUND, audio3DHandle ) ) )
-		PRINT_WARNING( "Failed to initialize 3D audio!\n" );
+		ape_console_warning_( "Failed to initialize 3D audio!\n" );
 	else
 	{
 		audio3DSupported = true;

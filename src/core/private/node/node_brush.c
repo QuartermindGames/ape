@@ -104,7 +104,7 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 	ApeBrush *dstBrush = ape_brush_create( src->parent, src->name, &src->position, &src->angles );
 	if ( dstBrush == nullptr )
 	{
-		ape_warning_( "Failed to create brush for duplication!\n" );
+		ape_console_warning_( "Failed to create brush for duplication!\n" );
 		return nullptr;
 	}
 
@@ -493,7 +493,7 @@ bool ape_brush_face_set_tag( ApeBrushFace *self, const char *tag )
 	size_t tagLength = strlen( tag );
 	if ( tagLength + 1 >= sizeof( self->tag ) )
 	{
-		ape_warning_( "Failed to set tag (%s) for face, tag is too long (%u >= %u)!\n", tag, tagLength, sizeof( self->tag ) );
+		ape_console_warning_( "Failed to set tag (%s) for face, tag is too long (%u >= %u)!\n", tag, tagLength, sizeof( self->tag ) );
 		return false;
 	}
 
@@ -506,7 +506,7 @@ bool ape_brush_face_set_tag( ApeBrushFace *self, const char *tag )
 	ApeRoom *room = ape_brush_face_get_room( self );
 	if ( room == nullptr )
 	{
-		ape_warning_( "Failed to set tag (%s) for face, as face isn't attached to a room!\n", tag );
+		ape_console_warning_( "Failed to set tag (%s) for face, as face isn't attached to a room!\n", tag );
 		return false;
 	}
 
@@ -699,14 +699,14 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const QmMathVector3f *vertic
 	// extrude and build the brush geometry from the given polygon shape
 	if ( numVertices < 3 )
 	{
-		ape_warning_( "Invalid number of vertices for building brush from polygon (%u < 3)!\n", numVertices );
+		ape_console_warning_( "Invalid number of vertices for building brush from polygon (%u < 3)!\n", numVertices );
 		return false;
 	}
 
 	switch ( type )
 	{
 		default:
-			ape_warning_( "Unsupported brush type (%u)!\n", type );
+			ape_console_warning_( "Unsupported brush type (%u)!\n", type );
 			return false;
 		case APE_EDITOR_BRUSH_TYPE_BLOCK:
 			build_block_brush( self, vertices, numVertices, dir, scale, signedArea );
@@ -763,7 +763,7 @@ void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, const unsigned
 
 		if ( ape_world_node_get_parent_by_pointer( APE_WORLD_NODE( self ), APE_WORLD_NODE( brush ) ) )
 		{
-			ape_warning_( "Cannot merge brush, as it is a parent of the brush it's being merged into!\n" );
+			ape_console_warning_( "Cannot merge brush, as it is a parent of the brush it's being merged into!\n" );
 			brushes[ i ] = nullptr;
 			continue;
 		}
@@ -772,7 +772,7 @@ void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, const unsigned
 		QmMathVector3f *vertices = qm_os_memory_realloc( self->vertices, sizeof( QmMathVector3f ) * ( self->numVertices + brush->numVertices ) );
 		if ( vertices == nullptr )
 		{
-			ape_warning_( "Failed to merge brushes: %s\n", PlGetError() );
+			ape_console_warning_( "Failed to merge brushes: %s\n", PlGetError() );
 			brushes[ i ] = nullptr;
 			return;
 		}
@@ -789,7 +789,7 @@ void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, const unsigned
 		ApeBrushFace *faces = qm_os_memory_realloc( self->faces, sizeof( ApeBrushFace ) * ( self->numFaces + brush->numFaces ) );
 		if ( faces == nullptr )
 		{
-			ape_warning_( "Failed to merge brushes: %s\n", PlGetError() );
+			ape_console_warning_( "Failed to merge brushes: %s\n", PlGetError() );
 			brushes[ i ] = nullptr;
 			continue;
 		}
@@ -926,7 +926,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 	}
 	else
 	{
-		ape_warning_( "No vertices specified for brush!\n" );
+		ape_console_warning_( "No vertices specified for brush!\n" );
 		ape_world_node_destroy( APE_WORLD_NODE( self ) );
 		return nullptr;
 	}
@@ -966,7 +966,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 			}
 			else
 			{
-				ape_warning_( "No vertices specified for brush!\n" );
+				ape_console_warning_( "No vertices specified for brush!\n" );
 				ape_world_node_destroy( APE_WORLD_NODE( self ) );
 				return nullptr;
 			}
@@ -989,7 +989,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 			}
 			else
 			{
-				ape_warning_( "No material specified for a brush face, using default!\n" );
+				ape_console_warning_( "No material specified for a brush face, using default!\n" );
 				self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 			}
 			self->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( QmMathVector2f ) {} );
@@ -1008,7 +1008,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 	}
 	else
 	{
-		ape_warning_( "No faces specified for brush!\n" );
+		ape_console_warning_( "No faces specified for brush!\n" );
 		ape_world_node_destroy( APE_WORLD_NODE( self ) );
 		return nullptr;
 	}

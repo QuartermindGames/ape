@@ -60,7 +60,7 @@ static int core_print( void *ptr )
 	const char *output = lua_tostring( state, -1 );
 	if ( output != nullptr )
 	{
-		ape_print_( "%s\n", output );
+		ape_console_print_( "%s\n", output );
 	}
 
 	lua_pop( state, 1 );
@@ -80,7 +80,7 @@ static int core_warning( void *ptr )
 	const char *output = lua_tostring( state, -1 );
 	if ( output != nullptr )
 	{
-		ape_warning_( "%s\n", output );
+		ape_console_warning_( "%s\n", output );
 	}
 
 	lua_pop( state, 1 );
@@ -102,7 +102,7 @@ static int core_error( void *ptr )
 	const char *output = lua_tostring( state, -1 );
 	if ( output != nullptr )
 	{
-		ape_error_( shouldDie, "%s\n", output );
+		ape_console_error_( shouldDie, "%s\n", output );
 	}
 
 	lua_pop( state, 1 );
@@ -135,7 +135,7 @@ void ape_script_manager_register_interface( const ApeScriptLuaInterface *interfa
 		switch ( interface->exports[ i ].type )
 		{
 			default:
-				ape_warning_( "Unknown script export type (%u)!\n", interface->exports[ i ].type );
+				ape_console_warning_( "Unknown script export type (%u)!\n", interface->exports[ i ].type );
 				break;
 			case APE_SCRIPT_LUA_EXPORT_TYPE_FUNC:
 				lua_pushcfunction( scriptLuaState, ( int ( * )( lua_State * ) ) interface->exports[ i ].func );
@@ -171,7 +171,7 @@ void ape_script_manager_initialize_()
 	scriptLuaState = lua_newstate( script_alloc, nullptr );
 	if ( scriptLuaState == nullptr )
 	{
-		ape_error_( true, "Failed to initialize script interface!\n" );
+		ape_console_error_( true, "Failed to initialize script interface!\n" );
 	}
 
 	lua_newtable( scriptLuaState );
@@ -194,7 +194,7 @@ bool ape_script_manager_do_string( const char *buf )
 {
 	if ( !luaL_dostring( scriptLuaState, buf ) )
 	{
-		ape_warning_( "Lua error: %s\n", lua_tostring( scriptLuaState, -1 ) );
+		ape_console_warning_( "Lua error: %s\n", lua_tostring( scriptLuaState, -1 ) );
 		return false;
 	}
 
@@ -206,14 +206,14 @@ bool ape_script_manager_do_file( const char *path )
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == nullptr )
 	{
-		ape_warning_( "Failed to open file (%s): %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to open file (%s): %s\n", path, PlGetError() );
 		return false;
 	}
 
 	size_t size = PlGetFileSize( file );
 	if ( size == 0 || size >= PlMegabytesToBytes( 64 ) )
 	{
-		ape_warning_( "Invalid size for file (%s) (%u)!\n", path, size );
+		ape_console_warning_( "Invalid size for file (%s) (%u)!\n", path, size );
 		return false;
 	}
 
@@ -229,7 +229,7 @@ bool ape_script_manager_do_file( const char *path )
 	}
 	else
 	{
-		ape_warning_( "Lua error (%s): %s\n", path, lua_tostring( scriptLuaState, -1 ) );
+		ape_console_warning_( "Lua error (%s): %s\n", path, lua_tostring( scriptLuaState, -1 ) );
 	}
 
 	qm_os_memory_free( buf );

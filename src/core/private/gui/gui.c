@@ -53,7 +53,7 @@ bool ape_gui_initialize_( void )
 	guiBaseCanvas = ape_gui_canvas_create( 640, 480 );
 	if ( guiBaseCanvas == nullptr )
 	{
-		ape_error_( true, "Failed to create base canvas!\n" );
+		ape_console_error_( true, "Failed to create base canvas!\n" );
 	}
 
 #endif
@@ -61,15 +61,15 @@ bool ape_gui_initialize_( void )
 	postMaterial = ape_material_cache( POST_MATERIAL_PATH, APE_CACHE_GROUP_GLOBAL, false );
 	if ( postMaterial == nullptr )
 	{
-		ape_warning_( "Failed to find viewport material (%s); post-processing effects will not work!\n", POST_MATERIAL_PATH );
+		ape_console_warning_( "Failed to find viewport material (%s); post-processing effects will not work!\n", POST_MATERIAL_PATH );
 	}
 
 	if ( !ape_gui_initialize_fonts_() )
 	{
-		ape_error_( true, "Font initialization failed!\n" );
+		ape_console_error_( true, "Font initialization failed!\n" );
 	}
 
-	ape_print_( "GUI initialized!\n" );
+	ape_console_print_( "GUI initialized!\n" );
 	return true;
 }
 
@@ -156,7 +156,7 @@ static void draw_profiler( const ApeViewport *viewport )
 	{
 		if ( numProfilingGroups >= MAX_PROFILING_GROUPS )
 		{
-			ape_warning_( "Hit profiling group limit!\n" );
+			ape_console_warning_( "Hit profiling group limit!\n" );
 			break;
 		}
 

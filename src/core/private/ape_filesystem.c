@@ -20,7 +20,7 @@ static void parse_aliases( AcmBranch *root )
 	AcmBranch *child = acm_get_first_child( root );
 	if ( acm_branch_get_type( child ) != ACM_PROPERTY_TYPE_STRING )
 	{
-		PRINT_WARNING( "Invalid child type found in config!\n" );
+		ape_console_warning_( "Invalid child type found in config!\n" );
 		return;
 	}
 
@@ -31,7 +31,7 @@ static void parse_aliases( AcmBranch *root )
 		child = acm_get_next_child( child );
 		if ( child == NULL )
 		{
-			PRINT_WARNING( "Encountered alias with no path: %u\n", i );
+			ape_console_warning_( "Encountered alias with no path: %u\n", i );
 			break;
 		}
 
@@ -39,7 +39,7 @@ static void parse_aliases( AcmBranch *root )
 		acm_branch_get_string( child, targetPath, sizeof( PLPath ) );
 
 		PlAddFileAlias( aliasPath, targetPath );
-		PRINT( "Registered alias: \"%s\" > \"%s\"\n", aliasPath, targetPath );
+		ape_console_print_( "Registered alias: \"%s\" > \"%s\"\n", aliasPath, targetPath );
 
 		child = acm_get_next_child( child );
 	}
@@ -59,14 +59,14 @@ const char *ss_acl_fs_get_user_config_location( void )
 		const char *p = PlGetApplicationDataDirectory( ENGINE_APP_NAME, configPath, sizeof( configPath ) - ( strlen( USER_CONFIG ) + 1 ) );
 		if ( p == NULL )
 		{
-			PRINT_WARNING( "Failed to fetch application data directory, config may not be saved upon closing!\n" );
+			ape_console_warning_( "Failed to fetch application data directory, config may not be saved upon closing!\n" );
 			snprintf( configPath, sizeof( configPath ), "./%s", USER_CONFIG );
 		}
 		else
 		{
 			if ( !PlCreateDirectory( p ) )
 			{
-				PRINT_WARNING( "Failed to create application data directory: %s\n", p );
+				ape_console_warning_( "Failed to create application data directory: %s\n", p );
 			}
 
 			p = &p[ strlen( p ) - 1 ];
@@ -80,7 +80,7 @@ const char *ss_acl_fs_get_user_config_location( void )
 			}
 		}
 
-		PRINT( "Config: %s\n", configPath );
+		ape_console_print_( "Config: %s\n", configPath );
 	}
 
 	return configPath;
@@ -106,7 +106,7 @@ void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize )
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
 	{
-		PRINT_WARNING( "Failed to open file (%s): %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to open file (%s): %s\n", path, PlGetError() );
 		return NULL;
 	}
 
@@ -126,7 +126,7 @@ void ape_fs_mount_base_locations( void )
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )
 	{
 		snprintf( exePath, sizeof( exePath ), "./" );
-		PRINT_WARNING( "Failed to get executable directory, using fallback!\n" );
+		ape_console_warning_( "Failed to get executable directory, using fallback!\n" );
 	}
 
 	PlMountLocalLocation( exePath );

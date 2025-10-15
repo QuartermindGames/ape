@@ -104,7 +104,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != COM_FORMAT_FONT_MAGIC )
 	{
-		ape_warning_( "Invalid font file!\n" );
+		ape_console_warning_( "Invalid font file!\n" );
 		return nullptr;
 	}
 
@@ -112,14 +112,14 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	assert( version <= COM_FORMAT_FONT_VERSION );
 	if ( version > COM_FORMAT_FONT_VERSION )
 	{
-		ape_warning_( "Unsupported font version (%u)!\n", version );
+		ape_console_warning_( "Unsupported font version (%u)!\n", version );
 		return nullptr;
 	}
 
 	uint32_t numGlyphs = PL_READUINT32( file, false, NULL );
 	if ( numGlyphs == 0 )
 	{
-		ape_warning_( "Empty font file!\n" );
+		ape_console_warning_( "Empty font file!\n" );
 		return nullptr;
 	}
 
@@ -163,7 +163,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	if ( bitmapW == 0 || bitmapH == 0 )
 	{
 		ape_gui_font_destroy( font );
-		ape_warning_( "Invalid bitmap size for font!\n" );
+		ape_console_warning_( "Invalid bitmap size for font!\n" );
 		return nullptr;
 	}
 
@@ -172,7 +172,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	if ( PlReadFile( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
 	{
 		ape_gui_font_destroy( font );
-		ape_warning_( "Failed to load entirity of bitmap image from font!\n" );
+		ape_console_warning_( "Failed to load entirity of bitmap image from font!\n" );
 		return nullptr;
 	}
 
@@ -181,7 +181,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 	if ( !PlgUploadTextureImage( font->texture, bitmapImage ) )
 	{
 		ape_gui_font_destroy( font );
-		ape_warning_( "Failed to upload texture data for font!\n" );
+		ape_console_warning_( "Failed to upload texture data for font!\n" );
 		return nullptr;
 	}
 
@@ -197,7 +197,7 @@ ApeGuiFont *gui_font_load( const char *path, ApeGuiFont *fallback )
 	PLFile *file = PlOpenFile( path, false );
 	if ( file == NULL )
 	{
-		ape_warning_( "Failed to load font: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to load font: %s\n", PlGetError() );
 		return fallback;
 	}
 
@@ -225,7 +225,7 @@ bool ape_gui_initialize_fonts_( void )
 		assert( defaultFonts[ i ] != NULL );
 		if ( defaultFonts[ i ] == NULL )
 		{
-			ape_warning_( "Failed to load default font (%s)!\n", fontPaths[ i ] );
+			ape_console_warning_( "Failed to load default font (%s)!\n", fontPaths[ i ] );
 			return false;
 		}
 	}

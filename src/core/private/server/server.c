@@ -45,11 +45,11 @@ bool ape_server_start( const char *ip, unsigned short port )
 	hostSocket = ape_net_open_socket_( ip, port, true );
 	if ( hostSocket == NULL )
 	{
-		ape_warning_( "Failed to open server socket!\n" );
+		ape_console_warning_( "Failed to open server socket!\n" );
 		return false;
 	}
 
-	ape_print_( "APE server active (%s:%u), listening for clients...\n", ip, ape_server_get_port_() );
+	ape_console_print_( "APE server active (%s:%u), listening for clients...\n", ip, ape_server_get_port_() );
 
 	return true;
 }
@@ -59,7 +59,7 @@ void ape_initialize_server_( void )
 	connectedClients = PlCreateLinkedList();
 	if ( connectedClients == NULL )
 	{
-		ape_error_( true, "Failed to create connected clients list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create connected clients list: %s\n", PlGetError() );
 	}
 }
 
@@ -71,7 +71,7 @@ void ape_shutdown_server_( void )
 
 void ape_server_drop_client_( ApeServerClient *serverClient )
 {
-	ape_print_( "Dropping client...\n" );
+	ape_console_print_( "Dropping client...\n" );
 
 	ape_net_close_socket_( serverClient->netSocket );
 
@@ -89,7 +89,7 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 
 	if ( message->magic != APE_PROTOCOL_MAGIC )
 	{
-		ape_warning_( "Invalid magic received from client (%u != %u)!\n", message->magic, APE_PROTOCOL_MAGIC );
+		ape_console_warning_( "Invalid magic received from client (%u != %u)!\n", message->magic, APE_PROTOCOL_MAGIC );
 		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
@@ -99,7 +99,7 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 	uint16_t baseProtocolVersion = message->version >> 8;
 	if ( baseProtocolVersion != APE_PROTOCOL_VERSION )
 	{
-		ape_warning_( "Invalid protocol version received from client (%u != %u)!\n", baseProtocolVersion, APE_PROTOCOL_VERSION );
+		ape_console_warning_( "Invalid protocol version received from client (%u != %u)!\n", baseProtocolVersion, APE_PROTOCOL_VERSION );
 		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
@@ -107,21 +107,21 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 	uint16_t gameProtocolVersion = ( message->version & 0xFF );
 	if ( gameProtocolVersion != game->protocolVersion )
 	{
-		ape_warning_( "Invalid game protocol version received from client (%u != %u)!\n", gameProtocolVersion, game->protocolVersion );
+		ape_console_warning_( "Invalid game protocol version received from client (%u != %u)!\n", gameProtocolVersion, game->protocolVersion );
 		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
 	if ( strncmp( message->identifier, game->identifier, sizeof( message->identifier ) ) != 0 )
 	{
-		ape_warning_( "Invalid identifier received from client (%s != %s)!\n", message->identifier, game->identifier );
+		ape_console_warning_( "Invalid identifier received from client (%s != %s)!\n", message->identifier, game->identifier );
 		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
 
 	if ( *message->clientName == '\0' )
 	{
-		ape_warning_( "No name specified for client!\n" );
+		ape_console_warning_( "No name specified for client!\n" );
 		client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 		return;
 	}
@@ -134,7 +134,7 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 	}
 
 	snprintf( client->name, sizeof( client->name ), "%s", message->clientName );
-	ape_print_( "Client (%s) validated successfully\n", client->name );
+	ape_console_print_( "Client (%s) validated successfully\n", client->name );
 
 	client->state = APE_SERVER_CLIENT_STATE_ACCEPTED;
 
@@ -155,7 +155,7 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 	{
 		if ( messageHeader->type != APE_PROTOCOL_MESSAGE_TYPE_VALIDATION )
 		{
-			ape_warning_( "Client answered without validation message, rejecting!\n" );
+			ape_console_warning_( "Client answered without validation message, rejecting!\n" );
 			client->state = APE_SERVER_CLIENT_STATE_REJECTED;
 			return;
 		}
@@ -179,7 +179,7 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 	switch ( messageHeader->type )
 	{
 		default:
-			ape_warning_( "Unhandled server message (%u)!\n", messageHeader->type );
+			ape_console_warning_( "Unhandled server message (%u)!\n", messageHeader->type );
 			break;
 		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
 		{
@@ -224,7 +224,7 @@ static void tick_server_client( void *userData, bool *breakEarly )
 		else if ( messageHeader->length > APE_PROTOCOL_MESSAGE_SIZE )
 		{
 			// boom
-			ape_warning_( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, APE_PROTOCOL_MESSAGE_SIZE );
+			ape_console_warning_( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, APE_PROTOCOL_MESSAGE_SIZE );
 			ape_server_drop_client_( serverClient );
 		}
 
@@ -253,7 +253,7 @@ void ape_tick_server_( double delta )
 		serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
 		serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;
 		// validation still needs to be performed
-		ape_print_( "Client connected, awaiting validation...\n" );
+		ape_console_print_( "Client connected, awaiting validation...\n" );
 	}
 
 	PlIterateLinkedList( connectedClients, tick_server_client, true );
@@ -287,7 +287,7 @@ bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *b
 	ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ) + totalSize, .type = APE_PROTOCOL_MESSAGE_TYPE_GAME };
 	if ( !ape_net_send_( clientHandle->netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
 	{
-		ape_warning_( "Failed to send message header!\n" );
+		ape_console_warning_( "Failed to send message header!\n" );
 		return false;
 	}
 
@@ -298,7 +298,7 @@ bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *b
 			continue;
 		}
 
-		ape_warning_( "Failed to send message buffer (%u)!\n", i );
+		ape_console_warning_( "Failed to send message buffer (%u)!\n", i );
 		return false;
 	}
 

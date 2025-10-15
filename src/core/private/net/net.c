@@ -81,14 +81,14 @@ static bool execute_test( void )
 	testData.hostSocket = ape_net_open_socket_( ip, 0, true );
 	if ( testData.hostSocket == NULL )
 	{
-		PRINT_WARNING( "Failed to create host socket!\n" );
+		ape_console_warning_( "Failed to create host socket!\n" );
 		return false;
 	}
 
 	testData.clientSocket = ape_net_open_socket_( ip, ape_net_get_local_port_( testData.hostSocket ), false );
 	if ( testData.clientSocket == NULL )
 	{
-		PRINT_WARNING( "Failed to create client socket!\n" );
+		ape_console_warning_( "Failed to create client socket!\n" );
 		return false;
 	}
 
@@ -105,7 +105,7 @@ static bool execute_test( void )
 	size_t sl = strlen( s );
 	ape_net_send_( testData.acceptSocket, s, sl );
 
-	PRINT( "Sent \"%s\" to %s\n", s, ip );
+	ape_console_print_( "Sent \"%s\" to %s\n", s, ip );
 
 	char d[ 16 ];
 	size_t dl = 0;
@@ -115,11 +115,11 @@ static bool execute_test( void )
 			break;
 	}
 
-	PRINT( "Received \"%s\" from %s\n", d, ip );
+	ape_console_print_( "Received \"%s\" from %s\n", d, ip );
 
 	if ( strncmp( s, d, sl ) != 0 )
 	{
-		PRINT_WARNING( "Message did not match expected string!\n" );
+		ape_console_warning_( "Message did not match expected string!\n" );
 		return false;
 	}
 
@@ -130,7 +130,7 @@ static void test_net_command( unsigned int argc, char **argv )
 {
 	PL_ZERO_( testData );
 
-	PRINT( "%s", execute_test() ? "Test passed successfully!\n" : "Test failed!\n" );
+	ape_console_print_( "%s", execute_test() ? "Test passed successfully!\n" : "Test failed!\n" );
 
 	if ( testData.hostSocket != NULL )
 		ape_net_close_socket_( testData.hostSocket );
@@ -149,7 +149,7 @@ void ape_initialize_net_( void )
 	int r;
 	if ( ( r = WSAStartup( MAKEWORD( 2, 2 ), &data ) ) != 0 )
 	{
-		PRINT_WARNING( "Failed to initialize Winsock: %d\n", r );
+		ape_console_warning_( "Failed to initialize Winsock: %d\n", r );
 	}
 #endif
 
@@ -188,7 +188,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	int s = getaddrinfo( ip, buf, &hints, &result );
 	if ( s != 0 )
 	{
-		PRINT_WARNING( "Failed to get address info: %s\n", gai_strerror( s ) );
+		ape_console_warning_( "Failed to get address info: %s\n", gai_strerror( s ) );
 		return NULL;
 	}
 
@@ -226,9 +226,9 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 
 #if defined( _WIN32 )
 		const char *GetLastError_strerror( uint32_t errnum );
-		PRINT( "Unable to bind/connect for socket: %s\n", GetLastError_strerror( WSAGetLastError() ) );
+		ape_console_print_( "Unable to bind/connect for socket: %s\n", GetLastError_strerror( WSAGetLastError() ) );
 #else
-		PRINT( "Unable to bind/connect for socket: %s\n", strerror( errno ) );
+		ape_console_print_( "Unable to bind/connect for socket: %s\n", strerror( errno ) );
 #endif
 
 		close_socket( handle );
@@ -241,7 +241,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 		addressType = r->ai_family;
 		if ( addressType != AF_INET && addressType != AF_INET6 )
 		{
-			PRINT_WARNING( "Unsupported socket type: %u\n", addressType );
+			ape_console_warning_( "Unsupported socket type: %u\n", addressType );
 			close_socket( handle );
 			handle = -1;
 		}
@@ -249,7 +249,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 
 	if ( handle == -1 )
 	{
-		PRINT_WARNING( "Failed to open and connect/bind socket!\n" );
+		ape_console_warning_( "Failed to open and connect/bind socket!\n" );
 		freeaddrinfo( result );
 		return NULL;
 	}
@@ -292,13 +292,13 @@ static bool flush_send_buffer( ApeNetSocket *netSocket )
 			DWORD error = WSAGetLastError();
 			if ( error != WSAEWOULDBLOCK )
 			{
-				PRINT_WARNING( "Send error on socket (error code %u)\n", ( unsigned ) ( error ) );
+				ape_console_warning_( "Send error on socket (error code %u)\n", ( unsigned ) ( error ) );
 				return false;
 			}
 #else
 			if ( errno != EAGAIN && errno != EWOULDBLOCK )
 			{
-				PRINT_WARNING( "Send error on socket (%s)\n", strerror( errno ) );
+				ape_console_warning_( "Send error on socket (%s)\n", strerror( errno ) );
 				return false;
 			}
 #endif
@@ -322,7 +322,7 @@ bool ape_net_send_( ApeNetSocket *netSocket, const void *buf, size_t length )
 
 	if ( ( netSocket->sendBufferUsed + length ) > netSocket->sendBufferSize )
 	{
-		PRINT_WARNING( "Attempted to send %zu bytes on socket, but send buffer has insufficient space\n", length );
+		ape_console_warning_( "Attempted to send %zu bytes on socket, but send buffer has insufficient space\n", length );
 		return false;
 	}
 
@@ -419,7 +419,7 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 			return ( netSocket->connectionState = NET_CONNECTION_CONNECTED );
 		}
 
-		ape_warning_( "Connection failed with error code %u!\n", errCode );
+		ape_console_warning_( "Connection failed with error code %u!\n", errCode );
 		return ( netSocket->connectionState = NET_CONNECTION_FAILED );
 	}
 
@@ -469,7 +469,7 @@ bool ape_net_set_send_buffer_size_( ApeNetSocket *netSocket, size_t sendBufferSi
 	if ( res != 0 )
 	{
 #ifdef _WIN32
-		ape_warning_( "Error setting SO_SNDBUF socket option (error code %u)\n", ( unsigned ) ( WSAGetLastError() ) );
+		ape_console_warning_( "Error setting SO_SNDBUF socket option (error code %u)\n", ( unsigned ) ( WSAGetLastError() ) );
 #else
 		char tmp[ 256 ];
 		if ( strerror_r( errno, tmp, sizeof( tmp ) ) != 0 )
@@ -477,7 +477,7 @@ bool ape_net_set_send_buffer_size_( ApeNetSocket *netSocket, size_t sendBufferSi
 			snprintf( tmp, sizeof( tmp ), "error code %u", errno );
 		}
 
-		ape_warning_( "Error setting SO_SNDBUF socket option (%s)\n", tmp );
+		ape_console_warning_( "Error setting SO_SNDBUF socket option (%s)\n", tmp );
 #endif
 		return false;
 	}

@@ -32,7 +32,7 @@ void ape_editor_selection_initialize_()
 	selectionViewport = ape_viewport_create( 0, 0, 640, 480, NULL, false );
 	if ( selectionViewport == NULL )
 	{
-		ape_error_( true, "Failed to create selection viewport!\n" );
+		ape_console_error_( true, "Failed to create selection viewport!\n" );
 	}
 
 	setup_transform_widget();
@@ -554,7 +554,7 @@ QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *
 	}
 	else
 	{
-		ape_warning_( "Failed to read framebuffer: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to read framebuffer: %s\n", PlGetError() );
 	}
 
 	qm_os_memory_free( buf );
@@ -608,7 +608,7 @@ void ape_editor_delete_selection( ApeEditorInstance *self )
 	{
 		if ( !ape_world_node_has_magic( worldNode ) )
 		{
-			ape_warning_( "One of the selected items wasn't a valid world node, unable to delete!\n" );
+			ape_console_warning_( "One of the selected items wasn't a valid world node, unable to delete!\n" );
 			continue;
 		}
 
@@ -627,7 +627,7 @@ void ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room )
 	{
 		if ( !ape_world_node_has_magic( worldNode ) )
 		{
-			ape_warning_( "One of the selected items wasn't a valid world node, unable to move!\n" );
+			ape_console_warning_( "One of the selected items wasn't a valid world node, unable to move!\n" );
 			continue;
 		}
 

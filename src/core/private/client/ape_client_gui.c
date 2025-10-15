@@ -27,7 +27,7 @@ void ape_initialize_gui_( void )
 	auxCamera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( auxCamera == nullptr )
 	{
-		ape_error_( true, "Failed to create auxiliary camera!\n" );
+		ape_console_error_( true, "Failed to create auxiliary camera!\n" );
 	}
 
 	ape_gui_initialize_();

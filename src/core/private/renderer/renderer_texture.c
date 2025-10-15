@@ -47,7 +47,7 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 	switch ( numChannels )
 	{
 		default:
-			ape_warning_( "Invalid number of colour channels specified!\n" );
+			ape_console_warning_( "Invalid number of colour channels specified!\n" );
 			return nullptr;
 		case 3:
 			cFormat = PL_COLOURFORMAT_RGB;
@@ -62,7 +62,7 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 	PLImage *imageData = PlCreateImage( data, w, h, 0, cFormat, iFormat );
 	if ( imageData == nullptr )
 	{
-		ape_warning_( "Failed to generate image (%s) data: %s\n", id, PlGetError() );
+		ape_console_warning_( "Failed to generate image (%s) data: %s\n", id, PlGetError() );
 	}
 
 #if 0
@@ -74,7 +74,7 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 	PLGTexture *internalTexture = PlgCreateTexture();
 	if ( internalTexture == NULL )
 	{
-		ape_error_( true, "Failed to create texture (%s): %s\n", id, PlGetError() );
+		ape_console_error_( true, "Failed to create texture (%s): %s\n", id, PlGetError() );
 	}
 
 	if ( !generateMipMap )
@@ -88,7 +88,7 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 
 	if ( !PlgUploadTextureImage( internalTexture, imageData ) )
 	{
-		ape_error_( true, "Failed to generate texture from image (%s): %s\n", id, PlGetError() );
+		ape_console_error_( true, "Failed to generate texture from image (%s): %s\n", id, PlGetError() );
 	}
 
 	PlDestroyImage( imageData );
@@ -109,14 +109,14 @@ static void fetch_texture_config( ApeTexture *texture )
 	char *c = strrchr( configPath, '/' );
 	if ( c == NULL )
 	{
-		PRINT_WARNING( "Failed to find path separator for path (%s)!\n", configPath );
+		ape_console_warning_( "Failed to find path separator for path (%s)!\n", configPath );
 		return;
 	}
 
 	c = strchr( c, '.' );
 	if ( c == NULL )
 	{
-		PRINT_WARNING( "Failed to find extension denominator (%s)!\n", configPath );
+		ape_console_warning_( "Failed to find extension denominator (%s)!\n", configPath );
 		return;
 	}
 
@@ -185,7 +185,7 @@ void ape_initialize_textures_( void )
 	textureTable = PlCreateHashTable();
 	if ( textureTable == NULL )
 	{
-		ape_error_( true, "Failed to create texture table: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create texture table: %s\n", PlGetError() );
 	}
 
 	// generate fallback texture
@@ -218,7 +218,7 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 	texture->internal = PlgLoadTextureFromImage( path, texture->filterMode );
 	if ( texture->internal == nullptr )
 	{
-		ape_warning_( "Failed to load texture (%s): %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to load texture (%s): %s\n", path, PlGetError() );
 		qm_os_memory_free( texture );
 		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
 	}
