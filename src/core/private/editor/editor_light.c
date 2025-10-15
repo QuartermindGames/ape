@@ -64,7 +64,7 @@ static void gather_lights_( ApeWorldNode *node, PLLinkedList *lights )
 
 void ape_editor_light_generate_( ApeRoom *room )
 {
-	ape_print_( "Generating lightmap...\n" );
+	ape_console_print_( "Generating lightmap...\n" );
 
 	double startTime = PlGetCurrentSeconds();
 
@@ -73,7 +73,7 @@ void ape_editor_light_generate_( ApeRoom *room )
 	PLLinkedList *lights = PlCreateLinkedList();
 	if ( lights == nullptr )
 	{
-		ape_error_( true, "Failed to create lights list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create lights list: %s\n", PlGetError() );
 	}
 
 	gather_lights_( APE_WORLD_NODE( room ), lights );
@@ -89,7 +89,7 @@ void ape_editor_light_generate_( ApeRoom *room )
 	PlDestroyLinkedList( lights );
 
 	double endTime = PlGetCurrentSeconds();
-	ape_print_( "Lightmap generation took %.3f seconds.\n", endTime - startTime );
+	ape_console_print_( "Lightmap generation took %.3f seconds.\n", endTime - startTime );
 }
 
 #endif

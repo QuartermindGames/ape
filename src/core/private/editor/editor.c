@@ -95,7 +95,7 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 		editorInstanceList = PlCreateLinkedList();
 		if ( editorInstanceList == nullptr )
 		{
-			ape_error_( true, "Failed to create editor instance list: %s\n", PlGetError() );
+			ape_console_error_( true, "Failed to create editor instance list: %s\n", PlGetError() );
 		}
 
 		cache_node_icons();
@@ -106,19 +106,19 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 	self->selectionTable = PlCreateHashTable();
 	if ( self->selectionTable == nullptr )
 	{
-		ape_error_( true, "Failed to create selection table for instance: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create selection table for instance: %s\n", PlGetError() );
 	}
 
 	self->subSelectionTable = PlCreateHashTable();
 	if ( self->subSelectionTable == nullptr )
 	{
-		ape_error_( true, "Failed to create sub-selection table for instance: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create sub-selection table for instance: %s\n", PlGetError() );
 	}
 
 	self->selectedObjects = PlCreateLinkedList();
 	if ( self->selectedObjects == nullptr )
 	{
-		ape_error_( true, "Failed to create selected objects list for instance: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create selected objects list for instance: %s\n", PlGetError() );
 	}
 
 	return self;
@@ -288,7 +288,7 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 
 				if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
 				{
-					ape_warning_( "Too many adjacent faces to smooth face!\n" );
+					ape_console_warning_( "Too many adjacent faces to smooth face!\n" );
 					break;
 				}
 			}
@@ -351,7 +351,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 	PLLinkedList *newSelectionList = PlCreateLinkedList();
 	if ( newSelectionList == nullptr )
 	{
-		ape_warning_( "Failed to create new selection list: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to create new selection list: %s\n", PlGetError() );
 		return;
 	}
 
@@ -360,7 +360,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 	{
 		if ( worldNode->classType->clone == nullptr )
 		{
-			ape_warning_( "Cannot duplicate this type of node (%u)!\n", worldNode->type );
+			ape_console_warning_( "Cannot duplicate this type of node (%u)!\n", worldNode->type );
 			continue;
 		}
 
@@ -374,7 +374,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 		PlInsertLinkedListNode( newSelectionList, worldNode );
 	}
 
-	ape_print_( "Duplicated %u nodes\n", PlGetNumLinkedListNodes( newSelectionList ) );
+	ape_console_print_( "Duplicated %u nodes\n", PlGetNumLinkedListNodes( newSelectionList ) );
 
 	ape_editor_selection_rebuild_( self );
 
@@ -438,7 +438,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 				}
 				else
 				{
-					ape_warning_( "Failed to lookup parent brush when adjusting vertex!\n" );
+					ape_console_warning_( "Failed to lookup parent brush when adjusting vertex!\n" );
 				}
 			}
 			break;
@@ -525,7 +525,7 @@ static void save_command( unsigned int, char **argv )
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
-		ape_warning_( "No active instance to close!\n" );
+		ape_console_warning_( "No active instance to close!\n" );
 		return;
 	}
 
@@ -537,7 +537,7 @@ static void load_command( unsigned int, char **argv )
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
 	{
-		ape_warning_( "No active instance to close!\n" );
+		ape_console_warning_( "No active instance to close!\n" );
 		return;
 	}
 
@@ -1035,7 +1035,7 @@ static PLImage *get_material_preview_image( const char *path )
 	AcmBranch *root = com_acm_load_file( path, "material" );
 	if ( root == nullptr )
 	{
-		ape_warning_( "Failed to load material (%s) for preview!\n", path );
+		ape_console_warning_( "Failed to load material (%s) for preview!\n", path );
 		return nullptr;
 	}
 
@@ -1051,14 +1051,14 @@ static PLImage *get_material_preview_image( const char *path )
 		AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
 		if ( diffuseNode == nullptr )
 		{
-			ape_warning_( "Failed to find preview texture to use under material (%s)!\n", path );
+			ape_console_warning_( "Failed to find preview texture to use under material (%s)!\n", path );
 			return nullptr;
 		}
 
 		PLPath buf;
 		if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) != ND_ERROR_SUCCESS )
 		{
-			ape_warning_( "Diffuse texture under material (%s) was not a valid string!\n", path );
+			ape_console_warning_( "Diffuse texture under material (%s) was not a valid string!\n", path );
 			return nullptr;
 		}
 
@@ -1087,7 +1087,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 		editorMaterialPreviews = PlCreateHashTable();
 		if ( editorMaterialPreviews == nullptr )
 		{
-			ape_error_( true, "Failed to create material preview table: %s\n", PlGetError() );
+			ape_console_error_( true, "Failed to create material preview table: %s\n", PlGetError() );
 		}
 	}
 
@@ -1095,7 +1095,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 	PLPath hashName;
 	if ( PlSetupPath( hashName, false, "%s_%u_%u", path, width, height ) == nullptr )
 	{
-		ape_warning_( "Failed to setup hash name for material preview (%s)!\n", path );
+		ape_console_warning_( "Failed to setup hash name for material preview (%s)!\n", path );
 		return nullptr;
 	}
 	size_t hashNameLength = strlen( hashName );
@@ -1123,22 +1123,22 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 				return preview;
 			}
 
-			ape_warning_( "Failed to load cached image (%s): %s\n", cachePath, PlGetError() );
+			ape_console_warning_( "Failed to load cached image (%s): %s\n", cachePath, PlGetError() );
 		}
 		else
 		{
-			ape_print_( "Cache not found for material (%s). Caching...\n", path );
+			ape_console_print_( "Cache not found for material (%s). Caching...\n", path );
 		}
 	}
 	else
 	{
-		ape_warning_( "Failed to create cache directory (%s): %s\n", cachePath, PlGetError() );
+		ape_console_warning_( "Failed to create cache directory (%s): %s\n", cachePath, PlGetError() );
 	}
 
 	// and now the worst case, it's not yet been cached...
 	if ( ( preview = get_material_preview_image( path ) ) == nullptr )
 	{
-		ape_warning_( "Failed to load preview image for material (%s): %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to load preview image for material (%s): %s\n", path, PlGetError() );
 		return nullptr;
 	}
 
@@ -1162,13 +1162,13 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 		}
 		else
 		{
-			ape_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
+			ape_console_warning_( "Failed to resize preview for material (%s): %s\n", path, PlGetError() );
 		}
 	}
 
 	if ( !PlWriteImage( preview, cachePath, 0 ) )
 	{
-		ape_warning_( "Failed to write image to cache (%s): %s\n", cachePath, PlGetError() );
+		ape_console_warning_( "Failed to write image to cache (%s): %s\n", cachePath, PlGetError() );
 	}
 
 	PlInsertHashTableNode( editorMaterialPreviews, hashName, hashNameLength, preview );
@@ -1288,7 +1288,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 {
 	if ( self->numPolygonPoints < 3 )
 	{
-		ape_warning_( "Not enough points to create a brush.\n" );
+		ape_console_warning_( "Not enough points to create a brush.\n" );
 		return nullptr;
 	}
 
@@ -1298,7 +1298,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 	ApeRoom *room = ape_camera_get_room( camera );
 	if ( room == nullptr )
 	{
-		ape_warning_( "No valid room for brush!\n" );
+		ape_console_warning_( "No valid room for brush!\n" );
 		return nullptr;
 	}
 
@@ -1338,7 +1338,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 
 	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, signedArea, material, type ) )
 	{
-		ape_warning_( "Failed to create brush from polygon!\n" );
+		ape_console_warning_( "Failed to create brush from polygon!\n" );
 		ape_material_release( material );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		brush = nullptr;
@@ -1398,7 +1398,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 {
 	if ( self->numPolygonPoints >= APE_BRUSH_MAX_FACE_VERTICES )
 	{
-		ape_warning_( "Hit polygon vertex limit (%u >= %u)!\n", self->numPolygonPoints, APE_BRUSH_MAX_FACE_VERTICES );
+		ape_console_warning_( "Hit polygon vertex limit (%u >= %u)!\n", self->numPolygonPoints, APE_BRUSH_MAX_FACE_VERTICES );
 		return false;
 	}
 
@@ -1450,7 +1450,7 @@ void ape_editor_validate_properties_( const ApeProperty *properties, const unsig
 		switch ( properties[ i ].type )
 		{
 			default:
-				ape_error_( true, "Encountered invalid property type during validation (%u)!\n" );
+				ape_console_error_( true, "Encountered invalid property type during validation (%u)!\n" );
 				break;
 			case APE_PROPERTY_TYPE_FLOAT:
 				typeName = "ApeFloatProperty";
@@ -1484,7 +1484,7 @@ void ape_editor_validate_properties_( const ApeProperty *properties, const unsig
 
 		if ( strcmp( typeName, properties[ i ].typeName ) != 0 )
 		{
-			ape_error_( true, "Encountered invalid property, \"%s\" (%s != %s)!\n", properties[ i ].internalName, typeName, properties[ i ].typeName );
+			ape_console_error_( true, "Encountered invalid property, \"%s\" (%s != %s)!\n", properties[ i ].internalName, typeName, properties[ i ].typeName );
 		}
 	}
 }

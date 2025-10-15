@@ -77,7 +77,7 @@ void ape_add_flare_to_queue( const ApeCamera *camera, const QmMathVector3f *worl
 
 	if ( numFlares >= MAX_FLARES )
 	{
-		ape_warning_( "Hit flare limit (%u >= %u)!\n", numFlares, MAX_FLARES );
+		ape_console_warning_( "Hit flare limit (%u >= %u)!\n", numFlares, MAX_FLARES );
 		return;
 	}
 

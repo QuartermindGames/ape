@@ -65,11 +65,11 @@ void ape_room_add_tagged_surface( ApeRoom *self, ApeBrushFace *face )
 {
 	if ( PlInsertHashTableNode( self->taggedSurfaceLookup, face->tag, strlen( face->tag ), face ) == nullptr )
 	{
-		ape_warning_( "Attempted to add duplicate surface tag (%s)!\n", face->tag );
+		ape_console_warning_( "Attempted to add duplicate surface tag (%s)!\n", face->tag );
 		return;
 	}
 
-	PRINT_DEBUG( "Added \"%s\" to room lookup\n", face->tag );
+	ape_console_verbose_( "Added \"%s\" to room lookup\n", face->tag );
 }
 
 void ape_room_remove_tagged_surface( ApeRoom *self, ApeBrushFace *face )
@@ -77,13 +77,13 @@ void ape_room_remove_tagged_surface( ApeRoom *self, ApeBrushFace *face )
 	PLHashTableNode *node = PlLookupHashTableNode( self->taggedSurfaceLookup, face->tag, strlen( face->tag ) );
 	if ( node == nullptr )
 	{
-		ape_warning_( "Failed to remove tag (%s), lookup failed!\n", face->tag );
+		ape_console_warning_( "Failed to remove tag (%s), lookup failed!\n", face->tag );
 		return;
 	}
 
 	PlDestroyHashTableNode( node );
 
-	PRINT_DEBUG( "Removed \"%s\" from room lookup\n", face->tag );
+	ape_console_verbose_( "Removed \"%s\" from room lookup\n", face->tag );
 }
 
 ApeBrushFace *ape_room_get_tagged_surface( const ApeRoom *self, const char *tag )
@@ -412,7 +412,7 @@ bool ape_room_set_path( ApeRoom *self, const char *path )
 {
 	if ( PlSetupPath( self->path, false, "%s", path ) == nullptr )
 	{
-		ape_warning_( "Invalid path provided: %s\n", PlGetError() );
+		ape_console_warning_( "Invalid path provided: %s\n", PlGetError() );
 		return false;
 	}
 
@@ -442,7 +442,7 @@ bool ape_room_set_save_path( ApeRoom *self, const char *path )
 {
 	if ( PlSetupPath( self->savePath, false, "%s", path ) == nullptr )
 	{
-		ape_warning_( "Invalid path provided: %s\n", PlGetError() );
+		ape_console_warning_( "Invalid path provided: %s\n", PlGetError() );
 		return false;
 	}
 

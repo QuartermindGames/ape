@@ -90,7 +90,7 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMa
 	camera->internal = PlgCreateCamera();
 	if ( camera->internal == nullptr )
 	{
-		ape_error_( true, "Failed to create camera: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create camera: %s\n", PlGetError() );
 	}
 
 	static constexpr float DEFAULT_FAR  = 1000000.0f;
@@ -126,7 +126,7 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMa
 		cameras = PlCreateLinkedList();
 		if ( cameras == nullptr )
 		{
-			ape_error_( true, "Failed to create cameras list: %s\n", PlGetError() );
+			ape_console_error_( true, "Failed to create cameras list: %s\n", PlGetError() );
 		}
 	}
 
@@ -483,7 +483,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 				}
 				else
 				{
-					ape_warning_( "Hit max visible room limit (%u >= %u)!\n", self->pvs.numRooms, APE_CAMERA_MAX_ROOMS );
+					ape_console_warning_( "Hit max visible room limit (%u >= %u)!\n", self->pvs.numRooms, APE_CAMERA_MAX_ROOMS );
 				}
 			}
 		}
@@ -527,7 +527,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 		}
 		else
 		{
-			ape_warning_( "Hit max visible light limit (%u >= %u)!\n", visibleRoom->numLights, APE_CAMERA_MAX_ROOM_LIGHTS );
+			ape_console_warning_( "Hit max visible light limit (%u >= %u)!\n", visibleRoom->numLights, APE_CAMERA_MAX_ROOM_LIGHTS );
 		}
 	}
 	else
@@ -553,7 +553,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 		}
 		else
 		{
-			ape_warning_( "Hit max visible node limit (%u >= %u)!\n", visibleRoom->numNodes, APE_CAMERA_MAX_ROOM_NODES );
+			ape_console_warning_( "Hit max visible node limit (%u >= %u)!\n", visibleRoom->numNodes, APE_CAMERA_MAX_ROOM_NODES );
 		}
 	}
 

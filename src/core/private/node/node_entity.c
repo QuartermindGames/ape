@@ -22,35 +22,35 @@ static void list_entity_classes_command( unsigned int, char ** )
 		return;
 	}
 
-	ape_print_( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassLookup ) );
+	ape_console_print_( "Listing %u entity classes...\n", PlGetNumHashTableNodes( entityClassLookup ) );
 
 	PLHashTableNode *node = PlGetFirstHashTableNode( entityClassLookup );
 	while ( node != NULL )
 	{
 		ApeEntityClassDefinition *classDefinition = PlGetHashTableNodeUserData( node );
-		ape_print_( "-------------------------------------------------\n" );
-		ape_print_( "%s : %s\n", classDefinition->name, classDefinition->description != NULL ? classDefinition->description : "none" );
-		ape_print_( " num properties       = %u\n", classDefinition->numProperties );
-		ape_print_( " cache callback       = %p\n", classDefinition->cacheFunction );
-		ape_print_( " create callback      = %p\n", classDefinition->createFunction );
-		ape_print_( " destroy callback     = %p\n", classDefinition->destroyFunction );
-		ape_print_( " spawn callback       = %p\n", classDefinition->spawnFunction );
-		ape_print_( " tick callback        = %p\n", classDefinition->tickFunction );
-		ape_print_( " draw callback        = %p\n", classDefinition->drawFunction );
-		ape_print_( " serialize callback   = %p\n", classDefinition->serializeFunction );
-		ape_print_( " deserialize callback = %p\n", classDefinition->deserializeFunction );
+		ape_console_print_( "-------------------------------------------------\n" );
+		ape_console_print_( "%s : %s\n", classDefinition->name, classDefinition->description != NULL ? classDefinition->description : "none" );
+		ape_console_print_( " num properties       = %u\n", classDefinition->numProperties );
+		ape_console_print_( " cache callback       = %p\n", classDefinition->cacheFunction );
+		ape_console_print_( " create callback      = %p\n", classDefinition->createFunction );
+		ape_console_print_( " destroy callback     = %p\n", classDefinition->destroyFunction );
+		ape_console_print_( " spawn callback       = %p\n", classDefinition->spawnFunction );
+		ape_console_print_( " tick callback        = %p\n", classDefinition->tickFunction );
+		ape_console_print_( " draw callback        = %p\n", classDefinition->drawFunction );
+		ape_console_print_( " serialize callback   = %p\n", classDefinition->serializeFunction );
+		ape_console_print_( " deserialize callback = %p\n", classDefinition->deserializeFunction );
 
 		node = PlGetNextHashTableNode( node );
 	}
 
-	ape_print_( "\nListing %u entity components...\n", PlGetNumHashTableNodes( entityComponentDefinitions ) );
+	ape_console_print_( "\nListing %u entity components...\n", PlGetNumHashTableNodes( entityComponentDefinitions ) );
 
 	node = PlGetFirstHashTableNode( entityComponentDefinitions );
 	while ( node != NULL )
 	{
 		ApeEntityComponentDefinition *componentDefinition = PlGetHashTableNodeUserData( node );
-		ape_print_( "-------------------------------------------------\n" );
-		ape_print_( "%s\n", componentDefinition->name );
+		ape_console_print_( "-------------------------------------------------\n" );
+		ape_console_print_( "%s\n", componentDefinition->name );
 
 		node = PlGetNextHashTableNode( node );
 	}
@@ -74,13 +74,13 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 
 	if ( PlLookupHashTableUserData( entityClassLookup, definition->name, strlen( definition->name ) ) != NULL )
 	{
-		ape_warning_( "Attempted to register a duplicate entity class (%s)\n", definition->name );
+		ape_console_warning_( "Attempted to register a duplicate entity class (%s)\n", definition->name );
 		return;
 	}
 
 	if ( definition->createFunction == nullptr )
 	{
-		ape_warning_( "Encountered a class (%s) with no create callback!\n", definition->name );
+		ape_console_warning_( "Encountered a class (%s) with no create callback!\n", definition->name );
 		return;
 	}
 
@@ -95,7 +95,7 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 		definition->cacheFunction();
 	}
 
-	ape_print_( "Registered \"%s\" entity class\n", definition->name );
+	ape_console_print_( "Registered \"%s\" entity class\n", definition->name );
 }
 
 const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses )
@@ -113,7 +113,7 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( classDefinition == NULL )
 	{
-		ape_warning_( "Failed to find entity class (%s)!\n", className );
+		ape_console_warning_( "Failed to find entity class (%s)!\n", className );
 		return nullptr;
 	}
 
@@ -125,7 +125,7 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 	entity->classData = classDefinition->createFunction( entity, properties );
 	if ( entity->classData == nullptr )
 	{
-		ape_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
+		ape_console_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
 		ape_world_node_destroy( APE_WORLD_NODE( entity ) );
 		return nullptr;
 	}
@@ -226,7 +226,7 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 
 	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL )
 	{
-		ape_warning_( "Attempted to register a duplicate entity component (%s)\n", definition->name );
+		ape_console_warning_( "Attempted to register a duplicate entity component (%s)\n", definition->name );
 		return;
 	}
 
@@ -235,7 +235,7 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 
-	ape_print_( "Registered \"%s\" entity component\n", definition->name );
+	ape_console_print_( "Registered \"%s\" entity component\n", definition->name );
 }
 
 void *ape_entity_add_component( ApeEntity *self, const char *name )
@@ -243,7 +243,7 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 	const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
 	if ( componentDefinition == NULL )
 	{
-		ape_warning_( "Failed to find entity component (%s)!\n", name );
+		ape_console_warning_( "Failed to find entity component (%s)!\n", name );
 		return NULL;
 	}
 
@@ -256,7 +256,7 @@ void *ape_entity_add_component( ApeEntity *self, const char *name )
 
 	if ( !PlInsertHashTableNode( self->componentTable, name, strlen( name ), component ) )
 	{
-		ape_warning_( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
+		ape_console_warning_( "Failed to insert entity component (%s): %s\n", name, PlGetError() );
 
 		if ( component->componentDefinition->destroyFunction != NULL )
 		{
@@ -299,7 +299,7 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 			switch ( property->type )
 			{
 				default:
-					ape_error_( false, "Failed to serialize property type (%u)!\n", property->type );
+					ape_console_error_( false, "Failed to serialize property type (%u)!\n", property->type );
 					break;
 				case APE_PROPERTY_TYPE_FLOAT:
 					acm_push_f32( root, property->internalName, *( ApeFloatProperty * ) ptr );
@@ -364,14 +364,14 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 	const char *className = acm_get_string( root, "className", nullptr );
 	if ( className == nullptr )
 	{
-		ape_warning_( "Failed to deserialize entity: no class name!\n" );
+		ape_console_warning_( "Failed to deserialize entity: no class name!\n" );
 		return nullptr;
 	}
 
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( classDefinition == nullptr )
 	{
-		ape_warning_( "Failed to deserialize entity: class (%s) not found!\n", className );
+		ape_console_warning_( "Failed to deserialize entity: class (%s) not found!\n", className );
 		return nullptr;
 	}
 
@@ -387,21 +387,21 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 			const char *name = acm_get_string( i, "name", nullptr );
 			if ( name == nullptr )
 			{
-				ape_warning_( "No name provided for entity component!\n" );
+				ape_console_warning_( "No name provided for entity component!\n" );
 				continue;
 			}
 
 			const ApeEntityComponentDefinition *componentDefinition = PlLookupHashTableUserData( entityComponentDefinitions, name, strlen( name ) );
 			if ( componentDefinition == NULL )
 			{
-				ape_warning_( "Failed to find entity component (%s)!\n", name );
+				ape_console_warning_( "Failed to find entity component (%s)!\n", name );
 				continue;
 			}
 
 			void *component = ape_entity_add_component( entity, name );
 			if ( componentDefinition->deserializeFunction != nullptr && componentDefinition->deserializeFunction( component, i ) == nullptr )
 			{
-				ape_warning_( "Failed to deserialize entity component (%s)!\n", name );
+				ape_console_warning_( "Failed to deserialize entity component (%s)!\n", name );
 			}
 		}
 	}
@@ -416,7 +416,7 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 			switch ( property->type )
 			{
 				default:
-					ape_error_( false, "Failed to deserialize property type (%u)!\n", property->type );
+					ape_console_error_( false, "Failed to deserialize property type (%u)!\n", property->type );
 					break;
 				case APE_PROPERTY_TYPE_FLOAT:
 					*( ApeFloatProperty * ) ptr = acm_get_f32( root, property->internalName, *( float * ) ptr );

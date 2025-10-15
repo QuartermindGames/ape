@@ -50,6 +50,7 @@ add_library(ape-core STATIC
         # Console
         private/console/console.c
         private/console/console_client.c
+        private/console/console_log.c
 
         # Scene Node System
         private/node/node_brush.c

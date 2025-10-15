@@ -20,14 +20,14 @@ static void test_model_command( unsigned int argc, char **argv )
 	ApeWorld *world = game_get_current_world();
 	if ( world == nullptr )
 	{
-		ape_warning_( "No world loaded, please create a world first!\n" );
+		ape_console_warning_( "No world loaded, please create a world first!\n" );
 		return;
 	}
 
 	ApeRoom *room = ape_world_get_first_room_( world );
 	if ( room == nullptr )
 	{
-		ape_warning_( "World has no rooms!\n" );
+		ape_console_warning_( "World has no rooms!\n" );
 		return;
 	}
 

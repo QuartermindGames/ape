@@ -49,7 +49,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	AcmBranch *root = com_acm_load_file( path, "particleEmitter" );
 	if ( root == NULL )
 	{
-		PRINT_WARNING( "Failed to load particle emitter template: %s\n" );
+		ape_console_warning_( "Failed to load particle emitter template: %s\n" );
 		return;
 	}
 
@@ -81,7 +81,7 @@ ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 	ApeParticleEmitter *emitterTemplate = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
-		PRINT_WARNING( "Emitter type was not cached: %s\n", path );
+		ape_console_warning_( "Emitter type was not cached: %s\n", path );
 		return nullptr;
 	}
 
@@ -94,11 +94,11 @@ ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 ApeParticleEmitter *ss_arl_particle_emitter_create( void )
 {
 	ApeParticleEmitter *emitter = QM_OS_MEMORY_NEW( ApeParticleEmitter );
-	emitter->particles              = PlCreateLinkedList();
+	emitter->particles          = PlCreateLinkedList();
 
 	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_DYNAMIC, 1000, 1000 );
 	if ( emitter->mesh == NULL )
-		PRINT_ERROR( "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
 
 	emitter->startScale = 10.0f;
 	emitter->endScale   = 0.0f;
@@ -120,7 +120,7 @@ void ss_arl_particle_emitter_destroy( ApeParticleEmitter *emitter )
 	while ( node != NULL )
 	{
 		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
-		node                      = PlGetNextLinkedListNode( node );
+		node                  = PlGetNextLinkedListNode( node );
 		qm_os_memory_free( particle );
 	}
 
@@ -221,8 +221,8 @@ void ss_arl_particle_emitter_tick( ApeParticleEmitter *emitter )
 		ApeParticle *particle = PlGetLinkedListNodeUserData( node );
 		if ( i == 0 )
 		{
-			emitter->bounds.maxs = ( QmMathVector3f ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
-			emitter->bounds.mins = ( QmMathVector3f ) { particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z };
+			emitter->bounds.maxs = qm_math_vector3f( particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z );
+			emitter->bounds.mins = qm_math_vector3f( particle->transform.translation.x, particle->transform.translation.y, particle->transform.translation.z );
 		}
 
 		node = PlGetNextLinkedListNode( node );

@@ -26,7 +26,7 @@ static void Cmd_IsTaskRunning( unsigned int argc, char **argv )
 	if ( argc <= 1 )
 		return;
 
-	PRINT( "%s\n", apeIsScheduledTaskRunning( argv[ 1 ] ) ? "true" : "false" );
+	ape_console_print_( "%s\n", apeIsScheduledTaskRunning( argv[ 1 ] ) ? "true" : "false" );
 }
 
 static void Cmd_KillTask( unsigned int argc, char **argv )
@@ -48,7 +48,7 @@ static void Cmd_SetTaskDelay( unsigned int argc, char **argv )
 
 void ape_initialize_scheduler_( void )
 {
-	PRINT( "Initializing scheduler\n" );
+	ape_console_print_( "Initializing scheduler\n" );
 
 	PlRegisterConsoleCommand( "sch/flushtasks", "Flush all running tasks.", 0, Cmd_FlushTasks );
 	PlRegisterConsoleCommand( "sch/istaskrunning", "Displays 'true' if the specified task is running.", 1, Cmd_IsTaskRunning );
@@ -57,12 +57,12 @@ void ape_initialize_scheduler_( void )
 
 	scheduleList = PlCreateLinkedList();
 	if ( scheduleList == NULL )
-		PRINT_ERROR( "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
 }
 
 void ape_shutdown_scheduler_( void )
 {
-	PRINT( "Shutting down scheduler\n" );
+	ape_console_print_( "Shutting down scheduler\n" );
 
 	PlDestroyLinkedList( scheduleList );
 }
@@ -153,7 +153,7 @@ void ss_acl_flush_tasks_( void )
 {
 	unsigned int numTasks = PlGetNumLinkedListNodes( scheduleList );
 	PlDestroyLinkedListNodes( scheduleList );
-	PRINT( "Flushed " PL_FMT_uint32 " tasks\n", numTasks );
+	ape_console_print_( "Flushed " PL_FMT_uint32 " tasks\n", numTasks );
 }
 
 void apePrintPendingTasks( void )
@@ -163,10 +163,10 @@ void apePrintPendingTasks( void )
 	while ( node != NULL )
 	{
 		SchTask *task = PlGetLinkedListNodeUserData( node );
-		PRINT( " (%d) %s %f\n", i++, task->desc, task->delay - ape_get_num_ticks() );
+		ape_console_print_( " (%d) %s %f\n", i++, task->desc, task->delay - ape_get_num_ticks() );
 		node = PlGetNextLinkedListNode( node );
 	}
-	PRINT( "%d scheduled tasks pending\n", i );
+	ape_console_print_( "%d scheduled tasks pending\n", i );
 }
 
 static SchTask *GetTaskByDescription( const char *desc )

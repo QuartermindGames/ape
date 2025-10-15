@@ -48,19 +48,19 @@ ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
 			}
 			else
 			{
-				ape_warning_( "Unsupported number of channels in wav (%u)!\n", dstSpec.channels );
+				ape_console_warning_( "Unsupported number of channels in wav (%u)!\n", dstSpec.channels );
 			}
 
 			SDL_free( dstBuf );
 		}
 		else
 		{
-			ape_warning_( "Failed to load wav file: %s\n", SDL_GetError() );
+			ape_console_warning_( "Failed to load wav file: %s\n", SDL_GetError() );
 		}
 	}
 	else
 	{
-		ape_warning_( "Failed to read wav file: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to read wav file: %s\n", PlGetError() );
 	}
 
 	qm_os_memory_free( buf );

@@ -93,7 +93,7 @@ static void *process_capture_queue( void * )
 		}
 		else
 		{
-			ape_warning_( "Failed to create image: %s\n", PlGetError() );
+			ape_console_warning_( "Failed to create image: %s\n", PlGetError() );
 		}
 
 		destroy_capture_frame( frame );
@@ -238,12 +238,12 @@ static void write_screenshot( void )
 		}
 		else
 		{
-			ape_warning_( "Failed to create image for screenshot: %s\n", PlGetError() );
+			ape_console_warning_( "Failed to create image for screenshot: %s\n", PlGetError() );
 		}
 	}
 	else
 	{
-		ape_warning_( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to read framebuffer for screenshot: %s\n", PlGetError() );
 	}
 
 	qm_os_memory_free( buf );
@@ -358,7 +358,7 @@ void ape_register_renderer_console_variables_( void )
 
 void ape_renderer_initialize_( void )
 {
-	PRINT( "Initializing renderer\n" );
+	ape_console_print_( "Initializing renderer\n" );
 
 	PL_ZERO_( ape_rendererState_ );
 
@@ -381,7 +381,7 @@ void ape_renderer_initialize_( void )
 	                                                PLG_TEXTURE_FILTER_LINEAR, 0 );
 	if ( defaultRenderTarget == NULL )
 	{
-		ape_error_( true, "Failed to create default render target!\n" );
+		ape_console_error_( true, "Failed to create default render target!\n" );
 	}
 
 	ape_postfx_setup_();
@@ -481,7 +481,7 @@ unsigned int ape_renderer_clip_polygon( const QmMathVector3f *vertices, unsigned
 
 				if ( numClippedVertices >= dstSize )
 				{
-					ape_warning_( "Hit max clip limit for polygon!\n" );
+					ape_console_warning_( "Hit max clip limit for polygon!\n" );
 					break;
 				}
 			}
@@ -489,7 +489,7 @@ unsigned int ape_renderer_clip_polygon( const QmMathVector3f *vertices, unsigned
 			dstVertices[ numClippedVertices++ ] = *cur;
 			if ( numClippedVertices >= dstSize )
 			{
-				ape_warning_( "Hit max clip limit for polygon!\n" );
+				ape_console_warning_( "Hit max clip limit for polygon!\n" );
 				break;
 			}
 		}
@@ -504,7 +504,7 @@ unsigned int ape_renderer_clip_polygon( const QmMathVector3f *vertices, unsigned
 
 			if ( numClippedVertices >= dstSize )
 			{
-				ape_warning_( "Hit max clip limit for polygon!\n" );
+				ape_console_warning_( "Hit max clip limit for polygon!\n" );
 				break;
 			}
 		}

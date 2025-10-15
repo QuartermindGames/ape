@@ -96,9 +96,6 @@ ApeConsoleOutput *apeGetConsoleOutput( void );
 void ape_initialize_console_( void );
 void ape_shutdown_console_( void );
 
-int  Console_GetLogLevel( ApeConsoleLogLevel level );
-void Console_Print( ApeConsoleLogLevel level, const char *message, ... );
-
 void ape_console_register_commands_( bool isDedicated );
 void ape_console_register_variables_( bool isDedicated );
 
@@ -106,26 +103,10 @@ void ape_console_draw_( const ApeViewport *viewport );
 void ape_console_register_cl_commands_( void );
 void ape_console_register_cl_variables_( void );
 
-void ape_print_( const char *message, ... );
-void ape_verbose_( const char *message, ... );
-void ape_warning_( const char *message, ... );
-void ape_error_( bool die, const char *message, ... );
-
-#define PRINT( FORMAT, ... ) \
-	Console_Print( APE_LOG_INFORMATION, FORMAT, ##__VA_ARGS__ )
-#define PRINT_WARNING( FORMAT, ... ) \
-	Console_Print( APE_LOG_WARNING, "WARNING: " FORMAT, ##__VA_ARGS__ )
-#define PRINT_ERROR( FORMAT, ... )                                                   \
-	{                                                                                \
-		PlLogMessage( Console_GetLogLevel( APE_LOG_ERROR ), FORMAT, ##__VA_ARGS__ ); \
-		abort();                                                                     \
-	}
-
-#if !defined( NDEBUG )
-#	define PRINT_DEBUG( FORMAT, ... ) PlLogWFunction( Console_GetLogLevel( ACL_LOG_DEBUG ), FORMAT, ##__VA_ARGS__ )
-#else
-#	define PRINT_DEBUG( FORMAT, ... )
-#endif
+void ape_console_print_( const char *message, ... );
+void ape_console_verbose_( const char *message, ... );
+void ape_console_warning_( const char *message, ... );
+void ape_console_error_( bool die, const char *message, ... );
 
 typedef struct ApeConfig
 {

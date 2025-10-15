@@ -121,13 +121,13 @@ bool ape_world_node_is_valid( const ApeWorldNode *self, ApeWorldNodeType expecte
 {
 	if ( self->magic != APE_WORLD_NODE_MAGIC )
 	{
-		ape_warning_( "Unexpected magic for world node (%u != %u)!\n", self->magic, APE_WORLD_NODE_MAGIC );
+		ape_console_warning_( "Unexpected magic for world node (%u != %u)!\n", self->magic, APE_WORLD_NODE_MAGIC );
 		return false;
 	}
 
 	if ( self->type != expectedType )
 	{
-		ape_warning_( "Unexpected type for world node (%u != %u)!\n", self->type, expectedType );
+		ape_console_warning_( "Unexpected type for world node (%u != %u)!\n", self->type, expectedType );
 		return false;
 	}
 
@@ -142,7 +142,7 @@ static ApeRoom *lookup_parent_room( ApeWorldNode *self )
 		char tmp[ 64 ];
 		qm_math_vector3f_print( self->position, tmp, sizeof( tmp ) );
 
-		ape_warning_( "Encountered a node (%s) without an associated room!\n", tmp );
+		ape_console_warning_( "Encountered a node (%s) without an associated room!\n", tmp );
 		return nullptr;
 	}
 
@@ -551,35 +551,35 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 	ApeWorldNodeMagic magic = ACM_GET_INT( magic, root, "classMagic", 0 );
 	if ( magic == 0 )
 	{
-		ape_warning_( "No class provided for world node!\n" );
+		ape_console_warning_( "No class provided for world node!\n" );
 		return nullptr;
 	}
 
 	const ApeWorldNodeClass *worldNodeClass = get_class_by_magic( magic );
 	if ( worldNodeClass == nullptr )
 	{
-		ape_warning_( "Unknown class type (%u) for world node!\n", magic );
+		ape_console_warning_( "Unknown class type (%u) for world node!\n", magic );
 		return nullptr;
 	}
 
 	//TODO: make this an assert
 	if ( worldNodeClass->deserialize == nullptr )
 	{
-		ape_warning_( "No deserialization method specified for class (%s), skipping!\n", worldNodeClass->identifier );
+		ape_console_warning_( "No deserialization method specified for class (%s), skipping!\n", worldNodeClass->identifier );
 		return nullptr;
 	}
 
 	AcmBranch *classBranch = acm_get_child_by_name( root, "class" );
 	if ( classBranch == nullptr )
 	{
-		ape_warning_( "Class data not specified for node!\n" );
+		ape_console_warning_( "Class data not specified for node!\n" );
 		return nullptr;
 	}
 
 	ApeWorldNode *self = worldNodeClass->deserialize( parent, classBranch );
 	if ( self == nullptr )
 	{
-		ape_warning_( "Failed to deserialize world node!\n" );
+		ape_console_warning_( "Failed to deserialize world node!\n" );
 		return nullptr;
 	}
 
@@ -643,7 +643,7 @@ ApeWorldNode **ape_world_node_gather_children( ApeWorldNode *self, ApeWorldNodeT
 	PLVectorArray *array = PlCreateVectorArray( reserve );
 	if ( array == nullptr )
 	{
-		ape_warning_( "Failed to gather children: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to gather children: %s\n", PlGetError() );
 		*numChildren = 0;
 		return nullptr;
 	}
@@ -683,7 +683,7 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 	AcmBranch *branch = com_acm_load_file( path, "node" );
 	if ( branch == nullptr )
 	{
-		ape_warning_( "Failed to load the specified node (%s): %s\n", path, acm_get_error_message() );
+		ape_console_warning_( "Failed to load the specified node (%s): %s\n", path, acm_get_error_message() );
 		return nullptr;
 	}
 
@@ -694,7 +694,7 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 	}
 	else
 	{
-		ape_warning_( "Failed to deserialize node (%s)!\n", path );
+		ape_console_warning_( "Failed to deserialize node (%s)!\n", path );
 	}
 
 	acm_branch_destroy( branch );
@@ -772,7 +772,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, numVertices );
 		if ( self->mesh == nullptr )
 		{
-			ape_warning_( "Failed to create mesh for node: %s\n", PlGetError() );
+			ape_console_warning_( "Failed to create mesh for node: %s\n", PlGetError() );
 			return;
 		}
 	}

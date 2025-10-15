@@ -176,7 +176,7 @@ static void check_for_controllers( void )
 
 		if ( ( inputControllers[ slot ].sdlGameController = SDL_OpenGamepad( joysticks[ i ] ) ) == NULL )
 		{
-			ape_warning_( "Failed to open game controller: %s\n", SDL_GetError() );
+			ape_console_warning_( "Failed to open game controller: %s\n", SDL_GetError() );
 			continue;
 		}
 
@@ -201,7 +201,7 @@ static void check_for_controllers( void )
 
 		char tmp[ 512 ];
 		snprintf( tmp, sizeof( tmp ), "Opened controller %d: %s (%s)\n", id, name, serial );
-		ape_print_( "%s", tmp );
+		ape_console_print_( "%s", tmp );
 
 		numControllers++;
 	}
@@ -299,7 +299,7 @@ static void list_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **
 	ApeInputAction *action;
 	COM_ITERATE_LINKED_LIST( action, actionableList, i )
 	{
-		ape_print_( "%s (%u) (%u)\n", action->id, action->numButtonBinds, action->numKeyBinds );
+		ape_console_print_( "%s (%u) (%u)\n", action->id, action->numButtonBinds, action->numKeyBinds );
 	}
 }
 
@@ -310,7 +310,7 @@ static void dump_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **
 	FILE *file = fopen( FILENAME, "w" );
 	if ( file == nullptr )
 	{
-		ape_warning_( "Failed to open destination file (%s)!\n", FILENAME );
+		ape_console_warning_( "Failed to open destination file (%s)!\n", FILENAME );
 		return;
 	}
 
@@ -337,7 +337,7 @@ void ape_input_initialize_( void )
 	inputKeyboard.activeKeyList = PlCreateLinkedList();
 	if ( inputKeyboard.activeKeyList == NULL )
 	{
-		ape_error_( true, "Failed to create active key list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create active key list: %s\n", PlGetError() );
 	}
 
 	// initialize the controller structure
@@ -345,7 +345,7 @@ void ape_input_initialize_( void )
 
 	if ( !SDL_Init( SDL_INIT_GAMEPAD ) )
 	{
-		ape_warning_( "Failed to initialize input: %s\n", SDL_GetError() );
+		ape_console_warning_( "Failed to initialize input: %s\n", SDL_GetError() );
 		return;
 	}
 
@@ -362,12 +362,12 @@ void ape_input_initialize_( void )
 		SDL_IOStream *rw = SDL_IOFromMem( buf, ( int ) ( size + 1 ) );
 		if ( SDL_AddGamepadMappingsFromIO( rw, true ) == -1 )
 		{
-			ape_warning_( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
+			ape_console_warning_( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
 		}
 	}
 	else
 	{
-		ape_warning_( "Failed to load game controller mappings: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to load game controller mappings: %s\n", PlGetError() );
 	}
 
 	// attempt to fetch and then init config
@@ -405,7 +405,7 @@ void ape_serialize_input_config_( AcmBranch *root )
 		AcmBranch   *controllerBranch = acm_serialize_struct( &ApeInputController_descriptor, &controllers[ i ], &errorCode );
 		if ( errorCode != ND_ERROR_SUCCESS )
 		{
-			ape_warning_( "Failed to serialize controller: %s\n", acm_get_error_message() );
+			ape_console_warning_( "Failed to serialize controller: %s\n", acm_get_error_message() );
 			break;
 		}
 
@@ -442,7 +442,7 @@ unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 	unsigned int slot = get_empty_controller( &id );
 	if ( slot == ( unsigned int ) -1 )
 	{
-		ape_warning_( "Failed to find an empty input device slot!\n" );
+		ape_console_warning_( "Failed to find an empty input device slot!\n" );
 		return -1;
 	}
 
@@ -460,7 +460,7 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 	// update the key state
 	if ( keyIndex >= APE_MAX_KEY_INPUTS )
 	{
-		ape_warning_( "Received invalid key: %d\n", keyIndex );
+		ape_console_warning_( "Received invalid key: %d\n", keyIndex );
 		return;
 	}
 
@@ -576,7 +576,7 @@ void ape_input_tick_( void )
 
 		if ( !SDL_GamepadConnected( inputControllers[ i ].sdlGameController ) )
 		{
-			ape_print_( "Controller disconnected from slot %u.\n", i );
+			ape_console_print_( "Controller disconnected from slot %u.\n", i );
 			unregister_controller( i );
 			continue;
 		}
@@ -689,25 +689,25 @@ void ape_client_input_register_action( const char    *id,
 		actionableList = PlCreateLinkedList();
 		if ( actionableList == NULL )
 		{
-			ape_error_( true, "Failed to create actionable list: %s\n", PlGetError() );
+			ape_console_error_( true, "Failed to create actionable list: %s\n", PlGetError() );
 		}
 	}
 
 	if ( numDefaultButtons > APE_MAX_BUTTON_INPUTS )
 	{
 		numDefaultButtons = APE_MAX_BUTTON_INPUTS;
-		ape_warning_( "Too many default button inputs for action!\n" );
+		ape_console_warning_( "Too many default button inputs for action!\n" );
 	}
 	if ( numDefaultKeys > APE_MAX_KEY_INPUTS )
 	{
 		numDefaultKeys = APE_MAX_KEY_INPUTS;
-		ape_warning_( "Too many default key inputs for action!\n" );
+		ape_console_warning_( "Too many default key inputs for action!\n" );
 	}
 
 	ApeInputAction *inputAction = QM_OS_MEMORY_NEW( ApeInputAction );
 	if ( inputAction == nullptr )
 	{
-		ape_warning_( "Failed to allocate action (%s)!\n", id );
+		ape_console_warning_( "Failed to allocate action (%s)!\n", id );
 		return;
 	}
 

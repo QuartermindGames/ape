@@ -629,11 +629,6 @@ extern "C"
 
 	void ss_shell_grab_mouse( bool grab ) {}
 
-	void ss_shell_push_message( int level, const char *msg, const QmMathColour4ub *colour )
-	{
-		forge::mainWindow->push_message( level, msg, *colour );
-	}
-
 	void ss_shell_shutdown( void )
 	{
 		forge::mainWindow->destroy();

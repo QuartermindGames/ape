@@ -4,9 +4,13 @@
 
 #include "ape_private.h"
 
+#include "console.h"
+
 #include "client/ape_client_input.h"
 #include "yin/core_fs.h"
 #include "node/node_entity.h"
+
+static int logLevels[ APE_LOG_LEVELS ];
 
 void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour );
 
@@ -33,14 +37,14 @@ static void clear_console_command( unsigned int argc, char **argv )
 	clear_output_buffer();
 }
 
-static void output_callback( int level, const char *message, QmMathColour4ub colour )
+void ape_console_push_message_( const char *message, const QmMathColour4ub colour )
 {
 	ape_console_push_notification_( message, colour );
 
 	size_t l = strlen( message );
 	if ( l >= CONSOLE_BUFFER_MAX_LENGTH )
 	{
-		ape_warning_( "Attempting to push message to console with an unexpected length!\n" );
+		ape_console_warning_( "Attempting to push message to console with an unexpected length!\n" );
 		l = CONSOLE_BUFFER_MAX_LENGTH - 2;
 	}
 
@@ -56,8 +60,6 @@ static void output_callback( int level, const char *message, QmMathColour4ub col
 
 	conOutputBuffer.lines[ conOutputBuffer.numLines ].colour = colour;
 	conOutputBuffer.numLines++;
-
-	ss_shell_push_message( level, message, &colour );
 }
 
 /* CONSOLE COMMANDS */
@@ -75,8 +77,8 @@ CMD_CALLBACK( Version )
 {
 	( void ) ( argc );
 	( void ) ( argv );
-	ape_print_( "Version:  v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n"
-	            "Compiled: " __DATE__ "\n" );
+	ape_console_print_( "Version:  v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n"
+	                    "Compiled: " __DATE__ "\n" );
 }
 
 /*------------------------------------------------------------------*/
@@ -97,21 +99,21 @@ static void load_user_config( void )
 		if ( acm_branch_get_string( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
 			PlSetConsoleVariableByName( cvarName, cvarValue );
 		else
-			PRINT_WARNING( "Failed to fetch value: %s\n", cvarName );
+			ape_console_warning_( "Failed to fetch value: %s\n", cvarName );
 
 		child = acm_get_next_child( child );
 	}
 
 	ape_deserialize_input_config_( root );
 
-	PRINT( "User config loaded.\n" );
+	ape_console_print_( "User config loaded.\n" );
 }
 
 static void save_user_config( void )
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
 	snprintf( path, sizeof( path ), "%s", ss_acl_fs_get_user_config_location() );
-	PRINT_DEBUG( "Saving user config: \"%s\"\n", path );
+	ape_console_verbose_( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;
 	size_t              numVars;
@@ -148,7 +150,7 @@ static void save_user_config( void )
 	acm_write_file( path, root, ACM_FILE_TYPE_UTF8 );
 	acm_branch_destroy( root );
 
-	PRINT( "User config saved.\n" );
+	ape_console_print_( "User config saved.\n" );
 }
 
 static void toggle_command( unsigned int, char **argv )
@@ -156,12 +158,12 @@ static void toggle_command( unsigned int, char **argv )
 	PLConsoleVariable *variable = PlGetConsoleVariable( argv[ 1 ] );
 	if ( variable == nullptr )
 	{
-		ape_warning_( "Failed to find the specified variable (%s)!\n" );
+		ape_console_warning_( "Failed to find the specified variable (%s)!\n" );
 		return;
 	}
 	if ( variable->type != PL_VAR_BOOL )
 	{
-		ape_warning_( "Console variable is not a boolean type!\n" );
+		ape_console_warning_( "Console variable is not a boolean type!\n" );
 		return;
 	}
 
@@ -193,7 +195,7 @@ static void validate_tick_frequency( PLConsoleVariable *variable )
 		return;
 	}
 
-	ape_warning_( "Invalid value specified for tick frequency (%i), resetting to default!\n", variable->i_value );
+	ape_console_warning_( "Invalid value specified for tick frequency (%i), resetting to default!\n", variable->i_value );
 
 	char tmp[ 64 ];
 	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
@@ -221,30 +223,53 @@ void ape_console_register_variables_( bool isDedicated )
 	}
 }
 
-static int logLevels[ APE_LOG_LEVELS ];
-
-int Console_GetLogLevel( ApeConsoleLogLevel level )
-{
-	return logLevels[ level ];
-}
-
-void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
+void ape_console_print_( const char *message, ... )
 {
 	va_list args;
 	va_start( args, message );
-
-	int length = pl_vscprintf( message, args ) + 1;
-	if ( length <= 0 )
-		return;
-
-	char *buf = QM_OS_MEMORY_NEW_( char, length );
-	vsnprintf( buf, length, message, args );
-
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( logLevels[ level ], buf );
+	ape_console_log_push_message( logLevels[ APE_LOG_INFORMATION ], buf );
+}
 
-	qm_os_memory_free( buf );
+void ape_console_verbose_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	ape_console_log_push_message( logLevels[ APE_LOG_VERBOSE ], buf );
+}
+
+void ape_console_warning_( const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	ape_console_log_push_message( logLevels[ APE_LOG_WARNING ], "$cFF0000FFWARNING: $cFFFFFFFF%s", buf );
+}
+
+void ape_console_error_( const bool die, const char *message, ... )
+{
+	va_list args;
+	va_start( args, message );
+	char buf[ 2048 ];
+	vsnprintf( buf, sizeof( buf ), message, args );
+	va_end( args );
+
+	ape_console_log_push_message( logLevels[ APE_LOG_ERROR ], "$cFF0000FFERROR: $cFFFFFFFF%s", buf );
+
+	if ( die )
+	{
+		abort();
+	}
 }
 
 /**
@@ -252,27 +277,27 @@ void Console_Print( ApeConsoleLogLevel level, const char *message, ... )
  */
 void ape_initialize_console_( void )
 {
-	PlSetConsoleOutputCallback( output_callback );
+	ape_console_log_initialize_();
 
-	logLevels[ APE_LOG_ERROR ]       = PlAddLogLevel( "ape/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_WARNING ]     = PlAddLogLevel( "ape/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_INFORMATION ] = PlAddLogLevel( "ape", PL_COLOUR_WHITE, true );
-	logLevels[ ACL_LOG_DEBUG ]       = PlAddLogLevel( "ape/debug", PL_COLOUR_ORCHID,
+	logLevels[ APE_LOG_ERROR ]       = ape_console_log_register_input( "ape/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_WARNING ]     = ape_console_log_register_input( "ape/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_INFORMATION ] = ape_console_log_register_input( "ape", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_VERBOSE ]     = ape_console_log_register_input( "ape/verbose", PL_COLOUR_BLUE, false );
+	logLevels[ ACL_LOG_DEBUG ]       = ape_console_log_register_input( "ape/debug", PL_COLOUR_ORCHID,
 #if !defined( NDEBUG )
-	                                            true
+	                                                             true
 #else
-	                                            false
+	                                                             false
 #endif
 	);
-	logLevels[ APE_LOG_VERBOSE ] = PlAddLogLevel( "ape/verbose", PL_COLOUR_BLUE, false );
 
-	logLevels[ APE_LOG_CLIENT_ERROR ]       = PlAddLogLevel( "ape/client/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_CLIENT_WARNING ]     = PlAddLogLevel( "ape/client/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_CLIENT_INFORMATION ] = PlAddLogLevel( "ape/client", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_CLIENT_ERROR ]       = ape_console_log_register_input( "ape/client/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_CLIENT_WARNING ]     = ape_console_log_register_input( "ape/client/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_CLIENT_INFORMATION ] = ape_console_log_register_input( "ape/client", PL_COLOUR_WHITE, true );
 
-	logLevels[ APE_LOG_SERVER_ERROR ]       = PlAddLogLevel( "ape/server/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_SERVER_WARNING ]     = PlAddLogLevel( "ape/server/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_SERVER_INFORMATION ] = PlAddLogLevel( "ape/server", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_SERVER_ERROR ]       = ape_console_log_register_input( "ape/server/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_SERVER_WARNING ]     = ape_console_log_register_input( "ape/server/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_SERVER_INFORMATION ] = ape_console_log_register_input( "ape/server", PL_COLOUR_WHITE, true );
 }
 
 void ape_shutdown_console_( void )
@@ -280,4 +305,6 @@ void ape_shutdown_console_( void )
 	clear_output_buffer();
 
 	//save_user_config();
+
+	ape_console_log_shutdown_();
 }

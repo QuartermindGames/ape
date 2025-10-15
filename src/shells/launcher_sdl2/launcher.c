@@ -21,10 +21,6 @@ static AcmBranch *shellConfig;
 
 static PLConsoleVariable *tickFrequencyVar;
 
-void ss_shell_push_message( int level, const char *msg, const QmMathColour4ub *colour )
-{
-}
-
 /****************************************
  * WINDOW MANAGEMENT
  ****************************************/
@@ -505,17 +501,6 @@ int launcher_initialize( int argc, char **argv )
 	{
 		printf( "Failed to initialize IO subsystem: %s\n", PlGetError() );
 		return EXIT_FAILURE;
-	}
-
-	if ( PlHasCommandLineArgument( "/log" ) )
-	{
-		const char *path = PlGetCommandLineArgumentValue( "/log" );
-		if ( path == NULL )
-		{
-			path = "log.txt";
-		}
-
-		PlSetupLogOutput( path );
 	}
 
 	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );

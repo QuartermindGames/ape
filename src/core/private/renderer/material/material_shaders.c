@@ -49,7 +49,7 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL )
 	{
-		ape_warning_( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return nullptr;
 	}
 
@@ -79,7 +79,7 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 	}
 	else
 	{
-		ape_warning_( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
 		PlgDestroyShaderStage( stage );
 		stage = nullptr;
 	}
@@ -94,7 +94,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	const char *internalName = acm_get_string( root, "description", nullptr );
 	if ( internalName == nullptr )
 	{
-		ape_warning_( "Shader program not assigned a valid 'description'!\n" );
+		ape_console_warning_( "Shader program not assigned a valid 'description'!\n" );
 		return nullptr;
 	}
 
@@ -103,13 +103,13 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		snprintf( program->internalName, sizeof( program->internalName ), "%s", internalName );
 		if ( ape_get_shader_by_name( program->internalName, APE_SHADER_DEFAULT_NULL ) != nullptr )
 		{
-			ape_warning_( "Shader program (%s) already registered!\n", program->internalName );
+			ape_console_warning_( "Shader program (%s) already registered!\n", program->internalName );
 			return nullptr;
 		}
 	}
 	else if ( strcmp( internalName, program->internalName ) != 0 )
 	{
-		ape_warning_( "Changing the internal name of an already loaded shader isn't allowed!\n" );
+		ape_console_warning_( "Changing the internal name of an already loaded shader isn't allowed!\n" );
 		return nullptr;
 	}
 
@@ -118,14 +118,14 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 	if ( vertexPath == NULL || fragmentPath == NULL )
 	{
-		ape_warning_( "No vertex/fragment stage defined in program!\n" );
+		ape_console_warning_( "No vertex/fragment stage defined in program!\n" );
 		return nullptr;
 	}
 
 	PLGShaderProgram *internal = PlgCreateShaderProgram();
 	if ( internal == NULL )
 	{
-		ape_warning_( "Failed to create shader program!\nPL: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to create shader program!\nPL: %s\n", PlGetError() );
 		return nullptr;
 	}
 
@@ -168,7 +168,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 			{
 				if ( subChild == NULL )
 				{
-					ape_warning_( "Hit an invalid child, aborting early!\n" );
+					ape_console_warning_( "Hit an invalid child, aborting early!\n" );
 					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
 					break;
 				}
@@ -190,7 +190,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 			{
 				if ( subChild == NULL )
 				{
-					ape_warning_( "Hit an invalid child, aborting early!\n" );
+					ape_console_warning_( "Hit an invalid child, aborting early!\n" );
 					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
 					break;
 				}
@@ -206,7 +206,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 	if ( !PlgLinkShaderProgram( internal ) )
 	{
-		ape_warning_( "Failed to link shader stages (%s): %s\n", program->internalName, PlGetError() );
+		ape_console_warning_( "Failed to link shader stages (%s): %s\n", program->internalName, PlGetError() );
 		PlgDestroyShaderProgram( internal, true );
 		return nullptr;
 	}
@@ -249,7 +249,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		program->globalUniforms[ i ] = PlgGetShaderUniformSlot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
 		if ( program->globalUniforms[ i ] < 0 )
 		{
-			ape_verbose_( "Didn't find global uniform (%s) per shader program (%s).\n", GLOBAL_UNIFORM_NAMES[ i ], program->internalName );
+			ape_console_verbose_( "Didn't find global uniform (%s) per shader program (%s).\n", GLOBAL_UNIFORM_NAMES[ i ], program->internalName );
 		}
 	}
 
@@ -266,19 +266,19 @@ static void destroy_shader( void *user )
 
 static void load_shader_program_callback( const char *path, PL_UNUSED void *userData )
 {
-	ape_print_( "Loading program: \"%s\"\n", path );
+	ape_console_print_( "Loading program: \"%s\"\n", path );
 
 	AcmBranch *root = com_acm_load_file( path, "program" );
 	if ( root == NULL )
 	{
-		ape_warning_( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
+		ape_console_warning_( "Failed to load shader program \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return;
 	}
 
 	ApeShaderProgram *program = QM_OS_MEMORY_NEW( ApeShaderProgram );
 	if ( parse_shader_program( program, root ) == nullptr )
 	{
-		ape_warning_( "Failed to parse shader program (%s)!\n", path );
+		ape_console_warning_( "Failed to parse shader program (%s)!\n", path );
 		destroy_shader( program );
 		program = nullptr;
 	}
@@ -297,7 +297,7 @@ static void load_shader_program_callback( const char *path, PL_UNUSED void *user
 	else
 	{
 		// the only negative outcome from this is that hot-reloading won't work, so just warn...
-		ape_warning_( "Failed to resolve virtual path for shader program (%s): %s\n", program->internalName, PlGetError() );
+		ape_console_warning_( "Failed to resolve virtual path for shader program (%s): %s\n", program->internalName, PlGetError() );
 	}
 
 	PlInsertHashTableNode( shaderProgramTable, program->internalName, strlen( program->internalName ), program );
@@ -308,13 +308,13 @@ static void reload_shader_program( ApeShaderProgram *program )
 	AcmBranch *root = com_acm_load_file( program->path, "program" );
 	if ( root == nullptr )
 	{
-		ape_warning_( "Failed to reload shader program (%s): %s\n", program->internalName, acm_get_error_message() );
+		ape_console_warning_( "Failed to reload shader program (%s): %s\n", program->internalName, acm_get_error_message() );
 		return;
 	}
 
 	if ( parse_shader_program( program, root ) == nullptr )
 	{
-		ape_warning_( "Failed to parse shader program (%s) for reload!\n", program->path );
+		ape_console_warning_( "Failed to parse shader program (%s) for reload!\n", program->path );
 	}
 
 	acm_branch_destroy( root );
@@ -329,7 +329,7 @@ static void reload_shader_program_command( unsigned int argc, char **argv )
 		ApeShaderProgram *program = ape_get_shader_by_name( argv[ 1 ], APE_SHADER_DEFAULT_NULL );
 		if ( program == nullptr )
 		{
-			ape_warning_( "Failed to find existing shader (%s)!\n", argv[ 1 ] );
+			ape_console_warning_( "Failed to find existing shader (%s)!\n", argv[ 1 ] );
 			return;
 		}
 
@@ -365,7 +365,7 @@ ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProg
 		//HACK: silence this if we're setting things up...
 		if ( !isEnumeratingShaders )
 		{
-			ape_warning_( "Failed to fetch shader (%s) by name!\n", name );
+			ape_console_warning_( "Failed to fetch shader (%s) by name!\n", name );
 		}
 		return nullptr;
 	}
@@ -373,7 +373,7 @@ ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProg
 	program = defaultShaders[ fallback ];
 	assert( program != nullptr );
 
-	ape_warning_( "Failed to fetch shader (%s) by name! Using fallback (%s)\n", program->internalName );
+	ape_console_warning_( "Failed to fetch shader (%s) by name! Using fallback (%s)\n", program->internalName );
 
 	return program;
 }
@@ -444,7 +444,7 @@ void ape_hot_reload_shaders_()
 
 		if ( reload )
 		{
-			ape_print_( "Reloading shader program (%s)\n", program->internalName );
+			ape_console_print_( "Reloading shader program (%s)\n", program->internalName );
 			reload_shader_program( program );
 		}
 
@@ -461,17 +461,17 @@ void ape_initialize_shaders_( void )
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
 	{
-		ape_error_( true, "Failed to create shader program list: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create shader program list: %s\n", PlGetError() );
 	}
 
 	isEnumeratingShaders = true;
 
-	ape_print_( "Scanning for shader programs...\n" );
+	ape_console_print_( "Scanning for shader programs...\n" );
 	PlScanDirectory( "materials/shaders", "n", load_shader_program_callback, true, NULL );
 
 	isEnumeratingShaders = false;
 
-	ape_print_( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
+	ape_console_print_( "%d shader programs indexed\n", PlGetNumHashTableNodes( shaderProgramTable ) );
 
 	// now fetch the default programs
 	static const char *defaultShaderNames[ APE_MAX_DEFAULT_SHADERS ] = {
@@ -487,7 +487,7 @@ void ape_initialize_shaders_( void )
 		ApeShaderProgram *program = ape_get_shader_by_name( defaultShaderNames[ i ], APE_SHADER_DEFAULT_NULL );
 		if ( program == nullptr )
 		{
-			ape_error_( true, "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
+			ape_console_error_( true, "Failed to find default shader program, \"%s\"!\n", defaultShaderNames[ i ] );
 		}
 
 		defaultShaders[ i ] = program;

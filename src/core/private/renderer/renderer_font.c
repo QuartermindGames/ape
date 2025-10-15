@@ -144,7 +144,7 @@ void ape_initialize_bitmap_fonts_( void )
 	defaultFontSmall = ss_arl_bitmap_font_cache( "materials/ui/fonts/default_small.mat.n", 128, 24, 4, 6, 0, 128 );
 
 	if ( defaultFont == NULL || defaultFontSmall == NULL )
-		PRINT_ERROR( "Failed to load default fonts!\n" );
+		ape_console_error_( true, "Failed to load default fonts!\n" );
 }
 
 void ape_shutdown_bitmap_fonts_( void )
@@ -165,7 +165,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 	PLGMesh *mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 4096, 4096 );
 	if ( mesh == NULL )
 	{
-		PRINT_WARNING( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
+		ape_console_warning_( "Failed to create font mesh, %s, aborting!\n", PlGetError() );
 		return NULL;
 	}
 
@@ -173,7 +173,7 @@ ApeBitmapFont *ss_arl_bitmap_font_cache( const char *materialPath, int w, int h,
 	if ( material == NULL )
 	{
 		PlgDestroyMesh( mesh );
-		PRINT_WARNING( "Failed to load font material \"%s\"!\n", materialPath );
+		ape_console_warning_( "Failed to load font material \"%s\"!\n", materialPath );
 		return NULL;
 	}
 

@@ -20,14 +20,14 @@ ApeAudioSample *ape_audio_format_vorbis_load_( PLFile *file )
 	{
 		qm_os_memory_free( output );
 
-		ape_warning_( "Failed to decode ogg!\n" );
+		ape_console_warning_( "Failed to decode ogg!\n" );
 		return nullptr;
 	}
 	else if ( channels == 0 || channels > 2 )
 	{
 		qm_os_memory_free( output );
 
-		ape_warning_( "Invalid number of channels for ogg!\n" );
+		ape_console_warning_( "Invalid number of channels for ogg!\n" );
 		return nullptr;
 	}
 

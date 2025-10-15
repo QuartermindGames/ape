@@ -69,7 +69,7 @@ void ape_postfx_setup_( void )
 	                                           PLG_TEXTURE_FILTER_LINEAR, 0 );
 	if ( ppRenderTarget == NULL )
 	{
-		ape_error_( true, "Failed to create postfx render target: %s\n", PlGetError() );
+		ape_console_error_( true, "Failed to create postfx render target: %s\n", PlGetError() );
 	}
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )

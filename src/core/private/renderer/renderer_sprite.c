@@ -73,7 +73,7 @@ void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFram
 	curFrame *= YR_NUM_SPRITE_ANGLES;
 	unsigned int actualFrame = curFrame + ( frameColumn - 1 );
 	if( actualFrame > numFrames ) {
-		PRINT_WARNING( "Out of scope frame, %d/%d!\n", actualFrame, numFrames );
+		ape_console_warning_( "Out of scope frame, %d/%d!\n", actualFrame, numFrames );
 		actualFrame = numFrames;
 	}
 

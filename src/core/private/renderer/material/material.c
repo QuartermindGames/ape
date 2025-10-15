@@ -56,7 +56,7 @@ PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 {
 	if ( pass >= self->numPasses )
 	{
-		ape_warning_( "Invalid material pass (%u >= %u)!\n", pass, self->numPasses );
+		ape_console_warning_( "Invalid material pass (%u >= %u)!\n", pass, self->numPasses );
 		return nullptr;
 	}
 
@@ -91,14 +91,14 @@ void ape_material_register_console_variables_()
 
 void ape_initialize_materials_( void )
 {
-	ape_print_( "Initializing material system\n" );
+	ape_console_print_( "Initializing material system\n" );
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		materials[ i ] = PlCreateLinkedList();
 		if ( materials[ i ] == NULL )
 		{
-			ape_error_( true, "Failed to create materials list: %s\n", PlGetError() );
+			ape_console_error_( true, "Failed to create materials list: %s\n", PlGetError() );
 		}
 	}
 
@@ -126,7 +126,7 @@ void ape_initialize_materials_( void )
 		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false );
 		if ( defaultMaterials[ i ] == NULL )
 		{
-			ape_error_( true, "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
+			ape_console_error_( true, "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
 		}
 	}
 }
@@ -158,7 +158,7 @@ void ape_shutdown_materials_( void )
 
 	if ( totalCachedMaterials > 0 )
 	{
-		ape_warning_( "Shutting down material system with %u active materials, orphaned %u caches!\n",
+		ape_console_warning_( "Shutting down material system with %u active materials, orphaned %u caches!\n",
 		              totalCachedMaterials, orphanedCaches );
 	}
 }
@@ -177,7 +177,7 @@ ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, const unsigned int pa
 {
 	if ( pass >= self->numPasses )
 	{
-		ape_warning_( "Invalid pass index specified (%u >= %u)!\n", pass, self->numPasses );
+		ape_console_warning_( "Invalid pass index specified (%u >= %u)!\n", pass, self->numPasses );
 		return nullptr;
 	}
 
@@ -216,7 +216,7 @@ static PLGCompareFunction get_compare_mode_by_tag( const char *tag )
 		return i;
 	}
 
-	ape_warning_( "Invalid compare mode specified, \"%s\", defaulting to \"less\"!\n", tag );
+	ape_console_warning_( "Invalid compare mode specified, \"%s\", defaulting to \"less\"!\n", tag );
 	return PLG_COMPARE_LESS;
 }
 
@@ -251,7 +251,7 @@ static int get_blend_mode_by_tag( const char *tag )
 		return i;
 	}
 
-	ape_warning_( "Invalid blend mode specified, \"%s\", defaulting to \"none\"!\n", tag );
+	ape_console_warning_( "Invalid blend mode specified, \"%s\", defaulting to \"none\"!\n", tag );
 	return PLG_BLEND_NONE;
 }
 
@@ -358,7 +358,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		materialVariable->programSlot = PlgGetShaderUniformSlot( materialPass->program->internal, propertyName );
 		if ( materialVariable->programSlot == -1 )
 		{
-			ape_warning_( "Failed to fetch uniform slot for variable \"%s\"!\n", propertyName );
+			ape_console_warning_( "Failed to fetch uniform slot for variable \"%s\"!\n", propertyName );
 			node = next;
 			continue;
 		}
@@ -366,7 +366,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		materialVariable->numElements = PlgGetNumShaderUniformElements( materialPass->program->internal, materialVariable->programSlot );
 		if ( materialVariable->numElements == 0 )
 		{
-			ape_warning_( "Failed to fetch number of uniform elements for variable (%s/%u)!\n", propertyName, materialVariable->programSlot );
+			ape_console_warning_( "Failed to fetch number of uniform elements for variable (%s/%u)!\n", propertyName, materialVariable->programSlot );
 			node = next;
 			continue;
 		}
@@ -402,7 +402,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					ApeMaterialBuiltinVar materialBuiltinVar = get_built_in_by_tag( p );
 					if ( materialBuiltinVar == APE_MATERIAL_BUILTIN_INVALID )
 					{
-						ape_warning_( "Invalid built-in variable, \"%s\", specified!\n", value );
+						ape_console_warning_( "Invalid built-in variable, \"%s\", specified!\n", value );
 						node = next;
 						continue;
 					}
@@ -602,7 +602,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 			if ( materialVariable->type == SS_ARL_MATERIAL_VAR_INVALID )
 			{
-				ape_warning_( "Invalid property type for shader variable \"%s\"!\n", propertyName );
+				ape_console_warning_( "Invalid property type for shader variable \"%s\"!\n", propertyName );
 				node = next;
 				continue;
 			}
@@ -610,7 +610,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 		if ( !validate_material_variable( materialVariable, uniformType ) )
 		{
-			ape_warning_( "Mismatch between material variable type and uniform type!\n" );
+			ape_console_warning_( "Mismatch between material variable type and uniform type!\n" );
 			node = next;
 			continue;
 		}
@@ -651,7 +651,7 @@ static PLGTextureFilter get_texture_filter_by_name( const char *name )
 	else
 	{
 		textureFilter = PLG_TEXTURE_FILTER_LINEAR;
-		ape_warning_( "Encountered an invalid texture filter type (%s), reverting to linear!\n", name );
+		ape_console_warning_( "Encountered an invalid texture filter type (%s), reverting to linear!\n", name );
 	}
 
 	return textureFilter;
@@ -673,7 +673,7 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 		}
 		else
 		{
-			ape_warning_( "Invalid blend mode array in material!\n" );
+			ape_console_warning_( "Invalid blend mode array in material!\n" );
 		}
 	}
 	else
@@ -705,7 +705,7 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 		char str[ 64 ];
 		qm_math_vector2f_print( materialPass->textureScale, str, sizeof( str ) );
 
-		ape_warning_( "Encountered material pass with invalid texture scale (%s)!\n", str );
+		ape_console_warning_( "Encountered material pass with invalid texture scale (%s)!\n", str );
 	}
 
 	if ( ( subNode = acm_get_child_by_name( root, "shaderParameters" ) ) != NULL )
@@ -769,7 +769,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 
 	if ( material->numPasses == 0 )
 	{
-		ape_warning_( "No passes specified for material!\n" );
+		ape_console_warning_( "No passes specified for material!\n" );
 	}
 
 	return material;
@@ -1074,7 +1074,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	AcmBranch *root = com_acm_load_file( path, "material" );
 	if ( root == NULL )
 	{
-		ape_warning_( "Failed to load material, \"%s\" (%s)!\n", path, acm_get_error_message() );
+		ape_console_warning_( "Failed to load material, \"%s\" (%s)!\n", path, acm_get_error_message() );
 		return fallbackPtr;
 	}
 

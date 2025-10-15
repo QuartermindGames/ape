@@ -120,7 +120,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
 			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
 			{
-				ape_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+				ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
 				break;
 			}
 
@@ -165,7 +165,7 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
 			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
 			{
-				ape_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+				ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
 				break;
 			}
 

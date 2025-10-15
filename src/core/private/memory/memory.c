@@ -26,12 +26,12 @@ static void initialize_cache_pools( void )
 		cacheMemoryGroups[ i ] = PlCreateMemoryGroup();
 		if ( cacheMemoryGroups[ i ] == nullptr )
 		{
-			ape_error_( true, "Failed to create memory group (%u): %s\n", i, PlGetError() );
+			ape_console_error_( true, "Failed to create memory group (%u): %s\n", i, PlGetError() );
 		}
 		cachePoolsList[ i ] = PlCreateLinkedList();
 		if ( cachePoolsList[ i ] == NULL )
 		{
-			ape_error_( true, "Failed to create cache pool (%u): %s\n", i, PlGetError() );
+			ape_console_error_( true, "Failed to create cache pool (%u): %s\n", i, PlGetError() );
 		}
 	}
 }
@@ -42,7 +42,7 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 	void *cachedData = ape_memory_get_from_pool_( id, pool );
 	if ( cachedData != NULL )
 	{
-		ape_error_( true, "Attempted to cache duplicate data: %s\n", id );
+		ape_console_error_( true, "Attempted to cache duplicate data: %s\n", id );
 	}
 
 	ApeMemoryCacheHeader *header = QM_OS_MEMORY_NEW( ApeMemoryCacheHeader );
@@ -53,10 +53,10 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 	header->node     = PlInsertLinkedListNode( cachePoolsList[ pool ], header );
 	if ( header->node == NULL )
 	{
-		ape_error_( true, "Failed to insert node for cache pool!\n" );
+		ape_console_error_( true, "Failed to insert node for cache pool!\n" );
 	}
 
-	ape_print_( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
+	ape_console_print_( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
 
 	return header;
 }
@@ -99,19 +99,19 @@ PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool )
 
 static void remove_from_cache( uint32_t id, uint8_t pool )
 {
-	ape_print_( "Removing %u from pool %u\n", id, pool );
+	ape_console_print_( "Removing %u from pool %u\n", id, pool );
 
 	return;
 	ApeMemoryCacheHeader *header = get_cache( id, pool );
 	if ( header == NULL )
 	{
-		ape_warning_( "Attempted to remove node from cache pool, but failed: %s\n", id );
+		ape_console_warning_( "Attempted to remove node from cache pool, but failed: %s\n", id );
 		return;
 	}
 
 	PlDestroyLinkedListNode( header->node );
 
-	ape_print_( "Removed \"%s\" from cache\n", header->description );
+	ape_console_print_( "Removed \"%s\" from cache\n", header->description );
 
 	qm_os_memory_free( header );
 }
@@ -195,14 +195,14 @@ static void cleanup_callback( PL_UNUSED void *unused0, PL_UNUSED double unused1 
 
 void ape_memory_initialize_( void )
 {
-	ape_print_( "Initializing memory manager\n" );
+	ape_console_print_( "Initializing memory manager\n" );
 
 	initialize_cache_pools();
 
 	mmReferenceList = PlCreateLinkedList();
 	if ( mmReferenceList == NULL )
 	{
-		ape_error_( true, "Failed to create memory manager linked list!\n" );
+		ape_console_error_( true, "Failed to create memory manager linked list!\n" );
 	}
 
 	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
@@ -215,7 +215,7 @@ void ape_memory_shutdown_( void )
 	unsigned int danglingReferences = PlGetNumLinkedListNodes( mmReferenceList );
 	if ( danglingReferences > 0 )
 	{
-		ape_warning_( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
+		ape_console_warning_( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
 	}
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
@@ -330,6 +330,6 @@ void ape_memory_temp_free( ApeMemoryReference *m )
 {
 	if ( !free_reference( m, false ) )
 	{
-		ape_warning_( "Failed to cleanup temporary pool!\n" );
+		ape_console_warning_( "Failed to cleanup temporary pool!\n" );
 	}
 }

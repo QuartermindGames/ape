@@ -43,7 +43,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 
 	if ( i >= MAX_VIEWPORTS )
 	{
-		ape_warning_( "Hit maximum viewport limit! Viewport will not be created.\n" );
+		ape_console_warning_( "Hit maximum viewport limit! Viewport will not be created.\n" );
 		return nullptr;
 	}
 
@@ -66,7 +66,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	                                                         PLG_TEXTURE_FILTER_LINEAR, msaa );
 	if ( viewports[ i ]->renderTarget == NULL )
 	{
-		ape_warning_( "Failed to create render target for viewport!\n" );
+		ape_console_warning_( "Failed to create render target for viewport!\n" );
 		qm_os_memory_free( viewports[ i ] );
 		viewports[ i ] = nullptr;
 	}
@@ -101,7 +101,7 @@ ApeViewport *ape_get_viewport_by_slot( unsigned int slot )
 	assert( slot < MAX_VIEWPORTS );
 	if ( slot >= MAX_VIEWPORTS )
 	{
-		ape_warning_( "Invalid slot specified!\n" );
+		ape_console_warning_( "Invalid slot specified!\n" );
 		return NULL;
 	}
 
