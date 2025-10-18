@@ -9,6 +9,7 @@
 
 #include "editor.h"
 #include "renderer/renderer.h"
+#include "renderer/renderer_render_target.h"
 #include "world/world.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -528,7 +529,7 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst )
 {
 	ApeViewport    *selectionViewport = ape_editor_selection_get_viewport_();
-	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer( selectionViewport->renderTarget );
+	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer_( selectionViewport->renderTarget );
 	if ( frameBuffer == nullptr )
 	{
 		return nullptr;

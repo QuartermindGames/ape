@@ -8,9 +8,9 @@
 
 typedef enum ApeRendererPostEffectType
 {
+	APE_RENDERER_POST_EFFECT_TYPE_DOF,
 	APE_RENDERER_POST_EFFECT_TYPE_FXAA,
 	APE_RENDERER_POST_EFFECT_TYPE_BLOOM,
-	APE_RENDERER_POST_EFFECT_TYPE_DOF,
 	APE_RENDERER_POST_EFFECT_TYPE_DITHER,
 
 	MAX_POST_EFFECTS
@@ -25,17 +25,17 @@ static ApeRenderTarget *ppRenderTarget = nullptr;
 extern ApePostProcessEffect ape_postDitherEffect_;
 extern ApePostProcessEffect ape_postDofEffect_;
 
-static void register_post_effects( void )
+static void register_post_effects()
 {
 	if ( postProcessInit )
 	{
 		return;
 	}
 
+	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_DOF ]    = &ape_postDofEffect_;
 	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_FXAA ]   = ape_postfx_get_fxaa_();
 	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_BLOOM ]  = ape_postfx_get_bloom_();
 	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_DITHER ] = &ape_postDitherEffect_;
-	postProcessEffects[ APE_RENDERER_POST_EFFECT_TYPE_DOF ]    = &ape_postDofEffect_;
 
 	postProcessInit = true;
 }
@@ -60,16 +60,16 @@ void ape_postfx_cleanup_( void )
 
 	postProcessInit = false;
 
-	ape_render_target_release( ppRenderTarget );
+	ape_render_target_release_( ppRenderTarget );
 }
 
 void ape_postfx_setup_( void )
 {
-	ppRenderTarget = ape_render_target_create( "postfx",
-	                                           800, 600,
-	                                           PLG_BUFFER_COLOUR,
-	                                           PLG_BUFFER_COLOUR,
-	                                           PLG_TEXTURE_FILTER_LINEAR, 0 );
+	ppRenderTarget = ape_render_target_create_( "postfx",
+	                                            800, 600,
+	                                            PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH,
+	                                            PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH,
+	                                            PLG_TEXTURE_FILTER_LINEAR, 0 );
 	if ( ppRenderTarget == NULL )
 	{
 		ape_console_error_( true, "Failed to create postfx render target: %s\n", PlGetError() );
@@ -116,12 +116,12 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 		return;
 	}
 
-	ape_render_target_set_size( ppRenderTarget, viewport->width, viewport->height );
-	ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_set_size_( ppRenderTarget, viewport->width, viewport->height );
+	ape_render_target_bind_( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
-	PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
-	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer( ppRenderTarget );
-	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, true );
+	PLGFrameBuffer *src = ape_render_target_get_frame_buffer_( viewport->renderTarget );
+	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer_( ppRenderTarget );
+	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, true );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{
@@ -132,11 +132,11 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 
 		postProcessEffects[ i ]->draw( viewport );
 
-		ape_render_target_bind( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_bind_( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 	}
 
 	// bind the viewport render target again
-	ape_render_target_bind( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind_( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	COM_PROFILE_FUNCTION_END();
 }

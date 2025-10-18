@@ -6,6 +6,7 @@
 #include "gui_private.h"
 
 #include "renderer/renderer.h"
+#include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 
 static PLGCamera *camera;
@@ -28,7 +29,7 @@ ApeGuiCanvas *ape_gui_canvas_create( int width, int height )
 	ApeGuiCanvas *canvas = QM_OS_MEMORY_NEW( ApeGuiCanvas );
 	canvas->width        = width;
 	canvas->height       = height;
-	canvas->renderTarget = ape_render_target_create( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
+	canvas->renderTarget = ape_render_target_create_( "gui", 640, 480, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
 
 	return canvas;
 }
@@ -40,7 +41,7 @@ void ape_gui_canvas_destroy( ApeGuiCanvas *canvas )
 		return;
 	}
 
-	ape_render_target_release( canvas->renderTarget );
+	ape_render_target_release_( canvas->renderTarget );
 
 	qm_os_memory_free( canvas );
 }
@@ -52,7 +53,7 @@ void ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height )
 		return;
 	}
 
-	ape_render_target_set_size( canvas->renderTarget, width, height );
+	ape_render_target_set_size_( canvas->renderTarget, width, height );
 }
 
 void ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *height )
@@ -69,7 +70,7 @@ void ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *heigh
 
 PLGTexture *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas )
 {
-	return ape_render_target_get_texture( canvas->renderTarget );
+	return ape_render_target_get_texture_( canvas->renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 }
 
 /****************************************
@@ -100,7 +101,7 @@ void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 
 	ape_setup_2d_viewport_( canvas->width, canvas->height );
 
-	ape_render_target_bind( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
+	ape_render_target_bind_( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
 	PlgSetupCamera( camera );
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );

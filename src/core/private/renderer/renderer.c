@@ -10,6 +10,7 @@
 
 #include "renderer.h"
 #include "renderer_font.h"
+#include "renderer_render_target.h"
 #include "camera/camera.h"
 
 #include "editor/editor.h"
@@ -193,9 +194,9 @@ static void write_screenshot( void )
 	}
 
 	unsigned int w, h;
-	ape_render_target_get_size( renderTarget, &w, &h );
+	ape_render_target_get_size_( renderTarget, &w, &h );
 
-	PLGFrameBuffer *fboBuffer = ape_render_target_get_frame_buffer( renderTarget );
+	PLGFrameBuffer *fboBuffer = ape_render_target_get_frame_buffer_( renderTarget );
 	assert( fboBuffer != NULL );
 
 	size_t         bufSize = ( ( w * h ) * 4 );
@@ -253,8 +254,8 @@ void ape_draw_end_( ApeViewport *viewport )
 {
 	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DEFAULT );
 
-	PLGFrameBuffer *src = ape_render_target_get_frame_buffer( viewport->renderTarget );
-	PlgBlitFrameBuffers( src, src->width, src->height, nullptr, viewport->width, viewport->height, true );
+	PLGFrameBuffer *src = ape_render_target_get_frame_buffer_( viewport->renderTarget );
+	PlgBlitFrameBuffers( src, src->width, src->height, nullptr, viewport->width, viewport->height, PLG_BUFFER_COLOUR, true );
 
 	ape_rendererPerformance_.numBatches    = 0;
 	ape_rendererPerformance_.numTriangles  = 0;
@@ -374,7 +375,7 @@ void ape_renderer_initialize_( void )
 
 	ape_setup_default_draw_state_( nullptr );
 
-	defaultRenderTarget = ape_render_target_create( "default",
+	defaultRenderTarget = ape_render_target_create_( "default",
 	                                                800, 600,
 	                                                PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
 	                                                PLG_BUFFER_COLOUR,

@@ -1,7 +1,9 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "ape_private.h"
+
 #include "renderer.h"
+#include "renderer_render_target.h"
 
 /**
  * What's a viewport? I hear you ask. Well, I'm glad you did.
@@ -59,7 +61,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 #if 1
 	char viewportTag[ 64 ];
 	snprintf( viewportTag, sizeof( viewportTag ), "viewport_%u", i );
-	viewports[ i ]->renderTarget = ape_render_target_create( viewportTag,
+	viewports[ i ]->renderTarget = ape_render_target_create_( viewportTag,
 	                                                         width, height,
 	                                                         PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
 	                                                         PLG_BUFFER_COLOUR,
@@ -84,7 +86,7 @@ void ape_viewport_destroy( ApeViewport *self )
 
 	if ( self->renderTarget != NULL )
 	{
-		ape_render_target_release( self->renderTarget );
+		ape_render_target_release_( self->renderTarget );
 		self->renderTarget = NULL;
 	}
 
@@ -123,7 +125,7 @@ static void update_render_target_size( ApeViewport *self )
 	}
 
 	unsigned int rw, rh;
-	ape_render_target_get_size( self->renderTarget, &rw, &rh );
+	ape_render_target_get_size_( self->renderTarget, &rw, &rh );
 
 	unsigned int nw = self->width * ( int ) ape_config_.renderer.framebufferScale;
 	unsigned int nh = self->height * ( int ) ape_config_.renderer.framebufferScale;
@@ -132,7 +134,7 @@ static void update_render_target_size( ApeViewport *self )
 		return;
 	}
 
-	ape_render_target_set_size( self->renderTarget, nw, nh );
+	ape_render_target_set_size_( self->renderTarget, nw, nh );
 }
 
 void ape_viewport_set_size( ApeViewport *self, int width, int height )
@@ -182,7 +184,7 @@ ApeRenderTarget *ape_viewport_get_render_target( ApeViewport *self )
 
 void ape_viewport_make_active( ApeViewport *self )
 {
-	ape_render_target_bind( self->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
+	ape_render_target_bind_( self->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 	// we've got to do this here again, because set_viewport_size isn't called quite so often via the regular launcher,
 	// though to be honest, it probably shouldn't be called as often from the editor either...

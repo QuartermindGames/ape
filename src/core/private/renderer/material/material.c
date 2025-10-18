@@ -387,10 +387,10 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
 					p += 3;
-					ApeRenderTarget *renderTarget = ape_render_target_get_by_key( p );
+					ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( p );
 					if ( renderTarget == NULL )
 					{// Passing flag of 0 to create a placeholder
-						renderTarget = ape_render_target_create( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
+						renderTarget = ape_render_target_create_( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
 					}
 
 					materialVariable->type     = APE_MATERIAL_VAR_RENDERTARGET;
@@ -810,7 +810,7 @@ static void destroy_material( ApeMaterial *material )
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
 				case APE_MATERIAL_VAR_RENDERTARGET:
-					ape_render_target_release( material->passes[ i ].variables[ j ].data.ptr );
+					ape_render_target_release_( material->passes[ i ].variables[ j ].data.ptr );
 					break;
 				default:
 					qm_os_memory_free( material->passes[ i ].variables[ j ].data.ptr );
@@ -1240,7 +1240,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 					PLGTexture *texture;
 					if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 					{
-						texture = ape_render_target_get_texture( curPass->variables[ j ].data.ptr );
+						texture = ape_render_target_get_texture_( curPass->variables[ j ].data.ptr, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 						if ( texture == NULL )
 						{
 							texture = ape_texture_get_fallback();

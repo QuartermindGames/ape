@@ -148,6 +148,8 @@ void ape_clear_flare_queue_( void );
 // Decal Manager
 /////////////////////////////////////////////////////////////////////////////////////
 
+typedef struct ApeDecalManager ApeDecalManager;
+
 ApeDecalManager *ape_decal_manager_create_();
 void             ape_decal_manager_destroy_( ApeDecalManager *self );
 

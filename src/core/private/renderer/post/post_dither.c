@@ -4,6 +4,7 @@
 
 #include "post.h"
 
+#include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 
 static bool ditherEnabled;
@@ -24,7 +25,7 @@ static bool setup_dither_effect()
 	{
 		return false;
 	}
-	if ( ( ditherFilterTarget = ape_render_target_create( "post_dither", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_NEAREST, 0 ) ) == nullptr )
+	if ( ( ditherFilterTarget = ape_render_target_create_( "post_dither", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_NEAREST, 0 ) ) == nullptr )
 	{
 		return false;
 	}
@@ -34,7 +35,7 @@ static bool setup_dither_effect()
 
 static void cleanup_dither_effect()
 {
-	ape_render_target_release( ditherFilterTarget );
+	ape_render_target_release_( ditherFilterTarget );
 }
 
 static void draw_dither_effect( const ApeViewport *viewport )
@@ -47,7 +48,7 @@ static void draw_dither_effect( const ApeViewport *viewport )
 	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
-	PLGTexture *viewportTexture = ape_render_target_get_texture( postRenderTarget );
+	PLGTexture *viewportTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 	assert( viewportTexture != nullptr );
 
 	{
@@ -65,8 +66,8 @@ static void draw_dither_effect( const ApeViewport *viewport )
 
 		ape_setup_2d_viewport_( bw, bh );
 
-		ape_render_target_bind( ditherFilterTarget, PLG_FRAMEBUFFER_DEFAULT );
-		ape_render_target_set_size( ditherFilterTarget, bw, bh );
+		ape_render_target_bind_( ditherFilterTarget, PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_set_size_( ditherFilterTarget, bw, bh );
 
 		ape_shader_set_active_( ditherFilterShader );
 
@@ -77,12 +78,13 @@ static void draw_dither_effect( const ApeViewport *viewport )
 		PlgSetTexture( nullptr, 0 );
 	}
 
+	// finalize
 	{
-		PLGTexture *ditherTexture = ape_render_target_get_texture( ditherFilterTarget );
+		PLGTexture *ditherTexture = ape_render_target_get_texture_( ditherFilterTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( ditherTexture != nullptr );
 
 		ape_setup_2d_viewport_( viewport->width, viewport->height );
-		ape_render_target_bind( postRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_bind_( postRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 

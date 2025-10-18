@@ -4,6 +4,7 @@
 
 #include "post.h"
 
+#include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -38,11 +39,11 @@ static bool setup_bloom_effect( void )
 	{
 		return false;
 	}
-	if ( ( bloomFilterTarget = ape_render_target_create( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, 0 ) ) == nullptr )
+	if ( ( bloomFilterTarget = ape_render_target_create_( "post_bloom", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, 0 ) ) == nullptr )
 	{
 		return false;
 	}
-	if ( ( bloomBlurTarget = ape_render_target_create( "post_bloom_blur", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, 0 ) ) == nullptr )
+	if ( ( bloomBlurTarget = ape_render_target_create_( "post_bloom_blur", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, 0 ) ) == nullptr )
 	{
 		return false;
 	}
@@ -51,8 +52,8 @@ static bool setup_bloom_effect( void )
 
 static void cleanup_bloom_effect( void )
 {
-	ape_render_target_release( bloomFilterTarget );
-	ape_render_target_release( bloomBlurTarget );
+	ape_render_target_release_( bloomFilterTarget );
+	ape_render_target_release_( bloomBlurTarget );
 }
 
 static void draw_bloom_effect( const ApeViewport *viewport )
@@ -68,7 +69,7 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
-	PLGTexture *viewportTexture = ape_render_target_get_texture( postRenderTarget );
+	PLGTexture *viewportTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 	assert( viewportTexture != nullptr );
 
 	// we use the texture here because supersampling madness...
@@ -78,8 +79,8 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 
 	// draw with filter into bloom render target
 	{
-		ape_render_target_bind( bloomFilterTarget, PLG_FRAMEBUFFER_DEFAULT );
-		ape_render_target_set_size( bloomFilterTarget, bw, bh );
+		ape_render_target_bind_( bloomFilterTarget, PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_set_size_( bloomFilterTarget, bw, bh );
 
 		ape_shader_set_active_( bloomFilterShader );
 
@@ -92,11 +93,11 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 
 	// blur
 	{
-		PLGTexture *bloomFilterTexture = ape_render_target_get_texture( bloomFilterTarget );
+		PLGTexture *bloomFilterTexture = ape_render_target_get_texture_( bloomFilterTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( bloomFilterTexture != nullptr );
 
-		ape_render_target_bind( bloomBlurTarget, PLG_FRAMEBUFFER_DRAW );
-		ape_render_target_set_size( bloomBlurTarget, bw, bh );
+		ape_render_target_bind_( bloomBlurTarget, PLG_FRAMEBUFFER_DRAW );
+		ape_render_target_set_size_( bloomBlurTarget, bw, bh );
 
 		ape_shader_set_active_( bloomBlurShader );
 
@@ -108,13 +109,13 @@ static void draw_bloom_effect( const ApeViewport *viewport )
 
 	// final blend
 	{
-		PLGTexture *bloomBlurTexture = ape_render_target_get_texture( bloomBlurTarget );
+		PLGTexture *bloomBlurTexture = ape_render_target_get_texture_( bloomBlurTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( bloomBlurTexture != nullptr );
 
 		ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
-		ape_render_target_bind( ape_postfx_get_render_target_(), PLG_FRAMEBUFFER_DEFAULT );
+		ape_render_target_bind_( ape_postfx_get_render_target_(), PLG_FRAMEBUFFER_DEFAULT );
 
 		if ( bloomAdditive )
 		{
