@@ -14,6 +14,7 @@
 #include "world/world.h"
 #include "game/game_public.h"
 #include "gui/gui_private.h"
+#include "qmos/public/qm_os_string.h"
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
@@ -159,7 +160,7 @@ void ape_shutdown_materials_( void )
 	if ( totalCachedMaterials > 0 )
 	{
 		ape_console_warning_( "Shutting down material system with %u active materials, orphaned %u caches!\n",
-		              totalCachedMaterials, orphanedCaches );
+		                      totalCachedMaterials, orphanedCaches );
 	}
 }
 
@@ -262,7 +263,6 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 {
 	static const char *builtInTags[] = {
 	        [APE_MATERIAL_BUILTIN_TIME]          = "time",
-	        [APE_MATERIAL_BUILTIN_DEPTH]         = "depth",
 	        [APE_MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
 	        [APE_MATERIAL_BUILTIN_FALLBACK]      = "proc_fallback",
 
@@ -272,7 +272,7 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 
 	for ( int i = 0; i < SS_ARL_MAX_MATERIAL_BUILTINS; ++i )
 	{
-		if ( strcmp( tag, builtInTags[ i ] ) != 0 )
+		if ( strncmp( tag, builtInTags[ i ], strlen( builtInTags[ i ] ) ) != 0 )
 		{
 			continue;
 		}
@@ -322,6 +322,7 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
 
 			/* special types */
 		case APE_MATERIAL_VAR_RENDERTARGET:
+		case APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP:
 		case APE_MATERIAL_VAR_TEXTURE:
 		{
 			return ( ( uniformType == PLG_UNIFORM_SAMPLER1D ) ||
@@ -387,14 +388,14 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
 					p += 3;
-					ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( p );
-					if ( renderTarget == NULL )
-					{// Passing flag of 0 to create a placeholder
-						renderTarget = ape_render_target_create_( p, 64, 64, 0, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_LINEAR, false );
-					}
-
 					materialVariable->type     = APE_MATERIAL_VAR_RENDERTARGET;
-					materialVariable->data.ptr = renderTarget;
+					materialVariable->data.ptr = qm_os_string_alloc( nullptr, "%s", p );
+				}
+				else if ( strncmp( p, "depth_", 6 ) == 0 )
+				{
+					p += 6;
+					materialVariable->type     = APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP;
+					materialVariable->data.ptr = qm_os_string_alloc( nullptr, "%s", p );
 				}
 				else
 				{
@@ -754,11 +755,11 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 	{
 		material->flags |= APE_MATERIAL_FLAG_CAST_SHADOWS | APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 	}
-	if ( !acm_get_bool( root, "receiveShadows", ( material->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS ) ) )
+	if ( !acm_get_bool( root, "receiveShadows", material->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS ) )
 	{
 		material->flags &= ~APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 	}
-	if ( !acm_get_bool( root, "castShadows", ( material->flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) ) )
+	if ( !acm_get_bool( root, "castShadows", material->flags & APE_MATERIAL_FLAG_CAST_SHADOWS ) )
 	{
 		material->flags &= ~APE_MATERIAL_FLAG_CAST_SHADOWS;
 	}
@@ -809,9 +810,6 @@ static void destroy_material( ApeMaterial *material )
 				case APE_MATERIAL_VAR_TEXTURE:
 					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
 					break;
-				case APE_MATERIAL_VAR_RENDERTARGET:
-					ape_render_target_release_( material->passes[ i ].variables[ j ].data.ptr );
-					break;
 				default:
 					qm_os_memory_free( material->passes[ i ].variables[ j ].data.ptr );
 					break;
@@ -830,7 +828,7 @@ static void destroy_material( ApeMaterial *material )
 
 static void destroy_material_callback( void *userData )
 {
-	destroy_material( ( ApeMaterial * ) userData );
+	destroy_material( userData );
 }
 
 /**
@@ -891,23 +889,9 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 		}
 
 		case APE_MATERIAL_BUILTIN_FALLBACK:
-		case APE_MATERIAL_BUILTIN_DEPTH:
 		{
-			PLGTexture *texture = NULL;
-			if ( variable == APE_MATERIAL_BUILTIN_FALLBACK )
-			{
-				texture = ape_texture_get_fallback();
-			}
-#if 0//TODO
-			else if ( variable == APE_MATERIAL_BUILTIN_DEPTH )
-				texture = apeGetPrimaryDepthAttachment();
-#endif
-
-			if ( texture == NULL )
-			{
-				break;
-			}
-
+			PLGTexture *texture = ape_texture_get_fallback();
+			assert( texture != nullptr );
 			PlgSetTexture( texture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
@@ -1235,13 +1219,34 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 				}
 
 				// textures just need to be set per their respective unit
-				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE || curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
+				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE ||
+					//TODO: change how we handle special types here, should probably move this logic under set_built_in_variable
+				     curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET ||
+				     curPass->variables[ j ].type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
 				{
-					PLGTexture *texture;
+					PLGTexture *texture = nullptr;
 					if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
 					{
-						texture = ape_render_target_get_texture_( curPass->variables[ j ].data.ptr, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
-						if ( texture == NULL )
+						ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( curPass->variables[ j ].data.ptr );
+						if ( renderTarget != nullptr )
+						{
+							texture = ape_render_target_get_texture_( renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+						}
+
+						if ( texture == nullptr )
+						{
+							texture = ape_texture_get_fallback();
+						}
+					}
+					else if ( curPass->variables[ j ].type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
+					{
+						ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( curPass->variables[ j ].data.ptr );
+						if ( renderTarget != nullptr )
+						{
+							texture = ape_render_target_get_texture_( renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_DEPTH );
+						}
+
+						if ( texture == nullptr )
 						{
 							texture = ape_texture_get_fallback();
 						}
@@ -1327,8 +1332,10 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
 }
 
-void ape_tick_materials_( void )
+void ape_tick_materials_( double delta )
 {
+	//TODO 25: handle delta here (how do we handle game speed modifier???)
+
 	ape_hot_reload_shaders_();
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )

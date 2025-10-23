@@ -15,7 +15,6 @@ typedef enum ApeMaterialBuiltinVar
 {
 	APE_MATERIAL_BUILTIN_INVALID = -1,
 	APE_MATERIAL_BUILTIN_TIME,
-	APE_MATERIAL_BUILTIN_DEPTH,
 	APE_MATERIAL_BUILTIN_VIEWPORT_SIZE,
 	APE_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
 
@@ -56,6 +55,7 @@ typedef enum ApeMaterialVariableType
 	APE_MATERIAL_VAR_TEXTURE,
 	APE_MATERIAL_VAR_BUILTIN,
 	APE_MATERIAL_VAR_RENDERTARGET,
+	APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP,
 
 	SS_ARL_MAX_MATERIAL_VAR_TYPES
 } ApeMaterialVariableType;
@@ -187,7 +187,7 @@ PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 bool ape_material_shadows_enabled( const ApeMaterial *self );
 bool ape_material_is_blended( const ApeMaterial *self );
 
-void ape_tick_materials_( void );
+void ape_tick_materials_( double delta );
 
 unsigned int ape_material_get_width( const ApeMaterial *self );
 unsigned int ape_material_get_height( const ApeMaterial *self );

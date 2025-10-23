@@ -225,7 +225,7 @@ void ape_render_frame_( ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_END();
 }
 
-void ape_tick_client_( double delta )
+void ape_tick_client_( const double delta )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -233,7 +233,7 @@ void ape_tick_client_( double delta )
 
 	ape_input_tick_();
 	ape_tick_gui_( delta );
-	ape_tick_materials_();
+	ape_tick_materials_( delta );
 	ape_audio_tick_();
 
 	if ( ape_gameInterface->clientTick != nullptr )

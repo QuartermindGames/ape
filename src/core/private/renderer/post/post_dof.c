@@ -16,6 +16,7 @@ static int dofFocusPointSlot;
 static int dofFocusScaleSlot;
 static int dofApertureSlot;
 
+static ApeMaterial      *dofMaterial;
 static ApeShaderProgram *dofShader;
 static ApeRenderTarget  *dofTarget;
 
@@ -23,9 +24,9 @@ static void register_dof_console_variables()
 {
 	PlRegisterConsoleVariable( "post_dof", "Enable/disable depth of field.", "true", PL_VAR_BOOL, &dofEnabled, nullptr, true );
 
-	PlRegisterConsoleVariable( "post_dof.focusPoint", "", "0.5", PL_VAR_F32, &dofFocusPoint, nullptr, false );
-	PlRegisterConsoleVariable( "post_dof.focusScale", "", "2.0", PL_VAR_F32, &dofFocusScale, nullptr, false );
-	PlRegisterConsoleVariable( "post_dof.aperture", "", "1.0", PL_VAR_F32, &dofAperture, nullptr, false );
+	PlRegisterConsoleVariable( "post_dof.focusPoint", "", "5.0", PL_VAR_F32, &dofFocusPoint, nullptr, false );
+	PlRegisterConsoleVariable( "post_dof.focusScale", "", "0.5", PL_VAR_F32, &dofFocusScale, nullptr, false );
+	PlRegisterConsoleVariable( "post_dof.aperture", "", "0", PL_VAR_F32, &dofAperture, nullptr, false );
 }
 
 static bool setup_dof_effect()
@@ -36,13 +37,15 @@ static bool setup_dof_effect()
 		return false;
 	}
 
+	if ( ( dofMaterial = ape_material_cache( "materials/engine/post/post_dof.mat.n", APE_CACHE_GROUP_GLOBAL, false ) ) == nullptr )
+	{
+		dofEnabled = false;
+		return false;
+	}
+
 	dofFocusPointSlot = PlgGetShaderUniformSlot( dofShader->internal, "focusPoint" );
 	dofFocusScaleSlot = PlgGetShaderUniformSlot( dofShader->internal, "focusScale" );
 	dofApertureSlot   = PlgGetShaderUniformSlot( dofShader->internal, "aperture" );
-
-	dofFocusPoint = 0.5f;
-	dofFocusScale = 2.0f;
-	dofAperture   = 1.0f;
 
 	if ( ( dofTarget = ape_render_target_create_( "post_dof", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_NEAREST, 0 ) ) == nullptr )
 	{
@@ -50,6 +53,7 @@ static bool setup_dof_effect()
 		return false;
 	}
 
+	dofEnabled = true;
 	return true;
 }
 
@@ -89,12 +93,7 @@ static void draw_dof_effect( const ApeViewport *viewport )
 		PlgSetShaderUniformValueByIndex( dofShader->internal, dofFocusScaleSlot, &dofFocusScale, false );
 		PlgSetShaderUniformValueByIndex( dofShader->internal, dofApertureSlot, &dofAperture, false );
 
-		PlgSetTexture( colourTexture, 0 );
-		PlgSetTexture( depthTexture, 1 );
-		PlgSetShaderUniformValue( dofShader->internal, "depthMap", &( int ) { 1 }, false );
-		PlgSetShaderUniformValue( dofShader->internal, "viewportSize", &QM_MATH_VECTOR2F( ( float ) bw, ( float ) bh ), false );
-
-		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
+		ape_draw_textured_quad( dofMaterial, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 
 		PlgSetTexture( nullptr, 0 );
 	}
