@@ -54,7 +54,7 @@ typedef struct ApeEntityClassDefinition
 	void ( *tickFunction )( ApeEntity *self, double delta );            // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self, ApeLight *light, int flags );
 
-	void ( *onUpdateProperty )( ApeEntity *self, ApeProperty *property );
+	void ( *onUpdateProperty )( ApeEntity *self, const ApeProperty *property );
 
 	void ( *serializeFunction )( ApeEntity *self, AcmBranch *root );
 	void ( *deserializeFunction )( ApeEntity *self, AcmBranch *root );
@@ -62,7 +62,7 @@ typedef struct ApeEntityClassDefinition
 #if !defined( APE_NO_EDITOR )
 
 	const ApeProperty *properties;
-	unsigned int             numProperties;
+	unsigned int       numProperties;
 
 	bool excludeInEditor;
 
@@ -99,7 +99,7 @@ typedef struct ApeEntityComponentDefinition
 #if !defined( APE_NO_EDITOR )
 
 	const ApeProperty *properties;
-	unsigned int             numProperties;
+	unsigned int       numProperties;
 
 #endif
 } ApeEntityComponentDefinition;

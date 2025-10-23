@@ -86,14 +86,14 @@ void forge::PropertiesDialog::set_node( ApeWorldNode *node )
 		return;
 	}
 
-	unsigned int             numBaseProperties;
+	unsigned int       numBaseProperties;
 	const ApeProperty *baseProperties = ape_world_node_get_properties( &numBaseProperties );
 	assert( numBaseProperties > 0 );
 
-	unsigned int             numClassProperties;
+	unsigned int       numClassProperties;
 	const ApeProperty *classProperties = ape_world_node_get_class_properties( &numClassProperties, node->type );
 
-	unsigned int             numEntityProperties = 0;
+	unsigned int       numEntityProperties = 0;
 	const ApeProperty *entityProperties    = nullptr;
 	if ( node->type == APE_WORLD_NODE_TYPE_ENTITY )
 	{
@@ -233,6 +233,16 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 	// need to set these again, so transform is updated (because of this dumb idiot)
 	ape_world_node_set_position( node, &node->position );
 	ape_world_node_set_angles( node, &node->angles );
+
+	if ( node->type == APE_WORLD_NODE_TYPE_ENTITY && tableProperty->scope == TablePropertyScope::ENTITY )
+	{
+		// let the entity know we've updated something of theirs
+		ApeEntity *entity = ( ApeEntity * ) node;
+		if ( entity->classDefinition->onUpdateProperty != nullptr )
+		{
+			entity->classDefinition->onUpdateProperty( entity, editorProperty );
+		}
+	}
 
 	return true;
 }
