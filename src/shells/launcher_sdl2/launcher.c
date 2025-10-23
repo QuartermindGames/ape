@@ -79,7 +79,11 @@ static bool IsWindowActive( void )
 
 static SDL_Window *create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
 {
+#if !defined( NDEBUG )
+	int flags = SDL_WINDOW_RESIZABLE;
+#else
 	int flags = 0;
+#endif
 	if ( fullscreen )
 	{
 		flags |= SDL_WINDOW_FULLSCREEN;
