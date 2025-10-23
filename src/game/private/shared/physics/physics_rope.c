@@ -20,7 +20,7 @@ float game_physics_rope_get_length( const GamePhysicsRope *self )
 	return l;
 }
 
-void game_physics_rope_attach( GamePhysicsRope *self, const QmMathVector3f *position, bool start )
+void game_physics_rope_attach( GamePhysicsRope *self, const QmMathVector3f *position, const bool start )
 {
 	unsigned int slot                = start ? 0 : ( self->numParticles - 1 );
 	self->particles[ slot ].fixed    = true;
@@ -48,7 +48,7 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, unsigned int nu
 	else if ( num >= GAME_PHYSICS_ROPE_MAX_PARTICLES )
 	{
 		game_warning_( "Invalid number of particles for rope (%u); must be less than %u!\n", num, GAME_PHYSICS_ROPE_MAX_PARTICLES );
-		num = ( GAME_PHYSICS_ROPE_MAX_PARTICLES - 1 );
+		num = GAME_PHYSICS_ROPE_MAX_PARTICLES - 1;
 	}
 
 	if ( self->numParticles > 0 )
@@ -68,11 +68,11 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, unsigned int nu
 	}
 }
 
-static QmMathVector3f test_particle_collision( const QmMathVector3f *position, const QmMathVector3f *newPosition, ApeRoom *room )
+static QmMathVector3f test_particle_collision( const GamePhysicsRope *self, const QmMathVector3f *position, const QmMathVector3f *newPosition, ApeRoom *room )
 {
-	if ( room == nullptr )
+	if ( !self->isCollidable || room == nullptr )
 	{
-		return *newPosition;
+		//return *newPosition;
 	}
 
 	PLCollisionRay ray = {};
@@ -90,7 +90,7 @@ static QmMathVector3f test_particle_collision( const QmMathVector3f *position, c
 	return *newPosition;
 }
 
-void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta )
+void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, const double delta, const QmMathVector3f *windVelocity )
 {
 	// add forces
 	for ( unsigned int i = 0; i < self->numParticles; ++i )
@@ -100,15 +100,59 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
 			continue;
 		}
 
-		self->particles[ i ].velocity = qm_math_vector3f( 0.0f, -0.5f, 0.0f );
+		QmMathVector3f gravityForce = qm_math_vector3f( 0.0f, -0.5f, 0.0f );
+		QmMathVector3f totalForce   = gravityForce;
 
-		QmMathVector3f npos = qm_math_vector3f_add(
-		        qm_math_vector3f_sub( self->particles[ i ].position, self->particles[ i ].oldPosition ),
-		        qm_math_vector3f_scale_float( self->particles[ i ].velocity, delta * 2.0f ) );
+		if ( windVelocity != NULL && self->windCoefficient > 0.0f )
+		{
+			QmMathVector3f windForce = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
+
+			if ( i > 0 )
+			{
+				GamePhysicsRopeParticle *a = &self->particles[ i - 1 ];
+				GamePhysicsRopeParticle *b = &self->particles[ i ];
+
+				QmMathVector3f segment       = qm_math_vector3f_sub( b->position, a->position );
+				float          segmentLength = qm_math_vector3f_length( segment );
+				if ( segmentLength > 0.0f )
+				{
+					QmMathVector3f segmentNormal = qm_math_vector3f_normalize( segment );
+
+					float intensity      = qm_math_vector3f_dot_product( segmentNormal, qm_math_vector3f_normalize( *windVelocity ) );
+					float forceMagnitude = ( 1.0f - fabsf( intensity ) ) * segmentLength * self->windCoefficient;
+
+					windForce = qm_math_vector3f_add( windForce, qm_math_vector3f_scale_float( *windVelocity, forceMagnitude * 0.5f ) );
+				}
+			}
+
+			if ( i < self->numParticles - 1 )
+			{
+				GamePhysicsRopeParticle *a = &self->particles[ i ];
+				GamePhysicsRopeParticle *b = &self->particles[ i + 1 ];
+
+				QmMathVector3f segment       = qm_math_vector3f_sub( b->position, a->position );
+				float          segmentLength = qm_math_vector3f_length( segment );
+				if ( segmentLength > 0.0f )
+				{
+					QmMathVector3f segmentNormal = qm_math_vector3f_normalize( segment );
+
+					float intensity      = qm_math_vector3f_dot_product( segmentNormal, qm_math_vector3f_normalize( *windVelocity ) );
+					float forceMagnitude = ( 1.0f - fabsf( intensity ) ) * segmentLength * self->windCoefficient;
+
+					windForce = qm_math_vector3f_add( windForce, qm_math_vector3f_scale_float( *windVelocity, forceMagnitude * 0.5f ) );
+				}
+			}
+
+			totalForce = qm_math_vector3f_add( totalForce, windForce );
+		}
+
+		QmMathVector3f displacement = qm_math_vector3f_sub( self->particles[ i ].position, self->particles[ i ].oldPosition );
+		QmMathVector3f acceleration = qm_math_vector3f_scale_float( totalForce, delta * delta );
 
 		self->particles[ i ].oldPosition = self->particles[ i ].position;
-		self->particles[ i ].position    = qm_math_vector3f_add( self->particles[ i ].position, npos );
-		self->particles[ i ].position    = test_particle_collision( &self->particles[ i ].oldPosition, &self->particles[ i ].position, room );
+		self->particles[ i ].position    = qm_math_vector3f_add( self->particles[ i ].position, displacement );
+		self->particles[ i ].position    = qm_math_vector3f_add( self->particles[ i ].position, acceleration );
+		self->particles[ i ].position    = test_particle_collision( self, &self->particles[ i ].oldPosition, &self->particles[ i ].position, room );
 	}
 
 	// satisfy constraints
@@ -121,25 +165,25 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta 
 			GamePhysicsRopeParticle *b = &self->particles[ j + 1 ];
 
 			QmMathVector3f deltaVec = qm_math_vector3f_sub( a->position, b->position );
-			float     deltaLen = qm_math_vector3f_length( deltaVec );
-			float     diff     = deltaLen > 0 ? ( self->length - deltaLen ) / deltaLen : 0.0f;
+			float          deltaLen = qm_math_vector3f_length( deltaVec );
+			float          diff     = deltaLen > 0 ? ( self->length - deltaLen ) / deltaLen : 0.0f;
 
 			QmMathVector3f adjust = qm_math_vector3f_scale_float( deltaVec, 0.5f * diff );
 			if ( !a->fixed )
 			{
 				a->position = qm_math_vector3f_add( a->position, adjust );
-				a->position = test_particle_collision( &a->oldPosition, &a->position, room );
+				a->position = test_particle_collision( self, &a->oldPosition, &a->position, room );
 			}
 			if ( !b->fixed )
 			{
 				b->position = qm_math_vector3f_sub( b->position, adjust );
-				b->position = test_particle_collision( &b->oldPosition, &b->position, room );
+				b->position = test_particle_collision( self, &b->oldPosition, &b->position, room );
 			}
 		}
 	}
 }
 
-void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, float length, const QmMathVector3f *initPosition )
+void game_physics_rope_setup( GamePhysicsRope *self, const unsigned int numParticles, const float length, const QmMathVector3f *initPosition )
 {
 	game_physics_rope_set_num_particles( self, numParticles );
 
@@ -149,14 +193,15 @@ void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, 
 		self->particles[ i ].oldPosition = self->particles[ i ].position;
 	}
 
-	self->length = length;
+	self->length          = length;
+	self->windCoefficient = 1.0f;
 }
 
-void game_physics_rope_debug_draw( GamePhysicsRope *self )
+void game_physics_rope_debug_draw( const GamePhysicsRope *self )
 {
 	for ( unsigned int i = 0; i < self->numParticles; ++i )
 	{
-		const QmMathColour4ub colour = ( self->particles[ i ].fixed ) ? PL_COLOUR_RED : PL_COLOUR_MAGENTA;
+		const QmMathColour4ub colour = self->particles[ i ].fixed ? PL_COLOUR_RED : PL_COLOUR_MAGENTA;
 		ape_draw_debug_sphere( self->particles[ i ].position, colour, 0.1f );
 
 		if ( i == 0 )

@@ -94,7 +94,7 @@ static void spawn_rope( ApeEntity *self )
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
 	for ( unsigned int i = 0; i < 512; ++i )
 	{
-		game_physics_rope_tick( &rope->physics, room, 1.0f );
+		game_physics_rope_tick( &rope->physics, room, 1.0f, &QM_MATH_VECTOR3F_ZERO );
 	}
 
 	update_bounds( self );
@@ -116,8 +116,12 @@ static void tick_rope( ApeEntity *self, double delta )
 		game_physics_rope_attach( &rope->physics, &position, false );
 	}
 
+	uint64_t       ticks        = ape_get_num_ticks();
+	float          windStrength = 5.0f + sinf( ticks * 2.0f ) * 2.5f;
+	QmMathVector3f wind         = qm_math_vector3f( windStrength, 0.0f, 0.0f );
+
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
-	game_physics_rope_tick( &rope->physics, room, delta );
+	game_physics_rope_tick( &rope->physics, room, delta, &wind );
 	if ( showRopeDebug )
 	{
 		game_physics_rope_debug_draw( &rope->physics );

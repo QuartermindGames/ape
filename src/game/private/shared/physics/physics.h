@@ -28,9 +28,10 @@ typedef struct GamePhysicsRope
 	GamePhysicsRopeParticle particles[ GAME_PHYSICS_ROPE_MAX_PARTICLES ];
 	unsigned int            numParticles;
 
-	float width;
 	float length;
-	float mass;
+	float windCoefficient;
+
+	bool isCollidable;
 } GamePhysicsRope;
 
 /**
@@ -81,8 +82,9 @@ void game_physics_rope_set_num_particles( GamePhysicsRope *self, unsigned int nu
  * @param self 		Pointer to instance.
  * @param room		Specify the room, for collisions. If left null, collisions are disabled.
  * @param delta 	Time delta of the frame.
+ * @param windVelocity
  */
-void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta );
+void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, double delta, const QmMathVector3f *windVelocity );
 
 /**
  * Sets up the initial rope state. Should be called before simulation.
@@ -99,7 +101,7 @@ void game_physics_rope_setup( GamePhysicsRope *self, unsigned int numParticles, 
  *
  * @param self	Pointer to instance.
  */
-void game_physics_rope_debug_draw( GamePhysicsRope *self );
+void game_physics_rope_debug_draw( const GamePhysicsRope *self );
 
 /**
  * Get the position of one of the specific particle of the rope.
