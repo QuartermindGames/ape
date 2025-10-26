@@ -60,6 +60,13 @@ typedef struct ApeCamera
 
 	char tag[ 32 ];
 
+	struct
+	{
+		float focusPoint;
+		float focusScale;
+		float aperture;
+	} dof;
+
 	bool active;
 
 	PLGCamera *internal; /* the camera used for this viewport */

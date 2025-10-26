@@ -78,6 +78,7 @@ static GameMenuOption optionsMenuOptions[] = {
 
         { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
         { "Post-Processing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" } },
+        { "Depth of Field\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dof" } },
         { "Bloom\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_bloom" } },
         { "Dithering\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dither" } },
         { "FXAA\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx_fxaa" } },
@@ -249,7 +250,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 
 void ss1_menu_initialize_( void )
 {
-	menuFont = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
+	menuFont      = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
 	menuTitleFont = gui_font_load( menuTitleFontPath, gui_get_default_font( GUI_FONT_DEFAULT_LARGE ) );
 
 	game_menu_compass_initialize_( menuTitleFont );
@@ -362,6 +363,8 @@ static void draw_hud( const ApeViewport *viewport )
 {
 	game_menu_compass_draw_( viewport );
 
+#if 0
+
 	static const int       health           = 100;
 	static constexpr float HEALTH_RADIUS    = 70.0f;
 	static constexpr float HEALTH_THICKNESS = 30.0f;
@@ -381,6 +384,8 @@ static void draw_hud( const ApeViewport *viewport )
 	draw_dial( 100, HEALTH_RADIUS / 2, HEALTH_THICKNESS, 0.0f, 0.0f, 1.0f, &QM_MATH_COLOUR4UB( 0, 255, 0, 255 ) );// stamina
 
 	PlPopMatrix();
+
+#endif
 }
 
 void ss1_menu_draw( const ApeViewport *viewport )

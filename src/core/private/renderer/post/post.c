@@ -104,7 +104,7 @@ void ape_register_postfx_console_variables_( void )
 	}
 }
 
-void ape_postfx_draw_( const ApeViewport *viewport )
+void ape_postfx_draw_( const ApeViewport *viewport, const ApeCamera *camera )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -115,6 +115,10 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 		COM_PROFILE_FUNCTION_END();
 		return;
 	}
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
+
+	ape_setup_2d_viewport_( viewport->width, viewport->height );
 
 	ape_render_target_set_size_( ppRenderTarget, viewport->width, viewport->height );
 	ape_render_target_bind_( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
@@ -130,13 +134,15 @@ void ape_postfx_draw_( const ApeViewport *viewport )
 			continue;
 		}
 
-		postProcessEffects[ i ]->draw( viewport );
+		postProcessEffects[ i ]->draw( viewport, camera );
 
 		ape_render_target_bind_( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 	}
 
 	// bind the viewport render target again
 	ape_render_target_bind_( viewport->renderTarget, PLG_FRAMEBUFFER_DEFAULT );
+
+	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_ENABLE );
 
 	COM_PROFILE_FUNCTION_END();
 }

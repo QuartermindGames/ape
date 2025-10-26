@@ -69,8 +69,6 @@ void ape_draw_menu_( ApeViewport *viewport )
 	PlPushMatrix();
 	PlLoadIdentityMatrix();
 
-	ape_postfx_draw_( viewport );
-
 	ape_gui_draw_( viewport );
 
 	PlPopMatrix();

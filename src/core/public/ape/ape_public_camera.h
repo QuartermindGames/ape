@@ -62,6 +62,10 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode );
 
 struct PLGCamera *ape_camera_get_internal( ApeCamera *camera );
 
+void ape_camera_set_focus_point( ApeCamera *self, float focusPoint );
+void ape_camera_set_focus_scale( ApeCamera *self, float focusScale );
+void ape_camera_set_aperture( ApeCamera *self, float aperture );
+
 //TODO: this shouldn't be public...
 void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport );
 

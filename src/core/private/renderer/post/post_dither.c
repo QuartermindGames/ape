@@ -38,7 +38,7 @@ static void cleanup_dither_effect()
 	ape_render_target_release_( ditherFilterTarget );
 }
 
-static void draw_dither_effect( const ApeViewport *viewport )
+static void draw_dither_effect( const ApeViewport *viewport, [[maybe_unused]] const ApeCamera *camera )
 {
 	if ( !ditherEnabled )
 	{

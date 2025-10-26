@@ -8,9 +8,14 @@
 #include "camera.h"
 
 #include "renderer/renderer.h"
+#include "renderer/post/post.h"
 #include "world/world.h"
 
 static PLLinkedList *cameras;
+
+static constexpr float APE_CAMERA_DEFAULT_FOCUS_POINT = 16.0f;
+static constexpr float APE_CAMERA_DEFAULT_FOCUS_SCALE = 100.0f;
+static constexpr float APE_CAMERA_DEFAULT_APERTURE    = 1.0f;
 
 void ape_camera_make_active( ApeCamera *camera )
 {
@@ -118,6 +123,10 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMa
 		camera->internal->far  = 10000.0f;
 	}
 
+	camera->dof.focusPoint = APE_CAMERA_DEFAULT_FOCUS_POINT;
+	camera->dof.focusScale = APE_CAMERA_DEFAULT_FOCUS_SCALE;
+	camera->dof.aperture   = APE_CAMERA_DEFAULT_APERTURE;
+
 	ape_camera_set_position( camera, position );
 	ape_camera_set_angles( camera, angles );
 
@@ -209,12 +218,30 @@ void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport
 	// Draw the scene into a buffer
 	ape_draw_scene_( camera, viewport );
 
+	// now apply post processing to the buffer
+	ape_postfx_draw_( viewport, camera );
+
 	COM_PROFILE_FUNCTION_END();
 }
 
 PLGCamera *ape_camera_get_internal( ApeCamera *camera )
 {
 	return camera->internal;
+}
+
+void ape_camera_set_focus_point( ApeCamera *self, const float focusPoint )
+{
+	self->dof.focusPoint = focusPoint;
+}
+
+void ape_camera_set_focus_scale( ApeCamera *self, const float focusScale )
+{
+	self->dof.focusScale = focusScale;
+}
+
+void ape_camera_set_aperture( ApeCamera *self, const float aperture )
+{
+	self->dof.aperture = aperture;
 }
 
 const ApeWorldNodeClass ape_cameraClass = {

@@ -32,7 +32,7 @@ static void cleanup_fxaa_effect( void )
 	ape_material_release( fxaaMaterial );
 }
 
-static void draw_fxaa_effect( const ApeViewport *viewport )
+static void draw_fxaa_effect( const ApeViewport *viewport, [[maybe_unused]] const ApeCamera *camera )
 {
 	if ( !fxaaEnabled )
 	{
@@ -50,8 +50,8 @@ const ApePostProcessEffect *ape_postfx_get_fxaa_( void )
 	static ApePostProcessEffect renderFXAAPostProcess;
 	PL_ZERO_( renderFXAAPostProcess );
 	renderFXAAPostProcess.registerConsoleVariables = register_fxaa_console_variables;
-	renderFXAAPostProcess.setup = setup_fxaa_effect;
-	renderFXAAPostProcess.cleanup = cleanup_fxaa_effect;
-	renderFXAAPostProcess.draw = draw_fxaa_effect;
+	renderFXAAPostProcess.setup                    = setup_fxaa_effect;
+	renderFXAAPostProcess.cleanup                  = cleanup_fxaa_effect;
+	renderFXAAPostProcess.draw                     = draw_fxaa_effect;
 	return &renderFXAAPostProcess;
 }

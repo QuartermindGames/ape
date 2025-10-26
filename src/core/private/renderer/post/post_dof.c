@@ -24,8 +24,8 @@ static void register_dof_console_variables()
 {
 	PlRegisterConsoleVariable( "post_dof", "Enable/disable depth of field.", "true", PL_VAR_BOOL, &dofEnabled, nullptr, true );
 
-	PlRegisterConsoleVariable( "post_dof.focusPoint", "", "5.0", PL_VAR_F32, &dofFocusPoint, nullptr, false );
-	PlRegisterConsoleVariable( "post_dof.focusScale", "", "0.5", PL_VAR_F32, &dofFocusScale, nullptr, false );
+	PlRegisterConsoleVariable( "post_dof.focusPoint", "", "0.0", PL_VAR_F32, &dofFocusPoint, nullptr, false );
+	PlRegisterConsoleVariable( "post_dof.focusScale", "", "0.0", PL_VAR_F32, &dofFocusScale, nullptr, false );
 	PlRegisterConsoleVariable( "post_dof.aperture", "", "0", PL_VAR_F32, &dofAperture, nullptr, false );
 }
 
@@ -63,7 +63,7 @@ static void cleanup_dof_effect()
 	dofTarget = nullptr;
 }
 
-static void draw_dof_effect( const ApeViewport *viewport )
+static void draw_dof_effect( const ApeViewport *viewport, const ApeCamera *camera )
 {
 	if ( !dofEnabled )
 	{
@@ -89,9 +89,14 @@ static void draw_dof_effect( const ApeViewport *viewport )
 
 		ape_shader_set_active_( dofShader );
 
-		PlgSetShaderUniformValueByIndex( dofShader->internal, dofFocusPointSlot, &dofFocusPoint, false );
-		PlgSetShaderUniformValueByIndex( dofShader->internal, dofFocusScaleSlot, &dofFocusScale, false );
-		PlgSetShaderUniformValueByIndex( dofShader->internal, dofApertureSlot, &dofAperture, false );
+		float focusPoint = dofFocusPoint + camera->dof.focusPoint;
+		PlgSetShaderUniformValueByIndex( dofShader->internal, dofFocusPointSlot, &focusPoint, false );
+
+		float focusScale = dofFocusScale + camera->dof.focusScale;
+		PlgSetShaderUniformValueByIndex( dofShader->internal, dofFocusScaleSlot, &focusScale, false );
+
+		float aperture = dofAperture + camera->dof.aperture;
+		PlgSetShaderUniformValueByIndex( dofShader->internal, dofApertureSlot, &aperture, false );
 
 		ape_draw_textured_quad( dofMaterial, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 

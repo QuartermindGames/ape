@@ -56,7 +56,7 @@ static void cleanup_bloom_effect( void )
 	ape_render_target_release_( bloomBlurTarget );
 }
 
-static void draw_bloom_effect( const ApeViewport *viewport )
+static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] const ApeCamera *camera )
 {
 	if ( !bloomEnabled || viewport->renderTarget == NULL )
 	{
