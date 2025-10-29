@@ -2,7 +2,6 @@
 // Purpose: Server implementation.
 
 #include "ape_private.h"
-
 #include "ape/ape_public_game.h"
 
 #include "server.h"
@@ -18,8 +17,8 @@ typedef struct ApeServerClient
 {
 	char name[ APE_PROTOCOL_MAX_CLIENT_NAME ];
 
-	ApeNetSocket     *netSocket;
-	PLLinkedListNode *node;
+	ApeNetSocket       *netSocket;
+	QmOsLinkedListNode *node;
 
 	ApeServerClientState state;
 
@@ -27,12 +26,7 @@ typedef struct ApeServerClient
 
 	unsigned int lastMessageTick;
 } ApeServerClient;
-static PLLinkedList *connectedClients;
-
-static void drop_client_callback( void *userData, PL_UNUSED bool *breakEarly )
-{
-	ape_server_drop_client_( userData );
-}
+static QmOsLinkedList *connectedClients;
 
 void ape_server_register_console_variables_()
 {
@@ -56,7 +50,7 @@ bool ape_server_start( const char *ip, unsigned short port )
 
 void ape_initialize_server_( void )
 {
-	connectedClients = PlCreateLinkedList();
+	connectedClients = qm_os_linked_list_create();
 	if ( connectedClients == NULL )
 	{
 		ape_console_error_( true, "Failed to create connected clients list: %s\n", PlGetError() );
@@ -66,7 +60,11 @@ void ape_initialize_server_( void )
 void ape_shutdown_server_( void )
 {
 	// drop all connected clients
-	PlIterateLinkedList( connectedClients, drop_client_callback, true );
+	ApeServerClient *client;
+	QM_OS_LINKED_LIST_ITERATE( client, connectedClients, i )
+	{
+		ape_server_drop_client_( client );
+	}
 }
 
 void ape_server_drop_client_( ApeServerClient *serverClient )
@@ -79,7 +77,7 @@ void ape_server_drop_client_( ApeServerClient *serverClient )
 	assert( game->serverClientDisconnected != nullptr );
 	game->serverClientDisconnected( serverClient );
 
-	PlDestroyLinkedListNode( serverClient->node );
+	qm_os_memory_free( serverClient->node );
 	qm_os_memory_free( serverClient );
 }
 
@@ -190,10 +188,8 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 	}
 }
 
-static void tick_server_client( void *userData, bool *breakEarly )
+static void tick_server_client( ApeServerClient *serverClient )
 {
-	ApeServerClient *serverClient = ( ApeServerClient * ) userData;
-
 	ssize_t r = ape_net_receive_( serverClient->netSocket,
 	                              serverClient->message.receiveBuffer + serverClient->message.receivedBytes,
 	                              sizeof( serverClient->message.receiveBuffer ) - serverClient->message.receivedBytes );
@@ -202,7 +198,8 @@ static void tick_server_client( void *userData, bool *breakEarly )
 		ape_server_drop_client_( serverClient );
 		return;
 	}
-	else if ( r > 0 )
+
+	if ( r > 0 )
 	{
 		serverClient->lastMessageTick = ape_get_num_ticks();
 	}
@@ -250,13 +247,17 @@ void ape_tick_server_( double delta )
 	{
 		ApeServerClient *serverClient = QM_OS_MEMORY_MALLOC_( sizeof( ApeServerClient ) );
 		serverClient->netSocket       = connectedSocket;
-		serverClient->node            = PlInsertLinkedListNode( connectedClients, serverClient );
+		serverClient->node            = qm_os_linked_list_push_back( connectedClients, serverClient );
 		serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;
 		// validation still needs to be performed
 		ape_console_print_( "Client connected, awaiting validation...\n" );
 	}
 
-	PlIterateLinkedList( connectedClients, tick_server_client, true );
+	ApeServerClient *client;
+	QM_OS_LINKED_LIST_ITERATE( client, connectedClients, i )
+	{
+		tick_server_client( client );
+	}
 
 	ape_tick_game_server_( delta );
 

@@ -39,14 +39,14 @@ typedef struct ApeDecal
 	QmOsSharedPtr *facePtr;
 	QmOsSharedPtr *ptr;
 
-	PLLinkedListNode *node;
+	QmOsLinkedListNode *node;
 } ApeDecal;
 
 typedef struct ApeDecalManager
 {
-	PLLinkedList *decalList;
-	ApeDecal      decals[ MAX_DECALS ];
-	unsigned int  iteratorPos;
+	QmOsLinkedList *decalList;
+	ApeDecal        decals[ MAX_DECALS ];
+	unsigned int    iteratorPos;
 } ApeDecalManager;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ static void cleanup_decal( ApeDecal *self )
 
 	if ( self->node != nullptr )
 	{
-		PlDestroyLinkedListNode( self->node );
+		qm_os_memory_free( self->node );
 		self->node = nullptr;
 	}
 
@@ -97,7 +97,7 @@ ApeDecalManager *ape_decal_manager_create_()
 {
 	ApeDecalManager *manager = QM_OS_MEMORY_NEW( ApeDecalManager );
 
-	manager->decalList = PlCreateLinkedList();
+	manager->decalList = qm_os_linked_list_create();
 	if ( manager->decalList == nullptr )
 	{
 		ape_console_warning_( "Failed to create decals list: %s\n", PlGetError() );
@@ -153,13 +153,13 @@ void ape_decal_manager_clear_( ApeDecalManager *self )
 		cleanup_decal( &self->decals[ i ] );
 	}
 
-	PlDestroyLinkedListNodes( self->decalList );
+	qm_os_memory_free( self->decalList );
 }
 
 void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 {
 	ApeDecal *decal;
-	COM_ITERATE_LINKED_LIST( decal, self->decalList, i )
+	QM_OS_LINKED_LIST_ITERATE( decal, self->decalList, i )
 	{
 		// check the decal is still attached to something
 		ApeBrushFace *face = qm_os_shared_ptr_get( decal->facePtr );
@@ -252,7 +252,7 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 {
 	assert( face != nullptr );
 
-	unsigned int numDecals = PlGetNumLinkedListNodes( self->decalList );
+	unsigned int numDecals = qm_os_linked_list_get_size( self->decalList );
 	if ( numDecals >= MAX_DECALS )
 	{
 		ape_console_warning_( "Failed to create decal, hit decal limit (%u >= %u)!\n", numDecals, MAX_DECALS );
@@ -299,7 +299,7 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 			return nullptr;
 		}
 
-		decal->node = PlInsertLinkedListNode( self->decalList, decal );
+		decal->node = qm_os_linked_list_push_back( self->decalList, decal );
 
 		// because decals can be destroyed at runtime,
 		// we'll need to use a shared ptr here...
@@ -313,7 +313,7 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 
 QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale )
 {
-	unsigned int numDecals = PlGetNumLinkedListNodes( self->decalList );
+	unsigned int numDecals = qm_os_linked_list_get_size( self->decalList );
 	if ( numDecals >= MAX_DECALS )
 	{
 		return nullptr;
@@ -384,7 +384,7 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 	COM_PROFILE_FUNCTION_START();
 
 	ApeDecal *decal;
-	COM_ITERATE_LINKED_LIST( decal, self->decalList, i )
+	QM_OS_LINKED_LIST_ITERATE( decal, self->decalList, i )
 	{
 		//TODO: optimise - batch - for now we'll just draw them like this for quickly getting them working
 

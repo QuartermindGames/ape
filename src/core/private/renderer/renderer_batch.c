@@ -13,17 +13,15 @@ typedef struct ApeRendererDrawBatch
 	ApeMaterial *material;
 	bool         usedThisFrame;
 
-	PLLinkedListNode *linkNode;
-	PLHashTableNode  *hashNode;
+	QmOsLinkedListNode *linkNode;
+	PLHashTableNode    *hashNode;
 } ApeRendererDrawBatch;
 
-static PLLinkedList *batches;
-static PLHashTable  *batchLookup;
+static QmOsLinkedList *batches;
+static PLHashTable    *batchLookup;
 
-static void destroy_batch( void *user )
+static void destroy_batch( ApeRendererDrawBatch *batch )
 {
-	ApeRendererDrawBatch *batch = user;
-
 	if ( batch->mesh != nullptr )
 	{
 		PlgDestroyMesh( batch->mesh );
@@ -36,8 +34,7 @@ static void destroy_batch( void *user )
 	}
 #endif
 
-	PlDestroyHashTableNode( batch->hashNode );
-
+	qm_os_memory_free( batch->hashNode );
 	qm_os_memory_free( batch );
 }
 
@@ -55,7 +52,7 @@ static ApeRendererDrawBatch *get_batch( ApeMaterial *material )
 	batch           = QM_OS_MEMORY_NEW( ApeRendererDrawBatch );
 	batch->mesh     = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
 	batch->material = material;//TODO: use shared_ptr instead...
-	batch->linkNode = PlInsertLinkedListNode( batches, batch );
+	batch->linkNode = qm_os_linked_list_push_back( batches, batch );
 	batch->hashNode = PlInsertHashTableNode( batchLookup, &ptr, sizeof( intptr_t ), batch );
 
 	return batch;
@@ -64,7 +61,7 @@ static ApeRendererDrawBatch *get_batch( ApeMaterial *material )
 static void cleanup_batch_queue()
 {
 	ApeRendererDrawBatch *batch;
-	COM_ITERATE_LINKED_LIST( batch, batches, i )
+	QM_OS_LINKED_LIST_ITERATE( batch, batches, i )
 	{
 		if ( batch->mesh->num_triangles != 0 )
 		{
@@ -72,7 +69,7 @@ static void cleanup_batch_queue()
 			continue;
 		}
 
-		PlDestroyLinkedListNode( batch->linkNode );
+		qm_os_memory_free( batch->linkNode );
 
 		destroy_batch( batch );
 	}
@@ -80,7 +77,7 @@ static void cleanup_batch_queue()
 
 void ape_renderer_batch_initialize_()
 {
-	batches = PlCreateLinkedList();
+	batches = qm_os_linked_list_create();
 	if ( batches == nullptr )
 	{
 		ape_console_error_( true, "Failed to create batches list: %s\n", PlGetError() );
@@ -97,7 +94,13 @@ void ape_renderer_batch_shutdown_()
 {
 	if ( batches != nullptr )
 	{
-		PlDestroyLinkedListEx( batches, destroy_batch );
+		ApeRendererDrawBatch *batch;
+		QM_OS_LINKED_LIST_ITERATE( batch, batches, i )
+		{
+			destroy_batch( batch );
+		}
+
+		qm_os_memory_free( batches );
 		batches = nullptr;
 	}
 
@@ -107,7 +110,7 @@ void ape_renderer_batch_shutdown_()
 void ape_renderer_batch_display_()
 {
 	ApeRendererDrawBatch *batch;
-	COM_ITERATE_LINKED_LIST( batch, batches, i )
+	QM_OS_LINKED_LIST_ITERATE( batch, batches, i )
 	{
 		ape_material_draw( batch->material, batch->mesh, nullptr );
 	}

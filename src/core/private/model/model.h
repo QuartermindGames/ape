@@ -66,7 +66,7 @@ typedef struct ApeModelNode
 	PLPath    modelPath;
 	ApeModel *model;
 
-	PLLinkedListNode *modelSceneNode;
+	struct PLLinkedListNode *modelSceneNode;
 } ApeModelNode;
 
 PL_EXTERN_C_END

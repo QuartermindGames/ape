@@ -4,6 +4,7 @@
 
 #include "qmos/public/qm_os.h"
 #include "qmos/public/qm_os_memory.h"
+#include "qmos/public/qm_os_linked_list.h"
 
 #include "qmmath/public/qm_math_vector.h"
 #include "qmmath/public/qm_math_quaternion.h"
@@ -13,7 +14,6 @@
 #include <plcore/pl_console.h>
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_package.h>
-#include <plcore/pl_linkedlist.h>
 #include <plcore/pl_array_vector.h>
 #include <plcore/pl_timer.h>
 

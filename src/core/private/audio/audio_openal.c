@@ -88,7 +88,7 @@ static LPALAUXILIARYEFFECTSLOTI       alAuxiliaryEffectSloti;
 
 static constexpr unsigned int MAX_TEMPORARY_SOURCES = 4096;
 static ApeAudioSource         temporarySources[ MAX_TEMPORARY_SOURCES ];
-static PLLinkedList          *activeSources;
+static QmOsLinkedList        *activeSources;
 
 static void shutdown_openal( void );
 
@@ -173,7 +173,7 @@ static bool initialize_openal( void )
 	}
 	XAL_CALL( alDistanceModel( AL_EXPONENT_DISTANCE ) );
 
-	activeSources = PlCreateLinkedList();
+	activeSources = qm_os_linked_list_create();
 	if ( activeSources == nullptr )
 	{
 		ape_console_error_( true, "Failed to create active sources list: %s\n", PlGetError() );
@@ -194,7 +194,7 @@ static void shutdown_openal( void )
 	alcCloseDevice( xalDevice );
 	xalDevice = nullptr;
 
-	PlDestroyLinkedList( activeSources );
+	qm_os_memory_free( activeSources );
 }
 
 static ApeAudioSource *get_free_temporary_source()
@@ -235,13 +235,9 @@ static void al_tick( void )
 
 	XAL_CALL( alListenerf( AL_GAIN, ape_audio_get_global_volume_() ) );
 
-	PLLinkedListNode *node = PlGetFirstNode( activeSources );
-	while ( node != nullptr )
+	ApeAudioSource *source;
+	QM_OS_LINKED_LIST_ITERATE( source, activeSources, i )
 	{
-		PLLinkedListNode *curNode = node;
-		ApeAudioSource   *source  = PlGetLinkedListNodeUserData( curNode );
-		node                      = PlGetNextLinkedListNode( node );
-
 		ALint state;
 		XAL_CALL( alGetSourcei( source->user, AL_SOURCE_STATE, &state ) );
 		if ( state != AL_PLAYING )
@@ -253,7 +249,7 @@ static void al_tick( void )
 				source->sample = nullptr;
 			}
 
-			PlDestroyLinkedListNode( curNode );
+			qm_os_memory_free( i );
 		}
 	}
 }
@@ -319,7 +315,7 @@ static void al_emit_sample( ApeAudioSample *sample, const QmMathVector3f *positi
 	ape_memory_add_reference( &sample->reference );
 
 	source->sample = sample;
-	PlInsertLinkedListNode( activeSources, source );
+	qm_os_linked_list_push_back( activeSources, source );
 }
 
 static bool al_create_source( ApeAudioSource *source )

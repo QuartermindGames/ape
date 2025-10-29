@@ -28,15 +28,15 @@ typedef struct ApeInputAction
 	ApeInputKey  keys[ APE_MAX_KEY_INPUTS ];
 	unsigned int numKeyBinds;
 
-	PLLinkedListNode *node;
+	QmOsLinkedListNode *node;
 } ApeInputAction;
 
-static PLLinkedList *actionableList = nullptr;
+static QmOsLinkedList *actionableList = nullptr;
 
 typedef struct Button
 {
-	ApeInputState     state;
-	PLLinkedListNode *activeNode;
+	ApeInputState       state;
+	QmOsLinkedListNode *activeNode;
 } Button;
 
 static struct
@@ -51,8 +51,8 @@ static struct
 
 static struct
 {
-	Button        keys[ APE_MAX_KEY_INPUTS ];
-	PLLinkedList *activeKeyList;
+	Button          keys[ APE_MAX_KEY_INPUTS ];
+	QmOsLinkedList *activeKeyList;
 } inputKeyboard = {};
 
 #define CLIENT_INPUT_MAX_CONTROLLERS 4
@@ -61,8 +61,8 @@ static struct
 {
 	bool isActive;
 
-	Button        buttons[ APE_MAX_BUTTON_INPUTS ];
-	PLLinkedList *activeButtonList;
+	Button          buttons[ APE_MAX_BUTTON_INPUTS ];
+	QmOsLinkedList *activeButtonList;
 
 	QmMathVector2f stickL, stickLOld, stickLDelta;
 	QmMathVector2f stickR, stickROld, stickRDelta;
@@ -88,9 +88,8 @@ static unsigned int get_empty_controller( unsigned int *id )
 	return -1;
 }
 
-static void iterate_action( void *userData, PL_UNUSED bool *breakEarly )
+static void iterate_action( const ApeInputAction *action )
 {
-	const ApeInputAction *action = userData;
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
 		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
@@ -195,9 +194,9 @@ static void check_for_controllers( void )
 
 		if ( inputControllers[ slot ].activeButtonList == nullptr )
 		{
-			inputControllers[ slot ].activeButtonList = PlCreateLinkedList();
+			inputControllers[ slot ].activeButtonList = qm_os_linked_list_create();
 		}
-		PlDestroyLinkedListNodes( inputControllers[ slot ].activeButtonList );
+		qm_os_linked_list_clear( inputControllers[ slot ].activeButtonList );
 
 		char tmp[ 512 ];
 		snprintf( tmp, sizeof( tmp ), "Opened controller %d: %s (%s)\n", id, name, serial );
@@ -223,7 +222,7 @@ static void unregister_controller( unsigned int slot )
 		numControllers--;
 	}
 
-	PlDestroyLinkedList( inputControllers[ slot ].activeButtonList );
+	qm_os_memory_free( inputControllers[ slot ].activeButtonList );
 	inputControllers[ slot ].activeButtonList = nullptr;
 
 	memset( inputControllers[ slot ].buttons, 0, sizeof( Button ) );
@@ -297,7 +296,7 @@ static float clamp_axis_input( float value, float deadzone )
 static void list_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
 {
 	ApeInputAction *action;
-	COM_ITERATE_LINKED_LIST( action, actionableList, i )
+	QM_OS_LINKED_LIST_ITERATE( action, actionableList, i )
 	{
 		ape_console_print_( "%s (%u) (%u)\n", action->id, action->numButtonBinds, action->numKeyBinds );
 	}
@@ -315,7 +314,7 @@ static void dump_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **
 	}
 
 	ApeInputAction *action;
-	COM_ITERATE_LINKED_LIST( action, actionableList, i )
+	QM_OS_LINKED_LIST_ITERATE( action, actionableList, i )
 	{
 		fprintf( file, "%s", action->id );
 	}
@@ -334,7 +333,7 @@ static void register_console_commands()
 
 void ape_input_initialize_( void )
 {
-	inputKeyboard.activeKeyList = PlCreateLinkedList();
+	inputKeyboard.activeKeyList = qm_os_linked_list_create();
 	if ( inputKeyboard.activeKeyList == NULL )
 	{
 		ape_console_error_( true, "Failed to create active key list: %s\n", PlGetError() );
@@ -391,7 +390,7 @@ void ape_shutdown_input_( void )
 {
 	ape_clear_input_devices();
 
-	PlDestroyLinkedList( inputKeyboard.activeKeyList );
+	qm_os_memory_free( inputKeyboard.activeKeyList );
 	inputKeyboard.activeKeyList = nullptr;
 }
 
@@ -433,7 +432,7 @@ void ape_clear_input_devices( void )
 
 	// Zero out and clear the active keys
 	memset( inputKeyboard.keys, 0, sizeof( Button ) );
-	PlDestroyLinkedListNodes( inputKeyboard.activeKeyList );
+	qm_os_linked_list_clear( inputKeyboard.activeKeyList );
 }
 
 unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
@@ -477,7 +476,7 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 
 	if ( key->state != APE_INPUT_STATE_NONE && key->activeNode == NULL )
 	{
-		key->activeNode = PlInsertLinkedListNode( inputKeyboard.activeKeyList, key );
+		key->activeNode = qm_os_linked_list_push_back( inputKeyboard.activeKeyList, key );
 	}
 
 	if ( ape_console_handle_key_event_( keyIndex, isPressed ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE ) )
@@ -563,7 +562,11 @@ void ape_input_tick_( void )
 
 	if ( actionableList != NULL )
 	{
-		PlIterateLinkedList( actionableList, iterate_action, true );
+		const ApeInputAction *action;
+		QM_OS_LINKED_LIST_ITERATE( action, actionableList, i )
+		{
+			iterate_action( action );
+		}
 	}
 
 	// now update the state of all the connected devices
@@ -583,10 +586,10 @@ void ape_input_tick_( void )
 
 		Button *button;
 		// first update the state for any controllers from the last tick
-		COM_ITERATE_LINKED_LIST( button, inputControllers[ i ].activeButtonList, j )
+		QM_OS_LINKED_LIST_ITERATE( button, inputControllers[ i ].activeButtonList, j )
 		{
 			button->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
-			PlDestroyLinkedListNode( button->activeNode );
+			qm_os_memory_free( button->activeNode );
 			button->activeNode = nullptr;
 		}
 
@@ -607,7 +610,7 @@ void ape_input_tick_( void )
 
 			if ( button->state != APE_INPUT_STATE_NONE && button->activeNode == NULL )
 			{
-				button->activeNode = PlInsertLinkedListNode( inputControllers[ i ].activeButtonList, button );
+				button->activeNode = qm_os_linked_list_push_back( inputControllers[ i ].activeButtonList, button );
 			}
 		}
 
@@ -625,10 +628,10 @@ void ape_input_tick_( void )
 	}
 
 	Button *key;
-	COM_ITERATE_LINKED_LIST( key, inputKeyboard.activeKeyList, i )
+	QM_OS_LINKED_LIST_ITERATE( key, inputKeyboard.activeKeyList, i )
 	{
 		key->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
-		PlDestroyLinkedListNode( key->activeNode );
+		qm_os_memory_free( key->activeNode );
 		key->activeNode = nullptr;
 	}
 
@@ -686,7 +689,7 @@ void ape_client_input_register_action( const char    *id,
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL )
 	{
-		actionableList = PlCreateLinkedList();
+		actionableList = qm_os_linked_list_create();
 		if ( actionableList == NULL )
 		{
 			ape_console_error_( true, "Failed to create actionable list: %s\n", PlGetError() );
@@ -720,5 +723,5 @@ void ape_client_input_register_action( const char    *id,
 	memcpy( inputAction->keys, keys, sizeof( ApeInputKey ) * numDefaultKeys );
 	inputAction->numKeyBinds = numDefaultKeys;
 
-	inputAction->node = PlInsertLinkedListNode( actionableList, inputAction );
+	inputAction->node = qm_os_linked_list_push_back( actionableList, inputAction );
 }

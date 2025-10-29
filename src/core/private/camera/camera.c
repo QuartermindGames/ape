@@ -11,8 +11,6 @@
 #include "renderer/post/post.h"
 #include "world/world.h"
 
-static PLLinkedList *cameras;
-
 static constexpr float APE_CAMERA_DEFAULT_FOCUS_POINT = 16.0f;
 static constexpr float APE_CAMERA_DEFAULT_FOCUS_SCALE = 100.0f;
 static constexpr float APE_CAMERA_DEFAULT_APERTURE    = 1.0f;
@@ -130,17 +128,6 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMa
 	ape_camera_set_position( camera, position );
 	ape_camera_set_angles( camera, angles );
 
-	if ( cameras == nullptr )
-	{
-		cameras = PlCreateLinkedList();
-		if ( cameras == nullptr )
-		{
-			ape_console_error_( true, "Failed to create cameras list: %s\n", PlGetError() );
-		}
-	}
-
-	camera->node = PlInsertLinkedListNode( cameras, camera );
-
 	return camera;
 }
 
@@ -159,15 +146,7 @@ void ape_camera_destroy_( void *data, ApeWorldNode *parent )
 
 	PlgDestroyCamera( self->internal );
 
-	PlDestroyLinkedListNode( self->node );
-
 	qm_os_memory_free( self );
-
-	if ( PlGetNumLinkedListNodes( cameras ) == 0 )
-	{
-		PlDestroyLinkedList( cameras );
-		cameras = nullptr;
-	}
 }
 
 void ape_camera_set_position( ApeCamera *self, const QmMathVector3f *position )

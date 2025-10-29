@@ -75,10 +75,6 @@ typedef struct ApeCamera
 	ApeCameraDrawMode drawMode;
 
 	ApeCameraVisibleSet pvs;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-
-	PLLinkedListNode *node;
 } ApeCamera;
 
 void ape_camera_build_pvs_( ApeCamera *self, const ApeViewport *viewport );
