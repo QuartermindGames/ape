@@ -12,8 +12,8 @@
 #include "world/world.h"
 
 static constexpr float APE_CAMERA_DEFAULT_FOCUS_POINT = 16.0f;
-static constexpr float APE_CAMERA_DEFAULT_FOCUS_SCALE = 100.0f;
-static constexpr float APE_CAMERA_DEFAULT_APERTURE    = 1.0f;
+static constexpr float APE_CAMERA_DEFAULT_FOCUS_SCALE = 0.f;
+static constexpr float APE_CAMERA_DEFAULT_APERTURE    = 0.f;
 
 void ape_camera_make_active( ApeCamera *camera )
 {
