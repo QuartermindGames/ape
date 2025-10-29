@@ -21,7 +21,7 @@ static QmMathVector3f closest_point_on_line_segment( const QmMathVector3f *a, co
 	return qm_math_vector3f_scale( qm_math_vector3f_add_float( *a, fminf( fmaxf( t, 0.0f ), 1.0f ) ), ab );
 }
 
-static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *vertices, unsigned int numVertices )
+static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *vertices, const unsigned int numVertices )
 {
 	// compute the maximum and minimum y of the plane
 	float maxY = vertices[ 0 ].y, minY = vertices[ 0 ].y;
@@ -37,7 +37,7 @@ static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *ver
 		}
 	}
 
-	return ( QmMathVector2f ) { minY, maxY };
+	return qm_math_vector2f( minY, maxY );
 }
 
 bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, QmMathVector3f *result )
@@ -221,8 +221,8 @@ bool com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinde
 		return false;
 	}
 
-	QmMathVector2f x = ( QmMathVector2f ) { cylinder->origin.x, cylinder->origin.z };
-	QmMathVector2f y = ( QmMathVector2f ) { point->x, point->z };
+	QmMathVector2f x = qm_math_vector2f( cylinder->origin.x, cylinder->origin.z );
+	QmMathVector2f y = qm_math_vector2f( point->x, point->z );
 	if ( qm_math_vector2f_distance( x, y ) <= cylinder->radius )
 	{
 		return true;
@@ -456,10 +456,10 @@ bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const Qm
 	}
 
 	QmMathVector2f aabbPoints[ 4 ] = {
-	        {minT, minB},
-	        {maxT, minB},
-	        {maxT, maxB},
-	        {minT, maxB}
+	        {.x = minT, .y = minB},
+	        {.x = maxT, .y = minB},
+	        {.x = maxT, .y = maxB},
+	        {.x = minT, .y = maxB}
     };
 
 	for ( int i = 0; i < 4; ++i )
@@ -518,10 +518,10 @@ bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, con
 
 	QmMathVector3f dir = qm_math_vector3f_normalize( difference );
 
-	QmMathVector3f perp = qm_math_vector3f_cross_product( dir, ( QmMathVector3f ) { 0.0f, 1.0f, 0.0f } );
+	QmMathVector3f perp = qm_math_vector3f_cross_product( dir, QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
 	if ( qm_math_vector3f_length( perp ) < EPSILON )
 	{
-		perp = qm_math_vector3f_cross_product( dir, ( QmMathVector3f ) { 0.0f, 0.0f, 1.0f } );
+		perp = qm_math_vector3f_cross_product( dir, QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 	}
 	perp = qm_math_vector3f_normalize( perp );
 
@@ -594,9 +594,9 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 		}
 
 		QmMathVector3f intersection = {
-		        ray->origin.x + t * ray->direction.x,
-		        ray->origin.y + t * ray->direction.y,
-		        ray->origin.z + t * ray->direction.z,
+		        .x = ray->origin.x + t * ray->direction.x,
+		        .y = ray->origin.y + t * ray->direction.y,
+		        .z = ray->origin.z + t * ray->direction.z,
 		};
 
 		QmMathVector3f point = qm_math_vector3f_sub( intersection, *v0 );
