@@ -51,6 +51,9 @@ void apeUpdateProfilerGraphs( void );
 #include "ape_scheduler.h"
 #include "memory/memory.h"
 
+struct AcmBranch *ape_get_config_( void );
+struct AcmBranch *ape_get_user_config_( void );
+
 /****************************************
  * CONSOLE
  ****************************************/

@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <plcore/pl.h>
-
 #include "../ape/ape_public_renderer.h"
 
 #include "core_input.h"

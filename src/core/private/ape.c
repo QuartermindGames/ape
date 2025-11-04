@@ -88,8 +88,15 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 
 ApeConfig ape_config_;
 
-AcmBranch *ape_get_config( void ) { return engineConfig; }
-AcmBranch *ape_get_user_config( void ) { return userConfig; }
+AcmBranch *ape_get_config_( void )
+{
+	return engineConfig;
+}
+
+AcmBranch *ape_get_user_config_( void )
+{
+	return userConfig;
+}
 
 bool ape_is_dedicated()
 {
@@ -108,9 +115,9 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	ape_initialize_console_();
 
 	ape_console_print_( ENGINE_NAME " %d (%s / (%s:%s, %s)), " COM_COPYRIGHT "\n",
-	            VERSION_MAJOR,
-	            ENGINE_VERSION_STR,
-	            GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
+	                    VERSION_MAJOR,
+	                    ENGINE_VERSION_STR,
+	                    GIT_BRANCH, GIT_COMMIT_COUNT, GIT_COMMIT_HASH );
 	ape_console_print_( "Current working directory: \"%s\"\n", PlGetWorkingDirectory() );
 
 	engineTerminalMode = PlHasCommandLineArgument( "cmd" );

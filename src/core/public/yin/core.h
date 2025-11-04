@@ -10,24 +10,17 @@
 
 PL_EXTERN_C
 
-typedef struct QmMathPlane QmMathPlane;// common.h
-
 typedef unsigned long int  ulong;
 typedef unsigned short int ushort;
 typedef unsigned int       uint;
 
 #define APE_DEFAULT_TICK_RATE ( 1000 / 60 )// ms
 
-#define APE_SELF_CAST( X, Y ) ( ( X * ) ( Y ) )
-
 bool ape_initialize( unsigned int argc, char **argv, const char *config );
 void ape_shutdown( void );
 
 void ape_render_frame( ApeViewport *viewport );
 void ape_tick_frame();
-
-struct AcmBranch *ape_get_config( void );
-struct AcmBranch *ape_get_user_config( void );
 
 uint64_t ape_get_num_ticks( void );
 

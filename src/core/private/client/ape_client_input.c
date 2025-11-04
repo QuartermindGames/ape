@@ -370,7 +370,7 @@ void ape_input_initialize_( void )
 	}
 
 	// attempt to fetch and then init config
-	AcmBranch *userConfig = ape_get_user_config();
+	AcmBranch *userConfig = ape_get_user_config_();
 	inputConfig           = acm_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
 	if ( inputConfig == NULL )
 	{

@@ -36,6 +36,7 @@ typedef struct ApeScriptLuaExport
 		{
 			void                *ptr;
 			ApeScriptLuaDataType type;
+			size_t               length;// only really matters for strings
 		} var;
 		struct
 		{
