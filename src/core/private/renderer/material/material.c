@@ -689,7 +689,7 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 		materialPass->depthMode = get_compare_mode_by_tag( tmp );
 	}
 
-	materialPass->depthTest = acm_get_bool( root, "depthTest", materialPass->depthTest );
+	materialPass->depthMask = acm_get_bool( root, "depthMask", materialPass->depthMask );
 	materialPass->cullMode  = ACM_GET_UINT( materialPass->cullMode, root, "cullMode", materialPass->cullMode );
 
 	if ( ( tmp = acm_get_string( root, "textureFilterMode", nullptr ) ) != NULL )
@@ -1179,9 +1179,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 		PlgSetCullMode( cullMode );
 
-		//TODO: breaks crap if called... :(
-		//		need to keep track of global requested state, and override
-		//PlgDepthMask( curPass->depthTest );
+		PlgDepthMask( ape_rendererState_.overrideDepthMask ? ape_rendererState_.depthMask : curPass->depthMask );
 
 		// we have an awkward check for wireframe here because we don't want to just blindly handle it globally,
 		// otherwise UI elements will be wireframe too, so instead we'll just check the plg state flag
@@ -1220,7 +1218,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 				// textures just need to be set per their respective unit
 				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_TEXTURE ||
-					//TODO: change how we handle special types here, should probably move this logic under set_built_in_variable
+				     //TODO: change how we handle special types here, should probably move this logic under set_built_in_variable
 				     curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET ||
 				     curPass->variables[ j ].type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
 				{
@@ -1328,6 +1326,8 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	// reset everything back before the next pass
 	PlgDepthBufferFunction( APE_RENDERER_DEFAULT_DEPTH_FUNCTION );
 	PlgSetBlendMode( PLG_BLEND_DISABLE );
+
+	PlgDepthMask( true );
 
 	PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
 }

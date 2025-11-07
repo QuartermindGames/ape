@@ -104,7 +104,7 @@ typedef struct ApeMaterialPass
 
 	PLGCompareFunction depthMode;
 
-	bool depthTest;
+	bool depthMask;
 	int  cullMode;
 } ApeMaterialPass;
 

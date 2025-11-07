@@ -100,6 +100,9 @@ typedef struct ApeRendererPassState
 	PLGBlend blendModeA, blendModeB;
 	bool     overrideBlendMode;
 
+	bool depthMask;
+	bool overrideDepthMask;
+
 	PLGCompareFunction depthMode;
 	bool               overrideDepthMode;
 

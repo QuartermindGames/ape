@@ -583,7 +583,8 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
-		PlgDepthMask( false );
+		ape_rendererState_.overrideDepthMask = true;
+		ape_rendererState_.depthMask = false;
 
 		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
@@ -603,7 +604,8 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 			ape_rendererState_.overrideBlendMode = false;
 		}
 
-		PlgDepthMask( depth );
+		ape_rendererState_.overrideDepthMask = false;
+		ape_rendererState_.depthMask = true;
 	}
 
 	PlgPopDebugGroupMarker();
@@ -687,7 +689,8 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 	{
 		PlgPushDebugGroupMarker( "Shaded" );
 
-		PlgDepthMask( false );
+		ape_rendererState_.overrideDepthMask = true;
+		ape_rendererState_.depthMask = false;
 
 		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
@@ -718,7 +721,8 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 			draw_solid_room_lit( visibleRoom, camera, light, depth );
 		}
 
-		PlgDepthMask( depth );
+		ape_rendererState_.overrideDepthMask = false;
+		ape_rendererState_.depthMask = depth;
 
 		PlgPopDebugGroupMarker();
 	}
@@ -754,8 +758,8 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 	}
 	else
 	{
-		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
-		PlgImmDraw();
+		ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
+		ape_material_draw( material, mesh, nullptr );
 	}
 
 	PlPopMatrix();
@@ -898,9 +902,13 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	// depth buffer pop
 
 	PlgColourMask( false, false, false, false );
-	PlgDepthMask( true );
+
+	ape_rendererState_.overrideDepthMask = true;
+	ape_rendererState_.depthMask = true;
 
 	draw_portal_face( portal, true );
+
+	ape_rendererState_.overrideDepthMask = false;
 
 	PlgColourMask( true, true, true, true );
 

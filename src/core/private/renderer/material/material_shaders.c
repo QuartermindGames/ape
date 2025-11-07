@@ -236,7 +236,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		program->defaultPass.program = program;
 
 		// some sensible defaults...
-		program->defaultPass.depthTest     = true;
+		program->defaultPass.depthMask     = true;
 		program->defaultPass.textureFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 
 		ape_parse_material_pass_( nullptr, child, &program->defaultPass );
