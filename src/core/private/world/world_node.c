@@ -149,6 +149,23 @@ static ApeRoom *lookup_parent_room( ApeWorldNode *self )
 	return ( ApeRoom * ) roomNode;
 }
 
+static void update_local_transform( ApeWorldNode *self )
+{
+	PLMatrix4 transform = PlTranslateMatrix4( self->position );
+
+	PLMatrix4 rotate;
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
+	transform = PlMultiplyMatrix4( &transform, &rotate );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
+	transform = PlMultiplyMatrix4( &transform, &rotate );
+	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
+	transform = PlMultiplyMatrix4( &transform, &rotate );
+
+	transform = PlScaleMatrix4( transform, self->scale );
+
+	self->localTransform = transform;
+}
+
 static void update_world_transform( ApeWorldNode *self )
 {
 	PLMatrix4 transform = ape_world_node_get_local_transform( self );
@@ -170,6 +187,12 @@ static void update_world_transform( ApeWorldNode *self )
 	}
 }
 
+static void update_transform( ApeWorldNode *self )
+{
+	update_local_transform( self );
+	update_world_transform( self );
+}
+
 ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles )
 {
 	self->magic = APE_WORLD_NODE_MAGIC;
@@ -185,6 +208,7 @@ ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, A
 
 	self->position = *position;
 	self->angles   = *angles;
+	self->scale    = QM_MATH_VECTOR3F( 1.0f, 1.0f, 1.0f );
 
 	self->type      = type;
 	self->classType = nodeClasses[ self->type ];
@@ -194,7 +218,7 @@ ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, A
 		ape_world_node_attach( self, parent );
 	}
 
-	update_world_transform( self );
+	update_transform( self );
 
 	return self;
 }
@@ -314,7 +338,7 @@ void ape_world_node_set_position( ApeWorldNode *self, const QmMathVector3f *posi
 	assert( ape_world_node_is_valid( self, self->type ) );
 	self->position = *position;
 
-	update_world_transform( self );
+	update_transform( self );
 }
 
 QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self )
@@ -329,7 +353,7 @@ void ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles
 
 	com_math_normalize_angles( angles, &self->angles );
 
-	update_world_transform( self );
+	update_transform( self );
 }
 
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs )
@@ -474,21 +498,13 @@ PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self )
 
 PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self )
 {
-	PLMatrix4 transform = PlMatrix4Identity();
-
-	PLMatrix4 translate = PlTranslateMatrix4( self->position );
-	transform           = PlMultiplyMatrix4( &transform, &translate );
-
-	PLMatrix4 rotate;
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
-	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
-	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
-	transform = PlMultiplyMatrix4( &transform, &rotate );
-
-	return transform;
+	return self->localTransform;
 }
+
+//!! KEEP THIS PRIVATE !!
+// don't want to end up with a can of worms with other
+// code trying to do version-specific behaviour
+static constexpr unsigned int WORLD_NODE_VERSION = 1;
 
 AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 {
@@ -502,6 +518,8 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 
 	AcmBranch *nodeBranch = acm_push_object( root, "node" );
 
+	acm_push_i32( nodeBranch, "version", WORLD_NODE_VERSION );
+
 	if ( *self->name != '\0' )
 	{
 		acm_push_string( nodeBranch, "name", self->name, false );
@@ -511,10 +529,9 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 	com_acm_push_vector3( nodeBranch, "angles", &self->angles, true );
 	com_acm_push_vector3( nodeBranch, "scale", &self->scale, true );
 
-	acm_push_array_f32( nodeBranch, "localTransform", ( float * ) &self->localTransform, 16 );
-
-	//	acm_push_array_f32( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
-	//	acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
+	//acm_push_array_f32( nodeBranch, "localTransform", ( float * ) &self->localTransform, 16 );
+	//acm_push_array_f32( nodeBranch, "localBounds", ( float * ) &self->localBounds, 12 );
+	//acm_push_array_f32( nodeBranch, "bounds", ( float * ) &self->bounds, 12 );
 
 	acm_push_ui32( nodeBranch, "flags", self->flags );
 
@@ -583,15 +600,27 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 		return nullptr;
 	}
 
+	const unsigned int version = acm_get_int( root, "version", 0 );
+
 	snprintf( self->name, sizeof( self->name ), "%s", acm_get_string( root, "name", "" ) );
 
 	self->position = com_acm_get_vector3( root, "position", &pl_vecOrigin3 );
 	self->angles   = com_acm_get_vector3( root, "angles", &pl_vecOrigin3 );
-	self->scale    = com_acm_get_vector3( root, "scale", &pl_vecOrigin3 );
+	if ( version > 0 )
+	{
+		self->scale = com_acm_get_vector3( root, "scale", &pl_vecOrigin3 );
+	}
+	else
+	{
+		// for older versions, we incorrectly stored scale
+		// (as we didn't really use it) so for those we'll
+		// just reset scale to 1
+		self->scale = QM_MATH_VECTOR3F( 1.0f, 1.0f, 1.0f );
+	}
 
-	acm_get_array_f32( root, "localTransform", ( float * ) &self->localTransform, 16 );
-	//	acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );
-	//	acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
+	//acm_get_array_f32( root, "localTransform", ( float * ) &self->localTransform, 16 );
+	//acm_get_array_f32( root, "localBounds", ( float * ) &self->localBounds, 12 );
+	//acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
 
 	self->flags = acm_get_uint( root, "flags", 0 );
 
@@ -609,7 +638,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 
 	ape_world_node_compute_bounds_( self );
 
-	update_world_transform( self );
+	update_transform( self );
 
 	return self;
 }
