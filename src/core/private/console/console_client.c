@@ -24,6 +24,11 @@ static char         history[ MAX_HISTORY_RESULTS ][ CONSOLE_BUFFER_MAX_LENGTH ];
 static unsigned int numHistoryItems;
 static unsigned int historySelection;
 
+static float get_console_display_scale()
+{
+	return consoleFontScale * shell_get_display_scale();
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Autocomplete
 /////////////////////////////////////////////////////////////////////////////////////
@@ -66,9 +71,9 @@ static void update_auto_complete_result( const char *input )
 
 typedef struct ConsoleNotification
 {
-	char     buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
+	char            buffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 	QmMathColour4ub colour;
-	double   time;
+	double          time;
 } ConsoleNotification;
 
 static double consoleNotificationFadeThreshold = 0.8;
@@ -93,7 +98,7 @@ static void update_notification_limit( PLConsoleVariable * )
 		consoleNumNotifications = consoleMaxNotifications;
 	}
 
-	size_t size = sizeof( ConsoleNotification ) * consoleMaxNotifications;
+	size_t size          = sizeof( ConsoleNotification ) * consoleMaxNotifications;
 	consoleNotifications = qm_os_memory_realloc( consoleNotifications, size );
 	PL_ZERO( consoleNotifications, size );
 }
@@ -166,6 +171,8 @@ static void draw_notifications( const ApeViewport *viewport )
 	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
 	assert( font != nullptr );
 
+	const float scale = get_console_display_scale();
+
 	float y = 8.0f;
 	for ( unsigned int i = consoleNumNotifications; i > 0; --i )
 	{
@@ -187,7 +194,7 @@ static void draw_notifications( const ApeViewport *viewport )
 			notification->colour.a = PlFloatToByte( PlClamp( 0.0f, fadeProgress, 1.0f ) );
 		}
 
-		gui_font_draw_string( font, 8.0f, y, nullptr, &y, 1.0f, &notification->colour, notification->buffer, strlen( notification->buffer ), true );
+		gui_font_draw_string( font, 8.0f * scale, y, nullptr, &y, scale, &notification->colour, notification->buffer, strlen( notification->buffer ), true );
 	}
 
 	gui_font_display( font );
@@ -437,9 +444,10 @@ bool ape_console_handle_text_event_( const char *key )
 
 static void draw_input_field( const ApeViewport *viewport, ApeGuiFont *font )
 {
-	const float ch = gui_font_get_line_spacing( font ) * consoleFontScale;
-	const float cw = ape_gui_font_get_character_pixel_width( font, consoleFontScale, '>' );
-	gui_font_draw_character( font, consoleFontScale, ( float ) viewport->height - ch, consoleFontScale, &PL_COLOUR_LIME, '>' );
+	const float scale = get_console_display_scale();
+	const float ch = gui_font_get_line_spacing( font ) * scale;
+	const float cw = ape_gui_font_get_character_pixel_width( font, scale, '>' );
+	gui_font_draw_character( font, scale, ( float ) viewport->height - ch, scale, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
 	static unsigned int v = 0;
@@ -449,32 +457,32 @@ static void draw_input_field( const ApeViewport *viewport, ApeGuiFont *font )
 	}
 
 	float bufPixW;
-	gui_font_get_string_pixel_size( font, consoleFontScale, inputBuffer, inputBufferLength, &bufPixW, nullptr );
+	gui_font_get_string_pixel_size( font, scale, inputBuffer, inputBufferLength, &bufPixW, nullptr );
 
 	const float x = ( 1.0f + cw );
 
 	// cursor
 	const char c = ( v > ape_get_num_ticks() + 10 ) ? '_' : ' ';
-	gui_font_draw_character( font, x + bufPixW, ( float ) viewport->height - ch, consoleFontScale, &PL_COLOUR_LIME, c );
+	gui_font_draw_character( font, x + bufPixW, ( float ) viewport->height - ch, scale, &PL_COLOUR_LIME, c );
 
 	if ( autoComplete[ 0 ] != NULL )
 	{
 		size_t autoCompleteLength = strlen( autoComplete[ 0 ] );
-		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, nullptr, nullptr, consoleFontScale, &PL_COLOUR_GREEN, autoComplete[ 0 ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
+		gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ch, nullptr, nullptr, scale, &PL_COLOUR_GREEN, autoComplete[ 0 ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
 		if ( enableAutoCompleteList )
 		{
 			unsigned int i = 1;
 			while ( autoComplete[ i ] != NULL )
 			{
 				autoCompleteLength = strlen( autoComplete[ i ] );
-				gui_font_draw_string( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), nullptr, nullptr, consoleFontScale, &PL_COLOUR_LIME, inputBuffer, inputBufferLength, false );
-				gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), nullptr, nullptr, consoleFontScale, &PL_COLOUR_GREEN, autoComplete[ i ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
+				gui_font_draw_string( font, x, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), nullptr, nullptr, scale, &PL_COLOUR_LIME, inputBuffer, inputBufferLength, false );
+				gui_font_draw_string( font, x + bufPixW, ( float ) viewport->height - ( ch * ( ( float ) i + 1 ) ), nullptr, nullptr, scale, &PL_COLOUR_GREEN, autoComplete[ i ] + inputBufferLength, autoCompleteLength - inputBufferLength, false );
 				++i;
 			}
 		}
 	}
 
-	gui_font_draw_string( font, 1.0f + cw, ( float ) viewport->height - ch, nullptr, nullptr, consoleFontScale, &PL_COLOUR_LIME, inputBuffer, inputBufferLength, false );
+	gui_font_draw_string( font, 1.0f + cw, ( float ) viewport->height - ch, nullptr, nullptr, scale, &PL_COLOUR_LIME, inputBuffer, inputBufferLength, false );
 
 	gui_font_display( font );
 }
@@ -513,7 +521,9 @@ void ape_console_draw_( const ApeViewport *viewport )
 #define CON_INDICATOR_COLOUR PL_COLOUR_DARK_BLUE
 #define CON_INPUT_COLOUR     qm_math_colour4ub( 0, 0, 0, 255 )
 
-	const float lineSpacing   = gui_font_get_line_spacing( font ) * consoleFontScale;
+	const float scale = get_console_display_scale();
+
+	const float lineSpacing   = gui_font_get_line_spacing( font ) * scale;
 	const float width         = ( float ) viewport->width;
 	const float height        = ( float ) viewport->height;
 	const float consoleHeight = height - lineSpacing;
@@ -532,13 +542,13 @@ void ape_console_draw_( const ApeViewport *viewport )
 		/* draw the indicator at the side of the console */
 		float cH = ( ( ( lineSpacing * ( float ) output->numLines ) / consoleHeight ) + 1.0f );
 		float cY = consoleHeight - ( ( ( float ) output->numLines / consoleHeight ) + ( float ) output->scrollPos ) - cH;
-		PlgDrawRectangle( 0.0f, cY, 8.0f, cH, CON_INDICATOR_COLOUR );
+		PlgDrawRectangle( 0.0f, cY, 8.0f * scale, cH, CON_INDICATOR_COLOUR );
 
 		float y = consoleHeight - 20.0f;
 		for ( unsigned int i = ( output->numLines - 1 ) - output->scrollPos; i > 0; --i )
 		{
 			/* draw the line we're currently at */
-			gui_font_draw_string( font, 12.0f, y, nullptr, nullptr, consoleFontScale, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
+			gui_font_draw_string( font, 12.0f, y, nullptr, nullptr, scale, &output->lines[ i ].colour, output->lines[ i ].buffer, strlen( output->lines[ i ].buffer ), drawShadow );
 
 			y -= lineSpacing;
 			if ( y < 0 )
@@ -563,13 +573,13 @@ void ape_console_draw_( const ApeViewport *viewport )
 		QmMathVector2f selectionBox;
 
 		//HACK: because the height depends on a newline, we'll have to call this... fuck
-		const float ch = gui_font_get_line_spacing( font ) * consoleFontScale;
+		const float ch = gui_font_get_line_spacing( font ) * scale;
 
 		// determine the box size
 		for ( unsigned int i = 1; autoComplete[ i ] != nullptr; ++i )
 		{
 			float w;
-			gui_font_get_string_pixel_size( font, consoleFontScale, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, nullptr );
+			gui_font_get_string_pixel_size( font, scale, autoComplete[ i ], strlen( autoComplete[ i ] ), &w, nullptr );
 
 			if ( w > autoCompleteWidth )
 			{
@@ -587,7 +597,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-		PlgDrawRectangle( consoleScrollBarWidth, ( height - ( float ) autoCompleteHeight ) - ch, autoCompleteWidth, autoCompleteHeight, CON_INPUT_COLOUR );
+		PlgDrawRectangle( consoleScrollBarWidth, ( height - autoCompleteHeight ) - ch, autoCompleteWidth, autoCompleteHeight, CON_INPUT_COLOUR );
 		if ( autoCompleteSelection > 0 )
 		{
 			// draw the selection box on top
@@ -604,11 +614,11 @@ void ape_console_draw_( const ApeViewport *viewport )
 		static char buf[] = "v" ENGINE_VERSION_STR " [" GIT_BRANCH "." GIT_COMMIT_COUNT "]\n";
 
 		float strW, strH;
-		gui_font_get_string_pixel_size( tinyFont, 1.0f, buf, sizeof( buf ), &strW, &strH );
+		gui_font_get_string_pixel_size( tinyFont, scale, buf, sizeof( buf ), &strW, &strH );
 
 		float x = width - strW;
 		float y = height - strH;
-		gui_font_draw_string( tinyFont, x, y, nullptr, nullptr, 1.0f, &QM_MATH_COLOUR4UB_RGB( 0, 255, 0 ), buf, sizeof( buf ), false );
+		gui_font_draw_string( tinyFont, x, y, nullptr, nullptr, scale, &QM_MATH_COLOUR4UB_RGB( 0, 255, 0 ), buf, sizeof( buf ), false );
 
 		gui_font_display( tinyFont );
 	}

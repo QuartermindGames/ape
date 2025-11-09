@@ -70,6 +70,16 @@ void shell_display_message( SS_Shell_MessageBoxType messageType, const char *mes
 	qm_os_memory_free( buf );
 }
 
+float shell_get_display_scale()
+{
+	if ( sdlWindow == nullptr )
+	{
+		return 1.0f;
+	}
+
+	return SDL_GetWindowDisplayScale( sdlWindow );
+}
+
 static bool IsWindowActive( void )
 {
 	assert( sdlWindow != NULL );

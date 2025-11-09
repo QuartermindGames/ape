@@ -615,6 +615,12 @@ extern "C"
 		}
 	}
 
+	float shell_get_display_scale()
+	{
+		// fox doesn't support dpi scaling, annoyingly...
+		return 1.0f;
+	}
+
 	ApeViewport *ss_shell_viewport_get_active( void )
 	{
 		return nullptr;
