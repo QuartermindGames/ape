@@ -218,7 +218,7 @@ long forge::SurfaceInspector::on_reset( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	static constexpr QmMathVector2f DEFAULT_SCALE = QM_MATH_VECTOR2F( 0.5f, 0.5f );
+	static constexpr QmMathVector2f DEFAULT_SCALE = QM_MATH_VECTOR2F( 0.25f, 0.25f );
 
 	QmMathVector2f scale = com_acm_get_vector2( editorConfig, "defaultSurfaceScale", &DEFAULT_SCALE );
 	ape_brush_face_apply_material_coordinates( face, &scale, &pl_vecOrigin2, &pl_vecOrigin3, localSpaceCheck->getCheck() );
