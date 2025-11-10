@@ -202,7 +202,7 @@ void ape_tick_frame()
 	COM_PROFILE_FUNCTION_START();
 
 	const double now   = qm_os_time_get_seconds();
-	const double delta = PlClamp( 0.0, now - lastTime, 1.0 );
+	const double delta = QM_MATH_CLAMP( 0.0, now - lastTime, 1.0 );
 	lastTime           = now;
 
 	ape_draw_debug_clear_();

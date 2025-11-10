@@ -55,6 +55,15 @@ typedef enum GameCameraState
 	GAME_CAMERA_STATE_MAX,
 } GameCameraState;
 
+typedef enum Qm1RoundStatus
+{
+	QM1_ROUND_STATUS_INTRO,
+	QM1_ROUND_STATUS_SELECT,
+	QM1_ROUND_STATUS_SELECTED,
+	QM1_ROUND_STATUS_PLAYING,
+	QM1_ROUND_STATUS_END,
+} Qm1RoundStatus;
+
 typedef struct SS1GameState
 {
 	GameWorldSimulation simulation;
@@ -64,6 +73,8 @@ typedef struct SS1GameState
 	ApeCamera      *camera;// our eyes
 	QmMathVector3f  oldCameraPosition;
 	GameCameraState oldCameraState, cameraState;
+
+	Qm1RoundStatus roundStatus;
 
 	ApeWorld *world;// world container
 

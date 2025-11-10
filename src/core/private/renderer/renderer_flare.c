@@ -162,14 +162,14 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float deltaY = ( dy / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
 
 		float maxDistance = qm_math_vector2f_length( QM_MATH_VECTOR2F( w, h ) ) / 4.0f;
-		float intensity   = PlClamp( 0.0f, ( 1.0f - ( qm_math_vector2f_length( QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
+		float intensity   = QM_MATH_CLAMP( 0.0f, ( 1.0f - ( qm_math_vector2f_length( QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
 		sumFlareIntensity += ( intensity - ( flare->distance / ( MAX_FLARE_DISTANCE / 2.0f ) ) );
 
 		draw_flare( &flares[ i ], deltaX, deltaY, intensity );
 	}
 
 #if 1// hogsy: todo!
-	sumFlareIntensity = PlClamp( 0.0f, sumFlareIntensity, 1.0f );
+	sumFlareIntensity = QM_MATH_CLAMP( 0.0f, sumFlareIntensity, 1.0f );
 	if ( sumFlareIntensity > 0.0f )
 	{
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );

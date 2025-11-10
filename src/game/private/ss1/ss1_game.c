@@ -46,7 +46,7 @@ static bool ss1_initialize()
 		return false;
 	}
 
-	ss1_gameState.cameraState = GAME_CAMERA_STATE_FREE;
+	ss1_gameState.cameraState = GAME_CAMERA_STATE_FIXED;
 
 	return true;
 }
@@ -105,7 +105,7 @@ static void handle_camera_input( double delta )
 				ape_client_input_get_mouse_delta( &mx, &my );
 				ang.y += ( float ) mx;
 				ang.x += ( float ) my;
-				ang.x = PlClamp( -90.0f, ang.x, 90.0f );
+				ang.x = QM_MATH_CLAMP( -90.0f, ang.x, 90.0f );
 			}
 
 			QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
@@ -367,7 +367,7 @@ static void world_tick( const double delta )
 
 		ss1_gameState.sunAngles.x = game_world_simulation_get_seconds_in_day( simulation ) / ( game_world_simulation_get_seconds_to_day( simulation ) / 360.0f );
 		ss1_gameState.sunAngles.y = sinf( PL_DEG2RAD( ss1_gameState.sunAngles.x + 90.0f ) ) * 2.0f;
-		sunColour.a               = PlClamp( 0.0f, ( -ss1_gameState.sunAngles.y ) / 1.0f, 1.0f );
+		sunColour.a               = QM_MATH_CLAMP( 0.0f, ( -ss1_gameState.sunAngles.y ) / 1.0f, 1.0f );
 
 		QmMathVector3f sunPosition = com_math_pitch_yaw_to_position( ss1_gameState.sunAngles.y, ss1_gameState.sunAngles.x );
 		ape_light_set_position( ss1_gameState.sunLight, &sunPosition );
@@ -375,16 +375,16 @@ static void world_tick( const double delta )
 
 		QmMathVector3f moonPosition = com_math_pitch_yaw_to_position( -ss1_gameState.sunAngles.y, -ss1_gameState.sunAngles.x );
 		ape_light_set_position( ss1_gameState.moonLight, &moonPosition );
-		moonColour.a = PlClamp( 0.0f, ( ss1_gameState.sunAngles.y ) / 1.0f, 0.25f );
+		moonColour.a = QM_MATH_CLAMP( 0.0f, ( ss1_gameState.sunAngles.y ) / 1.0f, 0.25f );
 		ape_light_set_colour( ss1_gameState.moonLight, &moonColour );
 
 		ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( ss1_gameState.sunLight ) );
 		if ( room != nullptr )
 		{
 			QmMathColour4f ambience;
-			ambience.r = PlClamp( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
-			ambience.g = PlClamp( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
-			ambience.b = PlClamp( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
+			ambience.r = QM_MATH_CLAMP( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
+			ambience.g = QM_MATH_CLAMP( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
+			ambience.b = QM_MATH_CLAMP( 0.05f, sunColour.r * ( sunColour.a / 0.5f ), 0.45f );
 			ambience.a = 1.0f;
 
 			ape_room_set_ambience( room, ambience );
@@ -490,7 +490,7 @@ static void ss1_spawn_world( ApeRoom *room )
 	                                            APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
 #endif
 
-	//ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	const char *path = ape_world_node_get_path( APE_WORLD_NODE( room ) );
 	if ( *path == '\0' )
@@ -503,6 +503,8 @@ static void ss1_spawn_world( ApeRoom *room )
 	game_integrations_discord_update_activity_( buf, nullptr, "qm1-logo", QM1_GAME_TITLE );
 
 	spawn_characters();
+
+	ss1_gameState.roundStatus = QM1_ROUND_STATUS_INTRO;
 }
 
 static void on_destroy_room( ApeRoom *room )

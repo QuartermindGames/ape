@@ -34,7 +34,7 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 	static constexpr float MAX_HEIGHT = 200.0f;
 	static constexpr float MIN_HEIGHT = 30.0f;
 
-	const float h = PlClamp( MIN_HEIGHT, MAX_HEIGHT * ( -compassAngles.x / MAX_HEIGHT ) + MAX_HEIGHT / 2.0f * scale, MAX_HEIGHT );
+	const float h = QM_MATH_CLAMP( MIN_HEIGHT, MAX_HEIGHT * ( -compassAngles.x / MAX_HEIGHT ) + MAX_HEIGHT / 2.0f * scale, MAX_HEIGHT );
 
 	const float x = w / 2.0f + 32.0f;
 	const float y = viewport->height - w / 2.0f + 32.0f;

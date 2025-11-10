@@ -38,7 +38,7 @@ forge::ProjectDialog::ProjectDialog( FX::FXWindow *parent )
 
 	static FXGIFIcon newFolderIcon( getApp(), FX::foldernew );
 	listBox->appendItem( "Create new project", &newFolderIcon, nullptr );
-	listBox->setNumVisible( PlClamp( 4, listBox->getNumItems(), 8 ) );
+	listBox->setNumVisible( QM_MATH_CLAMP( 4, listBox->getNumItems(), 8 ) );
 
 	projectNameField = new FXTextField( vf, 1, nullptr, 0, TEXTFIELD_NORMAL | LAYOUT_FILL_X );
 	projectNameField->setText( defaultName );

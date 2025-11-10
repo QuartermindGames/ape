@@ -116,10 +116,10 @@ namespace forge
 			inline QmMathColour4f get_room_ambience()
 			{
 				FXColor color = ambienceField->getRGBA();
-				return QM_MATH_COLOUR4F( PlByteToFloat( FXREDVAL( color ) ),
-				                     PlByteToFloat( FXGREENVAL( color ) ),
-				                     PlByteToFloat( FXBLUEVAL( color ) ),
-				                     PlByteToFloat( FXALPHAVAL( color ) ) );
+				return QM_MATH_COLOUR4F( QM_MATH_BTOF( FXREDVAL( color ) ),
+				                         QM_MATH_BTOF( FXGREENVAL( color ) ),
+				                         QM_MATH_BTOF( FXBLUEVAL( color ) ),
+				                         QM_MATH_BTOF( FXALPHAVAL( color ) ) );
 			}
 
 			inline ApeAudioReverbPreset get_room_audio_preset()

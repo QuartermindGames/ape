@@ -90,7 +90,7 @@ static void spawn_player_entity( ApeEntity *self )
 	QmMathVector3f forward;
 	PlAnglesAxes( ang, nullptr, nullptr, &forward );
 	forward                    = qm_math_vector3f_normalize( forward );
-	playerEntity->cameraAngles = qm_math_vector3f( 0.0f, PL_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
+	playerEntity->cameraAngles = qm_math_vector3f( 0.0f, QM_MATH_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
 
 	//setup_default_equipment( self );
 }

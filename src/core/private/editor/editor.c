@@ -877,7 +877,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 		assert( material != nullptr );
 
 		const float pixelScale = material != nullptr ? ape_material_get_width( material ) : 64.0f;
-		float       scale      = PlClamp( 0.0f, ( pixelScale * 2.0f ) - ( depth * ( ( pixelScale ) / 100.0f ) ) * iconFade, 64.0f );
+		float       scale      = QM_MATH_CLAMP( 0.0f, ( pixelScale * 2.0f ) - ( depth * ( ( pixelScale ) / 100.0f ) ) * iconFade, 64.0f );
 		if ( scale <= 0.0f )
 		{
 			continue;

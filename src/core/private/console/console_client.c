@@ -133,7 +133,7 @@ void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour 
 	notification->colour = colour;
 	notification->time   = 0.0;
 
-	consoleNumNotifications = PlClamp( 0, consoleNumNotifications + 1, consoleMaxNotifications );
+	consoleNumNotifications = QM_MATH_CLAMP( 0, consoleNumNotifications + 1, consoleMaxNotifications );
 }
 
 void ape_console_update_notifications_( double delta )
@@ -191,7 +191,7 @@ static void draw_notifications( const ApeViewport *viewport )
 		else
 		{
 			float fadeProgress     = timeLeft / ( consoleMaxNotificationTime * ( 1.0 - consoleNotificationFadeThreshold ) );
-			notification->colour.a = PlFloatToByte( PlClamp( 0.0f, fadeProgress, 1.0f ) );
+			notification->colour.a = PlFloatToByte( QM_MATH_CLAMP( 0.0f, fadeProgress, 1.0f ) );
 		}
 
 		gui_font_draw_string( font, 8.0f * scale, y, nullptr, &y, scale, &notification->colour, notification->buffer, strlen( notification->buffer ), true );
@@ -385,7 +385,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 				}
 				// and now add the new result to the head
 				snprintf( history[ 0 ], sizeof( history[ 0 ] ), "%s", inputBuffer );
-				numHistoryItems = PlClamp( 0, numHistoryItems + 1, MAX_HISTORY_RESULTS );
+				numHistoryItems = QM_MATH_CLAMP( 0, numHistoryItems + 1, MAX_HISTORY_RESULTS );
 
 				clear_input_buffer();
 			}

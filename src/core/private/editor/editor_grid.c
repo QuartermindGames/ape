@@ -93,7 +93,7 @@ void ape_grid_increase_size( void )
 		return;
 	}
 
-	instance->grid.size = PlClamp( MIN_GRID_SCALE, instance->grid.size * 2.0f, APE_EDITOR_GRID_MAX_POINTS_ROW );
+	instance->grid.size = QM_MATH_CLAMP( MIN_GRID_SCALE, instance->grid.size * 2.0f, APE_EDITOR_GRID_MAX_POINTS_ROW );
 }
 
 void ape_grid_decrease_size( void )
@@ -104,7 +104,7 @@ void ape_grid_decrease_size( void )
 		return;
 	}
 
-	instance->grid.size = PlClamp( MIN_GRID_SCALE, instance->grid.size / 2.0f, APE_EDITOR_GRID_MAX_POINTS_ROW );
+	instance->grid.size = QM_MATH_CLAMP( MIN_GRID_SCALE, instance->grid.size / 2.0f, APE_EDITOR_GRID_MAX_POINTS_ROW );
 }
 
 void ape_grid_align_to_face( ApeEditorGrid *self, ApeBrushFace *face )
@@ -176,7 +176,7 @@ void ape_grid_draw_( const ApeEditorGrid *self )
 	PlgSetShaderUniformValue( program->internal, "cursorPos", &cursorPos, false );
 	PlgSetShaderUniformValue( program->internal, "gridScale", &self->size, false );
 
-	int size     = PlClamp( APE_EDITOR_GRID_MAX_POINTS_ROW, self->size * self->size, APE_EDITOR_GRID_MAX_POINTS );
+	int size     = QM_MATH_CLAMP( APE_EDITOR_GRID_MAX_POINTS_ROW, self->size * self->size, APE_EDITOR_GRID_MAX_POINTS );
 	int position = -size / 2;
 
 	QmMathColour4ub colour = QM_MATH_COLOUR4UB( 0, 0, 255, 255 );

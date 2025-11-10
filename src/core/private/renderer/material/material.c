@@ -942,7 +942,7 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
 	{
-		float fogNear = PlClamp( 0.0f, ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear, FLT_MAX );
+		float fogNear = QM_MATH_CLAMP( 0.0f, ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear, FLT_MAX );
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &fogNear, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ] >= 0 )

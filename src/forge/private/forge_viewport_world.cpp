@@ -50,7 +50,7 @@ namespace forge
 
 				list->appendItem( classes[ i ]->name, icon, ( void * ) classes[ i ] );
 			}
-			list->setNumVisible( PlClamp( 4, list->getNumItems(), 8 ) );
+			list->setNumVisible( QM_MATH_CLAMP( 4, list->getNumItems(), 8 ) );
 
 			new FXHorizontalSeparator( frame );
 

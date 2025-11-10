@@ -253,6 +253,7 @@ static QmMathVector4f get_face_screen_rect( const ApeBrushFace *face, const ApeC
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
+		assert( face->vertices[ i ].posIndex < face->parent->numVertices );
 		QmMathVector3f vertex = PlTransformVector3( &face->parent->vertices[ face->vertices[ i ].posIndex ], &transform );
 
 		float          depth;
@@ -260,22 +261,22 @@ static QmMathVector4f get_face_screen_rect( const ApeBrushFace *face, const ApeC
 
 		if ( screenPos.x < rect.x )
 		{
-			rect.x = PlClamp( 0.0f, screenPos.x, viewport->width );
+			rect.x = QM_MATH_CLAMP( 0.0f, screenPos.x, viewport->width );
 		}
 		if ( screenPos.x > rect.z )
 		{
-			rect.z = PlClamp( 0.0f, screenPos.x, viewport->width );
+			rect.z = QM_MATH_CLAMP( 0.0f, screenPos.x, viewport->width );
 		}
 
 		// sigh... we need to flip it, again
 		screenPos.y = viewport->height - screenPos.y;
 		if ( screenPos.y < rect.y )
 		{
-			rect.y = PlClamp( 0.0f, screenPos.y, viewport->height );
+			rect.y = QM_MATH_CLAMP( 0.0f, screenPos.y, viewport->height );
 		}
 		if ( screenPos.y > rect.w )
 		{
-			rect.w = PlClamp( 0.0f, screenPos.y, viewport->height );
+			rect.w = QM_MATH_CLAMP( 0.0f, screenPos.y, viewport->height );
 		}
 	}
 

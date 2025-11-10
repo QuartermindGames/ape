@@ -112,7 +112,7 @@ static void tick_airship( ApeEntity *self, double delta )
 			pos.z += direction.z * step;
 		}
 
-		ang.y = PL_RAD2DEG( atan2f( direction.z, direction.x ) );
+		ang.y = QM_MATH_RAD2DEG( atan2f( direction.z, direction.x ) );
 	}
 
 	// apply some bobbing to make the ship look floaty
