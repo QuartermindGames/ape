@@ -77,6 +77,7 @@ void game_error_( const char *message, ... )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+extern ApeEntityClassDefinition game_pathEntityClass_;
 extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
 extern ApeEntityClassDefinition game_triggerEntityClass_;
 extern ApeEntityClassDefinition game_ropeEntityClass_;
@@ -98,6 +99,7 @@ extern ApeEntityComponentDefinition game_inventoryComponent_;
 
 static void register_standard_entity_components()
 {
+	ape_register_entity_class( &game_pathEntityClass_ );
 	ape_register_entity_class( &game_playerSpawnEntityClass_ );
 	ape_register_entity_class( &game_triggerEntityClass_ );
 	ape_register_entity_class( &game_ropeEntityClass_ );
@@ -107,6 +109,7 @@ static void register_standard_entity_components()
 	ape_register_entity_class( &ss1_airshipEntityClass );
 	ape_register_entity_class( &ss1_pawnEntityClass );
 	ape_register_entity_class( &ss1_playerEntityClass );
+	ape_register_entity_class( &game_pathEntityClass_ );
 #endif
 #if defined( GAME_QM2 )
 	ape_register_entity_class( &game_qm2_creatureEntityClass_ );
@@ -118,6 +121,33 @@ static void register_standard_entity_components()
 	ape_register_entity_component( &game_inventoryComponent_ );
 }
 
+static void navigate_world_tree( const ApeWorldNode *node, const unsigned int depth )
+{
+	for ( unsigned int i = 0; i < depth; ++i )
+	{
+		game_print_( "\t" );
+	}
+	game_print_( "%s (%s)\n", node->classType->identifier, *node->name == '\0' ? "none" : node->name );
+
+	const ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		navigate_world_tree( child, depth + 1 );
+	}
+}
+
+static void print_world_tree_command( unsigned int argc, char **argv )
+{
+	ApeWorld *world = game_get_current_world();
+	if ( world == nullptr )
+	{
+		game_print_( "No world loaded!\n" );
+		return;
+	}
+
+	navigate_world_tree( APE_WORLD_NODE( world ), 0 );
+}
+
 void game_server_initialize_();
 void game_client_initialize_();
 void game_language_initialize_();
@@ -126,6 +156,8 @@ bool game_initialize( void )
 	gameConfig = com_get_config( "game_shared" );
 
 	PlRegisterConsoleVariable( "game.timeModifier", "Time modifier, useful for emulating slow-motion.", "1.0", PL_VAR_F32, &gameTimeModifier, nullptr, false );
+
+	PlRegisterConsoleCommand( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
 
 	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
 	globalGameWarningLog = PlAddLogLevel( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
