@@ -10,11 +10,11 @@
 
 #include "qm1_entity_player.h"
 
-#include "shared/components/component_health.h"
-#include "shared/components/component_collision.h"
-#include "shared/components/component_movement.h"
-#include "shared/physics/physics.h"
-#include "shared/game_entity.h"
+#include "components/component_health.h"
+#include "components/component_collision.h"
+#include "components/component_movement.h"
+#include "physics/physics.h"
+#include "game_entity.h"
 
 static constexpr float PLAYER_CAMERA_HEIGHT   = 45.0f;
 static constexpr float PLAYER_CAMERA_DISTANCE = 50.0f;

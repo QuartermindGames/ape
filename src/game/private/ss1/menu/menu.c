@@ -4,9 +4,9 @@
 
 #include "menu.h"
 
-#include "shared/menu/menu.h"
-#include "shared/menu/menu_pie.h"
-#include "shared/menu/menu_compass.h"
+#include "menu/menu.h"
+#include "menu/menu_pie.h"
+#include "menu/menu_compass.h"
 
 static const char *menuFontPath = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
 static ApeGuiFont *menuFont;

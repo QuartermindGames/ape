@@ -6,7 +6,7 @@
 
 #include "ss1/ss1_game.h"
 #include "core/public/ape/ape_public_model.h"//TODO: this include should be UP
-#include "shared/components/component_health.h"
+#include "components/component_health.h"
 
 static constexpr float MIN_HEIGHT = 4096.0f;
 static constexpr float MAX_RANGE  = 10000.0f;

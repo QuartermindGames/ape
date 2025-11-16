@@ -5,7 +5,7 @@
 #include "game/private/ss1/ss1_game.h"
 
 // base menu impl.
-#include "../../shared/game_menu.h"
+#include "../../game_menu.h"
 
 typedef enum SS1MenuState
 {

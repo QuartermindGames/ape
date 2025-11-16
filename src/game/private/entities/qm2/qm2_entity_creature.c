@@ -9,12 +9,12 @@
 #	include "qmos/public/qm_os_random.h"
 #	include "qmos/public/qm_os_string.h"
 
-#	include "shared/game_private.h"
-#	include "shared/game_server.h"
-#	include "shared/ai/ai_brain.h"
-#	include "shared/components/component_collision.h"
-#	include "shared/components/component_health.h"
-#	include "shared/components/component_movement.h"
+#	include "game_private.h"
+#	include "game_server.h"
+#	include "ai/ai_brain.h"
+#	include "components/component_collision.h"
+#	include "components/component_health.h"
+#	include "components/component_movement.h"
 
 static constexpr int16_t QM2_CREATURE_MAX_HEALTH = 100;
 

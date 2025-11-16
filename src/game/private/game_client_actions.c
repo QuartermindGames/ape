@@ -1,7 +1,6 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
 #include "game_private.h"
-
 #include "game_menu.h"
 #include "game_server.h"
 

@@ -2,7 +2,7 @@
 // Purpose: Health indicator, used for "living" entities.
 // Author:  Mark E. Sowden
 
-#include "shared/game_private.h"
+#include "game_private.h"
 
 #include "component_health.h"
 

@@ -6,7 +6,7 @@
 
 #include "ss1_game.h"
 
-#include "shared/entities/qm1/qm1_entity_player.h"
+#include "entities/qm1/qm1_entity_player.h"
 
 static void fire_decal( ApeInputState state, const char * )
 {

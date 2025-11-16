@@ -4,13 +4,13 @@
 
 #include "menu/menu.h"
 
-#include "shared/integrations/integrations.h"
-#include "shared/physics/physics.h"
-#include "shared/game_team.h"
-#include "shared/components/component_movement.h"
-#include "shared/entities/entity_player_spawn.h"
+#include "integrations/integrations.h"
+#include "physics/physics.h"
+#include "game_team.h"
+#include "components/component_movement.h"
 
-#include "../shared/entities/qm1/qm1_entity_player.h"
+#include "entities/entity_player_spawn.h"
+#include "entities/qm1/qm1_entity_player.h"
 
 SS1GameState ss1_gameState;
 

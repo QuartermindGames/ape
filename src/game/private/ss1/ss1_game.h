@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "../shared/game_private.h"
-#include "../shared/game_server.h"
-#include "../shared/game_client.h"
-#include "../shared/game_world_simulation.h"
+#include "game_private.h"
+#include "game_server.h"
+#include "game_client.h"
+#include "game_world_simulation.h"
 
 static constexpr char QM1_GAME_TITLE[] = "Nihlexa";
 

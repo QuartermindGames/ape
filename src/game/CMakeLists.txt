@@ -1,42 +1,44 @@
 set(GAME_SHARED_FILES
-        private/shared/physics/physics_rope.c
-        private/shared/game.c
-        private/shared/game_client.c
-        private/shared/game_client_actions.c
-        private/shared/game_entity.c
-        private/shared/game_language.c
-        private/shared/game_menu.c
-        private/shared/game_server.c
-        private/shared/game_team.c
-        private/shared/game_test.c
+        private/physics/physics_rope.c
+        private/game.c
+        private/game_client.c
+        private/game_client_actions.c
+        private/game_entity.c
+        private/game_language.c
+        private/game_menu.c
+        private/game_server.c
+        private/game_team.c
+        private/game_test.c
 
         #############################################
 
-        private/shared/ai/ai_brain.c
+        private/ai/ai_brain.c
 
-        private/shared/components/component_collision.c
-        private/shared/components/component_health.c
-        private/shared/components/component_inventory.c
-        private/shared/components/component_movement.c
+        private/components/component_collision.c
+        private/components/component_health.c
+        private/components/component_inventory.c
+        private/components/component_movement.c
 
-        private/shared/entities/qm1/qm1_entity_airship.c
-        private/shared/entities/qm1/qm1_entity_pawn.c
-        private/shared/entities/qm1/qm1_entity_player.c
+        private/entities/qm1/qm1_entity_airship.c
+        private/entities/qm1/qm1_entity_pawn.c
+        private/entities/qm1/qm1_entity_player.c
 
-        private/shared/entities/qm2/qm2_entity_creature.c
+        private/entities/qm2/qm2_entity_creature.c
 
-        private/shared/entities/entity_player_spawn.c
-        private/shared/entities/entity_portal.c
-        private/shared/entities/entity_rope.c
-        private/shared/entities/entity_terrain.c
-        private/shared/entities/entity_trigger.c
+        private/entities/entity_ambience_manager.c
+        private/entities/entity_path.c
+        private/entities/entity_player_spawn.c
+        private/entities/entity_portal.c
+        private/entities/entity_rope.c
+        private/entities/entity_terrain.c
+        private/entities/entity_trigger.c
 
-        private/shared/integrations/discord/discord.c
+        private/integrations/discord/discord.c
 
-        private/shared/menu/menu_chat.c
-        private/shared/menu/menu_compass.c
-        private/shared/menu/menu_pie.c
-        private/shared/menu/menu_splash.c
+        private/menu/menu_chat.c
+        private/menu/menu_compass.c
+        private/menu/menu_pie.c
+        private/menu/menu_splash.c
 )
 
 include_directories(public/)
@@ -92,3 +94,24 @@ target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})
 target_compile_definitions(SS1Forge PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(SS1Forge PRIVATE private)
 set_target_properties(SS1Forge PROPERTIES FOLDER "Shells")
+
+#############################################
+# QM2
+#############################################
+set(QM2_SOURCES
+        ${GAME_SHARED_FILES}
+
+        private/gateway/gateway.c
+)
+
+add_executable(gateway WIN32 ${QM2_SOURCES} ../shells/launcher_sdl2/launcher.c)
+target_link_libraries(gateway ${GAME_LINK_LIBS})
+target_compile_definitions(gateway PRIVATE GAME_QM2)
+target_include_directories(gateway PRIVATE private)
+set_target_properties(gateway PROPERTIES FOLDER "Games")
+
+add_executable(gateway-forge WIN32 ${QM2_SOURCES})
+target_link_libraries(gateway-forge Forge ${GAME_LINK_LIBS})
+target_compile_definitions(gateway-forge PRIVATE GAME_QM2)
+target_include_directories(gateway-forge PRIVATE private)
+set_target_properties(gateway-forge PROPERTIES FOLDER "Shells")
