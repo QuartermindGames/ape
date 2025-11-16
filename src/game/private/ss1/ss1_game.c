@@ -20,11 +20,45 @@ static unsigned int teamResourcePools[ QM1_GAME_MAX_TEAMS ][ SS1_MAX_RESOURCE_TY
 
 void ss1_actions_register_();
 
+static void damage_player_command( [[maybe_unused]] const unsigned int argc, char **argv )
+{
+	int16_t value;
+	if ( argc > 1 )
+	{
+		value = ( int16_t ) atoi( argv[ 1 ] );
+	}
+	else
+	{
+		value = 10;
+	}
+
+	//TODO: pump the event...
+}
+
+static void print_camera_pos_command( unsigned int argc, char **argv )
+{
+	if ( ss1_gameState.camera == nullptr )
+	{
+		game_print_( "No valid camera.\n" );
+		return;
+	}
+
+	char tmp[ 64 ];
+
+	QmMathVector3f cameraPos = ape_camera_get_position( ss1_gameState.camera );
+	game_print_( "Camera Pos: %s\n", qm_math_vector3f_print( cameraPos, tmp, sizeof( tmp ) ) );
+	QmMathVector3f cameraAngles = ape_camera_get_angles( ss1_gameState.camera );
+	game_print_( "Camera Ang: %s\n", qm_math_vector3f_print( cameraAngles, tmp, sizeof( tmp ) ) );
+}
+
 static bool ss1_initialize()
 {
 	ss1_actions_register_();
 
 	PL_ZERO_( ss1_gameState );
+
+	PlRegisterConsoleCommand( "qm1_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
+	PlRegisterConsoleCommand( "qm1_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
