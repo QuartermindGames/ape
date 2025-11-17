@@ -337,19 +337,28 @@ static void al_destroy_source( ApeAudioSource *source )
 	XAL_CALL( alDeleteSources( 1, ( ALuint * ) &source->user ) );
 }
 
+static bool al_is_source_playing( const ApeAudioSource *source )
+{
+	ALint state;
+	XAL_CALL( alGetSourcei( source->user, AL_SOURCE_STATE, &state ) );
+	return state == AL_PLAYING;
+}
+
 const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void )
 {
 	static ApeAudioDriverInterface driverInterface;
 
-	driverInterface.initialize    = initialize_openal;
-	driverInterface.shutdown      = shutdown_openal;
-	driverInterface.tick          = al_tick;
-	driverInterface.pause         = al_pause;
-	driverInterface.cacheSample   = al_cache_sample;
-	driverInterface.freeSample    = al_free_sample;
-	driverInterface.emitSample    = al_emit_sample;
-	driverInterface.createSource  = al_create_source;
-	driverInterface.destroySource = al_destroy_source;
+	driverInterface.initialize  = initialize_openal;
+	driverInterface.shutdown    = shutdown_openal;
+	driverInterface.tick        = al_tick;
+	driverInterface.pause       = al_pause;
+	driverInterface.cacheSample = al_cache_sample;
+	driverInterface.freeSample  = al_free_sample;
+	driverInterface.emitSample  = al_emit_sample;
+
+	driverInterface.createSource    = al_create_source;
+	driverInterface.destroySource   = al_destroy_source;
+	driverInterface.isSourcePlaying = al_is_source_playing;
 
 	return &driverInterface;
 }

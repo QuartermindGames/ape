@@ -89,12 +89,12 @@ static void test_3d_command( unsigned int, char ** )
 		return;
 	}
 
-	unsigned int seed     = qm_os_random_seed_initialize();
-	QmMathVector3f    position = {
-	           .x = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
-	           .y = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
-	           .z = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
-    };
+	unsigned int   seed     = qm_os_random_seed_initialize();
+	QmMathVector3f position = {
+	        .x = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
+	        .y = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
+	        .z = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
+	};
 
 	ape_audio_sample_emit( sample, &position, 100, qm_os_random_float( &seed, 2.0f ) );
 	ape_audio_sample_release( sample );
@@ -290,6 +290,17 @@ void ape_audio_source_destroy( ApeAudioSource *audioSource )
 	DRIVER_CALLBACK( destroySource, audioSource );
 
 	qm_os_memory_free( audioSource );
+}
+
+bool ape_audio_source_is_playing( const ApeAudioSource *audioSource )
+{
+	if ( audioDriverInterface == nullptr )
+	{
+		return false;
+	}
+
+	assert( audioDriverInterface->isSourcePlaying != nullptr );
+	return audioDriverInterface->isSourcePlaying( audioSource );
 }
 
 void ape_audio_source_set_position( ApeAudioSource *audioSource, const QmMathVector3f *position )

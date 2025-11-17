@@ -120,6 +120,7 @@ void            ape_audio_sample_release( ApeAudioSample *audioSample );
 
 ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const QmMathVector3f *velocity, ApeAudioSourceGroup group );
 void            ape_audio_source_destroy( ApeAudioSource *audioSource );
+bool            ape_audio_source_is_playing( const ApeAudioSource *audioSource );
 void            ape_audio_source_set_position( ApeAudioSource *audioSource, const QmMathVector3f *position );
 void            ape_audio_source_set_velocity( ApeAudioSource *audioSource, const QmMathVector3f *velocity );
 void            ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample );

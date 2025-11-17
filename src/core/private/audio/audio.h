@@ -32,8 +32,8 @@ typedef ApeAudioSample *( *ApeAudioSampleLoadCallback )( PLFile *file );
 
 typedef struct ApeAudioSource
 {
-	QmMathVector3f       position;
-	QmMathVector3f       velocity;
+	QmMathVector3f  position;
+	QmMathVector3f  velocity;
 	ApeAudioSample *sample;
 	intptr_t        user;
 } ApeAudioSource;
@@ -65,6 +65,8 @@ typedef struct ApeAudioDriverInterface
 
 	bool ( *createSource )( ApeAudioSource *audioSource );
 	void ( *destroySource )( ApeAudioSource *audioSource );
+
+	bool ( *isSourcePlaying )( const ApeAudioSource *audioSource );
 } ApeAudioDriverInterface;
 
 PL_EXTERN_C_END
