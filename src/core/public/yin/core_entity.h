@@ -59,10 +59,10 @@ typedef struct ApeEntityClassDefinition
 	void ( *serializeFunction )( ApeEntity *self, AcmBranch *root );
 	void ( *deserializeFunction )( ApeEntity *self, AcmBranch *root );
 
-#if !defined( APE_NO_EDITOR )
-
 	const ApeProperty *properties;
 	unsigned int       numProperties;
+
+#if !defined( APE_NO_EDITOR )
 
 	bool excludeInEditor;
 
@@ -96,12 +96,8 @@ typedef struct ApeEntityComponentDefinition
 	AcmBranch *( *serializeFunction )( void *ptr, AcmBranch *root );
 	void *( *deserializeFunction )( void *ptr, AcmBranch *root );
 
-#if !defined( APE_NO_EDITOR )
-
 	const ApeProperty *properties;
 	unsigned int       numProperties;
-
-#endif
 } ApeEntityComponentDefinition;
 
 typedef const ApeEntityComponentDefinition *( *ApeEntityComponentRegisterFunction )( void );

@@ -1442,15 +1442,17 @@ void ape_editor_clear_plot_points( ApeEditorInstance *instance )
 
 #if !defined( NDEBUG )
 
-void ape_editor_validate_properties_( const ApeProperty *properties, const unsigned int numProperties )
+bool ape_editor_validate_properties_( const ApeProperty *properties, const unsigned int numProperties )
 {
+	bool valid = true;
 	for ( unsigned int i = 0; i < numProperties; ++i )
 	{
 		const char *typeName = nullptr;
 		switch ( properties[ i ].type )
 		{
 			default:
-				ape_console_error_( true, "Encountered invalid property type during validation (%u)!\n" );
+				ape_console_warning_( "Encountered invalid property type during validation (%u)!\n" );
+				valid = false;
 				break;
 			case APE_PROPERTY_TYPE_FLOAT:
 				typeName = "ApeFloatProperty";
@@ -1484,9 +1486,12 @@ void ape_editor_validate_properties_( const ApeProperty *properties, const unsig
 
 		if ( strcmp( typeName, properties[ i ].typeName ) != 0 )
 		{
-			ape_console_error_( true, "Encountered invalid property, \"%s\" (%s != %s)!\n", properties[ i ].internalName, typeName, properties[ i ].typeName );
+			ape_console_warning_( "Encountered invalid property, \"%s\" (%s != %s)!\n", properties[ i ].internalName, typeName, properties[ i ].typeName );
+			valid = false;
 		}
 	}
+
+	return valid;
 }
 
 #endif

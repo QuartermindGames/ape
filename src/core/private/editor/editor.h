@@ -45,11 +45,18 @@ QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-// this feature is only available in debug builds for performance reasons
 #if !defined( NDEBUG )
-void ape_editor_validate_properties_( const ApeProperty *properties, unsigned int numProperties );
+/**
+ * This iterates over all of the properties and checks if they have a valid type, and typename.
+ * It doesn't work outside of debug builds, for performance sake we exclude the typename crap
+ * there.
+ * @param properties Array of properties.
+ * @param numProperties Number of properties in the array.
+ * @return True if valid, false otherwise (invalid properties are printed to console).
+ */
+bool ape_editor_validate_properties_( const ApeProperty *properties, unsigned int numProperties );
 #else
-#	define ape_editor_validate_properties_( X, Y )
+#	define ape_editor_validate_properties_( X, Y ) true
 #endif
 
 PL_EXTERN_C_END

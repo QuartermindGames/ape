@@ -84,10 +84,10 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 		return;
 	}
 
+	assert( ape_editor_validate_properties_( definition->properties, definition->numProperties ) );
+
 	PlInsertHashTableNode( entityClassLookup, definition->name, strlen( definition->name ), ( void * ) definition );
 	PlPushBackVectorArrayElement( entityClasses, ( void * ) definition );
-
-	ape_editor_validate_properties_( definition->properties, definition->numProperties );
 
 	// call the cache function, so we can load resources into memory
 	if ( definition->cacheFunction != NULL )
@@ -233,6 +233,8 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 	assert( definition->createFunction != nullptr );
 	assert( definition->destroyFunction != nullptr );
 
+	assert( ape_editor_validate_properties_( definition->properties, definition->numProperties ) );
+
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 
 	ape_console_print_( "Registered \"%s\" entity component\n", definition->name );
@@ -281,6 +283,94 @@ void *ape_entity_get_component( ApeEntity *self, const char *name )
 	return component->data;
 }
 
+static void serialize_properties( AcmBranch *root, const ApeProperty *properties, const unsigned int numProperties, const uintptr_t baseOffset )
+{
+	for ( unsigned int i = 0; i < numProperties; ++i )
+	{
+		const ApeProperty *property = &properties[ i ];
+
+		void *ptr = ( char * ) baseOffset + property->offset;
+		switch ( property->type )
+		{
+			default:
+				ape_console_error_( false, "Failed to serialize property type (%u)!\n", property->type );
+				break;
+			case APE_PROPERTY_TYPE_FLOAT:
+				acm_push_f32( root, property->internalName, *( ApeFloatProperty * ) ptr );
+				break;
+			case APE_PROPERTY_TYPE_VEC2:
+				com_acm_push_vector2( root, property->internalName, ptr, true );
+				break;
+			case APE_PROPERTY_TYPE_VEC3:
+				com_acm_push_vector3( root, property->internalName, ptr, true );
+				break;
+			case APE_PROPERTY_TYPE_VEC4:
+				com_acm_push_vector4( root, property->internalName, ptr, true );
+				break;
+			case APE_PROPERTY_TYPE_COLOUR:
+				com_acm_push_colour4f( root, property->internalName, ptr, true );
+				break;
+			case APE_PROPERTY_TYPE_ENUM:
+				acm_push_ui32( root, property->internalName, *( ApeEnumProperty * ) ptr );
+				break;
+			case APE_PROPERTY_TYPE_INTEGER:
+				acm_push_i32( root, property->internalName, *( ApeIntegerProperty * ) ptr );
+				break;
+			case APE_PROPERTY_TYPE_STRING:
+			case APE_PROPERTY_TYPE_PATH:
+				acm_push_string( root, property->internalName, ptr, true );
+				break;
+			case APE_PROPERTY_TYPE_BOOLEAN:
+				acm_push_bool( root, property->internalName, *( ApeBooleanProperty * ) ptr );
+				break;
+		}
+	}
+}
+
+static void deserialize_properties( AcmBranch *root, const ApeProperty *properties, const unsigned int numProperties, const uintptr_t baseOffset )
+{
+	for ( unsigned int i = 0; i < numProperties; ++i )
+	{
+		const ApeProperty *property = &properties[ i ];
+
+		void *ptr = ( char * ) baseOffset + property->offset;
+		switch ( property->type )
+		{
+			default:
+				ape_console_error_( false, "Failed to deserialize property type (%u)!\n", property->type );
+				break;
+			case APE_PROPERTY_TYPE_FLOAT:
+				*( ApeFloatProperty * ) ptr = acm_get_f32( root, property->internalName, *( float * ) ptr );
+				break;
+			case APE_PROPERTY_TYPE_VEC2:
+				*( ApeVec2Property * ) ptr = com_acm_get_vector2( root, property->internalName, ptr );
+				break;
+			case APE_PROPERTY_TYPE_VEC3:
+				*( ApeVec3Property * ) ptr = com_acm_get_vector3( root, property->internalName, ptr );
+				break;
+			case APE_PROPERTY_TYPE_VEC4:
+				*( ApeVec4Property * ) ptr = com_acm_get_vector4( root, property->internalName, ptr );
+				break;
+			case APE_PROPERTY_TYPE_COLOUR:
+				*( ApeColour4fProperty * ) ptr = com_acm_get_colour_f32( root, property->internalName, ptr );
+				break;
+			case APE_PROPERTY_TYPE_ENUM:
+				*( ApeEnumProperty * ) ptr = acm_get_uint( root, property->internalName, *( ApeEnumProperty * ) ptr );
+				break;
+			case APE_PROPERTY_TYPE_INTEGER:
+				*( ApeIntegerProperty * ) ptr = acm_get_int( root, property->internalName, *( ApeIntegerProperty * ) ptr );
+				break;
+			case APE_PROPERTY_TYPE_STRING:
+			case APE_PROPERTY_TYPE_PATH:
+				acm_push_string( root, property->internalName, ptr, true );
+				break;
+			case APE_PROPERTY_TYPE_BOOLEAN:
+				*( ApeBooleanProperty * ) ptr = acm_get_bool( root, property->internalName, *( bool * ) ptr );
+				break;
+		}
+	}
+}
+
 static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 {
 	ApeEntity *entity = self;
@@ -289,50 +379,10 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 	const ApeEntityClassDefinition *classDefinition = entity->classDefinition;
 	assert( classDefinition != nullptr );
 
-	if ( classDefinition->properties != nullptr && classDefinition->numProperties > 0 )
-	{
-		for ( unsigned int i = 0; i < classDefinition->numProperties; ++i )
-		{
-			const ApeProperty *property = &classDefinition->properties[ i ];
+	serialize_properties( root, classDefinition->properties, classDefinition->numProperties, ( intptr_t ) entity->classData );
 
-			void *ptr = ( char * ) entity->classData + property->offset;
-			switch ( property->type )
-			{
-				default:
-					ape_console_error_( false, "Failed to serialize property type (%u)!\n", property->type );
-					break;
-				case APE_PROPERTY_TYPE_FLOAT:
-					acm_push_f32( root, property->internalName, *( ApeFloatProperty * ) ptr );
-					break;
-				case APE_PROPERTY_TYPE_VEC2:
-					com_acm_push_vector2( root, property->internalName, ptr, true );
-					break;
-				case APE_PROPERTY_TYPE_VEC3:
-					com_acm_push_vector3( root, property->internalName, ptr, true );
-					break;
-				case APE_PROPERTY_TYPE_VEC4:
-					com_acm_push_vector4( root, property->internalName, ptr, true );
-					break;
-				case APE_PROPERTY_TYPE_COLOUR:
-					com_acm_push_colour4f( root, property->internalName, ptr, true );
-					break;
-				case APE_PROPERTY_TYPE_ENUM:
-					acm_push_ui32( root, property->internalName, *( ApeEnumProperty * ) ptr );
-					break;
-				case APE_PROPERTY_TYPE_INTEGER:
-					acm_push_i32( root, property->internalName, *( ApeIntegerProperty * ) ptr );
-					break;
-				case APE_PROPERTY_TYPE_STRING:
-				case APE_PROPERTY_TYPE_PATH:
-					acm_push_string( root, property->internalName, ptr, true );
-					break;
-				case APE_PROPERTY_TYPE_BOOLEAN:
-					acm_push_bool( root, property->internalName, *( ApeBooleanProperty * ) ptr );
-					break;
-			}
-		}
-	}
-
+	// call this after to allow for any special logic we might want to envoke,
+	// for instance there might be some versioning handling or other nonsense
 	if ( classDefinition->serializeFunction != nullptr )
 	{
 		classDefinition->serializeFunction( entity, root );
@@ -349,6 +399,11 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 
 			AcmBranch *componentBranch = acm_push_object( branch, componentDefinition->name );
 			acm_push_string( componentBranch, "name", componentDefinition->name, false );
+
+			serialize_properties( componentBranch, componentDefinition->properties, componentDefinition->numProperties, ( intptr_t ) component->data );
+
+			// call this after to allow for any special logic we might want to envoke,
+			// for instance there might be some versioning handling or other nonsense
 			if ( componentDefinition->serializeFunction != nullptr )
 			{
 				componentDefinition->serializeFunction( component->data, componentBranch );
@@ -376,6 +431,11 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 	}
 
 	ApeEntity *entity = ape_entity_create( parent, className, "", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	if ( entity == nullptr )
+	{
+		ape_console_warning_( "Failed to deserialize entity: entity create failed!\n" );
+		return nullptr;
+	}
 
 	// for deserialization, it's going to be wiser to do this before we start
 	// deserializing the class as it'll probably want to look these up!
@@ -399,57 +459,22 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 			}
 
 			void *component = ape_entity_add_component( entity, name );
-			if ( componentDefinition->deserializeFunction != nullptr && componentDefinition->deserializeFunction( component, i ) == nullptr )
+
+			deserialize_properties( i, componentDefinition->properties, componentDefinition->numProperties, ( uintptr_t ) component );
+
+			// call this after to allow for any special logic we might want to envoke,
+			// for instance there might be some versioning handling or other nonsense
+			if ( componentDefinition->deserializeFunction != nullptr )
 			{
-				ape_console_warning_( "Failed to deserialize entity component (%s)!\n", name );
+				componentDefinition->deserializeFunction( component, i );
 			}
 		}
 	}
 
-	if ( classDefinition->properties != nullptr && classDefinition->numProperties > 0 )
-	{
-		for ( unsigned int i = 0; i < classDefinition->numProperties; ++i )
-		{
-			const ApeProperty *property = &classDefinition->properties[ i ];
+	deserialize_properties( root, classDefinition->properties, classDefinition->numProperties, ( uintptr_t ) entity->classData );
 
-			void *ptr = ( char * ) entity->classData + property->offset;
-			switch ( property->type )
-			{
-				default:
-					ape_console_error_( false, "Failed to deserialize property type (%u)!\n", property->type );
-					break;
-				case APE_PROPERTY_TYPE_FLOAT:
-					*( ApeFloatProperty * ) ptr = acm_get_f32( root, property->internalName, *( float * ) ptr );
-					break;
-				case APE_PROPERTY_TYPE_VEC2:
-					*( ApeVec2Property * ) ptr = com_acm_get_vector2( root, property->internalName, ptr );
-					break;
-				case APE_PROPERTY_TYPE_VEC3:
-					*( ApeVec3Property * ) ptr = com_acm_get_vector3( root, property->internalName, ptr );
-					break;
-				case APE_PROPERTY_TYPE_VEC4:
-					*( ApeVec4Property * ) ptr = com_acm_get_vector4( root, property->internalName, ptr );
-					break;
-				case APE_PROPERTY_TYPE_COLOUR:
-					*( ApeColour4fProperty * ) ptr = com_acm_get_colour_f32( root, property->internalName, ptr );
-					break;
-				case APE_PROPERTY_TYPE_ENUM:
-					*( ApeEnumProperty * ) ptr = acm_get_uint( root, property->internalName, *( ApeEnumProperty * ) ptr );
-					break;
-				case APE_PROPERTY_TYPE_INTEGER:
-					*( ApeIntegerProperty * ) ptr = acm_get_int( root, property->internalName, *( ApeIntegerProperty * ) ptr );
-					break;
-				case APE_PROPERTY_TYPE_STRING:
-				case APE_PROPERTY_TYPE_PATH:
-					acm_push_string( root, property->internalName, ptr, true );
-					break;
-				case APE_PROPERTY_TYPE_BOOLEAN:
-					*( ApeBooleanProperty * ) ptr = acm_get_bool( root, property->internalName, *( bool * ) ptr );
-					break;
-			}
-		}
-	}
-
+	// call this after to allow for any special logic we might want to envoke,
+	// for instance there might be some versioning handling or other nonsense
 	if ( classDefinition->deserializeFunction != nullptr )
 	{
 		classDefinition->deserializeFunction( entity, root );
