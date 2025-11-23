@@ -86,10 +86,10 @@ typedef struct ApeWorldNodeClass
 	ApeWorldNodeClassNetSerializeFunction   netSerializeFunction;
 	ApeWorldNodeClassNetDeserializeFunction netDeserializeFunction;
 
-#if !defined( APE_NO_EDITOR )
 	const ApeProperty *properties;
-	unsigned int             numProperties;
+	unsigned int       numProperties;
 
+#if !defined( APE_NO_EDITOR )
 	const char *editorIcon;
 
 	/**
@@ -520,11 +520,11 @@ typedef struct ComCollisionCapsule ComCollisionCapsule;
 
 typedef enum ApeCollisionType
 {
-	APE_COLLISION_TYPE_NONE,
-	APE_COLLISION_TYPE_AABB,
-	APE_COLLISION_TYPE_SPHERE,
-	APE_COLLISION_TYPE_CAPSULE,
-	APE_COLLISION_TYPE_PLANE,
+	APE_COLLISION_TYPE_NONE    = 0,
+	APE_COLLISION_TYPE_AABB    = 1,
+	APE_COLLISION_TYPE_SPHERE  = 2,
+	APE_COLLISION_TYPE_CAPSULE = 3,
+	APE_COLLISION_TYPE_PLANE   = 4,
 } ApeCollisionType;
 
 typedef enum ApeCollisionGroup
