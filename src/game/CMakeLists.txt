@@ -1,5 +1,4 @@
 set(GAME_SHARED_FILES
-        private/physics/physics_rope.c
         private/game.c
         private/game_client.c
         private/game_client_actions.c
@@ -9,8 +8,6 @@ set(GAME_SHARED_FILES
         private/game_server.c
         private/game_team.c
         private/game_test.c
-
-        #############################################
 
         private/ai/ai_brain.c
 
@@ -39,6 +36,10 @@ set(GAME_SHARED_FILES
         private/menu/menu_compass.c
         private/menu/menu_pie.c
         private/menu/menu_splash.c
+
+        private/physics/physics_rope.c
+
+        private/rpg/rpg_component.c
 )
 
 include_directories(public/)

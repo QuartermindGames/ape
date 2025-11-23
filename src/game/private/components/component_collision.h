@@ -14,8 +14,8 @@ typedef enum GameCollisionGroup : uint8_t
 
 typedef struct GameCollisionComponent
 {
-	GameCollisionGroup groups;
-	ApeCollisionType   type;
+	ApeIntegerProperty groups;
+	ApeEnumProperty    type;
 
 	union
 	{
