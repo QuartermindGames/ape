@@ -218,12 +218,6 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 			}
 		}
 	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		build_brush_display_list( child, material, light, camera, visibleRoom, offset, stage );
-	}
 }
 
 static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
@@ -254,6 +248,8 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 
 	if ( worldNode->mesh != nullptr )
 	{
+		PlgPushDebugGroupMarker( "Node Mesh Draw" );
+
 		//TODO: this is operating off a universal list, should only operate on *world* materials!!!
 		PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
 		assert( materialList != nullptr );
@@ -275,6 +271,12 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 			unsigned int offset = 0;
 			build_brush_display_list( worldNode, material, light, camera, visibleRoom, &offset, flags );
 
+			ApeWorldNode *child;
+			COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
+			{
+				build_brush_display_list( child, material, light, camera, visibleRoom, &offset, flags );
+			}
+
 			COM_PROFILE_END( "build_brush_display_list" );
 
 			if ( numSubMeshes[ 0 ] == 0 )
@@ -291,6 +293,8 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 
 			mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 		}
+
+		PlgPopDebugGroupMarker();
 	}
 
 	PlPopMatrix();
@@ -584,7 +588,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
 		ape_rendererState_.overrideDepthMask = true;
-		ape_rendererState_.depthMask = false;
+		ape_rendererState_.depthMask         = false;
 
 		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
@@ -605,7 +609,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 		}
 
 		ape_rendererState_.overrideDepthMask = false;
-		ape_rendererState_.depthMask = true;
+		ape_rendererState_.depthMask         = true;
 	}
 
 	PlgPopDebugGroupMarker();
@@ -690,7 +694,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 		PlgPushDebugGroupMarker( "Shaded" );
 
 		ape_rendererState_.overrideDepthMask = true;
-		ape_rendererState_.depthMask = false;
+		ape_rendererState_.depthMask         = false;
 
 		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
@@ -722,7 +726,7 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 		}
 
 		ape_rendererState_.overrideDepthMask = false;
-		ape_rendererState_.depthMask = depth;
+		ape_rendererState_.depthMask         = depth;
 
 		PlgPopDebugGroupMarker();
 	}
@@ -904,7 +908,7 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	PlgColourMask( false, false, false, false );
 
 	ape_rendererState_.overrideDepthMask = true;
-	ape_rendererState_.depthMask = true;
+	ape_rendererState_.depthMask         = true;
 
 	draw_portal_face( portal, true );
 
