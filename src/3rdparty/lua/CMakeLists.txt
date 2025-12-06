@@ -36,4 +36,8 @@ add_library(lua STATIC
 )
 
 target_include_directories(lua PUBLIC include)
-target_compile_definitions(lua PRIVATE LUA_USE_LINUX)
+if(NOT WIN32)
+    set(LUA_COMPILE_DEFINITIONS LUA_USE_LINUX)
+endif()
+
+target_compile_definitions(lua PRIVATE ${LUA_COMPILE_DEFINITIONS})
