@@ -252,12 +252,14 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 		return;
 	}
 
+	//TODO: replace the below with ape_brush_smooth_faces!!
+
 	ApeBrushFace *face;
 	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
 	{
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
-			face->vertices[ j ].normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
+			face->vertices[ j ].normal = ( QmMathVector3f ) {};
 		}
 	}
 
@@ -293,7 +295,7 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 				}
 			}
 
-			QmMathVector3f normal = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
+			QmMathVector3f normal = {};
 			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
 			{
 				const ApeBrushFace *adjFace = adjacentFaces[ k ];

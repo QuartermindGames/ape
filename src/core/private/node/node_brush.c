@@ -352,6 +352,8 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 		face->vertices[ face->edgeLoopOrder[ i ] ].textureCoords.x = ( -coord.x - face->materialOffset.x ) / ( width * face->materialScale.x );
 		face->vertices[ face->edgeLoopOrder[ i ] ].textureCoords.y = ( coord.y - face->materialOffset.y ) / ( height * face->materialScale.y );
 	}
+
+	compute_brush_face_tangents( face );
 }
 
 void ape_brush_face_fit_material( ApeBrushFace *self )
@@ -727,7 +729,6 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const QmMathVector3f *vertic
 		ape_brush_face_compute_normal( &self->faces[ i ] );
 		ape_brush_face_compute_bounds( &self->faces[ i ] );
 		compute_brush_face_texture_coordinates( &self->faces[ i ], false );
-		compute_brush_face_tangents( &self->faces[ i ] );
 	}
 
 	ape_brush_compute_bounds( self );
@@ -862,6 +863,77 @@ void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, const unsigned
 
 	ape_brush_compute_bounds( self );
 	ape_brush_mark_parent_dirty( self );
+}
+
+void ape_brush_smooth_faces( const QmOsLinkedList *faces )
+{
+	ApeBrushFace *face;
+
+	// clear all the normals
+	QM_OS_LINKED_LIST_ITERATE( face, faces, i )
+	{
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			face->vertices[ j ].normal = ( QmMathVector3f ) {};
+		}
+
+		// and mark the parent dirty so we regen the meshes
+		ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( face->parent ) );
+		assert( parent != nullptr );
+		ape_world_node_mark_dirty_( parent );
+	}
+
+	QM_OS_LINKED_LIST_ITERATE( face, faces, i )
+	{
+		ApeBrush *brush = face->parent;
+		assert( brush != nullptr );
+
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			unsigned int  numAdjacentFaces = 0;
+			ApeBrushFace *adjacentFaces[ APE_BRUSH_MAX_FACE_VERTICES ];
+			ApeBrushFace *adjacentFace;
+			QM_OS_LINKED_LIST_ITERATE( adjacentFace, faces, k )
+			{
+				for ( unsigned int l = 0; l < adjacentFace->numVertices; ++l )
+				{
+					if ( com_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ], &brush->vertices[ adjacentFace->vertices[ l ].posIndex ] ) )
+					{
+						adjacentFaces[ numAdjacentFaces++ ] = adjacentFace;
+					}
+
+					if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
+					{
+						break;
+					}
+				}
+
+				if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
+				{
+					ape_console_warning_( "Too many adjacent faces to smooth face!\n" );
+					break;
+				}
+			}
+
+			QmMathVector3f normal = {};
+			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
+			{
+				const ApeBrushFace *adjFace = adjacentFaces[ k ];
+				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
+				{
+					const QmMathVector3f *a = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l ] ].posIndex ];
+					const QmMathVector3f *b = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l + 1 ] ].posIndex ];
+					const QmMathVector3f *c = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ ( l + 2 ) % adjFace->numVertices ] ].posIndex ];
+
+					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
+
+					normal = qm_math_vector3f_add( normal, n );
+				}
+			}
+
+			face->vertices[ j ].normal = qm_math_vector3f_normalize( normal );
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1003,6 +1075,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
 
 			compute_brush_face_tangents( &self->faces[ i ] );
+
 			ape_brush_compute_bounds( self );
 		}
 	}

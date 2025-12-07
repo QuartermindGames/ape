@@ -486,6 +486,11 @@ PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode 
 	return bounds;
 }
 
+PLCollisionAABB ape_world_node_get_local_bounds( const ApeWorldNode *self )
+{
+	return self->localBounds;
+}
+
 PLCollisionAABB ape_world_node_get_bounds( const ApeWorldNode *self )
 {
 	return self->bounds;
