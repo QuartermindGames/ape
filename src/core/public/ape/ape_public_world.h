@@ -5,12 +5,15 @@
 #include <plcore/pl.h>
 #include <plcore/pl_physics.h>
 
+//TODO: ?????
 #include "ape_public_audio.h"
 
 PL_EXTERN_C
 
 typedef struct PLVectorArray PLVectorArray;
 typedef struct PLLinkedList  PLLinkedList;
+
+typedef struct QmOsLinkedList QmOsLinkedList;
 
 typedef struct AcmBranch AcmBranch;
 
@@ -231,6 +234,7 @@ const char *ape_world_node_get_name( const ApeWorldNode *self );
 void ape_world_node_set_name( ApeWorldNode *self, const char *name );
 
 PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode *self );
+PLCollisionAABB ape_world_node_get_local_bounds( const ApeWorldNode *self );
 PLCollisionAABB ape_world_node_get_bounds( const ApeWorldNode *self );
 
 /**
@@ -415,6 +419,13 @@ void ape_brush_compute_face_normals( ApeBrush *self );
 void ape_brush_mark_parent_dirty( ApeBrush *self );
 
 void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, unsigned int numBrushes );
+
+/**
+ * Iterates over all the faces in the given list,
+ * and ensures smooth normals across them all.
+ * @param faces Linked list of faces to smooth.
+ */
+void ape_brush_smooth_faces( const QmOsLinkedList *faces );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

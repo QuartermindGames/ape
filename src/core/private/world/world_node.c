@@ -486,6 +486,11 @@ PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode 
 	return bounds;
 }
 
+PLCollisionAABB ape_world_node_get_local_bounds( const ApeWorldNode *self )
+{
+	return self->localBounds;
+}
+
 PLCollisionAABB ape_world_node_get_bounds( const ApeWorldNode *self )
 {
 	return self->bounds;
@@ -764,6 +769,11 @@ PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self )
 	return self->mesh;
 }
 
+/**
+ * Fetches the total number of vertices for the tree, from the node.
+ * @param node World node instance.
+ * @return Total number of vertices for the tree.
+ */
 static unsigned int get_total_verts_for_tree( ApeWorldNode *node )
 {
 	unsigned int numVertices = 0;
@@ -782,6 +792,35 @@ static unsigned int get_total_verts_for_tree( ApeWorldNode *node )
 	return numVertices;
 }
 
+/**
+ * Fetches the total number of vertices for just this level of the tree.
+ * @param node World node instance.
+ * @return Total number of vertices for just this level of the tree.
+ */
+static unsigned int get_total_verts_for_layer( ApeWorldNode *node )
+{
+	unsigned int numVertices = 0;
+	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		const ApeBrush *brush = ( ApeBrush * ) node;
+		numVertices           = brush->numVertices;
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		if ( child->type != APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			continue;
+		}
+
+		const ApeBrush *brush = ( ApeBrush * ) child;
+		numVertices += brush->numVertices;
+	}
+
+	return numVertices;
+}
+
 void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 {
 	if ( !self->isMeshDirty )
@@ -789,7 +828,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 		return;
 	}
 
-	unsigned int numVertices = get_total_verts_for_tree( self );
+	unsigned int numVertices = get_total_verts_for_layer( self );
 	if ( numVertices == 0 )
 	{
 		PlgDestroyMesh( self->mesh );
