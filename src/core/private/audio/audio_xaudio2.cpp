@@ -26,11 +26,11 @@ typedef struct VoiceWrapper
 	IXAudio2SourceVoice *voice;
 	bool                 autoCleanup;
 } VoiceWrapper;
-PLLinkedList *voicesList;
+QmOsLinkedList *voicesList;
 
 static bool Audio_XAudio2_Initialize()
 {
-	PRINT( "Attempting to initialize XAudio2 driver...\n" );
+	ape_console_print_( "Attempting to initialize XAudio2 driver...\n" );
 
 	HRESULT result = CoInitializeEx( nullptr, COINIT_MULTITHREADED );
 	if ( result != S_OK && result != S_FALSE && result != RPC_E_CHANGED_MODE )
@@ -60,13 +60,13 @@ static bool Audio_XAudio2_Initialize()
 
 	XAUDIO2_VOICE_DETAILS voiceDetails;
 	audioMasteringVoice->GetVoiceDetails( &voiceDetails );
-	PRINT( "Channels:    %u\n", voiceDetails.InputChannels );
-	PRINT( "Sample Rate: %u\n", voiceDetails.InputSampleRate );
+	ape_console_print_( "Channels:    %u\n", voiceDetails.InputChannels );
+	ape_console_print_( "Sample Rate: %u\n", voiceDetails.InputSampleRate );
 
 	DWORD channelMask;
 	audioMasteringVoice->GetChannelMask( &channelMask );
 
-	voicesList = PlCreateLinkedList();
+	voicesList = qm_os_linked_list_create();
 
 #	if defined( ENABLE_3D_AUDIO )
 	// now we're going to try initializing X3DAudio
@@ -80,14 +80,14 @@ static bool Audio_XAudio2_Initialize()
 	}
 #	endif
 
-	PRINT( "XAudio2 driver initialized successfully!\n" );
+	ape_console_print_( "XAudio2 driver initialized successfully!\n" );
 
 	return true;
 }
 
 static void Audio_XAudio2_Shutdown()
 {
-	PlDestroyLinkedList( voicesList );
+	qm_os_memory_free( voicesList );
 
 	if ( audioMasteringVoice != nullptr )
 	{

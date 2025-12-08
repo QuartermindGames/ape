@@ -714,13 +714,15 @@ void ape_draw_debug_string( const float x, const float y, const float z, const Q
 {
 	va_list args;
 	va_start( args, string );
-	char *buf;
-	vasprintf( &buf, string, args );
+
+	const int l   = pl_vscprintf( string, args ) + 1;
+	char     *buf = QM_OS_MEMORY_NEW_( char, l );
+	vsnprintf( buf, l, string, args );
 	va_end( args );
 
 	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_TINY );
 
 	gui_font_draw_string( font, x, y, nullptr, nullptr, 1.0f, colour, buf, strlen( buf ), false );
 
-	free( buf );
+	qm_os_memory_free( buf );
 }
