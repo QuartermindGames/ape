@@ -685,7 +685,27 @@ int launcher_initialize( int argc, char **argv )
 
 		if ( updateProfiler )
 		{
-			com_profiler_update_samples();
+			//TODO: ditch this once console interface is in aux?
+			static bool               checkFail;
+			static PLConsoleVariable *profilerFrequency;
+			static unsigned int       freq = 32;
+			if ( profilerFrequency == nullptr && !checkFail )
+			{
+				profilerFrequency = PlGetConsoleVariable( "debug/profilerFrequency" );
+				if ( profilerFrequency == nullptr )
+				{
+					// if this fails, never check again
+					checkFail = true;
+				}
+			}
+
+			if ( profilerFrequency != nullptr )
+			{
+				const char *c = PlGetConsoleVariableValue( "debug/profilerFrequency" );
+				freq          = strtol( c, nullptr, 10 );
+			}
+
+			com_profiler_update_samples( freq );
 			updateProfiler = false;
 		}
 	}

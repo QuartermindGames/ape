@@ -7,16 +7,15 @@
 
 #include "common_private.h"
 
-#define NUM_SAMPLES 32
+#define MAX_SAMPLES 32
 
 typedef struct ComProfilingGroup
 {
 	const char *key;
 
-	double        startTime;
-	double        timeTaken, lastTimeTaken;
-	double        results[ NUM_SAMPLES ];
-	unsigned char resultsPos;
+	double startTime;
+	double timeTaken, lastTimeTaken;
+	double results[ MAX_SAMPLES ];
 
 	PLHashTableNode *node;
 } ComProfilingGroup;
@@ -128,18 +127,23 @@ ComProfilingGroup *com_profiler_get_next_group( const ComProfilingGroup *group )
 double com_profiler_get_time_average( const ComProfilingGroup *group )
 {
 	double samples = 0.0;
-	for ( unsigned int i = 0; i < NUM_SAMPLES; ++i )
+	for ( unsigned int i = 0; i < MAX_SAMPLES; ++i )
 	{
 		samples += group->results[ i ];
 	}
 
-	return samples / NUM_SAMPLES;
+	return samples / MAX_SAMPLES;
 }
 
 const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned int *numPoints )
 {
-	*numPoints = NUM_SAMPLES;
+	*numPoints = MAX_SAMPLES;
 	return group->results;
+}
+
+double com_profiler_get_time( const ComProfilingGroup *group )
+{
+	return group->timeTaken;
 }
 
 unsigned int com_profiler_get_num_groups( void )
@@ -152,14 +156,18 @@ unsigned int com_profiler_get_num_groups( void )
 	return PlGetNumHashTableNodes( profilingGroups );
 }
 
-void com_profiler_update_samples( void )
+void com_profiler_update_samples( const unsigned int freq )
 {
 	if ( profilingGroups == nullptr )
 	{
 		return;
 	}
 
+#if 0
 	PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
+#else
+
+#endif
 	static uint16_t nextRefresh = 0;
 
 	ComProfilingGroup *group = com_profiler_get_first_group();
@@ -170,12 +178,12 @@ void com_profiler_update_samples( void )
 		if ( nextRefresh == 0 )
 		{
 			// Shuffle the list along
-			for ( unsigned int i = 0; i < NUM_SAMPLES - 1; ++i )
+			for ( unsigned int i = 0; i < MAX_SAMPLES - 1; ++i )
 			{
 				group->results[ i ] = group->results[ i + 1 ];
 			}
 
-			group->results[ NUM_SAMPLES - 1 ] = group->timeTaken;
+			group->results[ MAX_SAMPLES - 1 ] = group->timeTaken;
 		}
 
 		group->timeTaken = 0.0;
@@ -185,7 +193,7 @@ void com_profiler_update_samples( void )
 
 	if ( nextRefresh == 0 )
 	{
-		nextRefresh = ( profilerFrequency != nullptr ? profilerFrequency->i_value : 32 );
+		nextRefresh = freq;
 		return;
 	}
 

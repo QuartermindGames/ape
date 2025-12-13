@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "common.h"
+#include "../common.h"
 
 typedef struct ComMathRectI32
 {
@@ -11,9 +11,9 @@ typedef struct ComMathRectI32
 
 static inline bool com_math_vector_check_epsilon( const QmMathVector3f *va, const QmMathVector3f *vb )
 {
-	return fabsf( va->x - vb->x ) <= PL_EPSILON &&
-	       fabsf( va->y - vb->y ) <= PL_EPSILON &&
-	       fabsf( va->z - vb->z ) <= PL_EPSILON;
+	return fabsf( va->x - vb->x ) <= QM_MATH_EPSILON &&
+	       fabsf( va->y - vb->y ) <= QM_MATH_EPSILON &&
+	       fabsf( va->z - vb->z ) <= QM_MATH_EPSILON;
 }
 
 static inline QmMathVector3f *com_math_normalize_angles( const QmMathVector3f *a, QmMathVector3f *b )

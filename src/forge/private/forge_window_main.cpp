@@ -108,14 +108,27 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 	{
 		ape_tick_frame();
 
-		static unsigned int refreshTime = 0;
-		if ( refreshTime <= ape_get_num_ticks() )
+		//TODO: ditch this once console interface is in aux?
+		static bool               checkFail;
+		static PLConsoleVariable *profilerFrequency;
+		static unsigned int       freq = 32;
+		if ( profilerFrequency == nullptr && !checkFail )
 		{
-			com_profiler_update_samples();
-
-			PL_GET_CVAR( "debug/profilerFrequency", profilerFrequency );
-			refreshTime += ( profilerFrequency != nullptr ) ? profilerFrequency->i_value : 16;
+			profilerFrequency = PlGetConsoleVariable( "debug/profilerFrequency" );
+			if ( profilerFrequency == nullptr )
+			{
+				// if this fails, never check again
+				checkFail = true;
+			}
 		}
+
+		if ( profilerFrequency != nullptr )
+		{
+			const char *c = PlGetConsoleVariableValue( "debug/profilerFrequency" );
+			freq          = strtol( c, nullptr, 10 );
+		}
+
+		com_profiler_update_samples( freq );
 	}
 
 	EditorTab *tab = dynamic_cast< EditorTab * >( get_active_tab() );

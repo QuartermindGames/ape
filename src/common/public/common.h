@@ -2,6 +2,12 @@
 
 #pragma once
 
+#include "plcore/pl.h"
+
+#include "qmmath/public/qm_math.h"
+#include "qmmath/public/qm_math_vector.h"
+#include "qmmath/public/qm_math_colour.h"
+
 #define COM_COPYRIGHT "Copyright © 2020-2025 Quartermind Games, Mark E Sowden"
 
 #if !defined( _POSIX_SOURCE )
@@ -150,6 +156,14 @@ double        com_profiler_get_time_average( const ComProfilingGroup *group );
 const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned int *numPoints );
 
 /**
+ * Returns the time taken from start to end.
+ *
+ * @param group Group to query.
+ * @return		Time in ms.
+ */
+double com_profiler_get_time( const ComProfilingGroup *group );
+
+/**
  * @brief Returns the number of existing profiling groups.
  *
  * This function calculates and returns the total number of profiling groups currently available.
@@ -169,7 +183,7 @@ unsigned int com_profiler_get_num_groups( void );
  * of time taken for profiling analyses.
  * The function performs no operation if no profiling groups are initialized.
  */
-void com_profiler_update_samples( void );
+void com_profiler_update_samples( unsigned int freq );
 
 #define COM_ENABLE_PROFILER
 
