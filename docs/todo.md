@@ -14,7 +14,7 @@ System can also be expanded to support height-maps once introduced.
 - **forge/core**: autosave current world on error
 - **forge**: implement a new tab type with close button, so we can easily close editors
 - **forge**: make the console correctly hide/show, and resize with a window
-- Initial Lua mock-up
+- ~~Initial Lua mock-up~~
 - ~~Mirrors—correctly traverse from room to build a visible list of rooms w/ transforms~~
   - Recursion for portals/mirrors isn't working right
 - Prototype 'eyes' for QM2 & QM1
