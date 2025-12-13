@@ -1345,8 +1345,8 @@ void ape_tick_materials_( double delta )
 		{
 			for ( unsigned int j = 0; j < material->numPasses; ++j )
 			{
-				if ( fabsf( material->passes[ j ].textureScroll.x ) < PL_EPSILON &&
-				     fabsf( material->passes[ j ].textureScroll.y ) < PL_EPSILON )
+				if ( fabsf( material->passes[ j ].textureScroll.x ) < QM_MATH_EPSILON &&
+				     fabsf( material->passes[ j ].textureScroll.y ) < QM_MATH_EPSILON )
 				{
 					continue;
 				}

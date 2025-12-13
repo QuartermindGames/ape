@@ -402,7 +402,7 @@ static void terrain_deserialize( ApeEntity *self, [[maybe_unused]] AcmBranch *ro
 	build_terrain( self, terrain );
 }
 
-ApeProperty properties[] = {
+static ApeProperty properties[] = {
         APE_PROPERTY_BASIC( "Num Chunks", "Number of chunks per row and col.", GameTerrainEntity, numChunks, INTEGER ),
         APE_PROPERTY_BASIC( "Num Tiles", "Number of tiles per row and col.", GameTerrainEntity, numTiles, INTEGER ),
         APE_PROPERTY_BASIC( "Tile Size", "Size of each tile, width and height.", GameTerrainEntity, tileSize, FLOAT ),

@@ -124,3 +124,17 @@ target_link_libraries(ape-core
         OpenAL
         lua
 )
+
+####################################################################
+# Tests
+####################################################################
+
+add_executable(ape-core_test test/core_test.c)
+target_link_libraries(ape-core_test ape-core)
+
+set_target_properties(ape-core_test PROPERTIES
+        FOLDER "Tests"
+        PREFIX ""
+)
+
+add_test(NAME ape-tests-core COMMAND ape-core_test)
