@@ -38,6 +38,27 @@ QM_TEST_FUNC_END()
 #	include <cairo.h>
 #endif
 
+static int compare_image( const void *a, const void *b )
+{
+	QmMathVector2i *va = ( QmMathVector2i * ) a;
+	QmMathVector2i *vb = ( QmMathVector2i * ) b;
+
+	unsigned int aa = va->x * va->y;
+	unsigned int ab = vb->x * va->y;
+
+	if ( aa < ab )
+	{
+		return 1;
+	}
+
+	if ( aa > ab )
+	{
+		return -1;
+	}
+
+	return 0;
+}
+
 QM_TEST_FUNC( texture_packer )
 {
 	static constexpr unsigned int W = 256;
@@ -55,17 +76,25 @@ QM_TEST_FUNC( texture_packer )
 
 	unsigned int seed = 0;
 
-	// populate it
-	for ( unsigned int i = 0; i < 350; ++i )
-	{
-		unsigned int w = rand() % 8 + 8 + 1;
-		unsigned int h = rand() % 8 + 8 + 1;
+	static constexpr unsigned int NUM_IMAGES = 350;
 
-		AuxTexturePackerNode *child = aux_texture_packer_node_insert( root, w, h );
+	QmMathVector2i images[ NUM_IMAGES ];
+	for ( unsigned int i = 0; i < NUM_IMAGES; ++i )
+	{
+		images[ i ].x = rand() % 8 + 8 + 1 ;
+		images[ i ].y = rand() % 8 + 8 + 1;
+	}
+
+	qsort( images, NUM_IMAGES, sizeof( QmMathVector2i ), compare_image );
+
+	// populate it
+	for ( unsigned int i = 0; i < NUM_IMAGES; ++i )
+	{
+		AuxTexturePackerNode *child = aux_texture_packer_node_insert( root, images[ i ].x, images[ i ].y );
 		QM_TEST_ASSERT( child != nullptr );
 
 		ComMathRectI32 rect = aux_texture_packer_node_get_rect( child );
-		QM_TEST_ASSERT( rect.w == w && rect.h == h );
+		QM_TEST_ASSERT( rect.w == images[ i ].x && rect.h == images[ i ].y );
 
 #ifdef USE_CAIRO
 		double r = qm_os_random_uniform_float( &seed, 0.5f ) + 0.5f;

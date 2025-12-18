@@ -2,13 +2,16 @@
 // Purpose: Lightmapper
 // Author:  Mark E. Sowden
 
-#define LIGHTMAPPER
-#ifdef LIGHTMAPPER
+#include "qmos/public/qm_os_time.h"
 
-#	include "ape_private.h"
+#include "ape_private.h"
 
-#	include "world/world.h"
-#	include "renderer/renderer.h"
+#include "common/public/aux_texture_packer.h"
+
+#include "game/game_public.h"
+
+#include "world/world.h"
+#include "renderer/renderer.h"
 
 /**
  * Some thoughts...
@@ -21,7 +24,12 @@
  *	Should the cook tool be turned into a library?
  */
 
+static constexpr unsigned int LIGHT_MAX_TEXTURE_WIDTH  = 512;
+static constexpr unsigned int LIGHT_MAX_TEXTURE_HEIGHT = 512;
+
 static constexpr char LIGHTMAP_EXTENSION[] = ".lmp";
+
+static AuxTexturePackerNode *lightmapCache;
 
 static void generate_lightmap_( ApeLight *light )
 {
@@ -66,7 +74,7 @@ void ape_editor_light_generate_( ApeRoom *room )
 {
 	ape_console_print_( "Generating lightmap...\n" );
 
-	double startTime = PlGetCurrentSeconds();
+	double startTime = qm_os_time_get_seconds();
 
 	// first, gather all the lights for the given room we need to operate on
 
@@ -88,8 +96,25 @@ void ape_editor_light_generate_( ApeRoom *room )
 	// cleanup
 	PlDestroyLinkedList( lights );
 
-	double endTime = PlGetCurrentSeconds();
+	double endTime = qm_os_time_get_seconds();
 	ape_console_print_( "Lightmap generation took %.3f seconds.\n", endTime - startTime );
 }
 
-#endif
+void ape_light_command_( unsigned int, char ** )
+{
+	ApeEditorInstance *instance = ape_editor_get_active_instance();
+	if ( instance == nullptr || instance->camera == nullptr )
+	{
+		ape_console_warning_( "Unable to generate lightmap, invalid editor instance!\n" );
+		return;
+	}
+
+	ApeRoom *room = ape_camera_get_room( instance->camera );
+	if ( room == nullptr )
+	{
+		ape_console_warning_( "Unable to generate lightmap, no valid camera!\n" );
+		return;
+	}
+
+	ape_editor_light_generate_( room );
+}

@@ -88,7 +88,7 @@ add_executable(SS1 WIN32 ${SS1_SOURCES} ../shells/launcher_sdl2/launcher.c)
 target_link_libraries(SS1 ${GAME_LINK_LIBS})
 target_compile_definitions(SS1 PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(SS1 PRIVATE private)
-set_target_properties(SS1 PROPERTIES FOLDER "Shells")
+set_target_properties(SS1 PROPERTIES FOLDER "Games")
 
 add_executable(SS1Forge WIN32 ${SS1_SOURCES})
 target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})

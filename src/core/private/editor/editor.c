@@ -582,12 +582,14 @@ void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMod
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_grid_toggle_command_( unsigned int, char ** );
+void ape_light_command_( unsigned int, char ** );
 
 void ape_editor_register_console_( void )
 {
 	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
 	PlRegisterConsoleCommand( "editor_save", "Save the current instance.", 1, save_command );
 	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
+	PlRegisterConsoleCommand( "editor_light", "Generate lightmap.", 0, ape_light_command_ );
 
 	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "true", PL_VAR_BOOL, &showIcons, nullptr, true );
 	PlRegisterConsoleVariable( "editor.iconFade", "Fade range for icons displayed in the editor.", "0.25", PL_VAR_F32, &iconFade, nullptr, true );

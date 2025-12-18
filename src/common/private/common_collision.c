@@ -403,6 +403,9 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 	return false;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+
 bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const QmMathVector3f *normal,
                                            const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result )
 {
