@@ -26,9 +26,11 @@ target_link_libraries(ape-common
 # Tests
 ####################################################################
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GLIB glib-2.0)
-pkg_check_modules(CAIRO cairo)
+find_package(PkgConfig)
+if (PKGCONFIG_FOUND)
+        pkg_check_modules(GLIB glib-2.0)
+        pkg_check_modules(CAIRO cairo)
+endif()
 
 add_executable(ape-aux_test test/aux_test.c)
 target_link_libraries(ape-aux_test

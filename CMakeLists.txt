@@ -8,6 +8,16 @@ project(Ape
         LANGUAGES C CXX
 )
 
+# Attempt to figure out which compiler we're using...
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(APE_COMPILER "clang")
+elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(APE_COMPILER "gnu")
+elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(APE_COMPILER "msvc")
+endif()
+message("Compiler detected as ${APE_COMPILER}")
+
 option(APE_BUILD_TOOLS "Build tools" ON)
 if (NOT APE_BUILD_TOOLS)
     add_compile_definitions(-DAPE_NO_EDITOR)
@@ -64,11 +74,14 @@ if (WIN32)
     include_directories(src/3rdparty/sdl2/include/)
 endif ()
 
-if (MSVC)
+if (APE_COMPILER STREQUAL "msvc")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
-else ()
+else (APE_COMPILER STREQUAL "gnu" OR APE_COMPILER STREQUAL "clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-variable -Wno-unused-function -Werror=return-type -Werror=implicit-function-declaration")
+    if( APE_COMPILER STREQUAL "clang")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c2x")
+    endif()
 endif ()
 
 # Get the current working branch
