@@ -229,7 +229,7 @@ static ApeBrush *build_terrain_chunk( ApeEntity *self, GameTerrainEntity *terrai
 				const float  height              = QM_MATH_BTOF( terrain->heightmap[ index ] ) * terrain->heightmapMultiplier;
 				brush->vertices[ vertexIndex ].y = height;
 
-				game_print_( "x: %f y: %f px: %u py: %u height: %f\n", x, y, px, py, height );
+				//game_print_( "x: %f y: %f px: %u py: %u height: %f\n", x, y, px, py, height );
 
 				if ( height > terrain->maxHeight )
 				{
