@@ -27,21 +27,20 @@ Some semblance of documentation can be found [here](docs).
 
 ## Features
 
-- Integration with [Hei Platform Library](https://github.com/OldTimes-Software/hei)
-  - Plugins for supporting additional package and texture formats
+- Integration with our [qmfw](https://github.com/QuartermindGames/hei) library
   - PNG, TGA, JPG, BMP and GIF image support
-  - Abstract graphics interface with support for different graphics APIs via plugins
+  - Abstract graphics interface with support for different graphics APIs
   - GLSL pre-processor with support for directives such as `include`
   - Virtual file-system allowing for directories and packages to be mounted at runtime
 - Console interface, with auto-completion, commands and variables
 - Flexible material system providing support for outlining multiple passes, blend modes and more
 - Custom package format with compression
 - Custom image format called `GFX` with own "block" compression and support for DXTC
-- Simple post-processing pipeline with support for FXAA and bloom
+- Simple post-processing pipeline with support for FXAA, bloom, depth-of-field and more
 - Super-sampling up to 2x display resolution
 - Memory manager with garbage collection and usage tracking
-- Ape Config Markup (ACM) for serialisation/deserialisation; can be stored as either binary or text
-- Editor frontend using [FOX Toolkit](http://www.fox-toolkit.org/)
+- [ACM (Another Config Markup)](https://github.com/QuartermindGames/acm) for serialisation/deserialisation; can be stored as either binary or text
+- Editor frontend, dubbed _Forge_, using [FOX Toolkit](http://www.fox-toolkit.org/)
 
 ## Games
 
@@ -66,7 +65,6 @@ Below is a list of released games that have used this engine.
 Keep in mind that the code is taking advantage of C23 additions. 
 To my knowledge, this currently means you're going to be limited to GCC 13 minimum, at least as of April 2024. 
 You might have some success with Clang. 
-MSVC is completely out of the picture.
 
 I've done this because I'd estimate by the time this code is actually useful to anyone, if ever, C23 support should hopefully be reasonably widespread. 
 If you've received this before that time, apologies!
@@ -79,19 +77,24 @@ cd build
 cmake ../
 ```
 
-### Windows
-
-APE Tech primarily supports 64-bit Windows 11; it has not been tested against other versions of Windows, so your milage might vary if that's the case.
-
-Compilation requires [MSYS2](https://www.msys2.org/) and [MinGW64](https://packages.msys2.org/groups/mingw-w64-x86_64-toolchain). As mentioned, Clang should also work, but I've not tried compiling it with Clang myself.
+Besides the platforms listed below, anything else is currently unsupported.
+Historically, the engine had been successfully built and run on macOS—but that was quite a few years ago. Given Apple's recent actions and lack of support for open standards, such as Vulkan/OpenGL, I've felt less inclined to support it as a target.
 
 ### Linux
 
-The engine primarily supports 64-bit [Ubuntu 24.04 LTS](https://ubuntu.com/download/desktop) and has not been tested against other distributions of Linux, but is expected to work just fine.
+This is the primary target platform.
 
-### macOS
+The engine has been tested against 64-bit [Ubuntu 24.04 LTS](https://ubuntu.com/download/desktop), and while it has not been tested against other distributions, is expected to work just fine.
 
-Historically, the engine had been successfully built and run on macOS—but that was quite a few years ago. Given Apple's recent actions and lack of support for open standards, such as Vulkan/OpenGL, I've felt less inclined to support it as a target.
+### Windows
+
+The engine primarily supports 64-bit Windows 11; it has not been tested against other versions of Windows, so your milage might vary if that's the case.
+Additionally, much of the development is done on Linux, so Windows support often lags behind a bit.
+
+In an ideal scenario, compilation requires just [MSYS2](https://www.msys2.org/) and [MinGW64](https://packages.msys2.org/groups/mingw-w64-x86_64-toolchain).
+
+Alternatively, if you insist on using MSVC, there's a `setup_project_msvc.bat` available.
+This requires CMake, Visual Studio and Clang (installed via Visual Studio).
 
 ## Q&A
 
@@ -105,6 +108,14 @@ So essentially, what you're seeing is the "clean" version.
 I'm afraid I'm not willing to accept contributions.
 I appreciate the notion though!
 But for the same reason as above, this isn't the _current_ version of the engine - as a matter of fact, I'll usually make any copies public a year after a milestone is hit, so what you're seeing is already pretty dated.
+
+### What makes this better than engine _X_?
+
+Nothing!
+It's not trying to be better than anything.
+I've got no expectation it ever will be.
+
+This was developed to suit and fit my needs, nothing more and nothing less.
 
 ### Why did you write it in C?
 
