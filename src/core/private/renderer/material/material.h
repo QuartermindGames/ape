@@ -165,7 +165,7 @@ typedef struct ApeShaderProgram
 	unsigned int flags;
 } ApeShaderProgram;
 
-void ape_hot_reload_shaders_();
+void ape_material_shaders_check_hot_reload_();
 
 ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProgram fallback );
 

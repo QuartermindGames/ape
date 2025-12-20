@@ -1336,7 +1336,7 @@ void ape_tick_materials_( double delta )
 {
 	//TODO 25: handle delta here (how do we handle game speed modifier???)
 
-	ape_hot_reload_shaders_();
+	ape_material_shaders_check_hot_reload_();
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
