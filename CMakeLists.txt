@@ -57,31 +57,47 @@ foreach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${APE_OUTPUT_DIR})
 endforeach (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
 
+####################################################################
+# 3rd party libraries
+
+add_compile_definitions(AL_LIBTYPE_STATIC)
+set(LIBTYPE STATIC)
+
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "")
+set(ALSOFT_UTILS OFF CACHE BOOL "")
+add_subdirectory(src/3rdparty/openal-soft)
+if (WIN32)
+    set_target_properties(alsoft.build_version PROPERTIES FOLDER "3rdParty/OpenAL")
+    set_target_properties(alsoft.common PROPERTIES FOLDER "3rdParty/OpenAL")
+    set_target_properties(alsoft.excommon PROPERTIES FOLDER "3rdParty/OpenAL")
+    set_target_properties(alsoft.fmt PROPERTIES FOLDER "3rdParty/OpenAL")
+endif ()
+set_target_properties(OpenAL PROPERTIES FOLDER "3rdParty/OpenAL")
+
+add_subdirectory(src/3rdparty/fox)
+set_target_properties(FOX-1.6 PROPERTIES FOLDER "3rdParty")
+
+add_subdirectory(src/3rdparty/lua)
+set_target_properties(lua PROPERTIES FOLDER "3rdParty")
+
+####################################################################
+# main projects
+
 if (WIN32)
     if (${APE_SYSTEM_ARCH} MATCHES x86_64)
         if (MINGW)
-            link_directories(src/3rdparty/sdl2/lib/x64_mingw/)
+            link_directories("src/3rdparty/sdl3/lib/x64_mingw/")
         else ()
-            link_directories(src/3rdparty/sdl2/lib/x64/)
+            link_directories("src/3rdparty/sdl3/lib/x64/")
         endif ()
     else ()
         if (MINGW)
-            link_directories(src/3rdparty/sdl2/lib/x86_mingw/)
+            link_directories("src/3rdparty/sdl3/lib/x86_mingw/")
         else ()
-            link_directories(src/3rdparty/sdl2/lib/x86/)
+            link_directories("src/3rdparty/sdl3/lib/x86/")
         endif ()
     endif ()
-    include_directories(src/3rdparty/sdl2/include/)
-endif ()
-
-if (APE_COMPILER STREQUAL "msvc")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
-else (APE_COMPILER STREQUAL "gnu" OR APE_COMPILER STREQUAL "clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-variable -Wno-unused-function -Werror=return-type -Werror=implicit-function-declaration")
-    if( APE_COMPILER STREQUAL "clang")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c2x")
-    endif()
+    include_directories("src/3rdparty/sdl3/include/")
 endif ()
 
 # Get the current working branch
@@ -109,8 +125,17 @@ add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
 add_definitions(-DGIT_COMMIT_COUNT="${GIT_COMMIT_COUNT}")
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
-####################################################################
-# main projects
+if (APE_COMPILER STREQUAL "msvc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W3 -D_CRT_SECURE_NO_WARNINGS")
+elseif (APE_COMPILER STREQUAL "gnu")
+    add_compile_options("-Wall -Wno-unused-variable -Wno-unused-function -Werror=return-type -Werror=implicit-function-declaration")
+elseif (APE_COMPILER STREQUAL "clang")
+    add_compile_options("-Wno-unused-function")
+    if(WIN32)
+        add_compile_definitions("_CRT_SECURE_NO_WARNINGS")
+    endif()
+endif ()
 
 # QMFW libraries
 add_subdirectory(src/kernel/src/qmos)
@@ -139,29 +164,6 @@ if (MSVC)
 elseif (MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
 endif ()
-
-####################################################################
-# 3rd party libraries
-
-add_compile_definitions(AL_LIBTYPE_STATIC)
-set(LIBTYPE STATIC)
-
-set(ALSOFT_EXAMPLES OFF CACHE BOOL "")
-set(ALSOFT_UTILS OFF CACHE BOOL "")
-add_subdirectory(src/3rdparty/openal-soft)
-if (WIN32)
-    set_target_properties(alsoft.build_version PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(alsoft.common PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(alsoft.excommon PROPERTIES FOLDER "3rdParty/OpenAL")
-    set_target_properties(alsoft.fmt PROPERTIES FOLDER "3rdParty/OpenAL")
-endif ()
-set_target_properties(OpenAL PROPERTIES FOLDER "3rdParty/OpenAL")
-
-add_subdirectory(src/3rdparty/fox)
-set_target_properties(FOX-1.6 PROPERTIES FOLDER "3rdParty")
-
-add_subdirectory(src/3rdparty/lua)
-set_target_properties(lua PROPERTIES FOLDER "3rdParty")
 
 ####################################################################
 
