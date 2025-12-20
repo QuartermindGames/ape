@@ -190,10 +190,10 @@ void ape_initialize_textures_( void )
 
 	// generate fallback texture
 	static QmMathColour4ub fallbackData[] = {
-	        {128, 0,   128, 255},
-	        {0,   128, 128, 255},
-	        {0,   128, 128, 255},
-	        {128, 0,   128, 255},
+	        QM_MATH_COLOUR4UB_RGB( 255, 0, 255 ),
+	        QM_MATH_COLOUR4UB_RGB( 0, 0, 0 ),
+	        QM_MATH_COLOUR4UB_RGB( 0, 0, 0 ),
+	        QM_MATH_COLOUR4UB_RGB( 255, 0, 255 ),
 	};
 	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( "fallback", fallbackData, 2, 2, 4, false );
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
