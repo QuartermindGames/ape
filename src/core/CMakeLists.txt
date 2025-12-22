@@ -105,13 +105,9 @@ set_target_properties(ape-core PROPERTIES
         PREFIX ""
 )
 
-if (WIN32)
-    target_link_libraries(ape-core SDL2_dll)
-else ()
-    target_link_libraries(ape-core SDL3)
-endif ()
-
 target_link_libraries(ape-core
+        SDL3
+
         # qmfw libraries
         qm-os
         # platform libraries

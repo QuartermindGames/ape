@@ -1,5 +1,5 @@
 node.utf8
 object config
 {
-    string defaultProject "ss1"
+    string defaultProject "qm1"
 }

@@ -70,13 +70,13 @@ static bool Audio_XAudio2_Initialize()
 
 #	if defined( ENABLE_3D_AUDIO )
 	// now we're going to try initializing X3DAudio
-	PRINT( "Setting up X3DAudio... " );
+	ape_console_print_( "Setting up X3DAudio... " );
 	if ( FAILED( X3DAudioInitialize( SPEAKER_STEREO, X3DAUDIO_SPEED_OF_SOUND, audio3DHandle ) ) )
 		ape_console_warning_( "Failed to initialize 3D audio!\n" );
 	else
 	{
 		audio3DSupported = true;
-		PRINT( "Successfully initialized X3DAudio!\n" );
+		ape_console_print_( "Successfully initialized X3DAudio!\n" );
 	}
 #	endif
 
@@ -104,20 +104,19 @@ static void Audio_XAudio2_Shutdown()
 static void Audio_XAudio2_Tick()
 {
 #	if defined( ENABLE_3D_AUDIO )
-	X3DAUDIO_LISTENER listener;
-	PL_ZERO_( listener );
+	X3DAUDIO_LISTENER listener = {};
 
-	QmMathVector3f v;
-	v                   = Audio_GetListenerPosition();
-	listener.Position.x = v.x;
-	listener.Position.y = v.y;
-	listener.Position.z = v.z;
-	v                   = Audio_GetListenerVelocity();
-	listener.Velocity.x = v.x;
-	listener.Velocity.y = v.y;
-	listener.Velocity.z = v.z;
+	QmMathVector3f pos  = ape_audio_get_listener_position();
+	listener.Position.x = pos.x;
+	listener.Position.y = pos.y;
+	listener.Position.z = pos.z;
 
-	QmMathVector3f angles = Audio_GetListenerAngles();
+	QmMathVector3f vel  = ape_audio_get_listener_velocity();
+	listener.Velocity.x = vel.x;
+	listener.Velocity.y = vel.y;
+	listener.Velocity.z = vel.z;
+
+	QmMathVector3f angles = ape_audio_get_listener_angles();
 
 	//X3DAudioCalculate()
 #	endif
