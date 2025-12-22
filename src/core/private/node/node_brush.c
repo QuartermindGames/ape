@@ -293,11 +293,8 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 	const ApeMaterial *material = face->material;
 	assert( material != nullptr );
 
-	unsigned int width = ape_material_get_width( material );
-	assert( width > 0 );
-
+	unsigned int width  = ape_material_get_width( material );
 	unsigned int height = ape_material_get_height( material );
-	assert( height > 0 );
 
 	ApeBrush *brush = face->parent;
 	assert( brush != nullptr );

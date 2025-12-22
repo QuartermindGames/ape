@@ -1034,6 +1034,9 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 
 static PLHashTable *editorMaterialPreviews;
 
+static constexpr const char PREVIEW_FALLBACK_PATH[] = "materials/editor/no_preview.png";
+static PLImage             *previewFallback;
+
 static PLImage *get_material_preview_image( const char *path )
 {
 	AcmBranch *root = com_acm_load_file( path, "material" );
@@ -1082,10 +1085,23 @@ void ape_editor_flush_material_previews()
 {
 	PlDestroyHashTableEx( editorMaterialPreviews, cleanup_preview );
 	editorMaterialPreviews = nullptr;
+
+	PlDestroyImage( previewFallback );
+	previewFallback = nullptr;
 }
 
 PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height )
 {
+	// lazy init of fallback and previews list, bleh
+	if ( previewFallback == nullptr )
+	{
+		previewFallback = PlLoadImage( PREVIEW_FALLBACK_PATH );
+		if ( previewFallback == nullptr )
+		{
+			ape_console_error_( true, "Failed to load preview fallback (%s): %s\n", PREVIEW_FALLBACK_PATH, PlGetError() );
+		}
+	}
+
 	if ( editorMaterialPreviews == nullptr )
 	{
 		editorMaterialPreviews = PlCreateHashTable();
@@ -1100,7 +1116,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 	if ( PlSetupPath( hashName, false, "%s_%u_%u", path, width, height ) == nullptr )
 	{
 		ape_console_warning_( "Failed to setup hash name for material preview (%s)!\n", path );
-		return nullptr;
+		return previewFallback;
 	}
 	size_t hashNameLength = strlen( hashName );
 
@@ -1142,8 +1158,10 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 	// and now the worst case, it's not yet been cached...
 	if ( ( preview = get_material_preview_image( path ) ) == nullptr )
 	{
-		ape_console_warning_( "Failed to load preview image for material (%s): %s\n", path, PlGetError() );
-		return nullptr;
+		ape_console_warning_( "No preview image for material (%s): %s\n", path, PlGetError() );
+
+		// go ahead and use the fallback instead
+		return previewFallback;
 	}
 
 	if ( preview->width > width || preview->height > height )

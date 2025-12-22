@@ -397,7 +397,7 @@ void ape_register_shader_console_variables_()
 	PlRegisterConsoleCommand( "reload_shaders", "Reload shader programs.", -1, reload_shader_program_command );
 }
 
-void ape_hot_reload_shaders_()
+void ape_material_shaders_check_hot_reload_()
 {
 	if ( !hotReload || hotReloadTicks > ape_get_num_ticks() )
 	{
