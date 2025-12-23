@@ -285,9 +285,9 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 			}
 
 			PLGMesh *mesh        = worldNode->mesh;
-			mesh->numSubMeshes   = numSubMeshes[ 0 ];
-			mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-			mesh->subMeshCounts  = subMeshes[ 0 ];
+			//mesh->numSubMeshes   = numSubMeshes[ 0 ];
+			//mesh->firstSubMeshes = firstSubMeshes[ 0 ];
+			//mesh->subMeshCounts  = subMeshes[ 0 ];
 
 			ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
 

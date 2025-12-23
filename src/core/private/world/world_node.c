@@ -837,7 +837,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 
 	if ( self->mesh == nullptr )
 	{
-		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, numVertices );
+		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, numVertices / 2, numVertices );
 		if ( self->mesh == nullptr )
 		{
 			ape_console_warning_( "Failed to create mesh for node: %s\n", PlGetError() );
@@ -860,6 +860,8 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 		const ApeBrush *brush = ( ApeBrush * ) child;
 		for ( unsigned int j = 0; j < brush->numFaces; ++j )
 		{
+			unsigned int indices[ APE_BRUSH_MAX_FACE_VERTICES ] = {};
+
 			const ApeBrushFace *face = &brush->faces[ j ];
 			for ( unsigned int k = 0; k < face->numVertices; ++k )
 			{
@@ -902,11 +904,16 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 
 #endif
 
-				const unsigned int idx = PlgAddMeshVertex( self->mesh, &brush->vertices[ vertex->posIndex ], &vertex->normal, &colour, &vertex->textureCoords );
+				indices[ k ] = PlgAddMeshVertex( self->mesh, &brush->vertices[ vertex->posIndex ], &vertex->normal, &colour, &vertex->textureCoords );
 
 				// these have to be set seperate for now, need an api for it
-				self->mesh->vertices[ idx ].tangent   = face->tangent;
-				self->mesh->vertices[ idx ].bitangent = face->bitangent;
+				self->mesh->vertices[ indices[ k ] ].tangent   = face->tangent;
+				self->mesh->vertices[ indices[ k ] ].bitangent = face->bitangent;
+			}
+
+			for ( unsigned int k = 1; k < face->numVertices - 1; ++k )
+			{
+				PlgAddMeshTriangle( self->mesh, indices[ 0 ], indices[ k ], indices[ k + 1 ] );
 			}
 		}
 	}
