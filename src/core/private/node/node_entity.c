@@ -362,8 +362,11 @@ static void deserialize_properties( AcmBranch *root, const ApeProperty *properti
 				break;
 			case APE_PROPERTY_TYPE_STRING:
 			case APE_PROPERTY_TYPE_PATH:
-				acm_push_string( root, property->internalName, ptr, true );
+			{
+				const char *str = acm_get_string( root, property->internalName, ptr );
+				snprintf( ptr, property->stringType.maxSize, "%s", str );
 				break;
+			}
 			case APE_PROPERTY_TYPE_BOOLEAN:
 				*( ApeBooleanProperty * ) ptr = acm_get_bool( root, property->internalName, *( bool * ) ptr );
 				break;

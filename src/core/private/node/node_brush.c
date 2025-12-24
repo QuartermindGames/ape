@@ -892,15 +892,15 @@ void ape_brush_smooth_faces( const QmOsLinkedList *faces )
 			ApeBrushFace *adjacentFace;
 			QM_OS_LINKED_LIST_ITERATE( adjacentFace, faces, k )
 			{
+				ApeBrush *adjacentBrush = adjacentFace->parent;
+				assert( adjacentBrush != nullptr );
+
 				for ( unsigned int l = 0; l < adjacentFace->numVertices; ++l )
 				{
-					if ( com_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ], &brush->vertices[ adjacentFace->vertices[ l ].posIndex ] ) )
+					if ( com_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ],
+					                                    &adjacentBrush->vertices[ adjacentFace->vertices[ l ].posIndex ] ) )
 					{
 						adjacentFaces[ numAdjacentFaces++ ] = adjacentFace;
-					}
-
-					if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
-					{
 						break;
 					}
 				}
@@ -915,12 +915,15 @@ void ape_brush_smooth_faces( const QmOsLinkedList *faces )
 			QmMathVector3f normal = {};
 			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
 			{
-				const ApeBrushFace *adjFace = adjacentFaces[ k ];
+				const ApeBrushFace *adjFace  = adjacentFaces[ k ];
+				const ApeBrush     *adjBrush = adjFace->parent;
+				assert( adjBrush != nullptr );
+
 				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
 				{
-					const QmMathVector3f *a = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l ] ].posIndex ];
-					const QmMathVector3f *b = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l + 1 ] ].posIndex ];
-					const QmMathVector3f *c = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ ( l + 2 ) % adjFace->numVertices ] ].posIndex ];
+					const QmMathVector3f *a = &adjBrush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l ] ].posIndex ];
+					const QmMathVector3f *b = &adjBrush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l + 1 ] ].posIndex ];
+					const QmMathVector3f *c = &adjBrush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ ( l + 2 ) % adjFace->numVertices ] ].posIndex ];
 
 					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
 
