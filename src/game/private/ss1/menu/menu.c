@@ -41,6 +41,9 @@ static GameMenuOption debugMenuOptions[] = {
         { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
         { "Capture\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "capture" } },
         { "Screenshot\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "screenshot" } },
+        { nullptr, nullptr, nullptr, GAME_MENU_OPTION_TYPE_SEPERATOR },
+        { "Save Camera\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "qm1_camera_save_pos" } },
+        { "Restore Camera\n", nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "qm1_camera_restore_pos" } },
 };
 static GameMenu debugMenu = {
         "Debug Menu\n",

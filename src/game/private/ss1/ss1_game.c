@@ -1,5 +1,7 @@
 // Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
 
+#include "qmos/public/qm_os_string.h"
+
 #include "ss1_game.h"
 
 #include "menu/menu.h"
@@ -51,6 +53,62 @@ static void print_camera_pos_command( unsigned int argc, char **argv )
 	game_print_( "Camera Ang: %s\n", qm_math_vector3f_print( cameraAngles, tmp, sizeof( tmp ) ) );
 }
 
+static void camera_save_pos_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+{
+	if ( ss1_gameState.camera == nullptr )
+	{
+		return;
+	}
+
+	QmMathVector3f pos = ape_camera_get_position( ss1_gameState.camera );
+	QmMathVector3f ang = ape_camera_get_angles( ss1_gameState.camera );
+
+	char *path = qm_os_string_alloc( nullptr, "%s/camera.dat", com_get_app_data_directory() );
+	FILE *file = fopen( path, "w" );
+	if ( file != nullptr )
+	{
+		fprintf( file, "%f %f %f %f %f %f",
+		         pos.x, pos.y, pos.z,
+		         ang.x, ang.y, ang.z );
+		fclose( file );
+	}
+	else
+	{
+		game_warning_( "Failed to create camera file (%s)!\n", path );
+	}
+
+	qm_os_memory_free( path );
+}
+
+static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+{
+	if ( ss1_gameState.camera == nullptr )
+	{
+		return;
+	}
+
+	char *path = qm_os_string_alloc( nullptr, "%s/camera.dat", com_get_app_data_directory() );
+	FILE *file = fopen( path, "r" );
+	if ( file != nullptr )
+	{
+		QmMathVector3f pos = {};
+		QmMathVector3f ang = {};
+
+		fscanf( file, "%f %f %f %f %f %f",
+		        &pos.x, &pos.y, &pos.z,
+		        &ang.x, &ang.y, &ang.z );
+
+		ape_camera_set_position( ss1_gameState.camera, &pos );
+		ape_camera_set_angles( ss1_gameState.camera, &ang );
+	}
+	else
+	{
+		game_warning_( "Failed to open camera file (%s)!\n", path );
+	}
+
+	qm_os_memory_free( path );
+}
+
 static bool ss1_initialize()
 {
 	ss1_actions_register_();
@@ -59,6 +117,8 @@ static bool ss1_initialize()
 
 	PlRegisterConsoleCommand( "qm1_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
 	PlRegisterConsoleCommand( "qm1_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
+	PlRegisterConsoleCommand( "qm1_camera_save_pos", "Save the current camera position.", 0, camera_save_pos_command );
+	PlRegisterConsoleCommand( "qm1_camera_restore_pos", "Restore the camera position.", 0, camera_restore_pos_command );
 
 #if !defined( NDEBUG )
 	// validate all the professions are setup correctly
