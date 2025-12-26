@@ -22,11 +22,12 @@
 
 static constexpr char GAME_TERRAIN_CLASS_NAME[] = "terrain";
 
-static constexpr char TERRAIN_DEFAULT_HEIGHTMAP[] = "heightmap_test";
-static constexpr char TERRAIN_DEFAULT_MATERIAL[]  = "materials/terrain/terrain_default.mat.n";
-
 static constexpr unsigned int TERRAIN_HEIGHTMAP_MAX_NAME    = 128;
+static constexpr char         TERRAIN_HEIGHTMAP_DEFAULT[]   = "heightmap_test";
 static constexpr char         TERRAIN_HEIGHTMAP_BASE_PATH[] = "materials/terrain/heightmaps";
+
+static constexpr char TERRAIN_MATERIAL_DEFAULT[]   = "terrain_default";
+static constexpr char TERRAIN_MATERIAL_BASE_PATH[] = "materials/terrain";
 
 typedef struct GameTerrainEntity
 {
@@ -34,8 +35,15 @@ typedef struct GameTerrainEntity
 	float maxHeight;// heighest point
 
 	ApeIntegerProperty numChunks;
+	unsigned int       oldNumChunks;
+
 	ApeIntegerProperty numTiles;
-	ApeFloatProperty   tileSize;
+	unsigned int       oldNumTiles;
+
+	ApeFloatProperty tileSize;
+
+	ApeStringProperty materialName[ 128 ];
+	ApeMaterial      *material;
 
 	ApeStringProperty heightmapName[ TERRAIN_HEIGHTMAP_MAX_NAME ];
 	ApeFloatProperty  heightmapMultiplier;
@@ -173,29 +181,29 @@ static void terrain_load_heightmap( GameTerrainEntity *terrain )
 	terrain->heightmapWidth  = w;
 	terrain->heightmapHeight = h;
 
+	// determine the min and max heights
+	size_t heightmapSize = terrain->heightmapWidth * terrain->heightmapHeight;
+	for ( unsigned int i = 0; i < heightmapSize; ++i )
+	{
+		const float height = QM_MATH_BTOF( terrain->heightmap[ i ] ) * terrain->heightmapMultiplier;
+		if ( height > terrain->maxHeight )
+		{
+			terrain->maxHeight = height;
+		}
+		if ( height < terrain->minHeight )
+		{
+			terrain->minHeight = height;
+		}
+	}
+
 	strcpy( terrain->oldHeightmapName, terrain->heightmapName );
 
 	qm_os_memory_free( path );
 }
 
-static ApeBrush *build_terrain_chunk( ApeEntity *self, GameTerrainEntity *terrain, const QmMathVector2f chunkBasePos )
+static void setup_terrain_chunk( const GameTerrainEntity *terrain, ApeBrush *brush, const QmMathVector2f chunkBasePos )
 {
-	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( self ), "terrain", &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
-	if ( brush == nullptr )
-	{
-		game_warning_( "Failed to attach brush for terrain!\n" );
-		return nullptr;
-	}
-
-	brush->type = APE_WORLD_BRUSH_TYPE_SOLID;
-
-	// ensure brush isn't saved
-	APE_WORLD_NODE( brush )->flags |= APE_WORLD_NODE_FLAG_DISCARD;
-
 	unsigned int numChunkRowVertices = terrain_get_num_chunk_vertices_row( terrain );
-
-	brush->numVertices = terrain_get_num_chunk_vertices( terrain );
-	brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
 	for ( unsigned int row = 0; row < numChunkRowVertices; ++row )
 	{
 		float y = chunkBasePos.y + terrain->tileSize * row;
@@ -230,27 +238,16 @@ static ApeBrush *build_terrain_chunk( ApeEntity *self, GameTerrainEntity *terrai
 				brush->vertices[ vertexIndex ].y = height;
 
 				//game_print_( "x: %f y: %f px: %u py: %u height: %f\n", x, y, px, py, height );
-
-				if ( height > terrain->maxHeight )
-				{
-					terrain->maxHeight = height;
-				}
-				if ( height < terrain->minHeight )
-				{
-					terrain->minHeight = height;
-				}
 			}
 		}
 	}
 
-	brush->numFaces = terrain_get_num_chunk_tiles( terrain );
-	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 	for ( unsigned int j = 0; j < brush->numFaces; ++j )
 	{
 		ApeBrushFace *face = &brush->faces[ j ];
 		face->parent       = brush;
 		face->numVertices  = 4;
-		face->material     = ape_material_cache( TERRAIN_DEFAULT_MATERIAL, APE_CACHE_GROUP_WORLD, true );
+		face->material     = terrain->material;
 
 		unsigned int row = j / ( numChunkRowVertices - 1 );
 		unsigned int col = j % ( numChunkRowVertices - 1 );
@@ -284,15 +281,63 @@ static ApeBrush *build_terrain_chunk( ApeEntity *self, GameTerrainEntity *terrai
 	}
 
 	ape_brush_compute_bounds( brush );
+}
+
+static ApeBrush *create_terrain_chunk( ApeEntity *self, GameTerrainEntity *terrain, const QmMathVector2f chunkBasePos )
+{
+	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( self ), "terrain", &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
+	if ( brush == nullptr )
+	{
+		game_warning_( "Failed to attach brush for terrain!\n" );
+		return nullptr;
+	}
+
+	brush->type = APE_WORLD_BRUSH_TYPE_SOLID;
+
+	// ensure brush isn't saved
+	APE_WORLD_NODE( brush )->flags |= APE_WORLD_NODE_FLAG_DISCARD;
+
+	brush->numVertices = terrain_get_num_chunk_vertices( terrain );
+	brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
+
+	brush->numFaces = terrain_get_num_chunk_tiles( terrain );
+	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 
 	return brush;
 }
 
+static void terrain_load_material( GameTerrainEntity *terrain )
+{
+	char *materialPath = qm_os_string_alloc( nullptr, "%s/%s.mat.n", TERRAIN_MATERIAL_BASE_PATH, terrain->materialName );
+
+	// check if it's already loaded
+	if ( terrain->material != nullptr )
+	{
+		const char *currentMaterialPath = ape_material_get_path( terrain->material );
+		if ( strcmp( currentMaterialPath, materialPath ) != 0 )
+		{
+			// alright, not a match, release the current
+			// one so we can setup a new one!
+			ape_material_release( terrain->material );
+			terrain->material = nullptr;
+		}
+	}
+
+	if ( terrain->material == nullptr )
+	{
+		terrain->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+	}
+
+	qm_os_memory_free( materialPath );
+}
+
 static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 {
+	terrain_load_material( terrain );
 	terrain_load_heightmap( terrain );
 
-	if ( terrain->brushes != nullptr )
+	// check if we need to rebuild the brushes or not here
+	if ( terrain->brushes != nullptr && ( terrain->numChunks != terrain->oldNumChunks || terrain->numTiles != terrain->oldNumTiles ) )
 	{
 		for ( unsigned int i = 0; i < terrain->numBrushes; ++i )
 		{
@@ -306,22 +351,33 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 		}
 
 		qm_os_memory_free( terrain->brushes );
+		terrain->brushes = nullptr;
 	}
+
+	if ( terrain->brushes == nullptr )
+	{
+		terrain->numBrushes = terrain_get_total_chunks( terrain );
+		terrain->brushes    = QM_OS_MEMORY_NEW_( ApeBrush *, terrain->numBrushes );
+	}
+
+	const float terrainSize = terrain_get_size( terrain );
+	const float chunkSize   = terrain_get_chunk_size( terrain );
 
 	QmMathVector3f mins = {};
 	QmMathVector3f maxs = {};
 
-	float terrainSize = terrain_get_size( terrain );
-
-	terrain->numBrushes = terrain_get_total_chunks( terrain );
-	terrain->brushes    = QM_OS_MEMORY_NEW_( ApeBrush *, terrain->numBrushes );
 	for ( unsigned int row = 0, chunk = 0; row < terrain->numChunks; ++row )
 	{
 		for ( unsigned int col = 0; col < terrain->numChunks; ++col, ++chunk )
 		{
-			float          chunkSize  = terrain_get_chunk_size( terrain );
-			QmMathVector2f chunkPos   = qm_math_vector2f( chunkSize * row - terrainSize * 0.5f, chunkSize * col - terrainSize * 0.5f );
-			terrain->brushes[ chunk ] = build_terrain_chunk( self, terrain, chunkPos );
+			QmMathVector2f chunkPos = qm_math_vector2f( chunkSize * row - terrainSize * 0.5f, chunkSize * col - terrainSize * 0.5f );
+
+			if ( terrain->brushes[ chunk ] == nullptr )
+			{
+				terrain->brushes[ chunk ] = create_terrain_chunk( self, terrain, chunkPos );
+			}
+
+			setup_terrain_chunk( terrain, terrain->brushes[ chunk ], chunkPos );
 
 			PLCollisionAABB bounds = ape_world_node_get_local_bounds( APE_WORLD_NODE( terrain->brushes[ chunk ] ) );
 			if ( bounds.mins.x < mins.x ) { mins.x = bounds.mins.x; }
@@ -337,7 +393,8 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 	//TODO: there is supposed to be some logic to handle this automatically...
 	ape_world_node_set_local_bounds( APE_WORLD_NODE( self ), &mins, &maxs );
 
-	// URGH
+#if 1
+	//TODO: implement a more optimised method for this, as it's *very* slow
 	QmOsLinkedList *faces = qm_os_linked_list_create();
 	for ( unsigned int i = 0; i < terrain->numBrushes; ++i )
 	{
@@ -353,20 +410,28 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 	ape_brush_smooth_faces( faces );
 
 	qm_os_memory_free( faces );
+#endif
+
+	terrain->oldNumChunks = terrain->numChunks;
+	terrain->oldNumTiles  = terrain->numTiles;
 }
 
 static void *terrain_create( ApeEntity *self, AcmBranch *properties )
 {
 	GameTerrainEntity *terrain = QM_OS_MEMORY_NEW( GameTerrainEntity );
 
-	terrain->numChunks = 4;
-	terrain->numTiles  = 8;
-	terrain->tileSize  = 64.0f;
+	terrain->numChunks = terrain->oldNumChunks = 4;
+	terrain->numTiles = terrain->oldNumTiles = 8;
+
+	terrain->tileSize = 64.0f;
 
 	terrain->heightmapMultiplier = 500.0f;
-	snprintf( terrain->heightmapName, sizeof( terrain->heightmapName ), "%s", TERRAIN_DEFAULT_HEIGHTMAP );
+
+	snprintf( terrain->heightmapName, sizeof( terrain->heightmapName ), "%s", TERRAIN_HEIGHTMAP_DEFAULT );
+	snprintf( terrain->materialName, sizeof( terrain->materialName ), "%s", TERRAIN_MATERIAL_DEFAULT );
 
 	build_terrain( self, terrain );
+
 	return terrain;
 }
 
@@ -378,16 +443,12 @@ static void terrain_destroy( ApeEntity *self )
 	qm_os_memory_free( terrain );
 }
 
-static void terrain_spawn( ApeEntity *self )
-{
-}
-
 static void terrain_on_update_property( ApeEntity *self, const ApeProperty *property )
 {
 	GameTerrainEntity *terrain = GAME_TERRAIN_ENTITY( self );
 	assert( terrain != nullptr );
 
-	terrain->numChunks = QM_MATH_CLAMP( 1, terrain->numChunks, 8 );
+	terrain->numChunks = QM_MATH_CLAMP( 1, terrain->numChunks, 128 );
 	terrain->numTiles  = QM_MATH_CLAMP( 1, terrain->numTiles, 8 );
 	terrain->tileSize  = QM_MATH_CLAMP( 1.0f, terrain->tileSize, 2048.0f );
 
@@ -408,6 +469,7 @@ static ApeProperty properties[] = {
         APE_PROPERTY_BASIC( "Tile Size", "Size of each tile, width and height.", GameTerrainEntity, tileSize, FLOAT ),
         APE_PROPERTY_BASIC( "Heightmap Multiplier", "", GameTerrainEntity, heightmapMultiplier, FLOAT ),
         APE_PROPERTY_STRING( "Heightmap Name", "Name of the heightmap to use.", GameTerrainEntity, heightmapName ),
+        APE_PROPERTY_STRING( "Material Name", "Name of the material to use.", GameTerrainEntity, materialName ),
 };
 
 ApeEntityClassDefinition game_terrainEntityClass_ = {
@@ -416,7 +478,6 @@ ApeEntityClassDefinition game_terrainEntityClass_ = {
 
         .createFunction      = terrain_create,
         .destroyFunction     = terrain_destroy,
-        .spawnFunction       = terrain_spawn,
         .deserializeFunction = terrain_deserialize,
 
         .onUpdateProperty = terrain_on_update_property,
