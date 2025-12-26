@@ -1,8 +1,22 @@
-site_name: APE Tech Documentation
+site_name: ApeTech Documentation
 nav:
  - Home 🏠: index.md
+ - General:
+     - Entities 🧍: entity.md
+     - Materials 🖼: materials.md
+     - World 🌍: world.md
+ - Forge 🔨:
+     - Overview 🔍: forge/forge.md
+     - Model Editor 📦: forge/forge_model_editor.md
+     - Room Editor 🏠: forge/forge_room_editor.md
+ - Formats 👾:
+     - MDL: formats/format_mdl.md
+     - TEX: formats/tex_spec.md
+ - Research 🧪:
+     - Materials 🖼: research/research_materials.md
+     - Resources: research/research_resources.md
  - Other 🏠:
-     Todo: todo.md
-theme: 
+     - Todo: todo.md
+theme:
  name: readthedocs
  color_mode: dark

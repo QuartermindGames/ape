@@ -4,11 +4,7 @@ Forge is the name of the editor used alongside APE. It can be used for creating 
 
 When Forge is opened, it will first ask you to select or create a project.
 
-<div align="center">
-
 ![img.png](../images/img.png)
-
-</div>
 
 By default, this will be relative to where Forge is being executed from, specifically it should resolve to your installation location, and then 'projects'. A project will only appear in the list of available projects if it has a 'projectName.prj.n'; so for instance, the base project has 'base.prj.n' under the 'base' directory, so the editor will pick this up and parse the 'prj.n' to fetch the settings for that particular project.
 
@@ -16,11 +12,7 @@ Likewise, if you choose to create a new project, it will also be created as a ne
 
 Once your project is open, it will mount the appropriate locations for you automatically, and you'll be left with an empty editor window.
 
-<div align="center">
-
 ![img_1.png](../images/img_1.png)
-
-</div>
 
 From here you can now go into *File* in the top menu, and either choose to create or open an existing item. Of course, this isn't something we'll go into here but you can find a list of different categories below that will aid you with each of the individual editors available within.
 

@@ -34,15 +34,21 @@ Built in values can be used by prefixing with an
 underscore. Below are the available built-in
 values.
 
-    _rt     : Currently active render target.
-    _vpsize : Size of the viewport, provided as vec2.
-    _time   : Returns the number of sim ticks.
+    _rt_*           : Returns the specified RT buffer.
+    _rt_sphere      : Attempts to draw from surface origin, producing spheremap (expensive!!!)
+    _depth_*        : Returns depth-buffer for given RT.
+    _vpsize         : Size of the viewport, provided as vec2.
+    _time           : Returns the number of sim ticks.
+    _proc_fallback  : Uses the built-in fallback texture.
 
 Each pass also supports the following.
+Mind that the defaults for these will also be influenced by the given shader you're using, and additionally some of these can be overriden depending on the specific internal draw stage.
 
-    int cullMode            : Specifies culling mode, i.e. front/back/none.
-    bool depthTest          :
-    array string blendMode  :
+    int cullMode            : Culling mode, i.e. front/back/none.
+    string depthMode        : Depth mode to use for the pass (lequal by default).
+    bool depthMask          : Whether to enable/disable depth mask.
+    string textureFilterMode: Filtering mode to use (linear by default).
+    array string blendMode  : Blend mode (none by default).
 
 A complete example of a material can be seen below.
 
@@ -57,7 +63,7 @@ A complete example of a material can be seen below.
                     src_alpha
                     one
                 }
-                bool depthTest true
+                bool depthMask true
                 object shaderParameters
                 {
                     string diffuseMap materials/sky/cloudlayer00a.tga
