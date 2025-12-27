@@ -2,12 +2,13 @@
 // Purpose: Simple terrain system, utilising our existing brushes for rendering/collisions/etc.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_linked_list.h"
+#include "qmos/public/qm_os_random.h"
+#include "qmos/public/qm_os_string.h"
+
 #include "../game_private.h"
 
 #include "entity_terrain.h"
-
-#include "qmos/public/qm_os_linked_list.h"
-#include "qmos/public/qm_os_string.h"
 
 /*
  * Wishlist
@@ -201,6 +202,31 @@ static void terrain_load_heightmap( GameTerrainEntity *terrain )
 	qm_os_memory_free( path );
 }
 
+static float terrain_get_height( const GameTerrainEntity *terrain, const float x, const float y )
+{
+	if ( terrain->heightmap == nullptr )
+	{
+		return 0.0f;
+	}
+
+	float terrainSize = terrain_get_size( terrain );
+
+	unsigned int px = ( float ) terrain->heightmapWidth / terrainSize * ( x + terrainSize * 0.5f );
+	if ( px >= terrain->heightmapWidth )
+	{
+		px = terrain->heightmapWidth - 1;
+	}
+
+	unsigned int py = ( float ) terrain->heightmapHeight / terrainSize * ( y + terrainSize * 0.5f );
+	if ( py >= terrain->heightmapHeight )
+	{
+		py = terrain->heightmapHeight - 1;
+	}
+
+	unsigned int index = py * terrain->heightmapWidth + px;
+	return QM_MATH_BTOF( terrain->heightmap[ index ] ) * terrain->heightmapMultiplier;
+}
+
 static void setup_terrain_chunk( const GameTerrainEntity *terrain, ApeBrush *brush, const QmMathVector2f chunkBasePos )
 {
 	unsigned int numChunkRowVertices = terrain_get_num_chunk_vertices_row( terrain );
@@ -215,30 +241,7 @@ static void setup_terrain_chunk( const GameTerrainEntity *terrain, ApeBrush *bru
 			assert( vertexIndex < brush->numVertices );
 			brush->vertices[ vertexIndex ].x = x;
 			brush->vertices[ vertexIndex ].z = y;
-
-			// now apply the height
-			if ( terrain->heightmap != nullptr )
-			{
-				float terrainSize = terrain_get_size( terrain );
-
-				unsigned int px = ( float ) terrain->heightmapWidth / terrainSize * ( x + terrainSize * 0.5f );
-				if ( px >= terrain->heightmapWidth )
-				{
-					px = terrain->heightmapWidth - 1;
-				}
-
-				unsigned int py = ( float ) terrain->heightmapHeight / terrainSize * ( y + terrainSize * 0.5f );
-				if ( py >= terrain->heightmapHeight )
-				{
-					py = terrain->heightmapHeight - 1;
-				}
-
-				unsigned int index               = py * terrain->heightmapWidth + px;
-				const float  height              = QM_MATH_BTOF( terrain->heightmap[ index ] ) * terrain->heightmapMultiplier;
-				brush->vertices[ vertexIndex ].y = height;
-
-				//game_print_( "x: %f y: %f px: %u py: %u height: %f\n", x, y, px, py, height );
-			}
+			brush->vertices[ vertexIndex ].y = terrain_get_height( terrain, x, y );
 		}
 	}
 
@@ -331,6 +334,7 @@ static void terrain_load_material( GameTerrainEntity *terrain )
 	qm_os_memory_free( materialPath );
 }
 
+static void terrain_apply_detail( ApeEntity *self, GameTerrainEntity *terrain );
 static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 {
 	terrain_load_material( terrain );
@@ -392,6 +396,8 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 	// ensure that our bounds match the total bounds of our chunks
 	//TODO: there is supposed to be some logic to handle this automatically...
 	ape_world_node_set_local_bounds( APE_WORLD_NODE( self ), &mins, &maxs );
+
+	terrain_apply_detail( self, terrain );
 
 #if 1
 	//TODO: implement a more optimised method for this, as it's *very* slow
@@ -462,6 +468,41 @@ static void terrain_deserialize( ApeEntity *self, [[maybe_unused]] AcmBranch *ro
 
 	build_terrain( self, terrain );
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Detail
+// This is very experimental, already more-so than the rest of this :(
+
+static constexpr unsigned int TERRAIN_MAX_DETAIL_PROPS = 1024;
+static ApeEntity             *detailProps[ TERRAIN_MAX_DETAIL_PROPS ];
+
+static void terrain_apply_detail( ApeEntity *self, GameTerrainEntity *terrain )
+{
+	//TODO: return to this later...
+	return;
+
+	const float terrainSize = terrain_get_size( terrain );
+
+	unsigned int seed = 8;
+	for ( unsigned int i = 0; i < TERRAIN_MAX_DETAIL_PROPS; ++i )
+	{
+		QmMathVector2f pos;
+		pos.x = qm_os_random_float( &seed, terrainSize ) - qm_os_random_float( &seed, terrainSize );
+		pos.y = qm_os_random_float( &seed, terrainSize ) - qm_os_random_float( &seed, terrainSize );
+
+		float height = terrain_get_height( terrain, pos.x, pos.y );
+
+		float yaw = qm_os_random_float( &seed, 360.0f );
+
+		detailProps[ i ] = ape_entity_create( APE_WORLD_NODE( self ), "qm1_camera_follow", "test", nullptr,
+		                                      &QM_MATH_VECTOR3F( pos.x, height, pos.y ),
+		                                      &QM_MATH_VECTOR3F( 0.0f, yaw, 0.0f ) );
+
+		ape_world_node_load( APE_WORLD_NODE( detailProps[ i ] ), "prefabs/prefab_grass_00.node" );
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 static ApeProperty properties[] = {
         APE_PROPERTY_BASIC( "Num Chunks", "Number of chunks per row and col.", GameTerrainEntity, numChunks, INTEGER ),
