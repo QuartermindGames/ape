@@ -1,4 +1,4 @@
-// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 // we can just use sdl for this :)
 #include <SDL3/SDL.h>

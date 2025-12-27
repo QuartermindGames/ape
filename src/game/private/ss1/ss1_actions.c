@@ -1,4 +1,4 @@
-// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 // Purpose: This handles the actions specific to SS1/QM1.
 // Author:  Mark E. Sowden
 

@@ -1,4 +1,4 @@
-// Copyright © 2020-2025 Quartermind Games, Mark E. Sowden <hogsy@snortysoft.net>
+// Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 // Purpose: Basic RPG component for leveling, experience and stats.
 // Author:  Mark E. Sowden
 
