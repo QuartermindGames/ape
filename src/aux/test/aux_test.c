@@ -146,9 +146,7 @@ QM_TEST_FUNC_END()
 
 int main( const int argc, char **argv )
 {
-	PlInitialize( argc, argv );
-
-	com_initialize();
+	aux_initialize( argc, argv );
 
 	TEST_RUN_INIT
 	CALL_FUNC_TEST( project )

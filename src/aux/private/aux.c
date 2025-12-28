@@ -19,8 +19,10 @@ enum ComLogLevel
 
 static int com_logLevels_[ COM_MAX_LOG_LEVELS ];
 
-void com_initialize( void )
+void aux_initialize( int argc, char **argv )
 {
+	PlInitialize( argc, argv );
+
 	com_logLevels_[ COM_LOG_LEVEL_INFO ]  = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
 	com_logLevels_[ COM_LOG_LEVEL_WARN ]  = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
 	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );

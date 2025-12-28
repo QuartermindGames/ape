@@ -14,37 +14,17 @@
 #	define _POSIX_SOURCE 1
 #endif
 
-typedef enum ComDataType
-{
-	COM_DATATYPE_BOOL,
-
-	COM_DATATYPE_INT8,
-	COM_DATATYPE_INT16,
-	COM_DATATYPE_INT32,
-
-	COM_DATATYPE_UINT8,
-	COM_DATATYPE_UINT16,
-	COM_DATATYPE_UINT32,
-
-	COM_DATATYPE_FLOAT32,
-	COM_DATATYPE_FLOAT64,
-
-	COM_DATATYPE_POINTER,
-
-	COM_MAX_DATATYPES
-} ComDataType;
-
 PL_EXTERN_C
 
 /**
- * @brief Initializes common library components and settings.
+ * @brief Initializes aux library components and settings.
  *
  * This function sets up logging levels, registers packages, and initializes
  * necessary directories for the application's operation. It prepares the
- * common library for use by setting up various subsystems like logging and
+ * aux library for use by setting up various subsystems like logging and
  * directory lookups essential for the application's functionality.
  */
-void com_initialize( void );
+void aux_initialize( int argc, char **argv );
 
 /**
  * @brief Retrieves the local data directory path for the application.

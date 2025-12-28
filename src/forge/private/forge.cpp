@@ -469,19 +469,16 @@ static void cache_icons( FXApp &app )
 
 int main( int argc, char **argv )
 {
-	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
-	{
-		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Error", "Failed to initialize Hei library (%s)!", PlGetError() );
-		return EXIT_FAILURE;
-	}
+	// now init common library and fetch the editor config
+	aux_initialize( argc, argv );
+
+	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 
 	if ( PlgInitializeGraphics() != PL_RESULT_SUCCESS )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Error", "Failed to initialize Hei graphics library (%s)!", PlGetError() );
 		return EXIT_FAILURE;
 	}
-
-	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 
 	// attempt to fetch the driver directly from the executable location if possible
 	PLPath exePath;
@@ -497,16 +494,6 @@ int main( int argc, char **argv )
 	{
 		PlgScanForDrivers( "." );
 	}
-
-	PLPath tmp;
-	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
-	{
-		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to get executable location (%s)!", PlGetError() );
-		return EXIT_FAILURE;
-	}
-
-	// now init common library and fetch the editor config
-	com_initialize();
 
 	editorLogLevels[ EDITOR_LOG_PRINT ]   = PlAddLogLevel( "forge", PL_COLOUR_BLUE_VIOLET, true );
 	editorLogLevels[ EDITOR_LOG_WARNING ] = PlAddLogLevel( "forge/warning", PL_COLOUR_YELLOW, true );
@@ -541,6 +528,13 @@ int main( int argc, char **argv )
 	//HACK: make the engine initialisation happy...
 	auto *dummy = new forge::Viewport( forge::mainWindow, forge::get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
 	dummy->create();
+
+	PLPath tmp;
+	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
+	{
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to get executable location (%s)!", PlGetError() );
+		return EXIT_FAILURE;
+	}
 
 	setup_paths( tmp );
 

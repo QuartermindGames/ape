@@ -505,12 +505,7 @@ int launcher_initialize( int argc, char **argv )
 	prctl( PR_SET_DUMPABLE, 1 );
 #endif
 
-	/* initialize the platform library */
-	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
-	{
-		printf( "Failed to initialize Hei: %s\n", PlGetError() );
-		return EXIT_FAILURE;
-	}
+	aux_initialize( argc, argv );
 
 	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
 	Print( "Log output initialized!\n" );
@@ -519,8 +514,6 @@ int launcher_initialize( int argc, char **argv )
 	{
 		PrintError( "Failed to initialize SDL: %s\n", SDL_GetError() );
 	}
-
-	com_initialize();
 
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );

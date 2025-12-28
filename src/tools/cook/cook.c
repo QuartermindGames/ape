@@ -66,14 +66,9 @@ int main( int argc, char **argv )
 		return EXIT_SUCCESS;
 	}
 
-	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
-	{
-		ERROR( "Failed to initialize plcore: %s\n", PlGetError() );
-	}
-
 	PL_ZERO_( cook_state );
 
-	com_initialize();
+	aux_initialize( argc, argv );
 
 	PlMountLocalLocation( com_get_app_data_directory() );
 	PlMountLocalLocation( com_get_local_data_directory() );
