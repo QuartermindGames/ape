@@ -6,7 +6,8 @@
 #include "ape_private.h"
 
 #include "gui_private.h"
-#include "common_format_fnt.h"
+
+#include "aux/public/aux_format_fnt.h"
 
 #include "renderer/renderer.h"
 #include "renderer/material/material.h"

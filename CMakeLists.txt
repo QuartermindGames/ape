@@ -167,7 +167,7 @@ endif ()
 
 ####################################################################
 
-add_subdirectory(src/common)
+add_subdirectory(src/aux)
 add_subdirectory(src/core)
 
 add_subdirectory(src/acm)

@@ -7,7 +7,7 @@
 
 #include <plcore/pl_console.h>
 
-#include "common.h"
+#include "aux/public/aux.h"
 
 void com_print_( const char *m, ... );
 void com_warning_( const char *m, ... );

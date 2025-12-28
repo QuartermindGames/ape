@@ -4,8 +4,9 @@
 
 #include <acm/acm.h>
 
-#include "common_private.h"
-#include "common_project.h"
+#include "aux_private.h"
+
+#include "aux/public/aux_project.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private

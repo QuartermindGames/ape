@@ -12,7 +12,7 @@
 #include "forge_window_main.h"
 #include "forge_project_dialog.h"
 
-#include "common_project.h"
+#include "aux/public/aux_project.h"
 
 #include <FXGLVisual.h>
 

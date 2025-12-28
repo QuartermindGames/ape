@@ -7,8 +7,8 @@
 
 #include "qmos/public/qm_os_memory.h"
 
-#include "common.h"
-#include "common_project.h"
+#include "aux/public/aux.h"
+#include "aux/public/aux_project.h"
 
 #include "acm/acm.h"
 #include "ape/ape_formats.h"

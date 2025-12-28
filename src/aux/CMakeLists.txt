@@ -1,26 +1,22 @@
-add_library(ape-common STATIC
-        private/aux_texture_packer.c
-        private/common.c
-        private/common_collision.c
-        private/common_math.c
-        private/common_profiler.c
-        private/common_project.c
+add_library(ape-aux STATIC
         private/pack/pack_pkg.c
+
+        private/aux.c
+        private/aux_collision.c
+        private/aux_math.c
+        private/aux_profiler.c
+        private/aux_project.c
+        private/aux_texture_packer.c
 )
 
-target_include_directories(ape-common PRIVATE private ../3rdparty/miniz/)
-target_include_directories(ape-common PUBLIC public/)
+target_include_directories(ape-aux PRIVATE private ../3rdparty/miniz/)
 
-set_target_properties(ape-common PROPERTIES
+set_target_properties(ape-aux PROPERTIES
         FOLDER "Engine"
         PREFIX ""
 )
-target_compile_definitions(ape-common PRIVATE COMMON_DLL=1)
-target_link_libraries(ape-common
-        acm
-        qm-os
-        plcore
-)
+target_compile_definitions(ape-aux PRIVATE COMMON_DLL=1)
+target_link_libraries(ape-aux acm qm-os plcore)
 
 ####################################################################
 # Tests
@@ -37,7 +33,7 @@ target_link_libraries(ape-aux_test
         acm
         qm-os
         plcore
-        ape-common
+        ape-aux
 
         ${GLIB_LIBRARIES}
         ${CAIRO_LIBRARIES}

@@ -5,8 +5,6 @@
 
 #include "entities/entity_player_spawn.h"
 
-#include <common_project.h>
-
 static PLHashTable *serverClientsLookup;//GameServerClient
 
 //TODO: both serverClients and players would probably be better off as a linked list

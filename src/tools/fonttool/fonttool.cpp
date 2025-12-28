@@ -19,7 +19,7 @@
 
 #include "qmos/public/qm_os_memory.h"
 
-#include "common_format_fnt.h"
+#include "aux/public/aux_format_fnt.h"
 
 void serialize_font( FILE *file, const ComFontGlyph *glyphs, uint32_t numGlyphs, const void *bitmap, uint16_t width, uint16_t height )
 {

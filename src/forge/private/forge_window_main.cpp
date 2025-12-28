@@ -8,7 +8,8 @@
 #include "forge_editor_world.h"
 #include "forge_editor_material.h"
 
-#include "common_project.h"
+#include "aux/public/aux_project.h"
+
 #include "ape/ape_public_model.h"
 
 #include <algorithm>

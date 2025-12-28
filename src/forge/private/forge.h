@@ -19,8 +19,8 @@
 
 #include <acm/acm.h>
 
-#include "common.h"
-#include "common/common_math.h"
+#include "aux/public/aux.h"
+#include "../../aux/public/aux_math.h"
 
 // Yin
 #include <yin/core.h>

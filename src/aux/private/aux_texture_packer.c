@@ -2,9 +2,9 @@
 // Purpose: Texture/image packer. Used for lightmaps and other crap.
 // Author:  Mark E. Sowden
 
-#include "common_private.h"
+#include "aux_private.h"
 
-#include "common/common_math.h"
+#include "../public/aux_math.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Texture Packer

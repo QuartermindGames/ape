@@ -6,7 +6,7 @@
 
 #include "ape_private.h"
 
-#include "common/public/aux_texture_packer.h"
+#include "aux/public/aux_texture_packer.h"
 
 #include "game/game_public.h"
 

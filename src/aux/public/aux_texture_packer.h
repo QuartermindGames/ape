@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "common/common_math.h"
+#include "aux_math.h"
 
 typedef struct AuxTexturePackerNode AuxTexturePackerNode;
 

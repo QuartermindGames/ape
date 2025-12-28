@@ -5,10 +5,10 @@
 #include "kernel/tests/tests.h"
 
 #include "qmos/public/qm_os_memory.h"
-
-#include "common/public/aux_texture_packer.h"
-#include "common/public/common_project.h"
 #include "qmos/public/qm_os_random.h"
+
+#include "aux/public/aux_texture_packer.h"
+#include "aux/public/aux_project.h"
 
 QM_TEST_FUNC( project )
 {
@@ -81,7 +81,7 @@ QM_TEST_FUNC( texture_packer )
 	QmMathVector2i images[ NUM_IMAGES ];
 	for ( unsigned int i = 0; i < NUM_IMAGES; ++i )
 	{
-		images[ i ].x = rand() % 8 + 8 + 1 ;
+		images[ i ].x = rand() % 8 + 8 + 1;
 		images[ i ].y = rand() % 8 + 8 + 1;
 	}
 

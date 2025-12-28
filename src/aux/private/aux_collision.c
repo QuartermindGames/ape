@@ -6,8 +6,8 @@
 
 #include <plcore/pl_physics.h>
 
-#include "common_private.h"
-#include "common/common_math.h"
+#include "aux_private.h"
+#include "../public/aux_math.h"
 
 // I'm not going to lie, much of this is stolen from various books,
 // and I'm absolutely clueless how much of it works... so don't ask

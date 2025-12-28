@@ -13,8 +13,9 @@
 
 #include <yin/core.h>
 
-#include "common.h"
-#include "common_project.h"
+#include "aux/public/aux.h"
+#include "aux/public/aux_project.h"
+
 #include "launcher.h"
 
 static AcmBranch *shellConfig;
@@ -508,12 +509,6 @@ int launcher_initialize( int argc, char **argv )
 	if ( PlInitialize( argc, argv ) != PL_RESULT_SUCCESS )
 	{
 		printf( "Failed to initialize Hei: %s\n", PlGetError() );
-		return EXIT_FAILURE;
-	}
-
-	if ( PlInitializeSubSystems( PL_SUBSYSTEM_IO ) != PL_RESULT_SUCCESS )
-	{
-		printf( "Failed to initialize IO subsystem: %s\n", PlGetError() );
 		return EXIT_FAILURE;
 	}
 

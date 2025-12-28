@@ -4,7 +4,7 @@
 
 #include <plcore/pl_physics.h>
 
-#include "common_private.h"
+#include "aux_private.h"
 
 QmMathVector3f com_math_pitch_yaw_to_position( const float pitch, const float yaw )
 {

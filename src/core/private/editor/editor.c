@@ -5,7 +5,8 @@
 
 #include "ape_private.h"
 
-#include "common_project.h"
+#include "aux/public/aux_project.h"
+
 #include "editor.h"
 
 #include "renderer/renderer.h"

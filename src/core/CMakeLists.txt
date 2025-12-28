@@ -114,7 +114,7 @@ target_link_libraries(ape-core
         plcore
         plgraphics
         # ape libraries
-        ape-common
+        ape-aux
         acm
         # other
         OpenAL

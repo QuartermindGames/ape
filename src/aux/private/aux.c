@@ -5,7 +5,7 @@
 
 #include <acm/acm.h>
 
-#include "common_private.h"
+#include "aux_private.h"
 
 enum ComLogLevel
 {

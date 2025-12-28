@@ -5,7 +5,7 @@
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_timer.h>
 
-#include "common_private.h"
+#include "aux_private.h"
 
 #define MAX_SAMPLES 32
 

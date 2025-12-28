@@ -53,7 +53,7 @@ if (MINGW)
 
             plcore
             plgraphics
-            ape-common
+            ape-aux
             ape-core
     )
 else ()
@@ -63,7 +63,7 @@ else ()
 
             plcore
             plgraphics
-            ape-common
+            ape-aux
             ape-core
     )
 endif ()

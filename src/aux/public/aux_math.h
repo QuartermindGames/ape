@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../common.h"
+#include "aux.h"
 
 typedef struct ComMathRectI32
 {

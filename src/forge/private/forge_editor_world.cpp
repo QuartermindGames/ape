@@ -9,8 +9,8 @@
 #include "forge_viewport_world.h"
 #include "forge_window_main.h"
 
-#include "common_project.h"
-#include "common/common_math.h"
+#include "aux/public/aux_project.h"
+#include "../../aux/public/aux_math.h"
 
 #include "SurfaceInspector.h"
 

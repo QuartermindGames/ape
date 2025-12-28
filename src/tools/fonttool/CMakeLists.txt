@@ -20,6 +20,6 @@ if(NOT WIN32)
                 ${CAIRO_LIBRARIES}
                 FOX-1.6
                 plcore
-                ape-common
+                ape-aux
         )
 endif()
