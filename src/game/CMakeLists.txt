@@ -97,12 +97,13 @@ target_include_directories(SS1Forge PRIVATE private)
 set_target_properties(SS1Forge PROPERTIES FOLDER "Games")
 
 #############################################
-# QM2
+# Gateway
 #############################################
 set(QM2_SOURCES
         ${GAME_SHARED_FILES}
 
         private/gateway/gateway.c
+        private/gateway/gateway_hud.c
         private/gateway/gateway_menu.c
 )
 
