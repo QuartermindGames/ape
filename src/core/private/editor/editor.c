@@ -924,7 +924,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 				colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
 			}
 
-			ape_draw_textured_quad( material, screenPos.x - ( scale / 2.0f ), screenPos.y, scale, -scale, &colour, 0 );
+			ape_draw_textured_quad( material, screenPos.x - ( scale / 2.0f ), screenPos.y - scale, scale, scale, &colour, 0 );
 		}
 	}
 }
