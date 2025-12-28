@@ -83,14 +83,6 @@ extern ApeEntityClassDefinition game_triggerEntityClass_;
 extern ApeEntityClassDefinition game_ropeEntityClass_;
 extern ApeEntityClassDefinition game_portalEntityClass_;
 extern ApeEntityClassDefinition game_terrainEntityClass_;
-#if defined( GAME_SS1 )
-extern ApeEntityClassDefinition ss1_airshipEntityClass;
-extern ApeEntityClassDefinition ss1_pawnEntityClass;
-extern ApeEntityClassDefinition ss1_playerEntityClass;
-#endif
-#if defined( GAME_QM2 )
-extern ApeEntityClassDefinition game_qm2_creatureEntityClass_;
-#endif
 
 extern ApeEntityComponentDefinition game_collisionComponent_;
 extern ApeEntityComponentDefinition game_healthComponent_;
@@ -105,15 +97,6 @@ static void register_standard_entity_components()
 	ape_register_entity_class( &game_ropeEntityClass_ );
 	ape_register_entity_class( &game_portalEntityClass_ );
 	ape_register_entity_class( &game_terrainEntityClass_ );
-#if defined( GAME_SS1 )
-	ape_register_entity_class( &ss1_airshipEntityClass );
-	ape_register_entity_class( &ss1_pawnEntityClass );
-	ape_register_entity_class( &ss1_playerEntityClass );
-	ape_register_entity_class( &game_pathEntityClass_ );
-#endif
-#if defined( GAME_QM2 )
-	ape_register_entity_class( &game_qm2_creatureEntityClass_ );
-#endif
 
 	ape_register_entity_component( &game_collisionComponent_ );
 	ape_register_entity_component( &game_healthComponent_ );

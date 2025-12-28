@@ -19,11 +19,14 @@ static GameMenuOption quitMenuOptions[] = {
 GAME_MENU_IMPLEMENT( confirmQuitMenu, "Are you sure?\n", quitMenuOptions, &mainMenu, 0 );
 
 static GameMenuOption mainMenuOptions[] = {
-        GAME_MENU_OPTION_BUTTON( "Quit\n", &confirmQuitMenu, nullptr, nullptr ),
+        GAME_MENU_OPTION_BUTTON( "Load House\n", nullptr, nullptr, "game_load_room rooms/house/house.rom.n" ),
+        GAME_MENU_OPTION_BUTTON( "Load Movement Test\n", nullptr, nullptr, "game_load_room rooms/test/test_movement.rom.n" ),
+        GAME_MENU_OPTION_SEPERATOR(),
+        GAME_MENU_OPTION_BUTTON_SIMPLE( "Quit\n", &confirmQuitMenu ),
 };
 GAME_MENU_IMPLEMENT_ROOT( mainMenu, "Main Menu\n", mainMenuOptions, 0 );
 
-void gway_menu_initialize()
+void gway_menu_initialize_()
 {
 	game_menu_initialize();
 	game_menu_set_title( "GATEWAY" );
@@ -37,7 +40,7 @@ void gway_menu_initialize()
 	game_menu_set_active( &mainMenu );
 }
 
-void gway_menu_draw( ApeViewport *viewport )
+void gway_menu_draw_( ApeViewport *viewport )
 {
 	game_menu_draw_( viewport );
 }

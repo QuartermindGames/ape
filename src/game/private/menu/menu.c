@@ -180,8 +180,8 @@ void game_menu_draw_( const ApeViewport *viewport )
 
 	float scale = shell_get_display_scale();
 
-	float x = 50.0f;
-	float y = viewport->height / ( 2.0f * scale );
+	float x = 128.0f;
+	float y = 128.0f;
 
 	if ( *menuTitle != '\0' )
 	{
@@ -198,10 +198,6 @@ void game_menu_draw_( const ApeViewport *viewport )
 		gui_font_get_string_pixel_size( menuFont, scale, G_STR_( menu->heading ), strlen( menu->heading ), &w, nullptr );
 		x = ( viewport->width - w ) / 2.0f;
 		y = ( viewport->height - gui_font_get_line_spacing( menuFont ) * 2.0f ) / 2.0f;
-	}
-	else
-	{
-		x = 80.0f;
 	}
 
 	gui_font_set_shadow_offset( GUI_FONT_SHADOW_DEFAULT );

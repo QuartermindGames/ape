@@ -4,12 +4,12 @@
 
 #include "gateway.h"
 
-void gway_menu_initialize();
-void gway_menu_draw( ApeViewport *viewport );
+void gway_menu_initialize_();
+void gway_menu_draw_( ApeViewport *viewport );
 
 static bool gway_initialize()
 {
-	gway_menu_initialize();
+	gway_menu_initialize_();
 
 	return true;
 }
@@ -31,7 +31,7 @@ static bool gway_request_handler( ApeGameInterfaceRequest request, void *user )
 			return gway_shutdown();
 		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
 		{
-			gway_menu_draw( user );
+			gway_menu_draw_( user );
 			return true;
 		}
 	}

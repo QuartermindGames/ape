@@ -108,9 +108,17 @@ static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[ma
 	qm_os_memory_free( path );
 }
 
+extern ApeEntityClassDefinition ss1_airshipEntityClass;
+extern ApeEntityClassDefinition ss1_pawnEntityClass;
+extern ApeEntityClassDefinition ss1_playerEntityClass;
+
 static bool ss1_initialize()
 {
 	ss1_actions_register_();
+
+	ape_register_entity_class( &ss1_airshipEntityClass );
+	ape_register_entity_class( &ss1_pawnEntityClass );
+	ape_register_entity_class( &ss1_playerEntityClass );
 
 	PL_ZERO_( ss1_gameState );
 
