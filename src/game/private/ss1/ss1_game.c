@@ -3,8 +3,7 @@
 #include "qmos/public/qm_os_string.h"
 
 #include "ss1_game.h"
-
-#include "menu/menu.h"
+#include "qm1_menu.h"
 
 #include "integrations/integrations.h"
 #include "physics/physics.h"
@@ -668,7 +667,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
 	        .version               = APE_GAME_INTERFACE_VERSION,
-	        .protocolVersion       = SS1_GAME_PROTOCOL_VERSION + GAME_NET_PROTOCOL_VERSION,
+	        .protocolVersion       = SS1_GAME_PROTOCOL_VERSION,
 	        .identifier            = "ss1",
 	        .requestCallbackMethod = request_handler,
 	        .spawnWorld            = ss1_spawn_world,

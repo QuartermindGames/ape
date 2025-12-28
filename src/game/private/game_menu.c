@@ -1,24 +1,6 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include "game_private.h"
-#include "game_menu.h"
-
-static GameMenu *currentMenu = nullptr;
-
-void game_menu_set_active( GameMenu *menu )
-{
-	currentMenu = menu;
-}
-
-GameMenu *game_menu_get_active( void )
-{
-	return currentMenu;
-}
-
-bool game_menu_is_open()
-{
-	return game_menu_get_active() != nullptr;
-}
 
 /////////////////////////////////////////////////////////////////////////////////////
 

@@ -4,10 +4,4 @@
 
 #include "../game_private.h"
 
-typedef enum GWayCreatureStat
-{
-	GWAY_CREATURE_STAT_AGILITY,
-	GWAY_CREATURE_STAT_STRENGTH,
-
-	GWAY_CREATURE_STAT_MAX
-} GWayCreatureStat;
+static constexpr unsigned int GWAY_VERSION_PROTOCOL = 2;

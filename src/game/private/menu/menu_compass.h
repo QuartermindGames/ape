@@ -4,7 +4,7 @@
 
 #include "menu.h"
 
-void game_menu_compass_initialize_( ApeGuiFont *font );
+void game_hud_compass_initialize_( ApeGuiFont *font );
 void game_menu_compass_shutdown_();
 
 void game_menu_compass_draw_( const ApeViewport *viewport );

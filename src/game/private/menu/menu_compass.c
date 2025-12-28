@@ -9,7 +9,7 @@ static QmMathVector3f compassAngles;
 static ApeGuiFont  *compassFont;
 static ApeMaterial *compassBackground;
 
-void game_menu_compass_initialize_( ApeGuiFont *font )
+void game_hud_compass_initialize_( ApeGuiFont *font )
 {
 	compassAngles = QM_MATH_VECTOR3F_ZERO;
 	compassFont   = font;

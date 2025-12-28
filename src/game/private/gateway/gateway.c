@@ -4,8 +4,38 @@
 
 #include "gateway.h"
 
-static bool qm2_request_handler( ApeGameInterfaceRequest request, void *user )
+void gway_menu_initialize();
+void gway_menu_draw( ApeViewport *viewport );
+
+static bool gway_initialize()
 {
+	gway_menu_initialize();
+
+	return true;
+}
+
+static bool gway_shutdown()
+{
+	return true;
+}
+
+static bool gway_request_handler( ApeGameInterfaceRequest request, void *user )
+{
+	switch ( request )
+	{
+		default:
+			break;
+		case APE_GAME_INTERFACE_REQUEST_INITIALIZE:
+			return gway_initialize();
+		case APE_GAME_INTERFACE_REQUEST_SHUTDOWN:
+			return gway_shutdown();
+		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
+		{
+			gway_menu_draw( user );
+			return true;
+		}
+	}
+
 	return true;
 }
 
@@ -13,10 +43,10 @@ const ApeGameInterfaceImport *ape_game_get_interface()
 {
 	static ApeGameInterfaceImport interface = {
 	        .version         = APE_GAME_INTERFACE_VERSION,
-	        .protocolVersion = GAME_NET_PROTOCOL_VERSION,
+	        .protocolVersion = GWAY_VERSION_PROTOCOL,
 	        .identifier      = "qm2",
 
-	        .requestCallbackMethod = qm2_request_handler,
+	        .requestCallbackMethod = gway_request_handler,
 	};
 
 	return &interface;

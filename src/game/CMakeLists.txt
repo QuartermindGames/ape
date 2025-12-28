@@ -32,6 +32,7 @@ set(GAME_SHARED_FILES
 
         private/integrations/discord/discord.c
 
+        private/menu/menu.c
         private/menu/menu_chat.c
         private/menu/menu_compass.c
         private/menu/menu_pie.c
@@ -74,9 +75,8 @@ endif ()
 set(SS1_SOURCES
         ${GAME_SHARED_FILES}
 
-        private/ss1/menu/menu.c
-
         private/ss1/qm1_character.c
+        private/ss1/qm1_menu.c
 
         private/ss1/ss1_actions.c
         private/ss1/ss1_game.c
@@ -94,7 +94,7 @@ add_executable(SS1Forge WIN32 ${SS1_SOURCES})
 target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})
 target_compile_definitions(SS1Forge PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(SS1Forge PRIVATE private)
-set_target_properties(SS1Forge PROPERTIES FOLDER "Shells")
+set_target_properties(SS1Forge PROPERTIES FOLDER "Games")
 
 #############################################
 # QM2
@@ -103,6 +103,7 @@ set(QM2_SOURCES
         ${GAME_SHARED_FILES}
 
         private/gateway/gateway.c
+        private/gateway/gateway_menu.c
 )
 
 add_executable(gateway WIN32 ${QM2_SOURCES} ../shells/launcher_sdl2/launcher.c)
@@ -115,4 +116,4 @@ add_executable(gateway-forge WIN32 ${QM2_SOURCES})
 target_link_libraries(gateway-forge Forge ${GAME_LINK_LIBS})
 target_compile_definitions(gateway-forge PRIVATE GAME_QM2)
 target_include_directories(gateway-forge PRIVATE private)
-set_target_properties(gateway-forge PROPERTIES FOLDER "Shells")
+set_target_properties(gateway-forge PROPERTIES FOLDER "Games")
