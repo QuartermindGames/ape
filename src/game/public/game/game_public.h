@@ -8,9 +8,6 @@ PL_EXTERN_C
 
 typedef struct ApeWorld ApeWorld;
 
-bool game_initialize( void );
-void game_shutdown();
-
 /// Fetches the currently active world. Only one world can be active at a time.
 /// \return Handle to the currently active world.
 struct ApeWorld *game_get_current_world( void );

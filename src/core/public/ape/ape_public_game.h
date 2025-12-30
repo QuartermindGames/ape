@@ -7,21 +7,11 @@ PL_EXTERN_C
 //TODO: urgh...
 #include "ape_public_server.h"
 
-typedef struct ApeWorld ApeWorld;
-typedef struct ApeRoom  ApeRoom;
+typedef struct ApeViewport ApeViewport;
+typedef struct ApeWorld    ApeWorld;
+typedef struct ApeRoom     ApeRoom;
 
-#define APE_GAME_INTERFACE_VERSION 1
-
-typedef enum ApeGameInterfaceRequest
-{
-	APE_GAME_INTERFACE_REQUEST_INITIALIZE,// called on engine initialisation
-	APE_GAME_INTERFACE_REQUEST_SHUTDOWN,  // called when shutting down engine
-
-	APE_GAME_INTERFACE_REQUEST_DRAW,
-	APE_GAME_INTERFACE_REQUEST_DRAW_UI,
-
-	APE_GAME_INTERFACE_REQUEST_HANDLE_INPUT,
-} ApeGameInterfaceRequest;
+static constexpr unsigned int APE_GAME_INTERFACE_VERSION = 1;
 
 // Interface imported from game
 typedef struct ApeGameInterfaceImport
@@ -30,7 +20,11 @@ typedef struct ApeGameInterfaceImport
 	uint8_t      protocolVersion;// protocol version specific to the game itself
 	char         identifier[ 8 ];// identifier for the game (clients will only be able to connect if this matches)
 
-	bool ( *requestCallbackMethod )( ApeGameInterfaceRequest gameModeRequest, void *user );
+	bool ( *initialize )();
+	void ( *shutdown )();
+
+	void ( *draw )( const ApeViewport *viewport );
+	void ( *drawUI )( const ApeViewport *viewport );
 
 	void ( *spawnWorld )( ApeRoom *room );
 	void ( *onDestroyRoom )( ApeRoom *room );

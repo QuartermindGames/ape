@@ -40,7 +40,7 @@ void gway_menu_initialize_()
 	game_menu_set_active( &mainMenu );
 }
 
-void gway_menu_draw_( ApeViewport *viewport )
+void gway_menu_draw_( const ApeViewport *viewport )
 {
 	game_menu_draw_( viewport );
 }

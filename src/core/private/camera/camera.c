@@ -180,7 +180,10 @@ QmMathVector3f ape_camera_get_forward( const ApeCamera *camera )
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
 void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport )
 {
-	assert( camera != nullptr );
+	if ( camera == nullptr )
+	{
+		return;
+	}
 
 	COM_PROFILE_FUNCTION_START();
 

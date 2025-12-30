@@ -64,7 +64,7 @@ void ape_initialize_game_( void )
 		ape_console_error_( true, "No identifier provided for game interface!\n" );
 	}
 
-	if ( !game_initialize() )
+	if ( ape_gameInterface->initialize != nullptr && !ape_gameInterface->initialize() )
 	{
 		ape_console_error_( true, "Failed to initialize game!\n" );
 	}
@@ -74,13 +74,10 @@ void ape_initialize_game_( void )
 
 void ape_shutdown_game_( void )
 {
-	const ApeGameInterfaceImport *interface = ape_game_get_interface();
-	if ( interface == nullptr )
+	if ( ape_gameInterface->shutdown != nullptr )
 	{
-		return;
+		ape_gameInterface->shutdown();
 	}
-
-	interface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_SHUTDOWN, nullptr );
 }
 
 static void sync_world_nodes( ApeWorldNode *worldNode )

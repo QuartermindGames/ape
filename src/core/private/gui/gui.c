@@ -363,9 +363,9 @@ void ape_gui_draw_( ApeViewport *viewport )
 	//TODO: whaa... these have nothing to do with the gui!?
 	ape_flare_draw_( viewport );
 
-	if ( !ape_is_editor_active_() )
+	if ( !ape_is_editor_active_() && ape_gameInterface->drawUI != nullptr )
 	{
-		ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_DRAW_UI, viewport );
+		ape_gameInterface->drawUI( viewport );
 	}
 
 	ape_editor_draw_gui_( viewport );

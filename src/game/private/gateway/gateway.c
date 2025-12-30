@@ -10,46 +10,35 @@
 #include "integrations/integrations.h"
 
 void gway_menu_initialize_();
-void gway_menu_draw_( ApeViewport *viewport );
+void gway_menu_draw_( const ApeViewport *viewport );
 
 void gway_hud_initialize_();
 void gway_hud_shutdown_();
-void gway_hud_draw_( ApeViewport *viewport );
+void gway_hud_draw_( const ApeViewport *viewport );
 
 static bool gway_initialize()
 {
+	if ( !game_initialize_() )
+	{
+		return false;
+	}
+
 	gway_menu_initialize_();
 	gway_hud_initialize_();
 
 	return true;
 }
 
-static bool gway_shutdown()
+static void gway_shutdown()
 {
 	gway_hud_shutdown_();
-
-	return true;
+	game_shutdown_();
 }
 
-static bool gway_request_handler( ApeGameInterfaceRequest request, void *user )
+static void gway_draw_ui( const ApeViewport *viewport )
 {
-	switch ( request )
-	{
-		default:
-			break;
-		case APE_GAME_INTERFACE_REQUEST_INITIALIZE:
-			return gway_initialize();
-		case APE_GAME_INTERFACE_REQUEST_SHUTDOWN:
-			return gway_shutdown();
-		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
-		{
-			gway_menu_draw_( user );
-			gway_hud_draw_( user );
-			return true;
-		}
-	}
-
-	return true;
+	gway_menu_draw_( viewport );
+	gway_hud_draw_( viewport );
 }
 
 static bool server_client_validate( ApeServerClient *clientHandle )
@@ -89,7 +78,10 @@ const ApeGameInterfaceImport *ape_game_get_interface()
 	        .protocolVersion = GWAY_VERSION_PROTOCOL,
 	        .identifier      = "qm2",
 
-	        .requestCallbackMethod = gway_request_handler,
+	        .initialize = gway_initialize,
+	        .shutdown   = gway_shutdown,
+
+	        .drawUI = gway_draw_ui,
 
 	        .serverClientValidate     = server_client_validate,
 	        .serverClientConnected    = server_client_connected,

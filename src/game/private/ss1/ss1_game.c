@@ -114,6 +114,11 @@ extern ApeEntityClassDefinition ss1_playerEntityClass;
 
 static bool ss1_initialize()
 {
+	if ( !game_initialize_() )
+	{
+		return false;
+	}
+
 	ss1_actions_register_();
 
 	ape_register_entity_class( &ss1_airshipEntityClass );
@@ -159,7 +164,7 @@ static void serialize_config()
 	com_write_config( ss1_gameState.config, SS1_CONFIG );
 }
 
-static bool ss1_shutdown()
+static void ss1_shutdown()
 {
 	//TODO: need mechanism for removing components
 
@@ -179,9 +184,7 @@ static bool ss1_shutdown()
 
 	ss1_menu_shutdown_();
 
-	game_integrations_discord_shutdown_();
-
-	return true;
+	game_shutdown_();
 }
 
 static void handle_camera_input( double delta )
@@ -519,17 +522,15 @@ static void ss1_tick( double delta )
 #endif
 }
 
-static bool ss1_draw( const ApeViewport *viewport )
+static void ss1_draw( const ApeViewport *viewport )
 {
 	ape_camera_make_active( ss1_gameState.camera );
 	ape_camera_draw_perspective( ss1_gameState.camera, viewport );
-	return true;
 }
 
-static bool ss1_draw_menu( const ApeViewport *viewport )
+static void ss1_draw_menu( const ApeViewport *viewport )
 {
 	ss1_menu_draw( viewport );
-	return true;
 }
 
 static void spawn_characters()
@@ -618,25 +619,6 @@ static void on_destroy_room( ApeRoom *room )
 	}
 }
 
-static bool request_handler( ApeGameInterfaceRequest gameModeRequest, void *user )
-{
-	switch ( gameModeRequest )
-	{
-		case APE_GAME_INTERFACE_REQUEST_INITIALIZE:
-			return ss1_initialize();
-		case APE_GAME_INTERFACE_REQUEST_SHUTDOWN:
-			return ss1_shutdown();
-		case APE_GAME_INTERFACE_REQUEST_DRAW:
-			return ss1_draw( user );
-		case APE_GAME_INTERFACE_REQUEST_DRAW_UI:
-			return ss1_draw_menu( user );
-		default:
-			break;
-	}
-
-	return false;
-}
-
 static bool server_client_validate( ApeServerClient *clientHandle )
 {
 	return game_server_client_validate_( clientHandle );
@@ -674,11 +656,16 @@ static void client_tick( double delta )
 const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
-	        .version               = APE_GAME_INTERFACE_VERSION,
-	        .protocolVersion       = SS1_GAME_PROTOCOL_VERSION,
-	        .identifier            = "ss1",
-	        .requestCallbackMethod = request_handler,
-	        .spawnWorld            = ss1_spawn_world,
+	        .version         = APE_GAME_INTERFACE_VERSION,
+	        .protocolVersion = SS1_GAME_PROTOCOL_VERSION,
+	        .identifier      = "ss1",
+
+	        .initialize = ss1_initialize,
+	        .shutdown   = ss1_shutdown,
+	        .draw       = ss1_draw,
+	        .drawUI     = ss1_draw_menu,
+
+	        .spawnWorld = ss1_spawn_world,
 
 	        .onDestroyRoom = on_destroy_room,
 

@@ -134,7 +134,7 @@ static void print_world_tree_command( unsigned int argc, char **argv )
 void game_server_initialize_();
 void game_client_initialize_();
 void game_language_initialize_();
-bool game_initialize( void )
+bool game_initialize_( void )
 {
 	gameConfig = com_get_config( "game_shared" );
 
@@ -164,19 +164,14 @@ bool game_initialize( void )
 	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
 	game_integrations_discord_update_activity_( G_STR_( "Idling" ), nullptr, "qm1-logo", "Temp" );
 
-	if ( !ape_gameInterface->requestCallbackMethod( APE_GAME_INTERFACE_REQUEST_INITIALIZE, nullptr ) )
-	{
-		game_error_( "Failed to initialize game sub-system!\n" );
-		return false;
-	}
-
 	return true;
 }
 
 void game_language_shutdown_();
-void game_shutdown()
+void game_shutdown_()
 {
 	game_language_shutdown_();
+	game_integrations_discord_shutdown_();
 }
 
 double game_get_delta_mod_( double delta )

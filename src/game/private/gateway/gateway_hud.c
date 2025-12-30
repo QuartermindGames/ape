@@ -25,7 +25,7 @@ void gway_hud_shutdown_()
 	ape_material_release( hudHealthBodyMaterial );
 }
 
-void gway_hud_draw_( ApeViewport *viewport )
+void gway_hud_draw_( const ApeViewport *viewport )
 {
 	float hudHealthBodyW = 128.0f * hudScale;
 	float hudHealthBodyH = 256.0f * hudScale;
