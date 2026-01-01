@@ -191,6 +191,22 @@ void ape_material_animator_free_( ApeMaterialAnimator *self );
 void ape_material_animator_parse_array_( AcmBranch *root, ApeMaterialPass *pass );
 void ape_material_animator_tick_( ApeMaterialAnimator *self, double delta );
 
+/**
+ * Fetch the animator animation state. This could be done so you can restore it later.
+ *
+ * @param self	Animator instance to fetch the state from.
+ * @return		A copy of the current animator state.
+ */
+ApeMaterialAnimatorState ape_material_animator_get_state_( const ApeMaterialAnimator *self );
+
+/**
+ * Set the animator animation state.
+ *
+ * @param self	Animator instance to apply your state to.
+ * @param state The state you want to apply.
+ */
+void ape_material_animator_set_state_( ApeMaterialAnimator *self, const ApeMaterialAnimatorState *state );
+
 bool ape_material_animator_is_playing_( const ApeMaterialAnimator *self );
 
 /////////////////////////////////////////////////////////////////////////////////////

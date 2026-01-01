@@ -236,6 +236,16 @@ void ape_material_animator_tick_( ApeMaterialAnimator *self, const double delta 
 	}
 }
 
+ApeMaterialAnimatorState ape_material_animator_get_state_( const ApeMaterialAnimator *self )
+{
+	return self->state;
+}
+
+void ape_material_animator_set_state_( ApeMaterialAnimator *self, const ApeMaterialAnimatorState *state )
+{
+	self->state = *state;
+}
+
 bool ape_material_animator_is_playing_( const ApeMaterialAnimator *self )
 {
 	return self->state.frame < self->numFrames || self->state.isLooping;
