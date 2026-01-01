@@ -4,6 +4,7 @@ set(YIN_CORE_CLIENT
         private/client/ape_client_gui.c
 
         private/renderer/material/material.c
+        private/renderer/material/material_animator.c
         private/renderer/material/material_shaders.c
 
         private/renderer/post/post.c

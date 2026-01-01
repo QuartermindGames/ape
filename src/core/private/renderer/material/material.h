@@ -5,10 +5,13 @@
 PL_EXTERN_C
 
 typedef struct ApeShaderProgram ApeShaderProgram;
-typedef struct ApeMaterial      ApeMaterial;
 
-#define SS_ARL_MAX_MATERIAL_PASSES    4
-#define SS_ARL_MAX_MATERIAL_VARIABLES 64
+typedef struct ApeMaterial              ApeMaterial;
+typedef struct ApeMaterialAnimator      ApeMaterialAnimator;
+typedef struct ApeMaterialAnimatorState ApeMaterialAnimatorState;
+
+#define SS_ARL_MAX_MATERIAL_PASSES 4
+#define APE_MATERIAL_MAX_VARIABLES 64
 
 /* built-in variable types */
 typedef enum ApeMaterialBuiltinVar
@@ -87,7 +90,15 @@ typedef struct ApeMaterialVariable
 	unsigned int            numElements;// number of elements (i.e., is it an array?)
 
 	ApeMaterialVariableHint hint;
+
+	ApeMaterialAnimator *animator;
 } ApeMaterialVariable;
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Material Pass
+// These essentially represent your individual draw calls. A material can have
+// multiple passes, which is obviously better avoided when possible.
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct ApeMaterialPass
 {
@@ -98,8 +109,12 @@ typedef struct ApeMaterialPass
 	QmMathVector2f   textureOffset;
 	QmMathVector2f   textureScale;
 
-	PLGBlend            blendMode[ 2 ];
-	ApeMaterialVariable variables[ SS_ARL_MAX_MATERIAL_VARIABLES ];
+	unsigned int         numAnimators;
+	ApeMaterialAnimator *animators;
+
+	PLGBlend blendMode[ 2 ];
+
+	ApeMaterialVariable variables[ APE_MATERIAL_MAX_VARIABLES ];
 	unsigned int        numVariables;
 
 	PLGCompareFunction depthMode;
@@ -107,6 +122,79 @@ typedef struct ApeMaterialPass
 	bool depthMask;
 	int  cullMode;
 } ApeMaterialPass;
+
+void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, ApeMaterialPass *materialPass );
+
+ApeMaterialVariable *ape_material_pass_get_variable_( ApeMaterialPass *self, const char *name );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Material Animators
+// These are special blocks you can insert into a material to manage how variables
+// are tweaked and altered at runtime.
+/////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ApeMaterialAnimatorTexture
+{
+	ApeTexture **frames;
+} ApeMaterialAnimatorTexture;
+
+typedef enum ApeMaterialAnimatorTargetType
+{
+	APE_MATERIAL_ANIMATOR_TARGET_TYPE_BUILTIN,
+	APE_MATERIAL_ANIMATOR_TARGET_TYPE_VAR,
+} ApeMaterialAnimatorTargetType;
+
+typedef struct ApeMaterialAnimatorTarget
+{
+	ApeMaterialAnimatorTargetType type;
+
+	union
+	{
+		ApeMaterialVariable *var;
+	};
+} ApeMaterialAnimatorTarget;
+
+//TODO: this should be public
+typedef struct ApeMaterialAnimatorState
+{
+	bool isLooping;
+
+	float speed;
+	float timeAccumulator;
+
+	uint8_t  frame;
+	uint64_t numTicks;
+} ApeMaterialAnimatorState;
+
+typedef enum ApeMaterialAnimatorType
+{
+	APE_MATERIAL_ANIMATOR_TYPE_TEXTURE,
+	//APE_MATERIAL_ANIMATOR_TYPE_VEC2,
+} ApeMaterialAnimatorType;
+
+typedef struct ApeMaterialAnimator
+{
+	ApeMaterialAnimatorType   type;  // type of animator
+	ApeMaterialAnimatorTarget target;// the target variable we'll be modifying
+	ApeMaterialAnimatorState  state; // base state of the animator
+
+	uint8_t numFrames;
+
+	union
+	{
+		ApeMaterialAnimatorTexture texture;
+	};
+} ApeMaterialAnimator;
+
+void ape_material_animator_free_( ApeMaterialAnimator *self );
+
+void ape_material_animator_parse_array_( AcmBranch *root, ApeMaterialPass *pass );
+void ape_material_animator_tick_( ApeMaterialAnimator *self, double delta );
+
+bool ape_material_animator_is_playing_( const ApeMaterialAnimator *self );
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Shaders
@@ -174,8 +262,6 @@ void ape_set_active_shader_by_default_( ApeDefaultShaderProgram defaultShaderPro
 void ape_shader_set_active_( ApeShaderProgram *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
-
-void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, ApeMaterialPass *materialPass );
 
 void ape_material_register_console_variables_();
 

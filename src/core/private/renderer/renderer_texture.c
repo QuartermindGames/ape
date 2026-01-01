@@ -232,6 +232,11 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 	return texture;
 }
 
+void ape_texture_release_( ApeTexture *texture )
+{
+	ape_memory_release( &texture->reference );
+}
+
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture )
 {
 	return defaultTextures[ defaultTexture ];

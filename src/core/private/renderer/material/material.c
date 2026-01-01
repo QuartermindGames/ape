@@ -190,6 +190,20 @@ ApeShaderProgram *ape_material_pass_get_shader_program( const ApeMaterialPass *s
 	return self->program;
 }
 
+ApeMaterialVariable *ape_material_pass_get_variable_( ApeMaterialPass *self, const char *name )
+{
+	// for now we just have a linear lookup here, which will *probably* be okay...
+	for ( unsigned int i = 0; i < self->numVariables; ++i )
+	{
+		if ( strcmp( self->variables[ i ].name, name ) == 0 )
+		{
+			return &self->variables[ i ];
+		}
+	}
+
+	return nullptr;
+}
+
 /**
  * Convert the given tag into a compare mode type.
  */
@@ -697,23 +711,23 @@ void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, Ap
 		materialPass->textureFilter = get_texture_filter_by_name( tmp );
 	}
 
-	/* now handle any specific parameters the material provides */
+	// now handle any specific parameters the material provides
 	materialPass->textureScroll = com_acm_get_vector2( root, "textureScroll", &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
 	materialPass->textureOffset = com_acm_get_vector2( root, "textureOffset", &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
 	materialPass->textureScale  = com_acm_get_vector2( root, "textureScale", &QM_MATH_VECTOR2F( 1.0f, 1.0f ) );
-	if ( materialPass->textureScale.x == 0.0f || materialPass->textureScale.y == 0.0f )
-	{
-		char str[ 64 ];
-		qm_math_vector2f_print( materialPass->textureScale, str, sizeof( str ) );
-
-		ape_console_warning_( "Encountered material pass with invalid texture scale (%s)!\n", str );
-	}
 
 	if ( ( subNode = acm_get_child_by_name( root, "shaderParameters" ) ) != NULL )
 	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
 		parse_shader_parameters( material, materialPass, subNode );
+	}
+
+	// this should follow after the above, as it initialises the list of
+	// material variables, which we might want to look up after
+	if ( ( subNode = acm_get_child_by_name( root, "animators" ) ) != nullptr )
+	{
+		ape_material_animator_parse_array_( subNode, materialPass );
 	}
 
 	/* not sure whether the above section should be required yet, there might be
@@ -793,6 +807,36 @@ static ApeMaterial *get_material( const char *path, ApeCacheGroup group )
 	return nullptr;
 }
 
+static void ape_material_pass_free_( ApeMaterialPass *pass )
+{
+	for ( unsigned int i = 0; i < pass->numVariables; ++i )
+	{
+		switch ( pass->variables[ i ].type )
+		{
+			case APE_MATERIAL_VAR_BUILTIN:
+			case APE_MATERIAL_VAR_TEXTURE:
+				//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
+				break;
+			default:
+				qm_os_memory_free( pass->variables[ i ].data.ptr );
+				break;
+		}
+	}
+
+	if ( pass->animators != nullptr )
+	{
+		for ( unsigned int i = 0; i < pass->numAnimators; ++i )
+		{
+			ape_material_animator_free_( &pass->animators[ i ] );
+		}
+
+		qm_os_memory_free( pass->animators );
+
+		pass->animators    = nullptr;
+		pass->numAnimators = 0;
+	}
+}
+
 static void destroy_material( ApeMaterial *material )
 {
 	if ( material == NULL )
@@ -802,19 +846,7 @@ static void destroy_material( ApeMaterial *material )
 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
-		for ( unsigned int j = 0; j < material->passes[ i ].numVariables; ++j )
-		{
-			switch ( material->passes[ i ].variables[ j ].type )
-			{
-				case APE_MATERIAL_VAR_BUILTIN:
-				case APE_MATERIAL_VAR_TEXTURE:
-					//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
-					break;
-				default:
-					qm_os_memory_free( material->passes[ i ].variables[ j ].data.ptr );
-					break;
-			}
-		}
+		ape_material_pass_free_( &material->passes[ i ] );
 	}
 
 	PLLinkedList *container = PlGetLinkedListNodeContainer( material->node );
@@ -1113,6 +1145,67 @@ bool ape_material_is_blended( const ApeMaterial *self )
 	return self->flags & APE_MATERIAL_FLAG_BLENDED;
 }
 
+static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
+{
+	PLGTexture *texture = nullptr;
+	if ( var->hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse )
+	{
+		texture = diffuseFallbackTexture->internal;
+	}
+	else if ( var->hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && materialSkipNormal )
+	{
+		texture = normalFallbackTexture;
+	}
+	else if ( var->hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && materialSkipSpecular )
+	{
+		texture = specularFallbackTexture;
+	}
+	else if ( var->type == APE_MATERIAL_VAR_RENDERTARGET )
+	{
+		ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( var->data.ptr );
+		if ( renderTarget != nullptr )
+		{
+			texture = ape_render_target_get_texture_( renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+		}
+	}
+	else if ( var->type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
+	{
+		ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( var->data.ptr );
+		if ( renderTarget != nullptr )
+		{
+			texture = ape_render_target_get_texture_( renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_DEPTH );
+		}
+	}
+	else
+	{
+		if ( var->animator != nullptr )
+		{
+			ApeMaterialAnimator *animator = var->animator;
+			//TODO: should we validate the type here?? everything should've been validated at load
+
+			unsigned int frame = animator->state.frame;
+			if ( frame >= animator->numFrames )
+			{
+				frame = animator->numFrames - 1;
+			}
+
+			texture = animator->texture.frames[ frame ]->internal;
+		}
+		else
+		{
+			texture = var->data.ptr;
+		}
+	}
+
+	if ( texture == nullptr )
+	{
+		texture = ape_texture_get_fallback();
+		assert( texture != nullptr );
+	}
+
+	return texture;
+}
+
 void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights )
 {
 	if ( ape_rendererState_.camera != NULL )
@@ -1222,48 +1315,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 				     curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET ||
 				     curPass->variables[ j ].type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
 				{
-					PLGTexture *texture = nullptr;
-					if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET )
-					{
-						ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( curPass->variables[ j ].data.ptr );
-						if ( renderTarget != nullptr )
-						{
-							texture = ape_render_target_get_texture_( renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
-						}
-
-						if ( texture == nullptr )
-						{
-							texture = ape_texture_get_fallback();
-						}
-					}
-					else if ( curPass->variables[ j ].type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
-					{
-						ApeRenderTarget *renderTarget = ape_render_target_get_by_key_( curPass->variables[ j ].data.ptr );
-						if ( renderTarget != nullptr )
-						{
-							texture = ape_render_target_get_texture_( renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_DEPTH );
-						}
-
-						if ( texture == nullptr )
-						{
-							texture = ape_texture_get_fallback();
-						}
-					}
-					else
-					{
-						texture = ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse ) ? diffuseFallbackTexture->internal : ( PLGTexture * ) curPass->variables[ j ].data.ptr;
-					}
-
-					assert( texture != NULL );
-
-					if ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && materialSkipNormal )
-					{
-						texture = normalFallbackTexture;
-					}
-					if ( curPass->variables[ j ].hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && materialSkipSpecular )
-					{
-						texture = specularFallbackTexture;
-					}
+					PLGTexture *texture = ape_material_var_get_texture_( &curPass->variables[ j ] );
 
 					PlgSetTexture( texture, curUnit );
 
@@ -1332,10 +1384,32 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
 }
 
+static void ape_material_pass_tick_( ApeMaterialPass *self, const ApeMaterial *material, double delta )
+{
+	//TODO: wat???
+	QmMathVector2f scroll = {};
+	if ( !( fabsf( self->textureScroll.x ) < QM_MATH_EPSILON && fabsf( self->textureScroll.y ) < QM_MATH_EPSILON ) )
+	{
+		// before it was operating by the current pass texture
+		// honestly this might not really be the best approach,
+		// with the former being better, will see...
+		float w = ( float ) material->width;
+		float h = ( float ) material->height;
+
+		scroll = qm_math_vector2f_div( self->textureScroll, qm_math_vector2f( w, h ) );
+	}
+
+	scroll              = qm_math_vector2f_scale( scroll, QM_MATH_VECTOR2F( self->textureScale.x, self->textureScale.y ) );
+	self->textureOffset = qm_math_vector2f_add( self->textureOffset, scroll );
+
+	for ( unsigned int i = 0; i < self->numAnimators; ++i )
+	{
+		ape_material_animator_tick_( &self->animators[ i ], delta );
+	}
+}
+
 void ape_tick_materials_( double delta )
 {
-	//TODO 25: handle delta here (how do we handle game speed modifier???)
-
 	ape_material_shaders_check_hot_reload_();
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
@@ -1345,23 +1419,7 @@ void ape_tick_materials_( double delta )
 		{
 			for ( unsigned int j = 0; j < material->numPasses; ++j )
 			{
-				if ( fabsf( material->passes[ j ].textureScroll.x ) < QM_MATH_EPSILON &&
-				     fabsf( material->passes[ j ].textureScroll.y ) < QM_MATH_EPSILON )
-				{
-					continue;
-				}
-
-				// before it was operating by the current pass texture
-				// honestly this might not really be the best approach,
-				// with the former being better, will see...
-				float w = ( float ) material->width;
-				float h = ( float ) material->height;
-
-				QmMathVector2f scroll;
-				scroll = qm_math_vector2f_div( material->passes[ j ].textureScroll, qm_math_vector2f( w, h ) );
-				scroll = qm_math_vector2f_scale( scroll, QM_MATH_VECTOR2F( material->passes[ j ].textureScale.x, material->passes[ j ].textureScale.y ) );
-
-				material->passes[ j ].textureOffset = qm_math_vector2f_add( material->passes[ j ].textureOffset, scroll );
+				ape_material_pass_tick_( &material->passes[ j ], material, delta );
 			}
 		}
 	}

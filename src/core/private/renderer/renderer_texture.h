@@ -28,6 +28,7 @@ typedef struct ApeTexture
 } ApeTexture;
 
 ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback );
+void        ape_texture_release_( ApeTexture *texture );
 
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture );
 
