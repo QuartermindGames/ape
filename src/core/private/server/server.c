@@ -43,7 +43,7 @@ bool ape_server_start( const char *ip, unsigned short port )
 		return false;
 	}
 
-	ape_console_print_( "APE server active (%s:%u), listening for clients...\n", ip, ape_server_get_port_() );
+	ape_console_print_( ENGINE_NAME " server active (%s:%u), listening for clients...\n", ip, ape_server_get_port_() );
 
 	return true;
 }

@@ -418,7 +418,7 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 			return ( netSocket->connectionState = NET_CONNECTION_CONNECTED );
 		}
 
-		ape_console_warning_( "Connection failed with error code %u!\n", errCode );
+		ape_console_warning_( "Connection failed with error: %s!\n", strerror( errCode ) );
 		return ( netSocket->connectionState = NET_CONNECTION_FAILED );
 	}
 

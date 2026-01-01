@@ -13,6 +13,8 @@ typedef enum ApeNetConnectionState
 	NET_CONNECTION_FAILED,
 } ApeNetConnectionState;
 
+static constexpr uint16_t APE_NET_DEFAULT_PORT = 38749;
+
 #if defined( _MSC_VER )
 #	include <basetsd.h>
 typedef SSIZE_T ssize_t;

@@ -2,6 +2,8 @@
 
 #include "../ape_private.h"
 
+#include "qmos/public/qm_os_string.h"
+
 #include "../net/net.h"
 #include "ape_client.h"
 #include "ape_client_input.h"
@@ -169,8 +171,55 @@ static void handle_connection_state( void )
 
 static void connect_command( PL_UNUSED unsigned int argc, char **argv )
 {
-	uint16_t port = strtoul( argv[ 1 ], nullptr, 10 );
-	ape_initiate_client_connection_( "localhost", port );
+	char *address = qm_os_string_alloc( nullptr, "%s", argv[ 1 ] );
+	if ( address == nullptr )
+	{
+		ape_console_warning_( "Failed to allocate string for connect!\n" );
+		return;
+	}
+
+	uint16_t port = APE_NET_DEFAULT_PORT;
+	if ( *address == '[' )
+	{
+		// ipv6
+
+		char *p = strrchr( address, ']' );
+		if ( p == nullptr )
+		{
+			ape_console_warning_( "Not a valid ipv6 address (%s)!\n", argv[ 1 ] );
+			goto cleanup;
+		}
+
+		unsigned int length = p - 1 - address;
+
+		// check if the port is provided at the end
+		p = strrchr( p, ':' );
+		if ( p != nullptr )
+		{
+			port = strtoul( p + 1, nullptr, 10 );
+			*p   = '\0';
+		}
+
+		strncpy( address, address + 1, length );
+		address[ length ] = '\0';
+	}
+	else
+	{
+		// ipv4
+
+		// check if the port is provided at the end
+		char *p = strrchr( address, ':' );
+		if ( p != nullptr )
+		{
+			port = strtoul( p + 1, nullptr, 10 );
+			*p   = '\0';
+		}
+	}
+
+	ape_initiate_client_connection_( address, port );
+
+cleanup:
+	qm_os_memory_free( address );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
