@@ -10,21 +10,15 @@
 
 PL_EXTERN_C
 
-typedef struct PLVectorArray PLVectorArray;
-typedef struct PLLinkedList  PLLinkedList;
-
 typedef struct QmOsLinkedList QmOsLinkedList;
 
 typedef struct AcmBranch AcmBranch;
 
 typedef struct ApeMaterial ApeMaterial;
-typedef struct ApeCamera   ApeCamera;
-typedef struct ApeViewport ApeViewport;
 typedef struct ApeLight    ApeLight;
 typedef struct ApeEntity   ApeEntity;// core_entity.h
 typedef struct ApeRoom     ApeRoom;  // world.h
 typedef struct ApeBrush    ApeBrush;
-typedef struct ApeWorld    ApeWorld;
 
 typedef struct ApeProperty ApeProperty;
 
@@ -322,7 +316,6 @@ typedef enum ApeBrushFaceFlag
 	PL_BITFLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),    // reflects the current room
 	PL_BITFLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),    // allows for passing through to another destination
 	PL_BITFLAG( APE_BRUSH_FACE_FLAG_CLOSED, 3U ),    // if a portal/mirror, indicates that the vis-test shouldn't pass
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_NO_SHADOWS, 4U ),// skip shadows for the given face
 } ApeBrushFaceFlag;
 
 typedef struct ApeBrushFaceVertex

@@ -40,23 +40,23 @@ static void close_socket( ApeNetSocketHandle handle )
 
 typedef struct ApeNetSocket
 {
-	ApeNetSocketHandle handle; /* system socket handle */
-	int addressType;           /* ip4 / ip6 */
+	ApeNetSocketHandle handle;      /* system socket handle */
+	int                addressType; /* ip4 / ip6 */
 	union
 	{
-		struct sockaddr_in ip4;
+		struct sockaddr_in  ip4;
 		struct sockaddr_in6 ip6;
 	} local;
 	union
 	{
-		struct sockaddr_in ip4;
+		struct sockaddr_in  ip4;
 		struct sockaddr_in6 ip6;
 	} remote;
 	ApeNetConnectionState connectionState;
 
-	unsigned char *sendBuffer; /**< Buffer for data waiting to be sent. */
-	size_t sendBufferSize;     /**< Size of sendBuffer. */
-	size_t sendBufferUsed;     /**< Number of bytes currently in sendBuffer. */
+	unsigned char *sendBuffer;     /**< Buffer for data waiting to be sent. */
+	size_t         sendBufferSize; /**< Size of sendBuffer. */
+	size_t         sendBufferUsed; /**< Number of bytes currently in sendBuffer. */
 
 	size_t osSendBufferSize; /**< Size of OS socket send buffer (i.e. SO_SNDBUF). */
 } ApeNetSocket;
@@ -101,13 +101,13 @@ static bool execute_test( void )
 		testData.acceptSocket = ape_net_accept_( testData.hostSocket );
 	}
 
-	const char *s = "Hello World!";
-	size_t sl = strlen( s );
+	const char *s  = "Hello World!";
+	size_t      sl = strlen( s );
 	ape_net_send_( testData.acceptSocket, s, sl );
 
 	ape_console_print_( "Sent \"%s\" to %s\n", s, ip );
 
-	char d[ 16 ];
+	char   d[ 16 ];
 	size_t dl = 0;
 	while ( dl < sl )
 	{
@@ -146,7 +146,7 @@ void ape_initialize_net_( void )
 {
 #if defined( _WIN32 )
 	WSADATA data;
-	int r;
+	int     r;
 	if ( ( r = WSAStartup( MAKEWORD( 2, 2 ), &data ) ) != 0 )
 	{
 		ape_console_warning_( "Failed to initialize Winsock: %d\n", r );
@@ -170,7 +170,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	struct addrinfo hints;
 	PL_ZERO_( hints );
 
-	hints.ai_family = AF_UNSPEC;
+	hints.ai_family   = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* if ip is null, assume we don't care */
@@ -185,15 +185,15 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	snprintf( buf, sizeof( buf ), PL_FMT_uint16, port );
 
 	struct addrinfo *result;
-	int s = getaddrinfo( ip, buf, &hints, &result );
+	int              s = getaddrinfo( ip, buf, &hints, &result );
 	if ( s != 0 )
 	{
 		ape_console_warning_( "Failed to get address info: %s\n", gai_strerror( s ) );
-		return NULL;
+		return nullptr;
 	}
 
 	ApeNetSocketHandle handle = -1;
-	struct addrinfo *r;
+	struct addrinfo   *r;
 	for ( r = result; r != NULL; r = r->ai_next )
 	{
 		handle = socket( r->ai_family, r->ai_socktype, r->ai_protocol );
@@ -209,9 +209,8 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 		fcntl( handle, F_SETFL, O_NONBLOCK );
 #endif
 
-		if ( isHost && ( bind( handle, r->ai_addr, r->ai_addrlen ) == 0 ) )
+		if ( isHost && bind( handle, r->ai_addr, r->ai_addrlen ) == 0 && listen( handle, 8 ) == 0 )
 		{
-			assert( listen( handle, 8 ) == 0 );
 			break;
 		}
 
@@ -251,14 +250,14 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	{
 		ape_console_warning_( "Failed to open and connect/bind socket!\n" );
 		freeaddrinfo( result );
-		return NULL;
+		return nullptr;
 	}
 
 	/* all done, allocate and return it */
-	ApeNetSocket *netSocket = QM_OS_MEMORY_MALLOC_( sizeof( ApeNetSocket ) );
+	ApeNetSocket *netSocket    = QM_OS_MEMORY_MALLOC_( sizeof( ApeNetSocket ) );
 	netSocket->connectionState = NET_CONNECTION_PENDING;
-	netSocket->handle = handle;
-	netSocket->addressType = addressType;
+	netSocket->handle          = handle;
+	netSocket->addressType     = addressType;
 
 	socklen_t addrSize;
 	addrSize = sizeof( netSocket->local );
@@ -361,7 +360,7 @@ ssize_t ape_net_receive_( ApeNetSocket *netSocket, void *dst, size_t length )
 ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket )
 {
 	struct sockaddr_storage buf;
-	socklen_t size = sizeof( buf );
+	socklen_t               size = sizeof( buf );
 
 	int handle = accept( netSocket->handle, ( struct sockaddr * ) &buf, &size );
 	if ( handle >= 0 )
@@ -374,7 +373,7 @@ ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket )
 #endif
 
 		ApeNetSocket *out = QM_OS_MEMORY_MALLOC_( sizeof( ApeNetSocket ) );
-		out->handle = handle;
+		out->handle       = handle;
 
 		socklen_t addrSize;
 		addrSize = sizeof( netSocket->local );
@@ -411,7 +410,7 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 	int s = select( netSocket->handle + 1, NULL, &fdWrite, &fdAccept, &tv );
 	if ( s > 0 )
 	{
-		char errCode;
+		char      errCode;
 		socklen_t errLen = sizeof( errCode );
 		getsockopt( netSocket->handle, SOL_SOCKET, SO_ERROR, &errCode, &errLen );
 		if ( errCode == 0 )
@@ -449,7 +448,7 @@ bool ape_net_set_max_send_size_( ApeNetSocket *netSocket, size_t maxSendSize )
 		return false;
 	}
 
-	netSocket->sendBuffer = newSendBuffer;
+	netSocket->sendBuffer     = newSendBuffer;
 	netSocket->sendBufferSize = maxSendSize;
 
 	return true;
@@ -465,7 +464,7 @@ bool ape_net_set_send_buffer_size_( ApeNetSocket *netSocket, size_t sendBufferSi
 	assert( sendBufferSize < INT_MAX );
 
 	int sndbuf = ( int ) sendBufferSize;
-	int res = setsockopt( netSocket->handle, SOL_SOCKET, SO_SNDBUF, ( char * ) &sndbuf, sizeof( sndbuf ) );
+	int res    = setsockopt( netSocket->handle, SOL_SOCKET, SO_SNDBUF, ( char * ) &sndbuf, sizeof( sndbuf ) );
 	if ( res != 0 )
 	{
 #ifdef _WIN32
