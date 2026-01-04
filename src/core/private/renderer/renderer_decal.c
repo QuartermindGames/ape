@@ -158,6 +158,8 @@ void ape_decal_manager_clear_( ApeDecalManager *self )
 
 void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	ApeDecal *decal;
 	QM_OS_LINKED_LIST_ITERATE( decal, self->decalList, i )
 	{
@@ -182,6 +184,8 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 
 		decal->life++;
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 static bool decal_build_rect( ApeDecal *self )
