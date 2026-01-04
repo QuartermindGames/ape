@@ -4,6 +4,8 @@
 
 #include "post.h"
 
+#include "core_console.h"
+
 #include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 
@@ -15,8 +17,8 @@ static ApeRenderTarget  *ditherFilterTarget;
 
 static void register_dither_console_variables()
 {
-	PlRegisterConsoleVariable( "post_dither", "Enable/disable dithering effect.", "true", PL_VAR_BOOL, &ditherEnabled, nullptr, true );
-	PlRegisterConsoleVariable( "post_dither.downscale", "Draw the dithering effect into a smaller resolution buffer.", "false", PL_VAR_BOOL, &ditherDownscale, nullptr, true );
+	ape_console_var_register( "post_dither", "Enable/disable dithering effect.", "true", PL_VAR_BOOL, &ditherEnabled, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "post_dither.downscale", "Draw the dithering effect into a smaller resolution buffer.", "false", PL_VAR_BOOL, &ditherDownscale, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
 static bool setup_dither_effect()

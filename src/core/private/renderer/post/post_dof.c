@@ -4,6 +4,8 @@
 
 #include "post.h"
 
+#include "core_console.h"
+
 #include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 
@@ -22,11 +24,11 @@ static ApeRenderTarget  *dofTarget;
 
 static void register_dof_console_variables()
 {
-	PlRegisterConsoleVariable( "post_dof", "Enable/disable depth of field.", "true", PL_VAR_BOOL, &dofEnabled, nullptr, true );
+	ape_console_var_register( "post_dof", "Enable/disable depth of field.", "true", PL_VAR_BOOL, &dofEnabled, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
-	PlRegisterConsoleVariable( "post_dof.focusPoint", "", "0.0", PL_VAR_F32, &dofFocusPoint, nullptr, false );
-	PlRegisterConsoleVariable( "post_dof.focusScale", "", "0.0", PL_VAR_F32, &dofFocusScale, nullptr, false );
-	PlRegisterConsoleVariable( "post_dof.aperture", "", "0", PL_VAR_F32, &dofAperture, nullptr, false );
+	ape_console_var_register( "post_dof.focusPoint", "", "0.0", PL_VAR_F32, &dofFocusPoint, nullptr, 0 );
+	ape_console_var_register( "post_dof.focusScale", "", "0.0", PL_VAR_F32, &dofFocusScale, nullptr, 0 );
+	ape_console_var_register( "post_dof.aperture", "", "0", PL_VAR_F32, &dofAperture, nullptr, 0 );
 }
 
 static bool setup_dof_effect()
