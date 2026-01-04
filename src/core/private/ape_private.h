@@ -30,21 +30,20 @@
 
 #include <yin/core.h>
 
-#define ENGINE_NAME     "APE Tech"
+#define ENGINE_NAME     "ApeTech"
 #define ENGINE_APP_NAME "ape"
 
-#define VERSION_MAJOR    0
-#define VERSION_MINOR    5
-#define VERSION_PATCH    0
-#define VERSION_CODENAME "Pelham-Holles"
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 6
+#define VERSION_PATCH 0
+
+#define ENGINE_VERSION_STR       \
+	PL_TOSTRING( VERSION_MAJOR ) \
+	"." PL_TOSTRING( VERSION_MINOR ) "." PL_TOSTRING( VERSION_PATCH )
 
 #define S_STRCAT( DST, SOURCE ) strncat( ( DST ), ( SOURCE ), sizeof( ( DST ) ) - strlen( ( DST ) ) - 1 )
 
 PL_EXTERN_C
-
-#define ENGINE_VERSION_STR       \
-	PL_TOSTRING( VERSION_MAJOR ) \
-	"." PL_TOSTRING( VERSION_MINOR ) "." PL_TOSTRING( VERSION_PATCH ) " (" VERSION_CODENAME ")"
 
 void apeUpdateProfilerGraphs( void );
 
@@ -159,6 +158,5 @@ void ape_initialize_game_( void );
 void ape_shutdown_game_( void );
 
 void ape_tick_game_server_( double delta );
-void ape_spawn_world_( const char *path );
 
 PL_EXTERN_C_END
