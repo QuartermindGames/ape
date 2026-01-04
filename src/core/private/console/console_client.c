@@ -6,7 +6,7 @@
 #include "gui/gui_private.h"
 #include "audio/audio.h"
 #include "world/world.h"
-#include "client/ape_client_input.h"
+#include "client/client_input.h"
 #include "editor/editor.h"
 #include "renderer/material/material.h"
 

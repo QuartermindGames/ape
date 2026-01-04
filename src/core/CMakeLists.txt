@@ -1,7 +1,7 @@
 set(YIN_CORE_CLIENT
-        private/client/ape_client.c
-        private/client/ape_client_input.c
-        private/client/ape_client_gui.c
+        private/client/client.c
+        private/client/client_input.c
+        private/client/client_gui.c
 
         private/renderer/material/material.c
         private/renderer/material/material_animator.c

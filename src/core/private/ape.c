@@ -6,8 +6,8 @@
 
 #include "yin/core_fs.h"
 
-#include "client/ape_client.h"
-#include "client/ape_client_input.h"
+#include "client/client.h"
+#include "client/client_input.h"
 #include "renderer/renderer.h"
 
 #include "server/server.h"

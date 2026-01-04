@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 
 #include "ape_private.h"
-#include "ape_client_input.h"
+#include "client_input.h"
 #include "gui/gui_private.h"
 
 /////////////////////////////////////////////////////////////////////////////////////

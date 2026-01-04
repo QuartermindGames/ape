@@ -1,7 +1,7 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include "ape_private.h"
-#include "ape_client_gui.h"
+#include "client_gui.h"
 
 #include "camera/camera.h"
 #include "yin/core_interfaces.h"

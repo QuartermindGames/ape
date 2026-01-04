@@ -5,7 +5,6 @@
 PL_EXTERN_C
 
 #include <yin/core_input.h>
-#include <stdbool.h>
 
 typedef struct AcmBranch AcmBranch;
 

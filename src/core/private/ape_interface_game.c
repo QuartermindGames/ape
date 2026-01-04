@@ -4,7 +4,7 @@
 #include "game/game_public.h"
 #include "world/world.h"
 
-#include "client/ape_client.h"
+#include "client/client.h"
 #include "renderer/renderer.h"
 
 #include "server/server.h"

@@ -6,10 +6,10 @@
 #include "../ape_private.h"
 
 #include "../net/net.h"
-#include "ape_client.h"
-#include "ape_client_input.h"
+#include "client.h"
+#include "client_input.h"
 #include "game/game_public.h"
-#include "ape_client_gui.h"
+#include "client_gui.h"
 #include "editor/editor.h"
 #include "renderer/renderer.h"
 #include "audio/audio.h"
