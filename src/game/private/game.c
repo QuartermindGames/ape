@@ -104,6 +104,40 @@ static void register_standard_entity_components()
 	ape_register_entity_component( &game_inventoryComponent_ );
 }
 
+static void load_room_command( PL_UNUSED unsigned int argc, char **argv )
+{
+	ApeWorld *world = ape_world_create();
+	assert( world != nullptr );
+
+	ApeWorldNode *roomNode = ape_world_node_load( APE_WORLD_NODE( world ), argv[ 1 ] );
+	if ( roomNode == nullptr )
+	{
+		ape_world_node_destroy( APE_WORLD_NODE( world ) );
+		return;
+	}
+
+	game_spawn_world( world, ( ApeRoom * ) roomNode );
+}
+
+static void print_world_name( const char *path, void * )
+{
+	// verify it's a valid world
+	if ( strcmp( &path[ strlen( path ) - 6 ], "." APE_WORLD_ROOM_EXTENSION ) != 0 )
+	{
+		return;
+	}
+
+	//TODO: just print the name of the world itself?
+
+	const char *name = ( name = strrchr( path, '/' ) ) != nullptr ? name + 1 : path;
+	game_print_( "%s\n", name );
+}
+
+static void list_rooms_command( unsigned int, char ** )
+{
+	PlScanDirectory( "rooms", "n", print_world_name, true, nullptr );
+}
+
 static void navigate_world_tree( const ApeWorldNode *node, const unsigned int depth )
 {
 	for ( unsigned int i = 0; i < depth; ++i )
@@ -140,6 +174,8 @@ bool game_initialize_( void )
 
 	PlRegisterConsoleVariable( "game.timeModifier", "Time modifier, useful for emulating slow-motion.", "1.0", PL_VAR_F32, &gameTimeModifier, nullptr, false );
 
+	PlRegisterConsoleCommand( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
+	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
 	PlRegisterConsoleCommand( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
 
 	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
@@ -201,6 +237,11 @@ void game_spawn_world( ApeWorld *world, ApeRoom *room )
 	{
 		ape_gameInterface->spawnWorld( room );
 	}
+
+	ape_world_spawn_entities( world );
+
+	ape_server_start( "localhost", 0 );
+	ape_client_connect( "localhost", ape_server_get_port() );
 }
 
 const char *game_get_identifier()

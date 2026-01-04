@@ -57,7 +57,7 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 	qm_os_memory_free( self );
 }
 
-void ape_world_spawn_entities_( ApeWorld *self )
+void ape_world_spawn_entities( ApeWorld *self )
 {
 	ApeEntity *entity;
 	COM_ITERATE_LINKED_LIST( entity, self->entities, i )

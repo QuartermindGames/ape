@@ -4,6 +4,9 @@
 
 PL_EXTERN_C
 
+void ape_client_connect( const char *address, uint16_t port );
+void ape_client_disconnect( void );
+
 /**
  * Returns true if the current client is connected and validated.
  */

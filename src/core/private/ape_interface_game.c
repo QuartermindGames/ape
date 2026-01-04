@@ -11,44 +11,11 @@
 
 #include "yin/core_fs.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
-static void load_room_command( PL_UNUSED unsigned int argc, char **argv )
-{
-	ape_spawn_world_( argv[ 1 ] );
-}
-
-static void print_world_name( const char *path, void * )
-{
-	// verify it's a valid world
-	if ( strcmp( &path[ strlen( path ) - 6 ], "." APE_WORLD_ROOM_EXTENSION ) != 0 )
-	{
-		return;
-	}
-
-	//TODO: just print the name of the world itself?
-
-	const char *name = ( name = strrchr( path, '/' ) ) != nullptr ? name + 1 : path;
-	ape_console_print_( "%s\n", name );
-}
-
-static void list_rooms_command( unsigned int, char ** )
-{
-	PlScanDirectory( "rooms", "n", print_world_name, true, nullptr );
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Public
-
 const ApeGameInterfaceImport *ape_gameInterface;
 
 void ape_initialize_game_( void )
 {
 	ape_console_print_( "Initializing game...\n" );
-
-	PlRegisterConsoleCommand( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
-	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
 
 	ape_gameInterface = ape_game_get_interface();
 	if ( ape_gameInterface == nullptr )
@@ -142,24 +109,4 @@ void ape_tick_game_server_( double delta )
 	}
 
 	COM_PROFILE_FUNCTION_END();
-}
-
-void ape_spawn_world_( const char *path )
-{
-	ApeWorld *world = ape_world_create();
-	assert( world != nullptr );
-
-	ApeWorldNode *roomNode = ape_world_node_load( APE_WORLD_NODE( world ), path );
-	if ( roomNode == nullptr )
-	{
-		ape_world_node_destroy( APE_WORLD_NODE( world ) );
-		return;
-	}
-
-	game_spawn_world( world, ( ApeRoom * ) roomNode );
-
-	ape_world_spawn_entities_( world );
-
-	ape_server_start( "localhost", 0 );
-	ape_initiate_client_connection_( "localhost", ape_server_get_port_() );
 }

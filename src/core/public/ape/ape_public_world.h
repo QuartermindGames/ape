@@ -312,10 +312,10 @@ typedef enum ApeBrushType
 
 typedef enum ApeBrushFaceFlag
 {
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0U ),    // hides the face
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),    // reflects the current room
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),    // allows for passing through to another destination
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_CLOSED, 3U ),    // if a portal/mirror, indicates that the vis-test shouldn't pass
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0U ),// hides the face
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),// reflects the current room
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),// allows for passing through to another destination
+	PL_BITFLAG( APE_BRUSH_FACE_FLAG_CLOSED, 3U ),// if a portal/mirror, indicates that the vis-test shouldn't pass
 } ApeBrushFaceFlag;
 
 typedef struct ApeBrushFaceVertex
@@ -459,6 +459,8 @@ typedef struct ApeWorld
 /// Create an entirely new empty world handle.
 /// \return New world instance.
 ApeWorld *ape_world_create( void );
+
+void ape_world_spawn_entities( ApeWorld *self );
 
 ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path );
 

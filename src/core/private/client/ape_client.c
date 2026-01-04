@@ -1,8 +1,9 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include "../ape_private.h"
-
+#include "qmos/public/qm_os_time.h"
 #include "qmos/public/qm_os_string.h"
+
+#include "../ape_private.h"
 
 #include "../net/net.h"
 #include "ape_client.h"
@@ -35,7 +36,7 @@ typedef struct ClientState
 	bool          isConnected;
 
 	ApeProtocolMessage message;
-	unsigned int       lastMessageTick;
+	double             lastMessageTime;
 
 	PLConsoleString name;
 } ClientState;
@@ -78,11 +79,25 @@ static void process_server_message()
 		default:
 			ape_console_warning_( "Unhandled client message (%u)!\n", messageHeader->type );
 			break;
+		case APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE:
+			//ape_console_print_( "CL: Received heartbeat response\n" );
+			break;
+		case APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_REQUEST:
+		{
+			//ape_console_print_( "CL: Received heartbeat request\n" );
+			static constexpr ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ), .type = APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE };
+			if ( !ape_net_send_( clientState.netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
+			{
+				ape_client_disconnect();
+			}
+			break;
+		}
 		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
 		{
 			const ApeGameInterfaceImport *game = ape_game_get_interface();
 			assert( game->clientProcessMessage );
 			game->clientProcessMessage( messageHeader + 1, messageHeader->length - sizeof( ApeProtocolMessageHeader ) );
+			break;
 		}
 	}
 }
@@ -103,7 +118,7 @@ static void handle_connection_state( void )
 		{
 			if ( state == NET_CONNECTION_FAILED )
 			{
-				ape_client_disconnect_();
+				ape_client_disconnect();
 				ape_console_warning_( "Connection failed!\n" );
 			}
 			return;
@@ -132,12 +147,30 @@ static void handle_connection_state( void )
 	                              sizeof( clientState.message.receiveBuffer ) - clientState.message.receivedBytes );
 	if ( r == -1 )
 	{
-		ape_client_disconnect_();
+		ape_client_disconnect();
 		return;
 	}
+
+	double time = qm_os_time_get_seconds();
+	if ( r == 0 && time - clientState.lastMessageTime >= APE_PROTOCOL_TIMEOUT )
+	{
+		ape_console_warning_( "Received no response from server, disconnecting!\n", clientState.lastMessageTime );
+		ape_client_disconnect();
+		return;
+	}
+	if ( r == 0 && time - clientState.lastMessageTime >= APE_PROTOCOL_HEARTBEAT_TIME )
+	{
+		ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ), .type = APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_REQUEST };
+		if ( !ape_net_send_( clientState.netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
+		{
+			ape_client_disconnect();
+		}
+		return;
+	}
+
 	if ( r > 0 )
 	{
-		clientState.lastMessageTick = ape_get_num_ticks();
+		clientState.lastMessageTime = time;
 	}
 
 	clientState.message.receivedBytes += r;
@@ -158,13 +191,13 @@ static void handle_connection_state( void )
 		{
 			// boom
 			ape_console_warning_( "Client sent a message of an invalid length: %u/%u\n", messageHeader->length, APE_PROTOCOL_MESSAGE_SIZE );
-			ape_client_disconnect_();
+			ape_client_disconnect();
 		}
 
 		if ( clientState.state == CLIENT_SERVER_STATE_REJECTED )
 		{
 			ape_console_warning_( "Client rejected by server, disconnecting\n" );
-			ape_client_disconnect_();
+			ape_client_disconnect();
 		}
 	}
 }
@@ -216,7 +249,7 @@ static void connect_command( PL_UNUSED unsigned int argc, char **argv )
 		}
 	}
 
-	ape_initiate_client_connection_( address, port );
+	ape_client_connect( address, port );
 
 cleanup:
 	qm_os_memory_free( address );
@@ -301,19 +334,19 @@ void ape_tick_client_( const double delta )
  * Begin connection process - client will continue connecting per
  * tick until success or failure, and then begin handshake process.
  */
-void ape_initiate_client_connection_( const char *ip, unsigned short port )
+void ape_client_connect( const char *address, const uint16_t port )
 {
-	clientState.netSocket = ape_net_open_socket_( ip, port, false );
+	clientState.netSocket = ape_net_open_socket_( address, port, false );
 	if ( clientState.netSocket == NULL )
 	{
 		ape_console_warning_( "Failed to open client socket!\n" );
 		return;
 	}
 
-	ape_console_print_( "Initiated connection to %s, pending...\n", ip );
+	ape_console_print_( "Initiated connection to %s, pending...\n", address );
 }
 
-void ape_client_disconnect_( void )
+void ape_client_disconnect( void )
 {
 	if ( clientState.netSocket != NULL )
 	{

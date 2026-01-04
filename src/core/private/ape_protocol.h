@@ -6,11 +6,18 @@
 
 PL_EXTERN_C
 
+static constexpr unsigned int APE_PROTOCOL_MAX_CONNECTION_RETRIES = 8;
+
+static constexpr double APE_PROTOCOL_HEARTBEAT_TIME = 3.0; // seconds
+static constexpr double APE_PROTOCOL_TIMEOUT        = 30.0;//seconds
+
 typedef enum ApeProtocolMessageType
 {
 	APE_PROTOCOL_MESSAGE_TYPE_VALIDATION,// validation request
 	APE_PROTOCOL_MESSAGE_TYPE_VALIDATED, // successful validation message
-	APE_PROTOCOL_MESSAGE_TYPE_GAME,      // game-specific message
+	APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_REQUEST,
+	APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE,
+	APE_PROTOCOL_MESSAGE_TYPE_GAME,// game-specific message
 } ApeProtocolMessageType;
 
 typedef struct __attribute__( ( packed ) ) ApeProtocolMessageHeader

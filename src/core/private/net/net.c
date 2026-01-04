@@ -165,7 +165,7 @@ void ape_shutdown_net_( void )
 #endif
 }
 
-ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost )
+ApeNetSocket *ape_net_open_socket_( const char *address, const unsigned short port, const bool isHost )
 {
 	struct addrinfo hints;
 	PL_ZERO_( hints );
@@ -174,7 +174,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* if ip is null, assume we don't care */
-	if ( ip == NULL )
+	if ( address == NULL )
 	{
 		hints.ai_flags = AI_PASSIVE;
 	}
@@ -185,7 +185,7 @@ ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool is
 	snprintf( buf, sizeof( buf ), PL_FMT_uint16, port );
 
 	struct addrinfo *result;
-	int              s = getaddrinfo( ip, buf, &hints, &result );
+	int              s = getaddrinfo( address, buf, &hints, &result );
 	if ( s != 0 )
 	{
 		ape_console_warning_( "Failed to get address info: %s\n", gai_strerror( s ) );
@@ -386,7 +386,7 @@ ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket )
 
 		return out;
 	}
-	return NULL;
+	return nullptr;
 }
 
 ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
@@ -407,7 +407,7 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 	struct timeval tv;
 	PL_ZERO_( tv );
 
-	int s = select( netSocket->handle + 1, NULL, &fdWrite, &fdAccept, &tv );
+	int s = select( netSocket->handle + 1, nullptr, &fdWrite, &fdAccept, &tv );
 	if ( s > 0 )
 	{
 		char      errCode;
@@ -425,12 +425,12 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 	return NET_CONNECTION_PENDING;
 }
 
-unsigned short ape_net_get_local_port_( ApeNetSocket *netSocket )
+unsigned short ape_net_get_local_port_( const ApeNetSocket *netSocket )
 {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->local.ip4.sin_port : netSocket->local.ip6.sin6_port );
 }
 
-unsigned short ape_net_get_remote_port_( ApeNetSocket *netSocket )
+unsigned short ape_net_get_remote_port_( const ApeNetSocket *netSocket )
 {
 	return ntohs( ( netSocket->addressType == NET_IP4 ) ? netSocket->remote.ip4.sin_port : netSocket->remote.ip6.sin6_port );
 }

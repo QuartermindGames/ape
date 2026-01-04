@@ -14,7 +14,11 @@ typedef enum ApeServerClientState
 	APE_SERVER_CLIENT_STATE_ACCEPTED,    // is connected and validation was successful
 } ApeServerClientState;
 
-bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers );
+bool ape_server_start( const char *address, uint16_t port );
+
+uint16_t ape_server_get_port( void );
+
+bool ape_server_send( const ApeServerClient *clientHandle, const void **buf, const size_t *bufSizes, unsigned int numBuffers );
 
 const char *ape_server_get_client_name( ApeServerClient *client );
 

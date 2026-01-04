@@ -1,9 +1,11 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 // Purpose: Server implementation.
 
-#include "ape_private.h"
-#include "ape/ape_public_game.h"
+#include "qmos/public/qm_os_time.h"
 
+#include "ape_private.h"
+
+#include "ape/ape_public_game.h"
 #include "server.h"
 
 #define SERVER_CLIENT_TIMEOUT 1024
@@ -24,7 +26,7 @@ typedef struct ApeServerClient
 
 	ApeProtocolMessage message;
 
-	unsigned int lastMessageTick;
+	double lastMessageTime;
 } ApeServerClient;
 static QmOsLinkedList *connectedClients;
 
@@ -34,16 +36,16 @@ void ape_server_register_console_variables_()
 	PlRegisterConsoleVariable( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, nullptr, true );
 }
 
-bool ape_server_start( const char *ip, unsigned short port )
+bool ape_server_start( const char *address, const uint16_t port )
 {
-	hostSocket = ape_net_open_socket_( ip, port, true );
+	hostSocket = ape_net_open_socket_( address, port, true );
 	if ( hostSocket == NULL )
 	{
 		ape_console_warning_( "Failed to open server socket!\n" );
 		return false;
 	}
 
-	ape_console_print_( ENGINE_NAME " server active (%s:%u), listening for clients...\n", ip, ape_server_get_port_() );
+	ape_console_print_( ENGINE_NAME " server active (%s:%u), listening for clients...\n", address, ape_server_get_port() );
 
 	return true;
 }
@@ -179,6 +181,19 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 		default:
 			ape_console_warning_( "Unhandled server message (%u)!\n", messageHeader->type );
 			break;
+		case APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE:
+			//ape_console_print_( "SV: Received heartbeat response\n" );
+			break;
+		case APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_REQUEST:
+		{
+			//ape_console_print_( "SV: Received heartbeat request\n" );
+			static constexpr ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ), .type = APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE };
+			if ( !ape_net_send_( client->netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
+			{
+				ape_server_drop_client_( client );
+			}
+			break;
+		}
 		case APE_PROTOCOL_MESSAGE_TYPE_GAME:
 		{
 			const ApeGameInterfaceImport *game = ape_game_get_interface();
@@ -199,9 +214,26 @@ static void tick_server_client( ApeServerClient *serverClient )
 		return;
 	}
 
+	double time = qm_os_time_get_seconds();
+	if ( r == 0 && time - serverClient->lastMessageTime >= APE_PROTOCOL_TIMEOUT )
+	{
+		ape_console_warning_( "Received no response from client (%s), dropping!\n", serverClient->name );
+		ape_server_drop_client_( serverClient );
+		return;
+	}
+	if ( r == 0 && time - serverClient->lastMessageTime >= APE_PROTOCOL_HEARTBEAT_TIME )
+	{
+		ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ), .type = APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_REQUEST };
+		if ( !ape_net_send_( serverClient->netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
+		{
+			ape_server_drop_client_( serverClient );
+		}
+		return;
+	}
+
 	if ( r > 0 )
 	{
-		serverClient->lastMessageTick = ape_get_num_ticks();
+		serverClient->lastMessageTime = time;
 	}
 
 	serverClient->message.receivedBytes += r;
@@ -232,7 +264,7 @@ static void tick_server_client( ApeServerClient *serverClient )
 	}
 }
 
-void ape_tick_server_( double delta )
+void ape_tick_server_( const double delta )
 {
 	if ( hostSocket == nullptr )
 	{
@@ -248,6 +280,7 @@ void ape_tick_server_( double delta )
 		ApeServerClient *serverClient = QM_OS_MEMORY_MALLOC_( sizeof( ApeServerClient ) );
 		serverClient->netSocket       = connectedSocket;
 		serverClient->node            = qm_os_linked_list_push_back( connectedClients, serverClient );
+		serverClient->lastMessageTime = qm_os_time_get_seconds();
 		serverClient->state           = APE_SERVER_CLIENT_STATE_VALIDATING;
 		// validation still needs to be performed
 		ape_console_print_( "Client connected, awaiting validation...\n" );
@@ -267,7 +300,7 @@ void ape_tick_server_( double delta )
 /**
  * Return port of local server instance.
  */
-unsigned short ape_server_get_port_( void )
+uint16_t ape_server_get_port( void )
 {
 	if ( hostSocket == NULL )
 	{
@@ -277,7 +310,7 @@ unsigned short ape_server_get_port_( void )
 	return ape_net_get_local_port_( hostSocket );
 }
 
-bool ape_server_send( ApeServerClient *clientHandle, const void **buf, size_t *bufSizes, unsigned int numBuffers )
+bool ape_server_send( const ApeServerClient *clientHandle, const void **buf, const size_t *bufSizes, unsigned int numBuffers )
 {
 	size_t totalSize = 0;
 	for ( unsigned int i = 0; i < numBuffers; ++i )

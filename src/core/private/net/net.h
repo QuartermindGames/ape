@@ -23,7 +23,7 @@ typedef SSIZE_T ssize_t;
 void ape_initialize_net_( void );
 void ape_shutdown_net_( void );
 
-ApeNetSocket *ape_net_open_socket_( const char *ip, unsigned short port, bool isHost );
+ApeNetSocket *ape_net_open_socket_( const char *address, unsigned short port, bool isHost );
 void ape_net_close_socket_( ApeNetSocket *netSocket );
 
 /**
@@ -48,8 +48,8 @@ ApeNetSocket *ape_net_accept_( ApeNetSocket *netSocket );
 
 ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket );
 
-unsigned short ape_net_get_local_port_( ApeNetSocket *netSocket );
-unsigned short ape_net_get_remote_port_( ApeNetSocket *netSocket );
+unsigned short ape_net_get_local_port_( const ApeNetSocket *netSocket );
+unsigned short ape_net_get_remote_port_( const ApeNetSocket *netSocket );
 
 /**
  * @brief Sets the maximum size message which may be sent.
