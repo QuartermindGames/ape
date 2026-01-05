@@ -132,3 +132,8 @@ I'd decided to write a 3D engine in C just for the novelty of it, and because I'
 
 That said, in hindsight, this would've been written in C++ had I started this project today.
 Maybe for a future version I'll try migrating to C++, though at this stage it'd be a lot of work.
+
+### Why is feature _X_ missing?
+
+As mentioned already, this is very experimental and something I've been working on in my spare time.
+If you want to see feature _X_, and it's not here, then that heavily implies it's just simply not been a focus for me at this time.
