@@ -189,7 +189,7 @@ long forge::SurfaceInspector::on_update( FXObject *, FXSelector, void * )
 	offset.y = std::strtof( offsetFieldY->getText().text(), nullptr );
 
 	QmMathVector3f rotation = {};
-	rotation.x         = std::strtof( rotationField->getText().text(), nullptr );
+	rotation.x              = std::strtof( rotationField->getText().text(), nullptr );
 
 	ape_brush_face_apply_material_coordinates( face, &scale, &offset, &rotation, localSpaceCheck->getCheck() );
 
@@ -218,9 +218,7 @@ long forge::SurfaceInspector::on_reset( FXObject *, FXSelector, void * )
 		return FALSE;
 	}
 
-	static constexpr QmMathVector2f DEFAULT_SCALE = QM_MATH_VECTOR2F( 0.25f, 0.25f );
-
-	QmMathVector2f scale = com_acm_get_vector2( editorConfig, "defaultSurfaceScale", &DEFAULT_SCALE );
+	QmMathVector2f scale = ape_editor_get_default_material_scale();
 	ape_brush_face_apply_material_coordinates( face, &scale, &pl_vecOrigin2, &pl_vecOrigin3, localSpaceCheck->getCheck() );
 
 	set_current( face );

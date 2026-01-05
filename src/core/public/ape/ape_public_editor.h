@@ -221,6 +221,8 @@ AcmBranch *ape_editor_get_config();
 
 void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMode geometryMode );
 
+QmMathVector2f ape_editor_get_default_material_scale();
+
 void *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
 void  ape_editor_clear_selection( ApeEditorInstance *self );
 void  ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );

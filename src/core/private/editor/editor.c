@@ -3,12 +3,13 @@
 
 #include "plcore/pl_hashtable.h"
 
-#include "ape_private.h"
-
 #include "aux/public/aux_project.h"
+
+#include "ape_private.h"
 
 #include "editor.h"
 
+#include "core_console.h"
 #include "renderer/renderer.h"
 #include "renderer/material/material.h"
 
@@ -16,6 +17,8 @@
 #include "gui/gui_private.h"
 
 static AcmBranch *editorConfigRoot;
+
+static QmMathVector2f editorDefaultMaterialScale = QM_MATH_VECTOR2F( 0.25f, 0.25f );
 
 static bool         showIcons;
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
@@ -580,6 +583,11 @@ void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMod
 	ape_editor_selection_rebuild_( self );
 }
 
+QmMathVector2f ape_editor_get_default_material_scale()
+{
+	return editorDefaultMaterialScale;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 void ape_grid_toggle_command_( unsigned int, char ** );
@@ -592,8 +600,11 @@ void ape_editor_register_console_( void )
 	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
 	PlRegisterConsoleCommand( "editor_light", "Generate lightmap.", 0, ape_light_command_ );
 
-	PlRegisterConsoleVariable( "editor.showIcons", "Show icons in the editor mode.", "true", PL_VAR_BOOL, &showIcons, nullptr, true );
-	PlRegisterConsoleVariable( "editor.iconFade", "Fade range for icons displayed in the editor.", "0.25", PL_VAR_F32, &iconFade, nullptr, true );
+	ape_console_var_register( "editor.showIcons", "Show icons in the editor mode.", "true", PL_VAR_BOOL, &showIcons, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "editor.iconFade", "Fade range for icons displayed in the editor.", "0.25", PL_VAR_F32, &iconFade, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+
+	ape_console_var_register( "editor.materialScaleW", "Default material scale width.", "0.25", PL_VAR_F32, &editorDefaultMaterialScale.x, nullptr, 0 );
+	ape_console_var_register( "editor.materialScaleH", "Default material scale height.", "0.25", PL_VAR_F32, &editorDefaultMaterialScale.y, nullptr, 0 );
 }
 
 static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const ApeWorldNode *worldNode )

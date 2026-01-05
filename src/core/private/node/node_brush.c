@@ -721,7 +721,7 @@ bool ape_brush_build_from_polygon_( ApeBrush *self, const QmMathVector3f *vertic
 		self->faces[ i ].colour = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
 
 		self->faces[ i ].material      = material;
-		self->faces[ i ].materialScale = qm_math_vector2f( 0.25f, 0.25f );
+		self->faces[ i ].materialScale = ape_editor_get_default_material_scale();
 
 		ape_brush_face_compute_normal( &self->faces[ i ] );
 		ape_brush_face_compute_bounds( &self->faces[ i ] );
