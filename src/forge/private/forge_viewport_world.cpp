@@ -201,7 +201,24 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 		{
 			if ( instance->numPolygonPoints > 0 )
 			{
-				ape_editor_brush_from_polygon( instance, mainWindow->get_active_material(), event->state & SHIFTMASK ? APE_EDITOR_BRUSH_TYPE_PLANE : APE_EDITOR_BRUSH_TYPE_BLOCK );
+				ApeEditorBrushType brushType = APE_EDITOR_BRUSH_TYPE_BLOCK;
+				bool               flipFaces = false;
+				if ( event->state & SHIFTMASK )
+				{
+					if ( event->state & ALTMASK )
+					{
+						flipFaces = true;
+					}
+					else
+					{
+						brushType = APE_EDITOR_BRUSH_TYPE_PLANE;
+					}
+				}
+
+				ape_editor_brush_from_polygon( instance,
+				                               mainWindow->get_active_material_path(),
+				                               brushType,
+				                               flipFaces );
 				return TRUE;
 			}
 

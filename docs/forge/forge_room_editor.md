@@ -26,10 +26,12 @@
 
 ### Polygon Mode
 
-| Input       | Action                    |
-|-------------|---------------------------|
-| Right click | Create brush from polygon |
-| n           | New object at cursor      |
+| Input                     | Action                                  |
+|---------------------------|-----------------------------------------|
+| Right click               | Create brush from polygon               |
+| Right click               | (if no polygons) Create object at point |
+| Shift + Right click       | Create brush plane                      |
+| Shift + Alt + Right click | Create inverted brush                   |
 
 ### Face Mode
 

@@ -1248,7 +1248,7 @@ static bool validate_convex_polygon( const QmMathVector2f *vertices, unsigned in
 	return true;
 }
 
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type )
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type, bool flipFaces )
 {
 	if ( self->numPolygonPoints < 3 )
 	{
@@ -1284,7 +1284,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 	{
 		// determine order
 		unsigned int next = ( i + 1 ) % self->numPolygonPoints;
-		signedArea += ( self->polygonPoints[ i ].x * self->polygonPoints[ next ].y - self->polygonPoints[ next ].x * self->polygonPoints[ i ].y );
+		signedArea += self->polygonPoints[ i ].x * self->polygonPoints[ next ].y - self->polygonPoints[ next ].x * self->polygonPoints[ i ].y;
 
 		// now transform it into 3D space
 		vertices[ i ] = PlTransformVector3( &QM_MATH_VECTOR3F( self->polygonPoints[ i ].x, 0.0f, self->polygonPoints[ i ].y ), &self->grid.transform );
@@ -1300,7 +1300,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
 		material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 	}
 
-	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, signedArea, material, type ) )
+	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, flipFaces ? -signedArea : signedArea, material, type ) )
 	{
 		ape_console_warning_( "Failed to create brush from polygon!\n" );
 		ape_material_release( material );
@@ -1377,7 +1377,7 @@ bool ape_editor_add_polygon_point( ApeEditorInstance *self )
 		const QmMathVector2f *start = &self->polygonPoints[ 0 ];
 		if ( qm_math_vector2f_compare( *start, cursor ) )
 		{
-			ape_editor_brush_from_polygon( self, nullptr, APE_EDITOR_BRUSH_TYPE_BLOCK );
+			ape_editor_brush_from_polygon( self, nullptr, APE_EDITOR_BRUSH_TYPE_BLOCK, false );
 			return true;
 		}
 	}

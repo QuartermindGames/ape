@@ -365,7 +365,7 @@ void forge::MainWindow::open_material_browser()
 	materialBrowser->show();
 }
 
-const char *forge::MainWindow::get_active_material()
+const char *forge::MainWindow::get_active_material_path()
 {
 	if ( materialBrowser == nullptr )
 	{

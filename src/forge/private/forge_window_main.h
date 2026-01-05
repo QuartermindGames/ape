@@ -41,7 +41,7 @@ namespace forge
 		long on_toggle_room_visibility( FXObject *, FXSelector, void * );
 
 		void        open_material_browser();
-		const char *get_active_material();
+		const char *get_active_material_path();
 
 		void open_properties( ApeWorldNode *node );
 

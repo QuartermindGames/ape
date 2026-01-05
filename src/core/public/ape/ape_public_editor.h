@@ -304,9 +304,10 @@ typedef enum ApeEditorBrushType
  * @param self 			Pointer to the `ApeEditorInstance` which holds the polygon points and other relevant data.
  * @param materialPath	Path to the material being used for the brush.
  * @param type			The type of brush to create from the polygon.
+ * @param flipFaces		Flip the faces of the brush on creation.
  * @return 				A pointer to the newly created `ApeBrush`, or `nullptr` if the brush could not be created.
  */
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type );
+ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type, bool flipFaces );
 
 /**
  * This function decreases the number of points in the polygon managed by the
