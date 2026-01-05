@@ -100,7 +100,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 		{
 			bool  selected = false;
 			void *p;
-			COM_ITERATE_LINKED_LIST( p, instance->selectedObjects, i )
+			QM_OS_LINKED_LIST_ITERATE( p, instance->selectedObjects, i )
 			{
 				if ( ( ApeBrush * ) p == brush )
 				{
@@ -128,7 +128,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 			{
 				void *p;
-				COM_ITERATE_LINKED_LIST( p, instance->selectedObjects, i )
+				QM_OS_LINKED_LIST_ITERATE( p, instance->selectedObjects, i )
 				{
 					if ( ( ApeBrushFace * ) p == face )
 					{
@@ -551,7 +551,7 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light )
 
 void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 {
-	if ( PlIsLinkedListEmpty( instance->selectedObjects ) )
+	if ( qm_os_linked_list_get_size( instance->selectedObjects ) == 0 )
 	{
 		return;
 	}

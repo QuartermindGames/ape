@@ -107,7 +107,7 @@ static void add_node_to_transform_selection( ApeEditorInstance *self, ApeWorldNo
 void ape_editor_selection_rebuild_( ApeEditorInstance *self )
 {
 	// clear all the selection lists
-	PlDestroyLinkedListNodes( self->selectedObjects );
+	qm_os_linked_list_clear( self->selectedObjects );
 	PlClearHashTable( self->selectionTable );
 	PlClearHashTable( self->subSelectionTable );
 	self->hoverSelection = nullptr;
@@ -327,7 +327,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	PlgImmSetPrimitiveScale( 2.0f );
 
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 	{
 		ApeBrush *brush = face->parent;
 		assert( brush != nullptr );
@@ -410,7 +410,7 @@ static void render_selected_objects( ApeEditorInstance *self )
 	PlgImmSetPrimitiveScale( 2.0f );
 
 	ApeWorldNode *worldNode;
-	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( worldNode, self->selectedObjects, i )
 	{
 		switch ( worldNode->type )
 		{
@@ -487,7 +487,7 @@ static void render_vertices( ApeEditorInstance *self )
 	}
 
 	QmMathVector3f *vertex;
-	COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( vertex, self->selectedObjects, i )
 	{
 		draw_selection_cube( vertex, &PL_COLOUR_BLUE, SELECTION_VERTEX_SIZE, true );
 	}
@@ -569,7 +569,7 @@ void *ape_editor_get_object_under_cursor( ApeEditorInstance *self )
 
 void ape_editor_clear_selection( ApeEditorInstance *self )
 {
-	PlDestroyLinkedListNodes( self->selectedObjects );
+	qm_os_linked_list_clear( self->selectedObjects );
 }
 
 void ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object )
@@ -577,35 +577,35 @@ void ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object )
 	// make sure it's not already selected...
 
 	void *p;
-	COM_ITERATE_LINKED_LIST( p, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( p, self->selectedObjects, i )
 	{
 		if ( object != p )
 		{
 			continue;
 		}
 
-		PlDestroyLinkedListNode( i );
+		qm_os_memory_free( i );
 		return;
 	}
 
-	PlInsertLinkedListNode( self->selectedObjects, object );
+	qm_os_linked_list_push_back( self->selectedObjects, object );
 }
 
 void *ape_editor_get_first_selected( ApeEditorInstance *self )
 {
-	PLLinkedListNode *node = PlGetFirstNode( self->selectedObjects );
+	QmOsLinkedListNode *node = qm_os_linked_list_get_front( self->selectedObjects );
 	if ( node == nullptr )
 	{
 		return nullptr;
 	}
 
-	return PlGetLinkedListNodeUserData( node );
+	return qm_os_linked_list_node_get_data( node );
 }
 
 void ape_editor_delete_selection( ApeEditorInstance *self )
 {
 	ApeWorldNode *worldNode;
-	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( worldNode, self->selectedObjects, i )
 	{
 		if ( !ape_world_node_has_magic( worldNode ) )
 		{
@@ -624,7 +624,7 @@ void ape_editor_delete_selection( ApeEditorInstance *self )
 void ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room )
 {
 	ApeWorldNode *worldNode;
-	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( worldNode, self->selectedObjects, i )
 	{
 		if ( !ape_world_node_has_magic( worldNode ) )
 		{
@@ -711,13 +711,13 @@ static void cleanup_transform_widget()
 
 static void render_transform_widget( ApeEditorInstance *instance )
 {
-	PLLinkedListNode *node = PlGetFirstNode( instance->selectedObjects );
+	QmOsLinkedListNode *node = qm_os_linked_list_get_front( instance->selectedObjects );
 	if ( node == nullptr )
 	{
 		return;
 	}
 
-	ApeWorldNode *selected = PlGetLinkedListNodeUserData( node );
+	ApeWorldNode *selected = qm_os_linked_list_node_get_data( node );
 	if ( selected == nullptr )
 	{
 		return;

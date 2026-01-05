@@ -119,7 +119,7 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 		ape_console_error_( true, "Failed to create sub-selection table for instance: %s\n", PlGetError() );
 	}
 
-	self->selectedObjects = PlCreateLinkedList();
+	self->selectedObjects = qm_os_linked_list_create();
 	if ( self->selectedObjects == nullptr )
 	{
 		ape_console_error_( true, "Failed to create selected objects list for instance: %s\n", PlGetError() );
@@ -140,7 +140,7 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 	PlDestroyHashTable( self->subSelectionTable );
 	self->subSelectionTable = nullptr;
 
-	PlDestroyLinkedList( self->selectedObjects );
+	qm_os_memory_free( self->selectedObjects );
 	self->selectedObjects = nullptr;
 	self->hoverSelection  = nullptr;
 
@@ -181,7 +181,7 @@ ApeEditorInstance *ape_editor_get_active_instance( void )
 void ape_editor_toggle_faces( ApeEditorInstance *self )
 {
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 	{
 		face->flags ^= APE_BRUSH_FACE_FLAG_HIDDEN;
 	}
@@ -193,7 +193,7 @@ void ape_editor_toggle_other_faces( ApeEditorInstance *self )
 	bool          setVisible;
 
 	ApeBrushFace *selectedFace;
-	COM_ITERATE_LINKED_LIST( selectedFace, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( selectedFace, self->selectedObjects, i )
 	{
 		ApeBrush *brush = selectedFace->parent;
 		assert( brush != nullptr );
@@ -203,7 +203,7 @@ void ape_editor_toggle_other_faces( ApeEditorInstance *self )
 			bool          isSelected  = false;
 
 			ApeBrushFace *otherSelectedFace;
-			COM_ITERATE_LINKED_LIST( otherSelectedFace, self->selectedObjects, k )
+			QM_OS_LINKED_LIST_ITERATE( otherSelectedFace, self->selectedObjects, k )
 			{
 				if ( currentFace == otherSelectedFace )
 				{
@@ -243,7 +243,7 @@ void ape_editor_flip_faces( ApeEditorInstance *self )
 	}
 
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 	{
 		ape_brush_flip_face_( face );
 	}
@@ -256,77 +256,7 @@ void ape_editor_shade_faces_smooth( ApeEditorInstance *self )
 		return;
 	}
 
-	//TODO: replace the below with ape_brush_smooth_faces!!
-
-	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
-	{
-		for ( unsigned int j = 0; j < face->numVertices; ++j )
-		{
-			face->vertices[ j ].normal = ( QmMathVector3f ) {};
-		}
-	}
-
-	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
-	{
-		ApeBrush *brush = face->parent;
-		assert( brush != nullptr );
-
-		for ( unsigned int j = 0; j < face->numVertices; ++j )
-		{
-			unsigned int  numAdjacentFaces = 0;
-			ApeBrushFace *adjacentFaces[ APE_BRUSH_MAX_FACE_VERTICES ];
-			ApeBrushFace *adjacentFace;
-			COM_ITERATE_LINKED_LIST( adjacentFace, self->selectedObjects, k )
-			{
-				for ( unsigned int l = 0; l < adjacentFace->numVertices; ++l )
-				{
-					if ( com_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ], &brush->vertices[ adjacentFace->vertices[ l ].posIndex ] ) )
-					{
-						adjacentFaces[ numAdjacentFaces++ ] = adjacentFace;
-					}
-
-					if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
-					{
-						break;
-					}
-				}
-
-				if ( numAdjacentFaces >= APE_BRUSH_MAX_FACE_VERTICES )
-				{
-					ape_console_warning_( "Too many adjacent faces to smooth face!\n" );
-					break;
-				}
-			}
-
-			QmMathVector3f normal = {};
-			for ( unsigned int k = 0; k < numAdjacentFaces; ++k )
-			{
-				const ApeBrushFace *adjFace = adjacentFaces[ k ];
-				for ( unsigned int l = 0; l < adjFace->numVertices - 2; ++l )
-				{
-					const QmMathVector3f *a = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l ] ].posIndex ];
-					const QmMathVector3f *b = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l + 1 ] ].posIndex ];
-					const QmMathVector3f *c = &brush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ ( l + 2 ) % adjFace->numVertices ] ].posIndex ];
-
-					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
-
-					normal = qm_math_vector3f_add( normal, n );
-				}
-			}
-
-			face->vertices[ j ].normal = qm_math_vector3f_normalize( normal );
-		}
-	}
-
-	//TODO: get rid of this!
-	face = ape_editor_get_first_selected( self );
-
-	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( face->parent ) );
-	if ( parent != nullptr )
-	{
-		ape_world_node_mark_dirty_( parent );
-	}
+	ape_brush_smooth_faces( self->selectedObjects );
 }
 
 void ape_editor_shade_faces_flat( ApeEditorInstance *self )
@@ -337,7 +267,7 @@ void ape_editor_shade_faces_flat( ApeEditorInstance *self )
 	}
 
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 	{
 		ape_brush_face_compute_normal( face );
 	}
@@ -362,7 +292,7 @@ void ape_editor_duplicate_selection( ApeEditorInstance *self )
 	}
 
 	ApeWorldNode *worldNode;
-	COM_ITERATE_LINKED_LIST( worldNode, self->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( worldNode, self->selectedObjects, i )
 	{
 		if ( worldNode->classType->clone == nullptr )
 		{
@@ -416,7 +346,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
 		{
 			QmMathVector3f *vertex;
-			COM_ITERATE_LINKED_LIST( vertex, self->selectedObjects, i )
+			QM_OS_LINKED_LIST_ITERATE( vertex, self->selectedObjects, i )
 			{
 				*vertex = qm_math_vector3f_add( *vertex, qm_math_vector3f_scale_float( gridDir, self->grid.size ) );
 
@@ -455,7 +385,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 
 			// determine what vertices we're shifting
 			ApeBrushFace *face;
-			COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+			QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 			{
 				ApeBrush *brush = face->parent;
 				assert( brush != nullptr );
@@ -477,7 +407,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 
 			// recompute normals, bounds, etc.
 			//TODO: this will operate on the same brush multiple times if multiple faces are selected :(
-			COM_ITERATE_LINKED_LIST( face, self->selectedObjects, i )
+			QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 			{
 				ApeBrush *brush = face->parent;
 				if ( brush == nullptr )
@@ -496,7 +426,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 		{
 			ApeWorldNode *node;
-			COM_ITERATE_LINKED_LIST( node, self->selectedObjects, i )
+			QM_OS_LINKED_LIST_ITERATE( node, self->selectedObjects, i )
 			{
 				if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 				{

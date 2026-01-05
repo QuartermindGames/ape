@@ -205,7 +205,7 @@ typedef struct ApeEditorInstance
 
 	struct PLHashTable *selectionTable;
 	struct PLHashTable *subSelectionTable;
-	PLLinkedList       *selectedObjects;
+	QmOsLinkedList     *selectedObjects;
 	void               *hoverSelection;
 
 	struct PLLinkedListNode *listNode;// index in the table of instances

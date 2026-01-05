@@ -1,5 +1,7 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
+#include "qmos/public/qm_os_linked_list.h"
+
 #include "forge.h"
 #include "forge_browser_materials.h"
 
@@ -202,7 +204,7 @@ long forge::MaterialBrowser::on_material_select( FXObject *, FXSelector, void * 
 	}
 
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, instance->selectedObjects, i )
 	{
 		// check if it's set already
 		const char *oldPath = ape_material_get_path( face->material );
@@ -324,7 +326,7 @@ long forge::MaterialBrowser::on_material_apply( FXObject *, FXSelector, void * )
 	if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
 	{
 		ApeWorldNode *node;
-		COM_ITERATE_LINKED_LIST( node, instance->selectedObjects, i )
+		QM_OS_LINKED_LIST_ITERATE( node, instance->selectedObjects, i )
 		{
 			if ( !ape_world_node_has_magic( node ) || node->type != APE_WORLD_NODE_TYPE_BRUSH )
 			{
@@ -356,7 +358,7 @@ long forge::MaterialBrowser::on_material_apply( FXObject *, FXSelector, void * )
 	else if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
 	{
 		ApeBrushFace *face;
-		COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+		QM_OS_LINKED_LIST_ITERATE( face, instance->selectedObjects, i )
 		{
 			// check if it's set already
 			const char *oldPath = ape_material_get_path( face->material );

@@ -2,6 +2,8 @@
 // Purpose: Forge world viewport implementation.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_linked_list.h"
+
 #include "forge.h"
 #include "forge_viewport_world.h"
 #include "forge_editor_world.h"
@@ -313,7 +315,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 		}
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
 		{
-			unsigned int numSelectedNodes = PlGetNumLinkedListNodes( instance->selectedObjects );
+			unsigned int numSelectedNodes = qm_os_linked_list_get_size( instance->selectedObjects );
 			if ( numSelectedNodes == 0 )
 			{
 				return true;
@@ -370,7 +372,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				unsigned int numBrushes = 0;
 
 				ApeWorldNode *node;
-				COM_ITERATE_LINKED_LIST( node, instance->selectedObjects, i )
+				QM_OS_LINKED_LIST_ITERATE( node, instance->selectedObjects, i )
 				{
 					if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
 					{
@@ -742,7 +744,7 @@ long forge::WorldViewport::on_face_unlink_portal( FXObject *, FXSelector, void *
 	}
 
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, instance->selectedObjects, i )
 	{
 		*face->destinationTag = '\0';
 		face->flags &= ~APE_BRUSH_FACE_FLAG_PORTAL;
@@ -772,7 +774,7 @@ long forge::WorldViewport::on_face_link_portal( FXObject *object, FXSelector, vo
 	}
 
 	ApeBrushFace *face;
-	COM_ITERATE_LINKED_LIST( face, instance->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( face, instance->selectedObjects, i )
 	{
 		snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s", tag.c_str() );
 		face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
@@ -873,7 +875,7 @@ long forge::WorldViewport::on_merge( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	unsigned int numSelected = PlGetNumLinkedListNodes( instance->selectedObjects );
+	unsigned int numSelected = qm_os_linked_list_get_size( instance->selectedObjects );
 	if ( numSelected <= 1 )
 	{
 		forge_warning_( "Invalid number of objects selected for merge!\n" );
@@ -885,7 +887,7 @@ long forge::WorldViewport::on_merge( FXObject *, FXSelector, void * )
 	ApeBrush   **brushes    = QM_OS_MEMORY_NEW_( ApeBrush *, numSelected );
 
 	ApeWorldNode *node;
-	COM_ITERATE_LINKED_LIST( node, instance->selectedObjects, i )
+	QM_OS_LINKED_LIST_ITERATE( node, instance->selectedObjects, i )
 	{
 		if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
 		{
@@ -930,7 +932,7 @@ long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	unsigned int numSelected = PlGetNumLinkedListNodes( instance->selectedObjects );
+	unsigned int numSelected = qm_os_linked_list_get_size( instance->selectedObjects );
 	if ( numSelected != 1 )
 	{
 		forge_warning_( "Invalid number of nodes selected for export!\n" );
@@ -945,7 +947,7 @@ long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	ApeWorldNode *node = ( ApeWorldNode * ) PlGetLinkedListNodeUserData( PlGetFirstNode( instance->selectedObjects ) );
+	ApeWorldNode *node = ( ApeWorldNode * ) qm_os_linked_list_node_get_data( qm_os_linked_list_get_front( instance->selectedObjects ) );
 	assert( node != nullptr );
 
 	AcmBranch *root = ape_world_node_serialize( node, nullptr );
