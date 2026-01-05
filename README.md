@@ -2,10 +2,20 @@
 
 ![Logo](resources/ape_logo_v4_256.png)
 
+# ApeTech
+
+ApeTech is a 3D game engine written in C23, being developed by
+[Mark "hogsy" Sowden](https://hogsy.me/), for game jams and prototyping.
+
+[Features](#features) | [Games](#games) | [Screenshots](#screenshots) | [Building](#building) | [Q&A](#qa)
+
 </div>
 
-ApeTech is a 3D game engine written in C23, being developed by 
-[Mark "hogsy" Sowden](https://hogsy.me/), for game jams and prototyping.
+----
+
+> [!CAUTION]
+> This game engine is still in a highly experimental and work-in-progress state!
+> Expect things to break.
 
 ApeTech is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
 
@@ -17,30 +27,34 @@ It's being developed primarily for **fun**.
 
 Some semblance of documentation can be found [here](docs).
 
-* [Features](#features)
-* [Games](#games)
-* [Screenshots](#screenshots)
-* [Building](#building)
-* [Q&A](#qa)
-
-----
-
 ## Features
 
 - Integration with our [qmfw](https://github.com/QuartermindGames/hei) library
-  - PNG, TGA, JPG, BMP and GIF image support
+  - PNG, TGA, JPG, BMP, GIF and DDS image support
   - Abstract graphics interface with support for different graphics APIs
   - GLSL pre-processor with support for directives such as `include`
   - Virtual file-system allowing for directories and packages to be mounted at runtime
 - Console interface, with auto-completion, commands and variables
+- Per-pixel lighting and stencil shadow volumes
 - Flexible material system providing support for outlining multiple passes, blend modes and more
-- Custom package format with compression
-- Custom image format called `GFX` with own "block" compression and support for DXTC
-- Simple post-processing pipeline with support for FXAA, bloom, depth-of-field and more
+- Simple post-processing pipeline with support for FXAA, bloom, [depth-of-field](https://hogsy.me/media/ape/2025-10/2025-10-17%2009-57-42.png) and more
 - Super-sampling up to 2x display resolution
 - Memory manager with garbage collection and usage tracking
 - [ACM (Another Config Markup)](https://github.com/QuartermindGames/acm) for serialisation/deserialisation; can be stored as either binary or text
 - Editor frontend, dubbed _Forge_, using [FOX Toolkit](http://www.fox-toolkit.org/)
+
+## Screenshots
+
+<div align="center">
+
+[![Screenshot](resources/screenshots/preview0_thumb.png)](resources/screenshots/preview0.png)
+[![Screenshot](resources/screenshots/preview1_thumb.png)](resources/screenshots/preview1.png)
+[![Screenshot](resources/screenshots/preview2_thumb.png)](resources/screenshots/preview2.png)
+[![Screenshot](resources/screenshots/preview3_thumb.png)](resources/screenshots/preview3.png)
+
+More screenshots can be found [here](https://hogsy.me/media/ape/).
+
+</div>
 
 ## Games
 
@@ -48,17 +62,6 @@ Below is a list of released games that have used this engine.
 
 - [Space Ranger: Asteroid Attack](https://hogsy.itch.io/space-ranger-asteroid-attack)
 - [Buddy's Adventure](https://hogsy.itch.io/buddy)
-
-## Screenshots
-
-<div align="center">
-
-[![Screenshot](resources/preview0_thumb.png)](resources/preview0.png)
-[![Screenshot](resources/sr_preview_thumb.png)](resources/sr_preview.png)
-[![Screenshot](resources/preview2_thumb.png)](resources/preview2.png)
-[![Screenshot](resources/preview3_thumb.png)](resources/preview3.png)
-
-</div>
 
 ## Building
 
@@ -94,7 +97,7 @@ Additionally, much of the development is done on Linux, so Windows support often
 In an ideal scenario, compilation requires just [MSYS2](https://www.msys2.org/) and [MinGW64](https://packages.msys2.org/groups/mingw-w64-x86_64-toolchain).
 
 Alternatively, if you insist on using MSVC, there's a `setup_project_msvc.bat` available.
-This requires CMake, Visual Studio and Clang (installed via Visual Studio).
+This requires CMake, Visual Studio and Clang (installed via Visual Studio), but I've successfully compiled and run the engine under this configuration.
 
 ## Q&A
 
@@ -103,11 +106,17 @@ This requires CMake, Visual Studio and Clang (installed via Visual Studio).
 Depending on how you got this, I've likely not made the commit history available because there is a lot of experimental work I'll typically do, and I'm often not terribly happy with it.
 So essentially, what you're seeing is the "clean" version.
 
+Additionally, there were several resets which also resulted in the history being wiped.
+Early versions are available via the tags.
+
 ### Can I contribute to the project?
 
-I'm afraid I'm not willing to accept contributions.
-I appreciate the notion though!
-But for the same reason as above, this isn't the _current_ version of the engine - as a matter of fact, I'll usually make any copies public a year after a milestone is hit, so what you're seeing is already pretty dated.
+I'm afraid I'm not willing to accept contributions at this time, particularly because I've not yet decided on a formal licence yet.
+Some earlier versions were made available under public-domain and LGPL, and these can be found on my blog [here](https://www.hogsy.me/ape.htm).
+
+This is pretty much just here as a portfolio item for now.
+
+That said, I appreciate the thought!
 
 ### What makes this better than engine _X_?
 
