@@ -486,6 +486,21 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 	return APE_WORLD_NODE( entity );
 }
 
+static void ape_entity_draw_editor_( void *self, const bool isSelected )
+{
+	ApeEntity *entity = self;
+
+	const ApeEntityClassDefinition *classDefinition = entity->classDefinition;
+	assert( classDefinition != nullptr );
+
+	if ( classDefinition->onDrawEditor == nullptr )
+	{
+		return;
+	}
+
+	classDefinition->onDrawEditor( entity, isSelected );
+}
+
 const ApeWorldNodeClass ape_entityClass = {
         .identifier  = "entity",
         .magic       = QM_OS_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
@@ -496,6 +511,8 @@ const ApeWorldNodeClass ape_entityClass = {
 #if !defined( APE_NO_EDITOR )
 
         .editorIcon = "resources/new_entity.gif",
+
+        .onDrawEditor = ape_entity_draw_editor_,
 
 #endif
 };

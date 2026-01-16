@@ -42,6 +42,21 @@ static void destroy_player_spawn( ApeEntity *self )
 	qm_os_memory_free( spawnEntity );
 }
 
+static void entity_player_spawn_on_draw_editor_( ApeEntity *self, bool isSelected )
+{
+	if ( !isSelected )
+	{
+		return;
+	}
+
+	PLCollisionAABB bounds = {};
+	bounds.origin          = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	bounds.maxs            = QM_MATH_VECTOR3F( 16.0f, 72.0f, 16.0f );
+	bounds.mins            = QM_MATH_VECTOR3F( -16.0f, 0.0f, -16.0f );
+
+	ape_draw_debug_aabb( &bounds, APE_EDITOR_COLOUR_SELECT_BOUNDS );
+}
+
 static ApePropertyEnum teamsEnum[] = {
         {"Red",   0},
         {"Green", 1},
@@ -58,6 +73,8 @@ ApeEntityClassDefinition game_playerSpawnEntityClass_ = {
         .description     = "Creates a marker indicating where the player can spawn.",
         .createFunction  = create_player_spawn,
         .destroyFunction = destroy_player_spawn,
+
+        .onDrawEditor = entity_player_spawn_on_draw_editor_,
 
         .properties    = spawnProperties,
         .numProperties = QM_OS_ARRAY_ELEMENTS( spawnProperties ),

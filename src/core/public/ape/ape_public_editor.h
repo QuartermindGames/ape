@@ -21,6 +21,8 @@ typedef enum ApeEditorMode
 #define APE_EDITOR_MAX_VIEWPORTS      1
 #define APE_EDITOR_MAX_VIEW_BOOKMARKS 16
 
+static constexpr QmMathColour4ub APE_EDITOR_COLOUR_SELECT_BOUNDS = QM_MATH_COLOUR4UB_RGB( 0, 255, 0 );
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Object Properties
 /////////////////////////////////////////////////////////////////////////////////////

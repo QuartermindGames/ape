@@ -54,6 +54,14 @@ typedef struct ApeEntityClassDefinition
 	void ( *tickFunction )( ApeEntity *self, double delta );            // called per ticket, allowing for behaviours
 	void ( *drawFunction )( ApeEntity *self, ApeLight *light, int flags );
 
+	/**
+	 * This gets called regardless of being selected, or not.
+	 * However, in some cases you might only want your drawn
+	 * elements to show in the situation that it's selected,
+	 * which is what the 'isSelected' flag is for.
+	 */
+	void ( *onDrawEditor )( ApeEntity *self, bool isSelected );
+
 	void ( *onUpdateProperty )( ApeEntity *self, const ApeProperty *property );
 
 	void ( *serializeFunction )( ApeEntity *self, AcmBranch *root );
