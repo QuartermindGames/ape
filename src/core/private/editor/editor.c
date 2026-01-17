@@ -508,9 +508,66 @@ void ape_editor_set_geometry_mode( ApeEditorInstance *self, ApeEditorGeometryMod
 		return;
 	}
 
+	unsigned int numBrushes = 0;
+	ApeBrush   **brushes    = nullptr;
+	// if we're switching from transform to face, let's put it into a list we can restore
+	if ( geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE && self->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
+		unsigned int numSelected = qm_os_linked_list_get_size( self->selectedObjects );
+		brushes                  = QM_OS_MEMORY_NEW_( ApeBrush *, numSelected );
+
+		ApeWorldNode *node;
+		QM_OS_LINKED_LIST_ITERATE( node, self->selectedObjects, i )
+		{
+			if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
+			{
+				continue;
+			}
+
+			brushes[ numBrushes++ ] = ( ApeBrush * ) node;
+		}
+	}
+	// or face to transform
+	else if ( geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM && self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		unsigned int numSelected = qm_os_linked_list_get_size( self->selectedObjects );
+		brushes                  = QM_OS_MEMORY_NEW_( ApeBrush *, numSelected );
+
+		ApeBrushFace *face;
+		QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
+		{
+			brushes[ numBrushes++ ] = face->parent;
+		}
+	}
+
 	self->geometryMode = geometryMode;
 
 	ape_editor_selection_rebuild_( self );
+
+	// now restore it
+	if ( brushes != nullptr )
+	{
+		if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+		{
+			for ( unsigned int i = 0; i < numBrushes; ++i )
+			{
+				ApeBrush *brush = brushes[ i ];
+				for ( unsigned int j = 0; j < brush->numFaces; ++j )
+				{
+					ape_editor_add_object_to_selection( self, &brush->faces[ j ] );
+				}
+			}
+		}
+		else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+		{
+			for ( unsigned int i = 0; i < numBrushes; ++i )
+			{
+				ape_editor_add_object_to_selection( self, brushes[ i ] );
+			}
+		}
+
+		qm_os_memory_free( brushes );
+	}
 }
 
 QmMathVector2f ape_editor_get_default_material_scale()
