@@ -238,7 +238,7 @@ long forge::WorldEditor::on_change_geometry_mode( FXObject *, FXSelector selecto
 	switch ( FXSELID( selector ) )
 	{
 		default:
-			break;
+			return TRUE;
 		case ID_POLY_MODE:
 			geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;
 			break;
