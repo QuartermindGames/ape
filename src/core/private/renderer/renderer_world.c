@@ -456,7 +456,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 		for ( unsigned int i = 0; i < brush->numFaces; ++i )
 		{
 			const ApeBrushFace *face = &brush->faces[ i ];
-			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN || !ape_material_shadows_enabled( face->material ) )
+			if ( /*face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ||*/ !ape_material_shadows_enabled( face->material ) )
 			{
 				continue;
 			}
