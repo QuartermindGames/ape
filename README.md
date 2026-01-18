@@ -15,7 +15,7 @@ ApeTech is a 3D game engine written in C23, being developed by
 
 > [!CAUTION]
 > This game engine is still in a highly experimental and work-in-progress state!
-> Expect things to break.
+> Expect things to break, or be unfinished.
 
 ApeTech is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
 

@@ -42,19 +42,14 @@ static void destroy_player_spawn( ApeEntity *self )
 	qm_os_memory_free( spawnEntity );
 }
 
-static void entity_player_spawn_on_draw_editor_( ApeEntity *self, bool isSelected )
+static void entity_player_spawn_on_draw_editor_( ApeEntity *self, const bool isSelected )
 {
-	if ( !isSelected )
-	{
-		return;
-	}
-
 	PLCollisionAABB bounds = {};
 	bounds.origin          = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 	bounds.maxs            = QM_MATH_VECTOR3F( 16.0f, 72.0f, 16.0f );
 	bounds.mins            = QM_MATH_VECTOR3F( -16.0f, 0.0f, -16.0f );
 
-	ape_draw_debug_aabb( &bounds, APE_EDITOR_COLOUR_SELECT_BOUNDS );
+	ape_draw_debug_aabb( &bounds, isSelected ? APE_EDITOR_COLOUR_SELECT_BOUNDS : PL_COLOUR_BLUE );
 }
 
 static ApePropertyEnum teamsEnum[] = {

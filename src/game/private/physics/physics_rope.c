@@ -107,6 +107,8 @@ void game_physics_rope_tick( GamePhysicsRope *self, ApeRoom *room, const double 
 		{
 			QmMathVector3f windForce = qm_math_vector3f( 0.0f, 0.0f, 0.0f );
 
+			//TODO: what the fuck was I doing here... this needs cleaning up
+
 			if ( i > 0 )
 			{
 				GamePhysicsRopeParticle *a = &self->particles[ i - 1 ];
