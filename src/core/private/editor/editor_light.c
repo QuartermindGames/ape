@@ -2,11 +2,14 @@
 // Purpose: Lightmapper
 // Author:  Mark E. Sowden
 
-#include "qmos/public/qm_os_time.h"
+#include <float.h>
 
-#include "ape_private.h"
+#include "qmos/public/qm_os_time.h"
+#include "qmmath/public/qm_math_plane.h"
 
 #include "aux/public/aux_texture_packer.h"
+
+#include "ape_private.h"
 
 #include "game/game_public.h"
 
@@ -31,6 +34,15 @@ static constexpr char LIGHTMAP_EXTENSION[] = ".lmp";
 
 static AuxTexturePackerNode *lightmapCache;
 
+static void setup_face_lightmap( ApeBrushFace *face )
+{
+	QmMathPlane plane = ( QmMathPlane ) {
+	        .normal = face->normal,
+	};
+
+	QmMathPlaneProjection projection = qm_math_plane_compute_projection( &plane );
+}
+
 static void generate_lightmap_( ApeLight *light )
 {
 	if ( light->lightmap == nullptr )
@@ -51,22 +63,24 @@ static void generate_lightmap_( ApeLight *light )
 	}
 }
 
-static void gather_lights_( ApeWorldNode *node, PLLinkedList *lights )
+static void gather_nodes( ApeWorldNode *node, QmOsLinkedList *lights, QmOsLinkedList *brushes )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 	{
-		ApeLight *light = ( ApeLight * ) node;
 		//TODO: for now, for the sake of testing, we're ignoring this
 		//if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC ) )
-		{
-			PlInsertLinkedListNode( lights, light );
-		}
+		ApeLight *light = ( ApeLight * ) node;
+		qm_os_linked_list_push_back( lights, light );
+	}
+	else if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		qm_os_linked_list_push_back( brushes, node );
 	}
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		gather_lights_( child, lights );
+		gather_nodes( child, lights, brushes );
 	}
 }
 
@@ -78,26 +92,47 @@ void ape_editor_light_generate_( ApeRoom *room )
 
 	// first, gather all the lights for the given room we need to operate on
 
-	PLLinkedList *lights = PlCreateLinkedList();
-	if ( lights == nullptr )
+	QmOsLinkedList *lights  = qm_os_linked_list_create();
+	QmOsLinkedList *brushes = qm_os_linked_list_create();
+	if ( lights == nullptr || brushes == nullptr )
 	{
-		ape_console_error_( true, "Failed to create lights list: %s\n", PlGetError() );
+		ape_console_warning_( "Failed to create lists for lightmap generation!\n" );
+		goto cleanup;
 	}
 
-	gather_lights_( APE_WORLD_NODE( room ), lights );
+	gather_nodes( APE_WORLD_NODE( room ), lights, brushes );
+
+	ApeBrush *brush;
+	QM_OS_LINKED_LIST_ITERATE( brush, brushes, i )
+	{
+		for ( unsigned int k = 0; k < brush->numFaces; ++k )
+		{
+			// we probably don't want lightmaps for mirror or portal faces for now?
+			// mirrors are still doable if you've got a material assigned with mirror prop
+			if ( brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_HIDDEN ||
+			     brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_MIRROR ||
+			     brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_PORTAL )
+			{
+				continue;
+			}
+
+			setup_face_lightmap( &brush->faces[ k ] );
+		}
+	}
 
 	// now, generate the lightmap for each light
 	ApeLight *light;
-	COM_ITERATE_LINKED_LIST( light, lights, i )
+	QM_OS_LINKED_LIST_ITERATE( light, lights, i )
 	{
 		generate_lightmap_( light );
 	}
 
-	// cleanup
-	PlDestroyLinkedList( lights );
-
 	double endTime = qm_os_time_get_seconds();
 	ape_console_print_( "Lightmap generation took %.3f seconds.\n", endTime - startTime );
+
+cleanup:
+	qm_os_memory_free( lights );
+	qm_os_memory_free( brushes );
 }
 
 void ape_light_command_( unsigned int, char ** )
@@ -109,6 +144,8 @@ void ape_light_command_( unsigned int, char ** )
 		return;
 	}
 
+	//TODO: this should operate over all rooms open, not just wherever the camera is!
+	//		why do we not have a get_world method for ed?
 	ApeRoom *room = ape_camera_get_room( instance->camera );
 	if ( room == nullptr )
 	{

@@ -40,6 +40,8 @@ namespace forge
 		long on_toggle_post_processing( FXObject *, FXSelector, void * );
 		long on_toggle_room_visibility( FXObject *, FXSelector, void * );
 
+		long on_build_lightmap( FXObject *, FXSelector, void * );
+
 		void        open_material_browser();
 		const char *get_active_material_path();
 
@@ -70,6 +72,8 @@ namespace forge
 			ID_TOGGLE_SELECTION_BUFFER,
 			ID_TOGGLE_POST_PROCESSING,
 			ID_TOGGLE_ROOM_VISIBILITY,
+
+			ID_BUILD_LIGHTMAPS,
 
 			ID_PROJECT_PACKAGE,
 

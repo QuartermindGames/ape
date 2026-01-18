@@ -34,6 +34,8 @@ MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_POST_PROCESSING, forge::MainWindow::on_toggle_post_processing ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_ROOM_VISIBILITY, forge::MainWindow::on_toggle_room_visibility ),
 
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_BUILD_LIGHTMAPS, forge::MainWindow::on_build_lightmap ),
+
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_PROJECT_PACKAGE, forge::MainWindow::on_package_project ),
         FXMAPFUNC( SEL_TIMEOUT, forge::MainWindow::ID_TICK, forge::MainWindow::on_tick ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_CLOSE_EDITOR, forge::MainWindow::on_close_editor ),
@@ -71,8 +73,12 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCheck( menuPane, "Show Selection Buffer\t\tFor debugging selection buffer.", this, ID_TOGGLE_SELECTION_BUFFER );
 	( new FXMenuCheck( menuPane, "Post Processing\t\tEnable/disable post-processing.", this, ID_TOGGLE_POST_PROCESSING ) )->setCheck( true );
 	new FXMenuCheck( menuPane, "Show All Rooms\t\tToggles visibility of all rooms.", this, ID_TOGGLE_ROOM_VISIBILITY );
-
 	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
+
+	// build
+	menuPane = new FXMenuPane( menuBar_->getParent() );
+	new FXMenuCommand( menuPane, "Build Lightmaps\t\tBuild lightmaps for the current world.", nullptr, this, ID_BUILD_LIGHTMAPS );
+	new FXMenuTitle( menuBar_, "&Build", nullptr, menuPane );
 
 	menuPane = new FXMenuPane( menuBar_->getParent() );
 	new FXMenuCommand( menuPane, "&About\t\tOpen about dialog.", nullptr, this, ID_ABOUT );
@@ -351,7 +357,13 @@ long forge::MainWindow::on_toggle_post_processing( FXObject *object, FXSelector,
 long forge::MainWindow::on_toggle_room_visibility( FXObject *object, FXSelector, void * )
 {
 	PlSetConsoleVariableByName( "world.showAllRooms", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
-	return true;
+	return TRUE;
+}
+
+long forge::MainWindow::on_build_lightmap( FXObject *, FXSelector, void * )
+{
+	PlParseConsoleString( "editor_light" );
+	return TRUE;
 }
 
 void forge::MainWindow::open_material_browser()
