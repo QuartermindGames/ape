@@ -16,7 +16,6 @@ set(YIN_CORE_CLIENT
         private/renderer/renderer_batch.c
         private/renderer/renderer_decal.c
         private/renderer/renderer_flare.c
-        private/renderer/renderer_font.c
         private/renderer/renderer_particle.c
         private/renderer/renderer.c
         private/renderer/renderer_draw.c

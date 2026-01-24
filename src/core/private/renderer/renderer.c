@@ -9,7 +9,6 @@
 #include "world/world.h"
 
 #include "renderer.h"
-#include "renderer_font.h"
 #include "renderer_render_target.h"
 #include "camera/camera.h"
 
@@ -368,7 +367,6 @@ void ape_renderer_initialize_( void )
 	ape_initialize_shaders_();
 	ape_initialize_materials_();
 	ape_renderer_batch_initialize_();
-	ape_initialize_bitmap_fonts_();
 	ape_initialize_flares_();
 
 	ape_draw_initialize_debug_mesh_();
@@ -395,7 +393,6 @@ void ape_shutdown_renderer_( void )
 	ape_draw_destroy_debug_mesh_();
 
 	ape_shutdown_flares_();
-	ape_shutdown_bitmap_fonts_();
 	ape_renderer_batch_shutdown_();
 	ape_shutdown_materials_();
 	ape_shutdown_shaders_();

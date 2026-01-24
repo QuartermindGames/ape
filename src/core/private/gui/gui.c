@@ -6,7 +6,6 @@
 #include "ape/ape_public_game.h"
 #include "editor/editor.h"
 #include "renderer/renderer.h"
-#include "renderer/renderer_font.h"
 #include "renderer/material/material.h"
 #include "renderer/post/post.h"
 #include "yin/core_game.h"

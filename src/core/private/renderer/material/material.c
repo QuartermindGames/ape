@@ -1238,8 +1238,6 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 			continue;
 		}
 
-		// Mirror mode requires flipping the matrix,
-		// so we'll need to update the cull mode
 		PLGCullMode cullMode;
 		if ( ape_rendererState_.cullMode == APE_RENDERER_CULL_MODE_FRONT )
 		{
@@ -1258,6 +1256,8 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 			cullMode = curPass->cullMode;
 		}
 
+		// Mirror mode requires flipping the matrix,
+		// so we'll need to update the cull mode
 		if ( ape_rendererState_.mirror && ( ape_rendererState_.depth % 2 ) )
 		{
 			if ( cullMode == PLG_CULL_NEGATIVE )
