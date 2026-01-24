@@ -973,6 +973,7 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 			AcmBranch                *vertexBranch = acm_push_object( verticesBranch, "vertex" );
 			acm_push_i16( vertexBranch, "position", ( int16_t ) vertex->posIndex );
 			com_acm_push_vector2( vertexBranch, "uv", &vertex->textureCoords, true );
+			com_acm_push_vector2( vertexBranch, "lightmap", &vertex->lightmapCoords, true );
 			com_acm_push_vector3( vertexBranch, "normal", &vertex->normal, true );
 			acm_push_array_f32( vertexBranch, "colour", ( float * ) &vertex->colour, 4 );
 
@@ -1024,9 +1025,10 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 					self->faces[ i ].vertices[ j ].posIndex = ACM_GET_INT( self->faces[ i ].vertices[ j ].posIndex, vertexBranch, "position", 0 );
 					assert( self->faces[ i ].vertices[ j ].posIndex <= self->numVertices );
 
-					self->faces[ i ].vertices[ j ].textureCoords = com_acm_get_vector2( vertexBranch, "uv", &( QmMathVector2f ) {} );
-					self->faces[ i ].vertices[ j ].normal        = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
-					self->faces[ i ].vertices[ j ].colour        = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
+					self->faces[ i ].vertices[ j ].textureCoords  = com_acm_get_vector2( vertexBranch, "uv", &QM_MATH_VECTOR2F_ZERO );
+					self->faces[ i ].vertices[ j ].lightmapCoords = com_acm_get_vector2( vertexBranch, "lightmap", &QM_MATH_VECTOR2F_ZERO );
+					self->faces[ i ].vertices[ j ].normal         = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
+					self->faces[ i ].vertices[ j ].colour         = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
 				}
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];

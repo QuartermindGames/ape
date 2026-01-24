@@ -907,6 +907,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 				// these have to be set seperate for now, need an api for it
 				self->mesh->vertices[ idx ].tangent   = face->tangent;
 				self->mesh->vertices[ idx ].bitangent = face->bitangent;
+				self->mesh->vertices[ idx ].st[ 1 ]   = vertex->lightmapCoords;
 			}
 		}
 	}

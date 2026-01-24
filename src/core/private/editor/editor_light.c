@@ -27,20 +27,116 @@
  *	Should the cook tool be turned into a library?
  */
 
-static constexpr unsigned int LIGHT_MAX_TEXTURE_WIDTH  = 512;
-static constexpr unsigned int LIGHT_MAX_TEXTURE_HEIGHT = 512;
+static constexpr unsigned int LIGHTMAP_TEXTURE_WIDTH  = 512;
+static constexpr unsigned int LIGHTMAP_TEXTURE_HEIGHT = 512;
+
+static constexpr unsigned int LIGHTMAP_LUXEL_SIZE = 4;
 
 static constexpr char LIGHTMAP_EXTENSION[] = ".lmp";
 
 static AuxTexturePackerNode *lightmapCache;
 
-static void setup_face_lightmap( ApeBrushFace *face )
+static void setup_face_lightmap( ApeBrushFace *face, const ApeBrush *brush )
 {
-	QmMathPlane plane = ( QmMathPlane ) {
-	        .normal = face->normal,
-	};
+	// first calculate the bounds
 
-	QmMathPlaneProjection projection = qm_math_plane_compute_projection( &plane );
+	QmMathPlaneProjection projection = qm_math_plane_compute_projection( &( QmMathPlane ) {
+	        .normal = face->normal,
+	} );
+
+	QmMathVector2f min = QM_MATH_VECTOR2F( FLT_MAX, FLT_MAX );
+	QmMathVector2f max = QM_MATH_VECTOR2F( -FLT_MAX, -FLT_MAX );
+
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
+	{
+		QmMathVector2f p = {};
+		switch ( projection )
+		{
+			case QM_MATH_PLANE_PROJECTION_YZ:
+				p.x = brush->vertices[ face->vertices[ i ].posIndex ].y;
+				p.y = brush->vertices[ face->vertices[ i ].posIndex ].z;
+				break;
+			case QM_MATH_PLANE_PROJECTION_XZ:
+				p.x = brush->vertices[ face->vertices[ i ].posIndex ].x;
+				p.y = brush->vertices[ face->vertices[ i ].posIndex ].z;
+				break;
+			case QM_MATH_PLANE_PROJECTION_XY:
+				p.x = brush->vertices[ face->vertices[ i ].posIndex ].x;
+				p.y = brush->vertices[ face->vertices[ i ].posIndex ].y;
+				break;
+		}
+
+		if ( p.x < min.x )
+		{
+			min.x = p.x;
+		}
+		if ( p.y < min.y )
+		{
+			min.y = p.y;
+		}
+
+		if ( p.x > max.x )
+		{
+			max.x = p.x;
+		}
+		if ( p.y > max.y )
+		{
+			max.y = p.y;
+		}
+	}
+
+	// need to figure out where it's going to fit into our lightmap sheet
+
+	unsigned int w = ( unsigned int ) ceilf( ( max.x - min.x ) / LIGHTMAP_LUXEL_SIZE );
+	unsigned int h = ( unsigned int ) ceilf( ( max.y - min.y ) / LIGHTMAP_LUXEL_SIZE );
+
+	AuxTexturePackerNode *node = aux_texture_packer_node_insert( lightmapCache, w, h );
+	if ( node == nullptr )
+	{
+		//TODO: if this occurs, it might need to go into another sheet
+		//		but we'll worry about that later
+		ape_console_warning_( "Failed to insert node into lightmap (%ux%u)!\n", w, h );
+		return;
+	}
+
+	// now update the uv so its correct relative to where it's going to be on the sheet
+
+	ComMathRectI32 rect = aux_texture_packer_node_get_rect( node );
+
+	QmMathVector2f sx;
+	sx.x = ( float ) rect.x / LIGHTMAP_TEXTURE_WIDTH;
+	sx.y = ( float ) rect.y / LIGHTMAP_TEXTURE_HEIGHT;
+
+	QmMathVector2f sy;
+	sy.x = ( float ) ( rect.x + rect.w ) / LIGHTMAP_TEXTURE_WIDTH;
+	sy.y = ( float ) ( rect.y + rect.h ) / LIGHTMAP_TEXTURE_HEIGHT;
+
+	for ( unsigned int i = 0; i < face->numVertices; ++i )
+	{
+		QmMathVector2f p = {};
+		switch ( projection )
+		{
+			case QM_MATH_PLANE_PROJECTION_YZ:
+				p.x = brush->vertices[ face->vertices[ i ].posIndex ].y;
+				p.y = brush->vertices[ face->vertices[ i ].posIndex ].z;
+				break;
+			case QM_MATH_PLANE_PROJECTION_XZ:
+				p.x = brush->vertices[ face->vertices[ i ].posIndex ].x;
+				p.y = brush->vertices[ face->vertices[ i ].posIndex ].z;
+				break;
+			case QM_MATH_PLANE_PROJECTION_XY:
+				p.x = brush->vertices[ face->vertices[ i ].posIndex ].x;
+				p.y = brush->vertices[ face->vertices[ i ].posIndex ].y;
+				break;
+		}
+
+		QmMathVector2f uv;
+		uv = qm_math_vector2f_sub( p, min );
+		uv = qm_math_vector2f_div( uv, qm_math_vector2f_sub( max, min ) );
+
+		face->vertices[ i ].lightmapCoords.x = sx.x + uv.x * ( sy.x - sx.x );
+		face->vertices[ i ].lightmapCoords.y = sx.y + uv.y * ( sy.y - sx.y );
+	}
 }
 
 static void generate_lightmap_( ApeLight *light )
@@ -51,7 +147,7 @@ static void generate_lightmap_( ApeLight *light )
 	}
 	else
 	{
-		PL_ZERO( light->lightmap, sizeof( ApeLightmapPixel ) * APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE );
+		PL_ZERO( light->lightmap, APE_LIGHTMAP_BUFFER_SIZE );
 	}
 
 	float step = 1.0f / ( float ) APE_LIGHTMAP_SIZE;
@@ -90,6 +186,8 @@ void ape_editor_light_generate_( ApeRoom *room )
 
 	double startTime = qm_os_time_get_seconds();
 
+	lightmapCache = aux_texture_packer_node_create_root( LIGHTMAP_TEXTURE_WIDTH, LIGHTMAP_TEXTURE_HEIGHT );
+
 	// first, gather all the lights for the given room we need to operate on
 
 	QmOsLinkedList *lights  = qm_os_linked_list_create();
@@ -101,6 +199,10 @@ void ape_editor_light_generate_( ApeRoom *room )
 	}
 
 	gather_nodes( APE_WORLD_NODE( room ), lights, brushes );
+
+	ape_console_print_( "Processing %u lights, %u brushes...\n",
+	                    qm_os_linked_list_get_size( lights ),
+	                    qm_os_linked_list_get_size( brushes ) );
 
 	ApeBrush *brush;
 	QM_OS_LINKED_LIST_ITERATE( brush, brushes, i )
@@ -116,7 +218,10 @@ void ape_editor_light_generate_( ApeRoom *room )
 				continue;
 			}
 
-			setup_face_lightmap( &brush->faces[ k ] );
+			setup_face_lightmap( &brush->faces[ k ], brush );
+
+			// mark it dirty so we reupload later with the new uv
+			ape_brush_mark_parent_dirty( brush );
 		}
 	}
 

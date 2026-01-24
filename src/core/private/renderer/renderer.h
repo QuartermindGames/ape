@@ -42,15 +42,15 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 static constexpr PLGCompareFunction APE_RENDERER_DEFAULT_DEPTH_FUNCTION = PLG_COMPARE_LEQUAL;
 static constexpr PLGCullMode        APE_RENDERER_DEFAULT_CULL_FUNCTION  = PLG_CULL_POSITIVE;
 
-static constexpr unsigned int APE_LIGHTMAP_SIZE = 64;
-
 typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 {
-	unsigned char r, g, b;
-
+	QmMathColour3f colour;
 	QmMathVector3f position;
 	QmMathVector3f normal;
 } ApeLightmapPixel;
+
+static constexpr unsigned int APE_LIGHTMAP_SIZE        = 64;
+static constexpr unsigned int APE_LIGHTMAP_BUFFER_SIZE = APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE * sizeof( ApeLightmapPixel );
 
 #define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight

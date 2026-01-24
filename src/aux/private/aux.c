@@ -239,7 +239,7 @@ QmMathColour4f com_acm_get_colour_f32( AcmBranch *root, const char *name, const 
 
 AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const QmMathVector2f *vector, bool conditional )
 {
-	if ( conditional && qm_math_vector2f_compare( *vector, pl_vecOrigin2 ) )
+	if ( conditional && qm_math_vector2f_compare( *vector, QM_MATH_VECTOR2F_ZERO ) )
 	{
 		return nullptr;
 	}
@@ -249,7 +249,7 @@ AcmBranch *com_acm_push_vector2( AcmBranch *parent, const char *name, const QmMa
 
 AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const QmMathVector3f *vector, bool conditional )
 {
-	if ( conditional && qm_math_vector3f_compare( *vector, pl_vecOrigin3 ) )
+	if ( conditional && qm_math_vector3f_compare( *vector, QM_MATH_VECTOR3F_ZERO ) )
 	{
 		return nullptr;
 	}
@@ -259,7 +259,7 @@ AcmBranch *com_acm_push_vector3( AcmBranch *parent, const char *name, const QmMa
 
 AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const QmMathVector4f *vector, bool conditional )
 {
-	if ( conditional && qm_math_vector4f_compare( *vector, pl_vecOrigin4 ) )
+	if ( conditional && qm_math_vector4f_compare( *vector, QM_MATH_VECTOR4F_ZERO ) )
 	{
 		return nullptr;
 	}
