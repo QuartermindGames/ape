@@ -41,6 +41,7 @@ typedef enum ApePropertyType
 	APE_PROPERTY_TYPE_STRING,
 	APE_PROPERTY_TYPE_PATH,
 	APE_PROPERTY_TYPE_BOOLEAN,
+	APE_PROPERTY_TYPE_BITFLAG,
 
 	APE_PROPERTY_MAX_TYPES,
 } ApePropertyType;
@@ -78,6 +79,13 @@ typedef struct ApePropertyEnum
 	unsigned int value;
 } ApePropertyEnum;
 
+typedef struct ApePropertyBitFlag
+{
+	const char  *name;
+	const char  *desc;
+	unsigned int value;
+} ApePropertyBitFlag;
+
 typedef struct ApeProperty
 {
 	const char     *name;
@@ -97,6 +105,11 @@ typedef struct ApeProperty
 		{
 			unsigned int maxSize;
 		} stringType;
+		struct
+		{
+			ApePropertyBitFlag *bitFlags;
+			unsigned int        numBitFlags;
+		} bitFlagType;
 	};
 
 #if !defined( NDEBUG )
@@ -105,58 +118,30 @@ typedef struct ApeProperty
 } ApeProperty;
 
 #if !defined( NDEBUG )
-#	define APE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
-		{ NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP, .typeName = APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ) }
+#	define APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP, .typeName = APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR )
 #else
-#	define APE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
-		{ NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP }
+#	define APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP
 #endif
-#if !defined( NDEBUG )
-#	define APE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                  \
-		{                                                                 \
-		        NAME,                                                     \
-		        #VAR,                                                     \
-		        DESC,                                                     \
-		        PL_OFFSETOF( TYPE, VAR ),                                 \
-		        APE_PROPERTY_TYPE_STRING,                                 \
-		        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) },  \
-		        APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ), \
-		}
-#else
-#	define APE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                 \
-		{                                                                \
-		        NAME,                                                    \
-		        #VAR,                                                    \
-		        DESC,                                                    \
-		        PL_OFFSETOF( TYPE, VAR ),                                \
-		        APE_PROPERTY_TYPE_STRING,                                \
-		        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) }, \
-		}
-#endif
-#if !defined( NDEBUG )
-#	define APE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )             \
-		{                                                                 \
-		        NAME,                                                     \
-		        #VAR,                                                     \
-		        DESC,                                                     \
-		        PL_OFFSETOF( TYPE, VAR ),                                 \
-		        APE_PROPERTY_TYPE_ENUM,                                   \
-		        .enumType = { ENUMS,                                      \
-                             QM_OS_ARRAY_ELEMENTS( ENUMS ) },            \
-		        APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ), \
+
+#define APE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
+	{ APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) }
+#define APE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                  \
+	{                                                                 \
+	        APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, STRING ),     \
+	        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) },  \
+	        APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ), \
+	}
+#define APE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )       \
+	{                                                           \
+	        APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, ENUM ), \
+	        .enumType = { ENUMS,                                \
+                         QM_OS_ARRAY_ELEMENTS( ENUMS ) },      \
 }
-#else
-#	define APE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )  \
-		{                                                      \
-		        NAME,                                          \
-		        #VAR,                                          \
-		        DESC,                                          \
-		        PL_OFFSETOF( TYPE, VAR ),                      \
-		        APE_PROPERTY_TYPE_ENUM,                        \
-		        .enumType = { ENUMS,                           \
-                             QM_OS_ARRAY_ELEMENTS( ENUMS ) }, \
-		}
-#endif
+#define APE_PROPERTY_BITFLAG( NAME, DESC, TYPE, VAR, FLAGS )                                                    \
+	{                                                                                                           \
+		APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, BITFLAG ), .bitFlagType = { FLAGS,                          \
+			                                                                    QM_OS_ARRAY_ELEMENTS( FLAGS ) } \
+	}
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
