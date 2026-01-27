@@ -320,7 +320,8 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	ApeRoom *room = visibleRoom->room;
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience = room->ambientLight;
+		ape_rendererState_.ambience        = room->ambientLight;
+		ape_rendererState_.lightmapTexture = room->lightmapTexture;
 	}
 
 	// draw other node types
@@ -338,7 +339,8 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience = QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 0.0f );
+		ape_rendererState_.ambience        = QM_MATH_COLOUR4F_ZERO;
+		ape_rendererState_.lightmapTexture = nullptr;
 	}
 
 	COM_PROFILE_FUNCTION_END();
@@ -511,7 +513,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 	}
 }
 
-void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light )
+void ape_world_draw_stencil_shadows_( ApeCamera *camera, const ApeLight *light )
 {
 	assert( camera != nullptr && light != nullptr );
 

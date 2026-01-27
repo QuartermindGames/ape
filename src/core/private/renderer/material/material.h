@@ -20,10 +20,11 @@ typedef enum ApeMaterialBuiltinVar
 	APE_MATERIAL_BUILTIN_TIME,
 	APE_MATERIAL_BUILTIN_VIEWPORT_SIZE,
 	APE_MATERIAL_BUILTIN_FALLBACK,// todo: replace with 'proc', and determine proc type
+	APE_MATERIAL_BUILTIN_LIGHTMAP,
 
 	APE_MATERIAL_BUILTIN_RT_SPHERE,// realtime spheremap reflections
 
-	SS_ARL_MAX_MATERIAL_BUILTINS
+	APE_MATERIAL_MAX_BUILTINS
 } ApeMaterialBuiltinVar;
 
 typedef enum ApeMaterialFlag
@@ -69,9 +70,10 @@ typedef enum ApeMaterialVariableType
  */
 typedef enum ApeMaterialVariableHint
 {
-	SS_ARL_MATERIAL_VAR_HINT_DIFFUSE,
-	SS_ARL_MATERIAL_VAR_HINT_NORMAL,
-	SS_ARL_MATERIAL_VAR_HINT_SPECULAR,
+	APE_MATERIAL_VAR_HINT_DIFFUSE,
+	APE_MATERIAL_VAR_HINT_NORMAL,
+	APE_MATERIAL_VAR_HINT_SPECULAR,
+	APE_MATERIAL_VAR_HINT_LIGHTMAP,
 } ApeMaterialVariableHint;
 
 typedef union ApeMaterialVariableData

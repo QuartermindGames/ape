@@ -11,6 +11,8 @@
 #include "audio/audio.h"
 #include "camera/camera.h"
 
+typedef struct ApeLightmapPixel ApeLightmapPixel;
+
 typedef struct ApeRoom
 {
 	// This should always come first!
@@ -33,7 +35,10 @@ typedef struct ApeRoom
 	PLPath savePath;
 #endif
 
-	struct ApeDecalManager *decalManager;
+	ApeDecalManager *decalManager;
+
+	ApeLightmapPixel *lightmap;
+	PLGTexture       *lightmapTexture;
 } ApeRoom;
 
 PL_EXTERN_C
@@ -53,7 +58,7 @@ void ape_register_world_console_variables_( void );
 
 void ape_world_node_compute_bounds_( ApeWorldNode *self );
 
-void ape_world_draw_stencil_shadows_( ApeCamera *camera, ApeLight *light );
+void ape_world_draw_stencil_shadows_( ApeCamera *camera, const ApeLight *light );
 void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 
 /////////////////////////////////////////////////////////////////////////////////////

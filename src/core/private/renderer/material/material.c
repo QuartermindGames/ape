@@ -1,7 +1,10 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include <plcore/pl_linkedlist.h>
 #include <float.h>
+
+#include <plcore/pl_linkedlist.h>
+
+#include "qmos/public/qm_os_string.h"
 
 #include "ape_private.h"
 
@@ -11,22 +14,24 @@
 
 #include "material.h"
 
+#include "console/console.h"
+
 #include "world/world.h"
 #include "game/game_public.h"
 #include "gui/gui_private.h"
-#include "qmos/public/qm_os_string.h"
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
-static ApeTexture *diffuseFallbackTexture;
-static PLGTexture *specularFallbackTexture;
-static PLGTexture *normalFallbackTexture;
+static ApeTexture *whiteFallbackTexture;
+static ApeTexture *blackFallbackTexture;
+static ApeTexture *normalFallbackTexture;
 
 static PLConsoleString materialTextureFilter;
 static int32_t         materialTextureAnisotropy = 16;
 static bool            materialSkipDiffuse;
 static bool            materialSkipNormal;
 static bool            materialSkipSpecular;
+static bool            materialSkipLightmap;
 
 typedef struct ApeMaterial
 {
@@ -82,12 +87,13 @@ PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 
 void ape_material_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "material.forceTextureFilter", "Force a specific texture filtering mode.", "", PL_VAR_STRING, materialTextureFilter, nullptr, false );
-	PlRegisterConsoleVariable( "material.textureAnistropy", "", "16", PL_VAR_I32, &materialTextureAnisotropy, nullptr, false );
+	ape_console_var_register( "material.forceTextureFilter", "Force a specific texture filtering mode.", "", PL_VAR_STRING, materialTextureFilter, nullptr, 0 );
+	ape_console_var_register( "material.textureAnistropy", "", "16", PL_VAR_I32, &materialTextureAnisotropy, nullptr, 0 );
 
-	PlRegisterConsoleVariable( "material.skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, &materialSkipDiffuse, nullptr, false );
-	PlRegisterConsoleVariable( "material.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, &materialSkipNormal, nullptr, false );
-	PlRegisterConsoleVariable( "material.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, &materialSkipSpecular, nullptr, false );
+	ape_console_var_register( "material.skipDiffuse", "Skip diffuse map.", "0", PL_VAR_BOOL, &materialSkipDiffuse, nullptr, 0 );
+	ape_console_var_register( "material.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, &materialSkipNormal, nullptr, 0 );
+	ape_console_var_register( "material.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, &materialSkipSpecular, nullptr, 0 );
+	ape_console_var_register( "material.skipLightmap", "Skip lightmap.", "0", PL_VAR_BOOL, &materialSkipLightmap, nullptr, 0 );
 }
 
 void ape_initialize_materials_( void )
@@ -103,9 +109,9 @@ void ape_initialize_materials_( void )
 		}
 	}
 
-	diffuseFallbackTexture  = ape_texture_cache_( "materials/shaders/textures/white.png", PLG_TEXTURE_FILTER_LINEAR, true );
-	normalFallbackTexture   = ape_texture_load_direct_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
-	specularFallbackTexture = ape_texture_load_direct_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_MIPMAP_LINEAR );
+	whiteFallbackTexture  = ape_texture_cache_( "materials/shaders/textures/white.png", PLG_TEXTURE_FILTER_LINEAR, true );
+	blackFallbackTexture  = ape_texture_cache_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR, true );
+	normalFallbackTexture = ape_texture_cache_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR, true );
 
 	// cache default materials we need
 	static const char *defaultMaterialPaths[ APE_MAX_DEFAULT_MATERIALS ] =
@@ -279,12 +285,13 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
 	        [APE_MATERIAL_BUILTIN_TIME]          = "time",
 	        [APE_MATERIAL_BUILTIN_VIEWPORT_SIZE] = "vpsize",
 	        [APE_MATERIAL_BUILTIN_FALLBACK]      = "proc_fallback",
+	        [APE_MATERIAL_BUILTIN_LIGHTMAP]      = "lightmap",
 
 	        [APE_MATERIAL_BUILTIN_RT_SPHERE] = "rt_sphere",
 	};
-	PL_STATIC_ASSERT( QM_OS_ARRAY_ELEMENTS( builtInTags ) == SS_ARL_MAX_MATERIAL_BUILTINS, "" );
+	PL_STATIC_ASSERT( QM_OS_ARRAY_ELEMENTS( builtInTags ) == APE_MATERIAL_MAX_BUILTINS, "" );
 
-	for ( int i = 0; i < SS_ARL_MAX_MATERIAL_BUILTINS; ++i )
+	for ( int i = 0; i < APE_MATERIAL_MAX_BUILTINS; ++i )
 	{
 		if ( strncmp( tag, builtInTags[ i ], strlen( builtInTags[ i ] ) ) != 0 )
 		{
@@ -582,7 +589,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
 					{
-						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_DIFFUSE;
+						materialVariable->hint = APE_MATERIAL_VAR_HINT_DIFFUSE;
 
 						/* this sucks, but shaders only deal with a default "pass" rather than a whole material, so
 						 * it needs to be able to pass a null material... probably revisit this later. */
@@ -602,11 +609,15 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					}
 					else if ( pl_strcasecmp( materialVariable->name, "normalMap" ) == 0 )
 					{
-						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_NORMAL;
+						materialVariable->hint = APE_MATERIAL_VAR_HINT_NORMAL;
 					}
 					else if ( pl_strcasecmp( materialVariable->name, "specularMap" ) == 0 )
 					{
-						materialVariable->hint = SS_ARL_MATERIAL_VAR_HINT_SPECULAR;
+						materialVariable->hint = APE_MATERIAL_VAR_HINT_SPECULAR;
+					}
+					else if ( pl_strcasecmp( materialVariable->name, "lightMap" ) == 0 )
+					{
+						materialVariable->hint = APE_MATERIAL_VAR_HINT_LIGHTMAP;
 					}
 
 					materialVariable->data.ptr = texture;
@@ -903,7 +914,7 @@ static void draw_rt_sphere( ApeMaterial *material, PLGMesh *mesh )
 #endif
 }
 
-static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, unsigned int *curUnit )
+static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass *pass, PLGMesh *mesh, int uniformSlot, int variable, unsigned int *curUnit )
 {
 	if ( variable == -1 )
 	{
@@ -924,6 +935,19 @@ static void set_built_in_variable( ApeMaterial *material, ApeMaterialPass *pass,
 		{
 			PLGTexture *texture = ape_texture_get_fallback();
 			assert( texture != nullptr );
+			PlgSetTexture( texture, *curUnit );
+			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
+			( *curUnit )++;
+			break;
+		}
+		case APE_MATERIAL_BUILTIN_LIGHTMAP:
+		{
+			PLGTexture *texture = ape_rendererState_.lightmapTexture;
+			if ( texture == nullptr )
+			{
+				texture = blackFallbackTexture->internal;
+			}
+
 			PlgSetTexture( texture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
@@ -1148,17 +1172,18 @@ bool ape_material_is_blended( const ApeMaterial *self )
 static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 {
 	PLGTexture *texture = nullptr;
-	if ( var->hint == SS_ARL_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse )
+	if ( ( var->hint == APE_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse ) ||
+	     ( var->hint == APE_MATERIAL_VAR_HINT_LIGHTMAP && materialSkipLightmap ) )
 	{
-		texture = diffuseFallbackTexture->internal;
+		texture = whiteFallbackTexture->internal;
 	}
-	else if ( var->hint == SS_ARL_MATERIAL_VAR_HINT_NORMAL && materialSkipNormal )
+	else if ( var->hint == APE_MATERIAL_VAR_HINT_NORMAL && materialSkipNormal )
 	{
-		texture = normalFallbackTexture;
+		texture = normalFallbackTexture->internal;
 	}
-	else if ( var->hint == SS_ARL_MATERIAL_VAR_HINT_SPECULAR && materialSkipSpecular )
+	else if ( var->hint == APE_MATERIAL_VAR_HINT_SPECULAR && materialSkipSpecular )
 	{
-		texture = specularFallbackTexture;
+		texture = blackFallbackTexture->internal;
 	}
 	else if ( var->type == APE_MATERIAL_VAR_RENDERTARGET )
 	{

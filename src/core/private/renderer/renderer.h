@@ -110,6 +110,11 @@ typedef struct ApeRendererPassState
 	unsigned int depth;
 
 	ApeCamera *camera;
+
+	ApeLightPointerArray lights;
+	unsigned int         numLights;
+
+	PLGTexture *lightmapTexture;
 } ApeRendererPassState;
 extern ApeRendererPassState ape_rendererState_;
 

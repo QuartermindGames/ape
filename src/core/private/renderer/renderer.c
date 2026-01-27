@@ -17,7 +17,8 @@
 
 #include "post/post.h"
 
-ApeRendererStats     ape_rendererPerformance_ = {};
+ApeRendererStats ape_rendererPerformance_ = {};
+//TODO: kill this, caller instead sets up state and passes it into draw call
 ApeRendererPassState ape_rendererState_;
 
 static ApeCamera *currentCamera;
@@ -374,10 +375,10 @@ void ape_renderer_initialize_( void )
 	ape_setup_default_draw_state_( nullptr );
 
 	defaultRenderTarget = ape_render_target_create_( "default",
-	                                                800, 600,
-	                                                PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
-	                                                PLG_BUFFER_COLOUR,
-	                                                PLG_TEXTURE_FILTER_LINEAR, 0 );
+	                                                 800, 600,
+	                                                 PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                 PLG_BUFFER_COLOUR,
+	                                                 PLG_TEXTURE_FILTER_LINEAR, 0 );
 	if ( defaultRenderTarget == NULL )
 	{
 		ape_console_error_( true, "Failed to create default render target!\n" );
