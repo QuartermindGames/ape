@@ -30,16 +30,15 @@ the specific properties for the pass - the options
 will depend on what program you've chosen and will
 typically refer to any uniforms within the program.
 
-Built in values can be used by prefixing with an
-underscore. Below are the available built-in
-values.
+Built in values can be used by prefixing with a percentage symbol (%).
+Below are the available built-in values.
 
-    _rt_*           : Returns the specified RT buffer.
-    _rt_sphere      : Attempts to draw from surface origin, producing spheremap (expensive!!!)
-    _depth_*        : Returns depth-buffer for given RT.
-    _vpsize         : Size of the viewport, provided as vec2.
-    _time           : Returns the number of sim ticks.
-    _proc_fallback  : Uses the built-in fallback texture.
+    %rt_*           : Returns the specified RT buffer.
+    %rt_sphere      : Attempts to draw from surface origin, producing spheremap (expensive!!!)
+    %depth_*        : Returns depth-buffer for given RT.
+    %vpsize         : Size of the viewport, provided as vec2.
+    %time           : Returns the number of sim ticks.
+    %proc_fallback  : Uses the built-in fallback texture.
 
 Each pass also supports the following.
 Mind that the defaults for these will also be influenced by the given shader you're using, and additionally some of these can be overriden depending on the specific internal draw stage.

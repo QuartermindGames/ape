@@ -395,9 +395,9 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		{
 			PLPath value;
 			acm_branch_get_string( node, value, sizeof( value ) );
-			if ( *value == '_' )
+			if ( *value == '_' || *value == '%' )
 			{
-				const char *p = ( value + 1 );
+				const char *p = value + 1;
 				// Render targets are "special" in the sense that we can specify what we want
 				if ( strncmp( p, "rt_", 3 ) == 0 )
 				{
