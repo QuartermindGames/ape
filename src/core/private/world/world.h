@@ -38,7 +38,7 @@ typedef struct ApeRoom
 	ApeDecalManager *decalManager;
 
 	ApeLightmapPixel *lightmap;
-	PLGTexture       *lightmapTexture;
+	ApeTexture       *lightmapTexture;
 } ApeRoom;
 
 PL_EXTERN_C

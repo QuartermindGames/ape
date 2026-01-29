@@ -351,8 +351,9 @@ typedef struct ApeBrushFace
 	ApeBrushFaceVertex vertices[ APE_BRUSH_MAX_FACE_VERTICES ];     // list of vertices
 	unsigned int       numVertices;
 
-	PLCollisionAABB  bounds;
-	PLCollisionPlane plane;
+	PLCollisionAABB bounds;
+
+	QmMathVector4f lightmapArea;
 
 	unsigned int flags;
 

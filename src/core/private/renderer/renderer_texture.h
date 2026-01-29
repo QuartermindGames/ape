@@ -27,6 +27,11 @@ typedef struct ApeTexture
 	PLPath path;// for reloading
 } ApeTexture;
 
+PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
+PLGTexture *ape_texture_get_fallback( void );
+
+ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, bool generateMipMap );
+
 ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback );
 void        ape_texture_release_( ApeTexture *texture );
 

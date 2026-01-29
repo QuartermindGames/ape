@@ -221,9 +221,6 @@ void ape_brush_face_compute_normal( ApeBrushFace *face )
 	{
 		face->vertices[ i ].normal = face->normal;
 	}
-
-	// store the normal here, as the face normal may be modified later
-	face->plane.normal = face->normal;
 }
 
 static void compute_brush_face_tangents( ApeBrushFace *face )

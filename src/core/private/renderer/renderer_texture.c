@@ -39,12 +39,12 @@ static void destroy_texture( void *userData )
 	qm_os_memory_free( texture );
 }
 
-static ApeTexture *generate_texture( const char *id, void *data, unsigned int w, unsigned int h, unsigned int numChannels, bool generateMipMap )
+ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, bool generateMipMap )
 {
 	PLColourFormat cFormat;
 	PLImageFormat  iFormat;
 
-	switch ( numChannels )
+	switch ( format->numChannels )
 	{
 		default:
 			ape_console_warning_( "Invalid number of colour channels specified!\n" );
@@ -72,9 +72,10 @@ static ApeTexture *generate_texture( const char *id, void *data, unsigned int w,
 #endif
 
 	PLGTexture *internalTexture = PlgCreateTexture();
-	if ( internalTexture == NULL )
+	if ( internalTexture == nullptr )
 	{
 		ape_console_error_( true, "Failed to create texture (%s): %s\n", id, PlGetError() );
+		return nullptr;
 	}
 
 	if ( !generateMipMap )
@@ -195,7 +196,7 @@ void ape_initialize_textures_( void )
 	        QM_MATH_COLOUR4UB_RGB( 0, 0, 0 ),
 	        QM_MATH_COLOUR4UB_RGB( 255, 0, 255 ),
 	};
-	defaultTextures[ APE_TEXTURE_FALLBACK ] = generate_texture( "fallback", fallbackData, 2, 2, 4, false );
+	defaultTextures[ APE_TEXTURE_FALLBACK ] = ape_texture_generate_( "fallback", fallbackData, 2, 2, &QM_IMAGE_FORMAT_RGB8_DESC(), false );
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 

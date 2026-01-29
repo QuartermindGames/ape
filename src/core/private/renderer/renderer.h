@@ -42,15 +42,20 @@ typedef struct ApeRenderTarget ApeRenderTarget;
 static constexpr PLGCompareFunction APE_RENDERER_DEFAULT_DEPTH_FUNCTION = PLG_COMPARE_LEQUAL;
 static constexpr PLGCullMode        APE_RENDERER_DEFAULT_CULL_FUNCTION  = PLG_CULL_POSITIVE;
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Lighting
+/////////////////////////////////////////////////////////////////////////////////////
+
 typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 {
+#if 0
 	QmMathColour3f colour;
 	QmMathVector3f position;
 	QmMathVector3f normal;
+#else
+	QmMathColour3ub colour;
+#endif
 } ApeLightmapPixel;
-
-static constexpr unsigned int APE_LIGHTMAP_SIZE        = 64;
-static constexpr unsigned int APE_LIGHTMAP_BUFFER_SIZE = APE_LIGHTMAP_SIZE * APE_LIGHTMAP_SIZE * sizeof( ApeLightmapPixel );
 
 #define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight
@@ -73,6 +78,9 @@ typedef struct ApeLight
 } ApeLight;
 
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum ApeCullMode
 {
@@ -145,9 +153,6 @@ void ape_get_2d_viewport_size_( int *width, int *height );
 
 void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const QmMathVector3f *position, float spriteAngle );
 void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFrames, unsigned int curFrame, const QmMathVector3f *position, float angle );
-
-PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
-PLGTexture *ape_texture_get_fallback( void );
 
 void ape_add_flare_to_queue( const ApeCamera *camera, const QmMathVector3f *worldPos, const QmMathColour4f *colour, float size, float intensity );
 void ape_clear_flare_queue_( void );

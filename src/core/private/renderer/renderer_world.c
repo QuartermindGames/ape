@@ -4,6 +4,7 @@
 
 #include "ape_private.h"
 #include "renderer.h"
+#include "renderer_texture.h"
 #include "material/material.h"
 #include "camera/camera.h"
 #include "editor/editor.h"
@@ -321,7 +322,10 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience        = room->ambientLight;
-		ape_rendererState_.lightmapTexture = room->lightmapTexture;
+		if ( room->lightmapTexture != nullptr )
+		{
+			ape_rendererState_.lightmapTexture = room->lightmapTexture->internal;
+		}
 	}
 
 	// draw other node types
