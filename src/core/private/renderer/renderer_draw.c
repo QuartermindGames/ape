@@ -91,19 +91,19 @@ void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, f
 
 	PlgImmPushVertex( x, y, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-	PlgImmTextureCoord( 1.0f, 0.0f );
+	PlgImmTextureCoord( 0.0f, 0.0f );
 
 	PlgImmPushVertex( x, y + h, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-	PlgImmTextureCoord( 1.0f, 1.0f );
+	PlgImmTextureCoord( 0.0f, 1.0f );
 
 	PlgImmPushVertex( x + w, y, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-	PlgImmTextureCoord( 0.0f, 0.0f );
+	PlgImmTextureCoord( 1.0f, 0.0f );
 
 	PlgImmPushVertex( x + w, y + h, z );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
-	PlgImmTextureCoord( 0.0f, 1.0f );
+	PlgImmTextureCoord( 1.0f, 1.0f );
 
 	if ( material != nullptr )
 	{
