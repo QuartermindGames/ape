@@ -180,8 +180,8 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 			// sooo uh, need to convert the lightmap area relative to the luxel size I guess?
 
 			// this should return the x and y in world units
-			float fx = col * LIGHTMAP_LUXEL_SIZE;
-			float fy = row * LIGHTMAP_LUXEL_SIZE;
+			float fx = col * LIGHTMAP_LUXEL_SIZE + LIGHTMAP_LUXEL_SIZE / 2.0f;
+			float fy = row * LIGHTMAP_LUXEL_SIZE + LIGHTMAP_LUXEL_SIZE / 2.0f;
 
 			QmMathVector3f luxelPos = faceOrigin;
 			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis1, fx ) );
