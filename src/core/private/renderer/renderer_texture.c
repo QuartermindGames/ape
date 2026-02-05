@@ -39,7 +39,7 @@ static void destroy_texture( void *userData )
 	qm_os_memory_free( texture );
 }
 
-ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, bool generateMipMap )
+ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, const PLGTextureFilter filter )
 {
 	PLColourFormat cFormat;
 	PLImageFormat  iFormat;
@@ -78,14 +78,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 		return nullptr;
 	}
 
-	if ( !generateMipMap )
-	{
-		internalTexture->filter = PLG_TEXTURE_FILTER_NEAREST;
-	}
-	else
-	{
-		internalTexture->filter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
-	}
+	internalTexture->filter = filter;
 
 	if ( !PlgUploadTextureImage( internalTexture, imageData ) )
 	{

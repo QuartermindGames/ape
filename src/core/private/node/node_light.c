@@ -31,7 +31,6 @@ static void destroy_light( void *data, ApeWorldNode *parent )
 		return;
 	}
 
-	qm_os_memory_free( self->lightmap );
 	qm_os_memory_free( self );
 }
 
@@ -134,6 +133,24 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 
 	QmMathVector3f dir = qm_math_vector3f_sub( plane->origin, ape_light_get_position( self ) );
 	float          dot = qm_math_vector3f_dot_product( plane->normal, dir );
+	return dot < 0;
+}
+
+bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
+{
+	if ( self->type == APE_LIGHT_TYPE_SUN )
+	{
+		float dot = qm_math_vector3f_dot_product( face->normal, ape_light_get_position( self ) );
+		return dot <= 0;
+	}
+
+	if ( !com_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &face->bounds, nullptr ) )
+	{
+		return false;
+	}
+
+	QmMathVector3f dir = qm_math_vector3f_sub( face->bounds.absOrigin, ape_light_get_position( self ) );
+	float          dot = qm_math_vector3f_dot_product( face->normal, dir );
 	return dot < 0;
 }
 

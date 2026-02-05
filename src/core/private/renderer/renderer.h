@@ -57,7 +57,6 @@ typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 #endif
 } ApeLightmapPixel;
 
-#define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef struct ApeLight
 {
 	// This should always come first!
@@ -72,11 +71,10 @@ typedef struct ApeLight
 	unsigned int flags;
 	int          state;
 
-	ApeLightmapPixel *lightmap;
-
 	bool isCacheDirty;
 } ApeLight;
 
+#define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
 typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
 
 /////////////////////////////////////////////////////////////////////////////////////

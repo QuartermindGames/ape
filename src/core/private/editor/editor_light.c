@@ -28,8 +28,9 @@
  *	Consider moving this into the cook tool?
  *	Should the cook tool be turned into a library?
  *
- *	Store min/max rect for face as area?
- *	float w, h - relative to origin
+ *	Need to deal with concave faces, eventually, if we want to support things like
+ *	the terrain etc., or, we finally decide on getting rid of support for concave faces
+ *	and force convex
  */
 
 static constexpr unsigned int LIGHTMAP_WIDTH       = 512;
@@ -127,32 +128,103 @@ static bool setup_face_lightmap( ApeBrushFace *face, const ApeBrush *brush, AuxT
 	return true;
 }
 
-static void generate_lightmap_( ApeRoom *room, ApeBrushFace *face, ApeLight *light )
+static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLight *light )
 {
-	ApeBrush *brush = face->parent;
-	assert( brush != nullptr );
+	if ( light->radius <= 0.0f )
+	{
+		return;
+	}
 
-	unsigned int seed = ( uintptr_t ) face;
-
-	QmMathColour4ub colour;
-	colour.r = 128 + qm_os_random_int( &seed ) % 128 - 1;
-	colour.g = 128 + qm_os_random_int( &seed ) % 128 - 1;
-	colour.b = 128 + qm_os_random_int( &seed ) % 128 - 1;
-	colour.a = 255;
+	if ( !ape_light_test_face( light, face ) )
+	{
+		return;
+	}
 
 	unsigned int x = face->lightmapArea.x * LIGHTMAP_WIDTH;
 	unsigned int y = face->lightmapArea.y * LIGHTMAP_HEIGHT;
 	unsigned int w = ( face->lightmapArea.z - face->lightmapArea.x ) * LIGHTMAP_WIDTH;
 	unsigned int h = ( face->lightmapArea.w - face->lightmapArea.y ) * LIGHTMAP_HEIGHT;
 
+	const QmMathVector3f lightPos = ape_light_get_position( light );
+
+	QmMathPlaneProjection projection = qm_math_plane_compute_projection( &( QmMathPlane ) {
+	        .normal = face->normal,
+	} );
+
+	QmMathVector3f axis1, axis2;
+	if ( projection == QM_MATH_PLANE_PROJECTION_XY )
+	{
+		axis1 = QM_MATH_PROJECT_XY[ 0 ];
+		axis2 = QM_MATH_PROJECT_XY[ 1 ];
+	}
+	else if ( projection == QM_MATH_PLANE_PROJECTION_XZ )
+	{
+		axis1 = QM_MATH_PROJECT_XZ[ 0 ];
+		axis2 = QM_MATH_PROJECT_XZ[ 1 ];
+	}
+	else
+	{
+		axis1 = QM_MATH_PROJECT_YZ[ 0 ];
+		axis2 = QM_MATH_PROJECT_YZ[ 1 ];
+	}
+
+	QmMathVector3f faceOrigin = face->bounds.absOrigin;
+	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( axis1, w / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
+	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( axis2, h / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
+
 	for ( unsigned int row = 0; row < h; ++row )
 	{
 		for ( unsigned int col = 0; col < w; ++col )
 		{
+			// need to translate this now into a world coord relative to the origin of the face, and w / h ...
+			// sooo uh, need to convert the lightmap area relative to the luxel size I guess?
+
+			// this should return the x and y in world units
+			float fx = col * LIGHTMAP_LUXEL_SIZE;
+			float fy = row * LIGHTMAP_LUXEL_SIZE;
+
+			QmMathVector3f luxelPos = faceOrigin;
+			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis1, fx ) );
+			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis2, fy ) );
+
+			QmMathVector3f lightDir = qm_math_vector3f_sub( luxelPos, lightPos );
+			lightDir                = qm_math_vector3f_normalize( lightDir );
+
+#if 0
+			PLCollisionRay ray = {};
+			ray.origin         = lightPos;
+			ray.direction      = lightDir;
+
+			ApeCollisionIntersection result = {};
+			if ( !( ape_room_ray_intersect( room, &ray, &result ) && result.face == face ) )
+			{
+				continue;
+			}
+#endif
+
+			// just pulled much of the below from our existing shaders...
+
+			float d = qm_math_vector3f_distance( lightPos, luxelPos );
+			float r = QM_MATH_CLAMP( 0.0f, 1.0f - d * d / ( light->radius * light->radius ), 1.0f );
+			float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
+
+			QmMathVector3f c;
+			c = qm_math_vector3f_scale_float( qm_math_vector3f( light->colour.r, light->colour.g, light->colour.b ), l );
+			c = qm_math_vector3f_scale_float( c, r );
+
 			ApeLightmapPixel *pixel = &room->lightmap[ ( y + row ) * LIGHTMAP_WIDTH + ( x + col ) ];
-			pixel->colour.r         = colour.r;
-			pixel->colour.g         = colour.g;
-			pixel->colour.b         = colour.b;
+
+			unsigned int cr = pixel->colour.r;
+			unsigned int cg = pixel->colour.g;
+			unsigned int cb = pixel->colour.b;
+
+			cr = QM_MATH_CLAMP( 0, cr + ( unsigned int ) QM_MATH_FTOB( c.x ), 255 );
+			cg = QM_MATH_CLAMP( 0, cg + ( unsigned int ) QM_MATH_FTOB( c.y ), 255 );
+			cb = QM_MATH_CLAMP( 0, cb + ( unsigned int ) QM_MATH_FTOB( c.z ), 255 );
+
+			pixel->colour.r = cr;
+			pixel->colour.g = cg;
+			pixel->colour.b = cb;
 		}
 	}
 }
@@ -265,11 +337,11 @@ void ape_editor_light_generate_( ApeRoom *room )
 	QM_OS_LINKED_LIST_ITERATE( face, faces, i )
 	{
 		// now, generate the lightmap for each light
-		//ApeLight *light;
-		//QM_OS_LINKED_LIST_ITERATE( light, lights, i )
-		//{
-		generate_lightmap_( room, face, nullptr );
-		//}
+		ApeLight *light;
+		QM_OS_LINKED_LIST_ITERATE( light, lights, i )
+		{
+			generate_lightmap_( room, face, light );
+		}
 	}
 
 	// convert the lightmap into a texture we can use
@@ -279,7 +351,7 @@ void ape_editor_light_generate_( ApeRoom *room )
 		ape_memory_flush_unreferenced_resources();
 	}
 
-	room->lightmapTexture = ape_texture_generate_( "lightmap", room->lightmap, LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT, &QM_IMAGE_FORMAT_RGB8_DESC(), false );
+	room->lightmapTexture = ape_texture_generate_( "lightmap", room->lightmap, LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_NEAREST );
 	if ( room->lightmapTexture == nullptr )
 	{
 		ape_console_warning_( "Failed to create lightmap texture!\n" );

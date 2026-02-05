@@ -642,6 +642,7 @@ ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
 bool ape_light_is_active( const ApeLight *light );
 
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane );
+bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face );
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane );
 
 PL_EXTERN_C_END
