@@ -51,11 +51,33 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 			return nullptr;
 		case 3:
 			cFormat = PL_COLOURFORMAT_RGB;
-			iFormat = PL_IMAGEFORMAT_RGB8;
+			if ( format->channels[ 0 ].format == QM_IMAGE_DATA_FORMAT_F32 )
+			{
+				iFormat = PL_IMAGEFORMAT_RGB32F;
+			}
+			else if ( format->channels[ 0 ].format == QM_IMAGE_DATA_FORMAT_F16 )
+			{
+				iFormat = PL_IMAGEFORMAT_RGB16F;
+			}
+			else
+			{
+				iFormat = PL_IMAGEFORMAT_RGB8;
+			}
 			break;
 		case 4:
 			cFormat = PL_COLOURFORMAT_RGBA;
-			iFormat = PL_IMAGEFORMAT_RGBA8;
+			if ( format->channels[ 0 ].format == QM_IMAGE_DATA_FORMAT_F32 )
+			{
+				iFormat = PL_IMAGEFORMAT_RGBA32F;
+			}
+			else if ( format->channels[ 0 ].format == QM_IMAGE_DATA_FORMAT_F16 )
+			{
+				iFormat = PL_IMAGEFORMAT_RGBA16F;
+			}
+			else
+			{
+				iFormat = PL_IMAGEFORMAT_RGBA8;
+			}
 			break;
 	}
 

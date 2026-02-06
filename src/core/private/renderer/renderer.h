@@ -46,12 +46,14 @@ static constexpr PLGCullMode        APE_RENDERER_DEFAULT_CULL_FUNCTION  = PLG_CU
 // Lighting
 /////////////////////////////////////////////////////////////////////////////////////
 
+#define APE_RENDERER_LIGHTMAP_USE_FLOATS
+
 typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 {
-#if 0
-	QmMathColour3f colour;
-	QmMathVector3f position;
-	QmMathVector3f normal;
+#if defined( APE_RENDERER_LIGHTMAP_USE_FLOATS )
+	QmMathColour3f16 colour;
+	//QmMathVector3f position;
+	//QmMathVector3f normal;
 #else
 	QmMathColour3ub colour;
 #endif

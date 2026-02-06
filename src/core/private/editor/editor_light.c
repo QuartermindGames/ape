@@ -217,11 +217,16 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 			float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
 
 			QmMathVector3f c;
-			c = qm_math_vector3f_scale_float( qm_math_vector3f( light->colour.r, light->colour.g, light->colour.b ), l );
+			c = qm_math_vector3f_scale_float( qm_math_vector3f( light->colour.r, light->colour.g, light->colour.b ), l * light->colour.a );
 			c = qm_math_vector3f_scale_float( c, r );
 
 			ApeLightmapPixel *pixel = &room->lightmap[ ( y + row ) * LIGHTMAP_WIDTH + ( x + col ) ];
 
+#if defined( APE_RENDERER_LIGHTMAP_USE_FLOATS )
+			pixel->colour.r += c.x;
+			pixel->colour.g += c.y;
+			pixel->colour.b += c.z;
+#else
 			unsigned int cr = pixel->colour.r;
 			unsigned int cg = pixel->colour.g;
 			unsigned int cb = pixel->colour.b;
@@ -233,6 +238,7 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 			pixel->colour.r = cr;
 			pixel->colour.g = cg;
 			pixel->colour.b = cb;
+#endif
 		}
 	}
 }
@@ -298,14 +304,12 @@ void ape_editor_light_generate_( ApeRoom *room )
 		}
 	}
 
-	const ApeLightmapPixel ambient = {
-	        .colour.r = QM_MATH_FTOB( room->ambientLight.r ),
-	        .colour.g = QM_MATH_FTOB( room->ambientLight.g ),
-	        .colour.b = QM_MATH_FTOB( room->ambientLight.b ) };
-
+	// setup ambience first
 	for ( unsigned int i = 0; i < LIGHTMAP_PIXELS; ++i )
 	{
-		room->lightmap[ i ] = ambient;
+		room->lightmap[ i ].colour.r = room->ambientLight.r;
+		room->lightmap[ i ].colour.g = room->ambientLight.g;
+		room->lightmap[ i ].colour.b = room->ambientLight.b;
 	}
 
 	ApeBrush *brush;
@@ -389,7 +393,11 @@ void ape_editor_light_generate_( ApeRoom *room )
 		ape_memory_flush_unreferenced_resources();
 	}
 
+#if defined( APE_RENDERER_LIGHTMAP_USE_FLOATS )
+	room->lightmapTexture = ape_texture_generate_( "lightmap", room->lightmap, LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT, &QM_IMAGE_FORMAT_RGB16F_DESC(), PLG_TEXTURE_FILTER_LINEAR );
+#else
 	room->lightmapTexture = ape_texture_generate_( "lightmap", room->lightmap, LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_LINEAR );
+#endif
 	if ( room->lightmapTexture != nullptr )
 	{
 		//TODO: remove this!!! ITS A BOTCH - this should be updated by the material draw method, probably
