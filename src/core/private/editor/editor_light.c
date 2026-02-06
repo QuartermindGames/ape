@@ -33,11 +33,12 @@
  *	and force convex
  */
 
-static constexpr unsigned int LIGHTMAP_WIDTH       = 512;
-static constexpr unsigned int LIGHTMAP_HEIGHT      = 512;
-static constexpr unsigned int LIGHTMAP_BUFFER_SIZE = LIGHTMAP_HEIGHT * LIGHTMAP_WIDTH * sizeof( ApeLightmapPixel );
+static constexpr unsigned int LIGHTMAP_LUXEL_SIZE = 4;
 
-static constexpr unsigned int LIGHTMAP_LUXEL_SIZE = 8;
+static constexpr unsigned int LIGHTMAP_WIDTH       = 256;
+static constexpr unsigned int LIGHTMAP_HEIGHT      = 256;
+static constexpr unsigned int LIGHTMAP_PIXELS      = LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT;
+static constexpr unsigned int LIGHTMAP_BUFFER_SIZE = LIGHTMAP_HEIGHT * LIGHTMAP_WIDTH * sizeof( ApeLightmapPixel );
 
 static constexpr char LIGHTMAP_EXTENSION[] = ".lmp";
 
@@ -113,6 +114,8 @@ static bool setup_face_lightmap( ApeBrushFace *face, const ApeBrush *brush, AuxT
 	face->lightmapArea.z = ( float ) ( rect.x + rect.w ) / LIGHTMAP_WIDTH;
 	face->lightmapArea.w = ( float ) ( rect.y + rect.h ) / LIGHTMAP_HEIGHT;
 
+	static constexpr float PADDING = 0.002f;
+
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		QmMathVector2f p = get_projection( &brush->vertices[ face->vertices[ i ].posIndex ], projection );
@@ -121,8 +124,8 @@ static bool setup_face_lightmap( ApeBrushFace *face, const ApeBrush *brush, AuxT
 		uv = qm_math_vector2f_sub( p, min );
 		uv = qm_math_vector2f_div( uv, qm_math_vector2f_sub( max, min ) );
 
-		face->vertices[ i ].lightmapCoords.x = face->lightmapArea.x + uv.x * ( face->lightmapArea.z - face->lightmapArea.x );
-		face->vertices[ i ].lightmapCoords.y = face->lightmapArea.y + uv.y * ( face->lightmapArea.w - face->lightmapArea.y );
+		face->vertices[ i ].lightmapCoords.x = face->lightmapArea.x + PADDING + uv.x * ( face->lightmapArea.z - PADDING * 2.0f - face->lightmapArea.x );
+		face->vertices[ i ].lightmapCoords.y = face->lightmapArea.y + PADDING + uv.y * ( face->lightmapArea.w - PADDING * 2.0f - face->lightmapArea.y );
 	}
 
 	return true;
@@ -190,7 +193,7 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 			QmMathVector3f lightDir = qm_math_vector3f_sub( luxelPos, lightPos );
 			lightDir                = qm_math_vector3f_normalize( lightDir );
 
-#if 0
+#if 1
 			PLCollisionRay ray = {};
 			ray.origin         = lightPos;
 			ray.direction      = lightDir;
@@ -198,8 +201,13 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 			ApeCollisionIntersection result = {};
 			if ( !( ape_room_ray_intersect( room, &ray, &result ) && result.face == face ) )
 			{
+				//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
+				//ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_RED );
 				continue;
 			}
+
+			//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
+			//ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_GREEN );
 #endif
 
 			// just pulled much of the below from our existing shaders...
@@ -289,9 +297,15 @@ void ape_editor_light_generate_( ApeRoom *room )
 			goto cleanup;
 		}
 	}
-	else
+
+	const ApeLightmapPixel ambient = {
+	        .colour.r = QM_MATH_FTOB( room->ambientLight.r ),
+	        .colour.g = QM_MATH_FTOB( room->ambientLight.g ),
+	        .colour.b = QM_MATH_FTOB( room->ambientLight.b ) };
+
+	for ( unsigned int i = 0; i < LIGHTMAP_PIXELS; ++i )
 	{
-		memset( room->lightmap, 0, LIGHTMAP_BUFFER_SIZE );
+		room->lightmap[ i ] = ambient;
 	}
 
 	ApeBrush *brush;
@@ -341,6 +355,30 @@ void ape_editor_light_generate_( ApeRoom *room )
 		QM_OS_LINKED_LIST_ITERATE( light, lights, i )
 		{
 			generate_lightmap_( room, face, light );
+
+#if 0// a little experiment...
+			static constexpr unsigned int SAMPLES = 8;
+
+			unsigned int seed = SAMPLES;
+
+			QmMathVector3f storePos   = light->base.position;
+			float          storePower = light->colour.a;
+
+			for ( unsigned int j = 0; j < SAMPLES; ++j )
+			{
+#	define JITTER_VARIATION ( qm_os_random_float( &seed, ( ( float ) j ) * ( SAMPLES * 2.0f ) / SAMPLES ) - \
+		                       qm_os_random_float( &seed, ( ( float ) j ) * ( SAMPLES * 2.0f ) / SAMPLES ) )
+				light->base.position.x += JITTER_VARIATION;
+				light->base.position.y += JITTER_VARIATION;
+				light->base.position.z += JITTER_VARIATION;
+				light->colour.a = j * 1.0f / SAMPLES;
+
+				generate_lightmap_( room, face, light );
+			}
+
+			light->base.position = storePos;
+			light->colour.a      = storePower;
+#endif
 		}
 	}
 
@@ -351,8 +389,14 @@ void ape_editor_light_generate_( ApeRoom *room )
 		ape_memory_flush_unreferenced_resources();
 	}
 
-	room->lightmapTexture = ape_texture_generate_( "lightmap", room->lightmap, LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_NEAREST );
-	if ( room->lightmapTexture == nullptr )
+	room->lightmapTexture = ape_texture_generate_( "lightmap", room->lightmap, LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_LINEAR );
+	if ( room->lightmapTexture != nullptr )
+	{
+		//TODO: remove this!!! ITS A BOTCH - this should be updated by the material draw method, probably
+		room->lightmapTexture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
+		PlgSetTextureWrapMode( room->lightmapTexture->internal, room->lightmapTexture->wrapMode );
+	}
+	else
 	{
 		ape_console_warning_( "Failed to create lightmap texture!\n" );
 	}
@@ -392,6 +436,8 @@ void ape_light_command_( unsigned int, char ** )
 
 static bool display_brush_uv( ApeWorldNode *node, void *user )
 {
+	float scale = *( float * ) user;
+
 	ApeBrush *brush = ( ApeBrush * ) node;
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
@@ -411,7 +457,7 @@ static bool display_brush_uv( ApeWorldNode *node, void *user )
 			QmMathVector2f start = face->vertices[ face->edgeLoopOrder[ j ] ].lightmapCoords;
 			QmMathVector2f end   = face->vertices[ face->edgeLoopOrder[ k ] ].lightmapCoords;
 
-			static constexpr QmMathVector2f SCALE = QM_MATH_VECTOR2F( LIGHTMAP_WIDTH, LIGHTMAP_HEIGHT );
+			QmMathVector2f SCALE = QM_MATH_VECTOR2F( ( float ) LIGHTMAP_WIDTH * scale, ( float ) LIGHTMAP_HEIGHT * scale );
 
 			start = qm_math_vector2f_scale( start, SCALE );
 			end   = qm_math_vector2f_scale( end, SCALE );
@@ -451,14 +497,16 @@ void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instan
 		debugLightmapMaterial = ape_material_cache( "materials/debug/debug_lightmap.mat.n", APE_CACHE_GROUP_GLOBAL, true );
 	}
 
-	float w = ( float ) LIGHTMAP_WIDTH;
-	float h = ( float ) LIGHTMAP_HEIGHT;
+	static float SCALE = 2.0f;
+
+	float w = ( float ) LIGHTMAP_WIDTH * SCALE;
+	float h = ( float ) LIGHTMAP_HEIGHT * SCALE;
 
 	ape_rendererState_.lightmapTexture = room->lightmapTexture->internal;
 	ape_draw_textured_quad( debugLightmapMaterial, 0.0f, 0.0f, w, h, &PL_COLOUR_WHITE, 0.0f );
 	ape_rendererState_.lightmapTexture = nullptr;
 
-	ape_world_node_visit_children( APE_WORLD_NODE( room ), APE_WORLD_NODE_TYPE_BRUSH, true, display_brush_uv, nullptr );
+	ape_world_node_visit_children( APE_WORLD_NODE( room ), APE_WORLD_NODE_TYPE_BRUSH, true, display_brush_uv, &SCALE );
 }
 
 #endif//APE_COMPILE_TESTS

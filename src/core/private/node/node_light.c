@@ -199,7 +199,7 @@ static void light_on_draw_editor( void *self, const bool isSelected )
 	ApeLight *light = self;
 
 	// this sucks, need to convert the colour due to inconsistency
-	QmMathColour4ub colour = qm_math_colour4f_to_colour4ub( light->colour );
+	QmMathColour4ub colour = QM_MATH_COLOUR4F_TO_4UB( light->colour );
 
 	QmMathVector3f position = ape_light_get_position( light );
 	QmMathVector3f angles   = ape_light_get_angles( light );
