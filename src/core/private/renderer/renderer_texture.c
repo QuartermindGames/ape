@@ -211,7 +211,7 @@ void ape_initialize_textures_( void )
 	        QM_MATH_COLOUR4UB_RGB( 0, 0, 0 ),
 	        QM_MATH_COLOUR4UB_RGB( 255, 0, 255 ),
 	};
-	defaultTextures[ APE_TEXTURE_FALLBACK ] = ape_texture_generate_( "fallback", fallbackData, 2, 2, &QM_IMAGE_FORMAT_RGB8_DESC(), false );
+	defaultTextures[ APE_TEXTURE_FALLBACK ] = ape_texture_generate_( "fallback", fallbackData, 2, 2, &QM_IMAGE_FORMAT_RGBA8_DESC(), PLG_TEXTURE_FILTER_NEAREST );
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
