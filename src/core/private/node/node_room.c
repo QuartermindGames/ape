@@ -39,6 +39,11 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 	ape_decal_manager_destroy_( self->decalManager );
 
 	qm_os_memory_free( self->lightmap );
+	if ( self->lightmapTexture != nullptr )
+	{
+		ape_texture_release_( self->lightmapTexture );
+	}
+
 	qm_os_memory_free( self );
 }
 
