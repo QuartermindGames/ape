@@ -20,6 +20,8 @@ static AcmBranch *editorConfigRoot;
 
 static QmMathVector2f editorDefaultMaterialScale = QM_MATH_VECTOR2F( 0.25f, 0.25f );
 
+static bool editorShowLightmapOverlay;
+
 static bool         showIcons;
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 static float        iconFade = 0.25f;
@@ -592,6 +594,8 @@ void ape_editor_register_console_( void )
 
 	ape_console_var_register( "editor.materialScaleW", "Default material scale width.", "0.25", PL_VAR_F32, &editorDefaultMaterialScale.x, nullptr, 0 );
 	ape_console_var_register( "editor.materialScaleH", "Default material scale height.", "0.25", PL_VAR_F32, &editorDefaultMaterialScale.y, nullptr, 0 );
+
+	ape_console_var_register( "editor.showLightmapOverlay", "Show the lightmap overlaid on the screen, along with UV.", "false", PL_VAR_BOOL, &editorShowLightmapOverlay, nullptr, 0 );
 }
 
 static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const ApeWorldNode *worldNode )
@@ -927,6 +931,8 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 	}
 }
 
+void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instance );
+
 void ape_editor_draw_gui_( const ApeViewport *viewport )
 {
 	if ( !ape_is_editor_active_() || editorInstance == nullptr )
@@ -1000,6 +1006,11 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		float dw, dh;
 		gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
 		gui_font_draw_string( font, viewport->width / 2.0f - dw / 2.0f, viewport->height - dh * 2.0f - 2.0f, nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
+	}
+
+	if ( editorShowLightmapOverlay )
+	{
+		ape_editor_light_display_lightmap_overlay_( editorInstance );
 	}
 
 	draw_brush_gui( viewport, font );
@@ -1494,6 +1505,7 @@ bool ape_editor_validate_properties_( const ApeProperty *properties, const unsig
 				typeName = "ApeColour4fProperty";
 				break;
 			case APE_PROPERTY_TYPE_INTEGER:
+			case APE_PROPERTY_TYPE_BITFLAG:
 				typeName = "ApeIntegerProperty";
 				break;
 			case APE_PROPERTY_TYPE_STRING:

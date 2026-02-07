@@ -40,8 +40,6 @@ static constexpr unsigned int LIGHTMAP_HEIGHT      = 256;
 static constexpr unsigned int LIGHTMAP_PIXELS      = LIGHTMAP_WIDTH * LIGHTMAP_HEIGHT;
 static constexpr unsigned int LIGHTMAP_BUFFER_SIZE = LIGHTMAP_HEIGHT * LIGHTMAP_WIDTH * sizeof( ApeLightmapPixel );
 
-static constexpr char LIGHTMAP_EXTENSION[] = ".lmp";
-
 static QmMathVector2f get_projection( const QmMathVector3f *point, QmMathPlaneProjection projection )
 {
 	if ( projection == QM_MATH_PLANE_PROJECTION_XY )
@@ -114,6 +112,7 @@ static bool setup_face_lightmap( ApeBrushFace *face, const ApeBrush *brush, AuxT
 	face->lightmapArea.z = ( float ) ( rect.x + rect.w ) / LIGHTMAP_WIDTH;
 	face->lightmapArea.w = ( float ) ( rect.y + rect.h ) / LIGHTMAP_HEIGHT;
 
+	//TODO: this should be relative to luxel-size etc., blergh...
 	static constexpr float PADDING = 0.002f;
 
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
@@ -440,11 +439,9 @@ void ape_light_command_( unsigned int, char ** )
 	ape_editor_light_generate_( room );
 }
 
-#if defined( APE_COMPILE_TESTS )
-
 static bool display_brush_uv( ApeWorldNode *node, void *user )
 {
-	float scale = *( float * ) user;
+	const float scale = *( float * ) user;
 
 	ApeBrush *brush = ( ApeBrush * ) node;
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
@@ -499,10 +496,10 @@ void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instan
 		return;
 	}
 
-	static ApeMaterial *debugLightmapMaterial;
+	ApeMaterial *debugLightmapMaterial = ape_material_cache( "materials/debug/debug_lightmap.mat.n", APE_CACHE_GROUP_GLOBAL, false );
 	if ( debugLightmapMaterial == nullptr )
 	{
-		debugLightmapMaterial = ape_material_cache( "materials/debug/debug_lightmap.mat.n", APE_CACHE_GROUP_GLOBAL, true );
+		return;
 	}
 
 	static float SCALE = 2.0f;
@@ -515,6 +512,6 @@ void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instan
 	ape_rendererState_.lightmapTexture = nullptr;
 
 	ape_world_node_visit_children( APE_WORLD_NODE( room ), APE_WORLD_NODE_TYPE_BRUSH, true, display_brush_uv, &SCALE );
-}
 
-#endif//APE_COMPILE_TESTS
+	ape_material_release( debugLightmapMaterial );
+}
