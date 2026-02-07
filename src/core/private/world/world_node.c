@@ -439,6 +439,11 @@ ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
 
+	if ( self->parent == nullptr )
+	{
+		return self;
+	}
+
 	ApeWorldNode *root = self;
 	ApeWorldNode *next = self->parent;
 	while ( next != nullptr )
