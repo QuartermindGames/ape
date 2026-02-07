@@ -305,8 +305,8 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 							room = ape_brush_face_get_room( taggedSurfaces[ i ] );
 							assert( room != nullptr );
 
-							const char *path = ape_room_get_path( room );
-							if ( path == nullptr || *path == '\0' )
+							const char *path = ape_world_node_get_path( APE_WORLD_NODE( room ) );
+							if ( path == nullptr )
 							{
 								forge_warning_( "Encountered a room with an invalid path!\n" );
 								continue;
@@ -356,7 +356,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 						continue;
 					}
 
-					const char *path = ape_room_get_path( i );
+					const char *path = ape_world_node_get_path( APE_WORLD_NODE( i ) );
 					if ( path == nullptr || *path == '\0' )
 					{
 						// this shouldn't happen...
@@ -997,27 +997,19 @@ long forge::WorldViewport::on_import( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	AcmBranch *root = acm_load_file( filename, "node" );
+	ApeWorldNode *root = ape_world_node_load( nullptr, filename );
 	if ( root != nullptr )
 	{
-		ApeWorldNode *node = ape_world_node_deserialize( nullptr, root );
-		if ( node != nullptr )
-		{
-			ApeEditorInstance *instance = editor->get_internal();
-			assert( instance != nullptr );
+		ApeEditorInstance *instance = editor->get_internal();
+		assert( instance != nullptr );
 
-			ApeRoom *room = ape_camera_get_room( instance->camera );
-			assert( room != nullptr );
+		ApeRoom *room = ape_camera_get_room( instance->camera );
+		assert( room != nullptr );
 
-			QmMathVector3f pos = ape_grid_transform_point( &instance->grid, &instance->grid.cursor );
-			ape_world_node_set_position( node, &pos );
+		QmMathVector3f pos = ape_grid_transform_point( &instance->grid, &instance->grid.cursor );
+		ape_world_node_set_position( root, &pos );
 
-			ape_world_node_attach( node, APE_WORLD_NODE( room ) );
-		}
-		else
-		{
-			FXMessageBox::warning( this, MBOX_OK, "Warning", "Failed to deserialize export!" );
-		}
+		ape_world_node_attach( root, APE_WORLD_NODE( room ) );
 	}
 	else
 	{

@@ -18,7 +18,6 @@ typedef struct ApeRoom
 	// This should always come first!
 	ApeWorldNode base;
 
-	PLPath       path;
 	unsigned int flags;
 
 	QmMathColour4f colour;// an identifying colour
@@ -30,10 +29,6 @@ typedef struct ApeRoom
 	QmMathVector3f       gravity;     // default gravity for the room
 
 	unsigned int numVisits;
-
-#if !defined( APE_NO_EDITOR )
-	PLPath savePath;
-#endif
 
 	ApeDecalManager *decalManager;
 

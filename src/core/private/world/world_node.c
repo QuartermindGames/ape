@@ -573,7 +573,7 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 	return nodeBranch;
 }
 
-ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root )
+ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root, const char *path )
 {
 	ApeWorldNodeMagic magic = ACM_GET_INT( magic, root, "classMagic", 0 );
 	if ( magic == 0 )
@@ -610,6 +610,23 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 		return nullptr;
 	}
 
+	//TODO: this should be passed into the deserialize callback,
+	//		I've not done so yet just to avoid mass refactoring :(
+	if ( path != nullptr )
+	{
+		PLFileSystemMount *mount = PlGetMountLocationForPath( path );
+		if ( mount != nullptr )
+		{
+			const char *mountPath = PlGetMountLocationPath( mount );
+			assert( mountPath != nullptr );
+			snprintf( self->path, sizeof( self->path ), "%s", &path[ strlen( mountPath ) + 1 ] );
+		}
+		else
+		{
+			PlSetupPath( self->path, false, "%s", path );
+		}
+	}
+
 	const unsigned int version = acm_get_int( root, "version", 0 );
 
 	snprintf( self->name, sizeof( self->name ), "%s", acm_get_string( root, "name", "" ) );
@@ -641,7 +658,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root 
 		AcmBranch *childBranch = acm_get_first_child( childrenBranch );
 		while ( childBranch != nullptr )
 		{
-			ape_world_node_deserialize( self, childBranch );
+			ape_world_node_deserialize( self, childBranch, nullptr );
 			childBranch = acm_get_next_child( childBranch );
 		}
 	}
@@ -726,12 +743,8 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 		return nullptr;
 	}
 
-	ApeWorldNode *worldNode = ape_world_node_deserialize( parent, branch );
-	if ( worldNode != nullptr )
-	{
-		PlSetupPath( worldNode->path, true, "%s", path );
-	}
-	else
+	ApeWorldNode *worldNode = ape_world_node_deserialize( parent, branch, path );
+	if ( worldNode == nullptr )
 	{
 		ape_console_warning_( "Failed to deserialize node (%s)!\n", path );
 	}
@@ -743,6 +756,11 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 
 const char *ape_world_node_get_path( const ApeWorldNode *self )
 {
+	if ( *self->path == '\0' )
+	{
+		return nullptr;
+	}
+
 	return self->path;
 }
 
@@ -772,29 +790,6 @@ void ape_world_node_mark_dirty_( ApeWorldNode *self )
 PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self )
 {
 	return self->mesh;
-}
-
-/**
- * Fetches the total number of vertices for the tree, from the node.
- * @param node World node instance.
- * @return Total number of vertices for the tree.
- */
-static unsigned int get_total_verts_for_tree( ApeWorldNode *node )
-{
-	unsigned int numVertices = 0;
-	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
-	{
-		const ApeBrush *brush = ( ApeBrush * ) node;
-		numVertices           = brush->numVertices;
-	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		numVertices += get_total_verts_for_tree( child );
-	}
-
-	return numVertices;
 }
 
 /**

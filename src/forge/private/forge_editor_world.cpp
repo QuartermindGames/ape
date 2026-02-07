@@ -214,7 +214,7 @@ void forge::WorldEditor::update_tree() const
 			continue;
 		}
 
-		const char *name = ape_room_get_path( room );
+		const char *name = ape_world_node_get_path( child );
 		roomSelectBox->appendItem( name, room );
 	}
 }
@@ -295,8 +295,8 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	const char *path = ape_room_get_save_path( room );
-	if ( path == nullptr )
+	const char *path = APE_WORLD_NODE( room )->savePath;
+	if ( *path == '\0' )
 	{
 		std::string savePath = show_save_dialog();
 		if ( savePath.empty() )
@@ -304,9 +304,7 @@ long forge::WorldEditor::on_room_save( FXObject *, FXSelector, void * )
 			return false;
 		}
 
-		ape_room_set_save_path( room, savePath.c_str() );
-		path = ape_room_get_save_path( room );
-		assert( path != nullptr );
+		snprintf( APE_WORLD_NODE( room )->savePath, sizeof( APE_WORLD_NODE( room )->savePath ), "%s", savePath.c_str() );
 	}
 
 	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
@@ -469,7 +467,7 @@ long forge::WorldEditor::on_play( FXObject *object, FXSelector selector, void *p
 		return false;
 	}
 
-	const char *path = ape_room_get_path( room );
+	const char *path = ape_world_node_get_path( APE_WORLD_NODE( room ) );
 	if ( path == nullptr )
 	{
 		forge_warning_( "No path for room, have you saved it yet?\n" );
@@ -539,7 +537,7 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 	ApeRoom *originRoom = ape_brush_face_get_room( face );
 	assert( originRoom != nullptr );
 
-	const char *originRoomPath = ape_room_get_path( originRoom );
+	const char *originRoomPath = ape_world_node_get_path( APE_WORLD_NODE( originRoom ) );
 	if ( originRoomPath == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Please save your existing room before attempting to link!" );
@@ -604,7 +602,7 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 	// now sort out the tags so both faces can find each other, wheee...
 
 	ape_room_set_unique_surface_tag( room, &brush->faces[ 0 ] );
-	snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s:%s", ape_room_get_path( room ), brush->faces[ 0 ].tag );
+	snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s:%s", ape_world_node_get_path( APE_WORLD_NODE( room ) ), brush->faces[ 0 ].tag );
 
 	if ( *face->tag == '\0' )
 	{

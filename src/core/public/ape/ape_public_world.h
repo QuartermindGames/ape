@@ -144,6 +144,9 @@ typedef struct ApeWorldNode
 	unsigned int flags;
 
 	PLPath path;// where we were loaded from, if at all (note this isn't always valid)
+#if !defined( APE_NO_EDITOR )
+	PLPath savePath;
+#endif
 
 	struct PLLinkedList *children;// ApeWorldNode
 } ApeWorldNode;
@@ -248,7 +251,6 @@ PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self );
 PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self );
 
 AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
-ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root );
 
 /**
  * Iterate through all of the children of the given node and collect up children by type.
@@ -571,14 +573,6 @@ ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionC
 
 //TODO: obsolete
 bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result );
-
-bool        ape_room_set_path( ApeRoom *self, const char *path );
-const char *ape_room_get_path( const ApeRoom *self );
-
-#if !defined( APE_NO_EDITOR )
-bool        ape_room_set_save_path( ApeRoom *self, const char *path );
-const char *ape_room_get_save_path( const ApeRoom *self );
-#endif
 
 QmMathVector3f ape_room_get_gravity( const ApeRoom *self );
 

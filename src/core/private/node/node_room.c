@@ -3,10 +3,13 @@
 
 #include <plcore/pl_hashtable.h>
 
+#include "qmos/public/qm_os_string.h"
+
 #include "world/world.h"
 #include "ape/ape_public_game.h"
 
 #include "renderer/renderer.h"
+#include "renderer/renderer_texture.h"
 
 #include "yin/core_game.h"
 
@@ -414,22 +417,6 @@ ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionC
 	return hits;
 }
 
-bool ape_room_set_path( ApeRoom *self, const char *path )
-{
-	if ( PlSetupPath( self->path, false, "%s", path ) == nullptr )
-	{
-		ape_console_warning_( "Invalid path provided: %s\n", PlGetError() );
-		return false;
-	}
-
-	return true;
-}
-
-const char *ape_room_get_path( const ApeRoom *self )
-{
-	return self->path;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 
 QmMathVector3f ape_room_get_gravity( const ApeRoom *self )
@@ -441,31 +428,6 @@ bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, cons
 {
 	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir, angle, scale ) != nullptr;
 }
-
-#if !defined( APE_NO_EDITOR )
-
-bool ape_room_set_save_path( ApeRoom *self, const char *path )
-{
-	if ( PlSetupPath( self->savePath, false, "%s", path ) == nullptr )
-	{
-		ape_console_warning_( "Invalid path provided: %s\n", PlGetError() );
-		return false;
-	}
-
-	return true;
-}
-
-const char *ape_room_get_save_path( const ApeRoom *self )
-{
-	if ( *self->savePath == '\0' )
-	{
-		return nullptr;
-	}
-
-	return self->savePath;
-}
-
-#endif
 
 static ApePropertyEnum reverbPresetsEnum[] = {
         {"None",             0 },

@@ -97,8 +97,8 @@ static void on_attach_child( void *self, ApeWorldNode *child )
 		return;
 	}
 
-	const char *path = ape_room_get_path( ( ApeRoom * ) child );
-	if ( path == nullptr || *path == '\0' )
+	const char *path = ape_world_node_get_path( child );
+	if ( path == nullptr )
 	{
 		ape_console_warning_( "Attached a room with no path!\n" );
 		return;
@@ -120,8 +120,8 @@ static void on_dettach_child( void *self, ApeWorldNode *child )
 		return;
 	}
 
-	const char *path = ape_room_get_path( ( ApeRoom * ) child );
-	if ( path == nullptr || *path == '\0' )
+	const char *path = ape_world_node_get_path( child );
+	if ( path == nullptr )
 	{
 		return;
 	}

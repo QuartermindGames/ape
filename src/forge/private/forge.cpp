@@ -231,12 +231,7 @@ ApeRoom *forge_new_room_( const char *path )
 	}
 
 	const char *mountPath = PlGetMountLocationPath( mount );
-	if ( !ape_room_set_path( room, &path[ strlen( mountPath ) + 1 ] ) )
-	{
-		forge_warning_( "Failed to set room path!\n" );
-		ape_world_node_destroy( APE_WORLD_NODE( room ) );
-		room = nullptr;
-	}
+	snprintf( APE_WORLD_NODE( room )->path, sizeof( APE_WORLD_NODE( room )->path ), "%s", &path[ strlen( mountPath ) + 1 ] );
 
 	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
 	{
@@ -259,17 +254,10 @@ ApeRoom *forge_load_room_( const char *path )
 		return nullptr;
 	}
 
-	AcmBranch *root = acm_load_file( path, "node" );
-	if ( root == nullptr )
-	{
-		forge_warning_( "Failed to load room (%s)!\n", path );
-		return nullptr;
-	}
-
-	ApeWorldNode *roomNode = ape_world_node_deserialize( nullptr, root );
+	ApeWorldNode *roomNode = ape_world_node_load( nullptr, path );
 	if ( roomNode == nullptr )
 	{
-		forge_warning_( "Failed to deserialize room (%s)!\n", path );
+		forge_warning_( "Failed to load room (%s)!\n", path );
 		return nullptr;
 	}
 
@@ -280,15 +268,7 @@ ApeRoom *forge_load_room_( const char *path )
 		return FALSE;
 	}
 
-	ApeRoom *room = ( ApeRoom * ) roomNode;
-
-	const char *mountPath = PlGetMountLocationPath( mount );
-	if ( !ape_room_set_path( room, &path[ strlen( mountPath ) + 1 ] ) )
-	{
-		forge_warning_( "Failed to set room path!\n" );
-	}
-
-	return room;
+	return ( ApeRoom * ) roomNode;
 }
 
 static AcmBranch *generate_project_config( const char *name, const char *path )
