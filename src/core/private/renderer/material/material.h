@@ -288,7 +288,8 @@ void ape_shutdown_materials_( void );
 
 PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint );
 
-bool ape_material_shadows_enabled( const ApeMaterial *self );
+bool ape_material_can_cast_shadows( const ApeMaterial *self );
+bool ape_material_can_receive_shadows( const ApeMaterial *self );
 bool ape_material_is_blended( const ApeMaterial *self );
 
 void ape_tick_materials_( double delta );

@@ -321,7 +321,7 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	ApeRoom *room = visibleRoom->room;
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience        = room->ambientLight;
+		ape_rendererState_.ambience = room->ambientLight;
 		if ( room->lightmapTexture != nullptr )
 		{
 			ape_rendererState_.lightmapTexture = room->lightmapTexture->internal;
@@ -462,7 +462,7 @@ draw_room_submesh( room->mesh, shadowMaterial, 0, light );
 		for ( unsigned int i = 0; i < brush->numFaces; ++i )
 		{
 			const ApeBrushFace *face = &brush->faces[ i ];
-			if ( /*face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ||*/ !ape_material_shadows_enabled( face->material ) )
+			if ( /*face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ||*/ !ape_material_can_cast_shadows( face->material ) )
 			{
 				continue;
 			}
@@ -705,6 +705,11 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
 			ApeLight *light = visibleRoom->lights[ i ];
+			if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC && light->flags & APE_LIGHT_FLAG_ENABLED ) )
+			{
+				continue;
+			}
+
 			if ( ape_config_.renderer.lightJitterSamples > 0 )
 			{
 				unsigned int seed = ape_config_.renderer.lightJitterSamples;

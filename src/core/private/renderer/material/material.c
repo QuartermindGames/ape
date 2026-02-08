@@ -1159,9 +1159,14 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material )
 	return material->surfaceType;
 }
 
-bool ape_material_shadows_enabled( const ApeMaterial *self )
+bool ape_material_can_cast_shadows( const ApeMaterial *self )
 {
 	return self->flags & APE_MATERIAL_FLAG_CAST_SHADOWS;
+}
+
+bool ape_material_can_receive_shadows( const ApeMaterial *self )
+{
+	return self->flags & APE_MATERIAL_FLAG_RECEIVE_SHADOWS;
 }
 
 bool ape_material_is_blended( const ApeMaterial *self )

@@ -18,6 +18,7 @@
 #include "renderer/renderer.h"
 #include "renderer/renderer_texture.h"
 #include "node/node_room.h"
+#include "renderer/material/material.h"
 
 /**
  * Some thoughts...
@@ -167,6 +168,8 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( axis1, w / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
 	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( axis2, h / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
 
+	float planeDistance = -qm_math_vector3f_dot_product( face->normal, face->bounds.absOrigin );
+
 	for ( unsigned int row = 0; row < h; ++row )
 	{
 		for ( unsigned int col = 0; col < w; ++col )
@@ -182,23 +185,47 @@ static void generate_lightmap_( ApeRoom *room, const ApeBrushFace *face, ApeLigh
 			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis1, fx ) );
 			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis2, fy ) );
 
+			// this attempts to reproject it, so we can deal with angled surfaces
+			// though this isn't perfect, it's 2D reprojected to 3D so the luxel span isn't correct anymore (aaarrrghhh)
+			float sd = qm_math_vector3f_dot_product( face->normal, luxelPos ) + planeDistance;
+			luxelPos = qm_math_vector3f_sub( luxelPos, qm_math_vector3f_scale_float( face->normal, sd ) );
+
 			QmMathVector3f lightDir = qm_math_vector3f_sub( luxelPos, lightPos );
 			lightDir                = qm_math_vector3f_normalize( lightDir );
 
-#if 1
-			PLCollisionRay ray = {};
-			ray.origin         = lightPos;
-			ray.direction      = lightDir;
+			//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
 
-			ApeCollisionIntersection result = {};
-			if ( !( ape_room_ray_intersect( room, &ray, &result ) && result.face == face ) )
+#if 1
+			ApeMaterial *material = face->material;
+			if ( ape_material_can_receive_shadows( material ) && light->flags & APE_LIGHT_FLAG_SHADOWS )
 			{
-				//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
-				//ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_RED );
-				continue;
+				PLCollisionRay ray = {};
+				ray.origin         = lightPos;
+				ray.direction      = lightDir;
+
+				ApeCollisionIntersection result = {};
+				if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
+				{
+					continue;
+				}
+
+				if ( result.face != face )
+				{
+					material = result.face->material;
+					if ( ape_material_can_cast_shadows( material ) )
+					{
+						continue;
+					}
+
+					if ( !ape_material_is_blended( material ) )
+					{
+						continue;
+					}
+
+					//TODO: handle blended surfaces, refraction, yadda yadda
+				}
 			}
 
-			//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
 			//ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_GREEN );
 #endif
 
@@ -240,9 +267,10 @@ static void gather_nodes( ApeWorldNode *node, QmOsLinkedList *lights, QmOsLinked
 	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 	{
 		ApeLight *light = ( ApeLight * ) node;
-		//TODO: for now, for the sake of testing, we're ignoring this
-		//if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC ) )
-		qm_os_linked_list_push_back( lights, light );
+		if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC ) )
+		{
+			qm_os_linked_list_push_back( lights, light );
+		}
 	}
 	else if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
@@ -309,26 +337,26 @@ void ape_editor_light_generate_( ApeRoom *room )
 	{
 		for ( unsigned int k = 0; k < brush->numFaces; ++k )
 		{
-			if ( brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_HIDDEN ||
-			     brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_MIRROR )
-			{
-				continue;
-			}
+			//if ( brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_HIDDEN ||
+			//     brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_MIRROR )
+			//{
+			//	continue;
+			//}
 
 			// if we're dealing with a portal, we want to navigate down
 			// to figure out what else we need to deal with
-			if ( brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_PORTAL )
-			{
-				ApeBrushFace *dstFace = ape_brush_face_get_portal_destination( &brush->faces[ k ] );
-				if ( dstFace != &brush->faces[ k ] )
-				{
-					//TODO: navigate through portals, add to list, handle recursion, wheeee
-					continue;
-				}
-
-				//TODO: remove
-				continue;
-			}
+			//if ( brush->faces[ k ].flags & APE_BRUSH_FACE_FLAG_PORTAL )
+			//{
+			//	ApeBrushFace *dstFace = ape_brush_face_get_portal_destination( &brush->faces[ k ] );
+			//	if ( dstFace != &brush->faces[ k ] )
+			//	{
+			//		//TODO: navigate through portals, add to list, handle recursion, wheeee
+			//		continue;
+			//	}
+			//
+			//	//TODO: remove
+			//	continue;
+			//}
 
 			if ( !setup_face_lightmap( &brush->faces[ k ], brush, lightmapPacker ) )
 			{
