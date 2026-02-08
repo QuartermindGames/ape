@@ -39,14 +39,20 @@ static void add_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
 	}
 }
 
-ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles )
+static void *create_brush( ApeWorldNode *parent )
 {
 	ApeBrush *brush = QM_OS_MEMORY_NEW( ApeBrush );
-	if ( ape_world_node_setup_( &brush->base, parent, APE_WORLD_NODE_TYPE_BRUSH, name, position, angles ) == nullptr )
-	{
-		qm_os_memory_free( brush );
-		brush = nullptr;
-	}
+	ape_world_node_setup_( &brush->base, parent, APE_WORLD_NODE_TYPE_BRUSH, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
+	return brush;
+}
+
+ApeBrush *ape_brush_create( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles )
+{
+	ApeBrush *brush = create_brush( parent );
+
+	ape_world_node_set_name( APE_WORLD_NODE( brush ), name );
+	ape_world_node_set_position( APE_WORLD_NODE( brush ), position );
+	ape_world_node_set_angles( APE_WORLD_NODE( brush ), angles );
 
 	if ( parent != nullptr )
 	{
@@ -981,74 +987,74 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_brush( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeBrush *self = ape_brush_create( parent, "temp", &( QmMathVector3f ) {}, &( QmMathVector3f ) {} );
+	ApeBrush *brush = ( ApeBrush * ) self;
 
-	self->type = ACM_GET_INT( self->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
+	brush->type = ACM_GET_INT( brush->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
 
 	AcmBranch *branch;
 	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
 	{
-		self->numVertices = acm_get_num_of_children( branch ) / 3;
-		self->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numVertices );
-		acm_branch_get_float32_array( branch, ( float * ) self->vertices, self->numVertices * 3 );
+		brush->numVertices = acm_get_num_of_children( branch ) / 3;
+		brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
+		acm_branch_get_float32_array( branch, ( float * ) brush->vertices, brush->numVertices * 3 );
 	}
 	else
 	{
 		ape_console_warning_( "No vertices specified for brush!\n" );
-		ape_world_node_destroy( APE_WORLD_NODE( self ) );
+		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		return nullptr;
 	}
 
 	if ( ( branch = acm_get_child_by_name( root, "faces" ) ) != nullptr )
 	{
-		self->numFaces = acm_get_num_of_children( branch );
-		self->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
+		brush->numFaces = acm_get_num_of_children( branch );
+		brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 
 		branch = acm_get_first_child( branch );
-		for ( unsigned int i = 0; i < self->numFaces; ++i, branch = acm_get_next_child( branch ) )
+		for ( unsigned int i = 0; i < brush->numFaces; ++i, branch = acm_get_next_child( branch ) )
 		{
-			self->faces[ i ].parent = self;
+			brush->faces[ i ].parent = brush;
 
 			AcmBranch *vertexBranch = acm_get_child_by_name( branch, "vertices" );
 			if ( vertexBranch != nullptr )
 			{
-				self->faces[ i ].numVertices = acm_get_num_of_children( vertexBranch );
+				brush->faces[ i ].numVertices = acm_get_num_of_children( vertexBranch );
 
 				vertexBranch = acm_get_first_child( vertexBranch );
-				for ( unsigned int j = 0; j < self->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
+				for ( unsigned int j = 0; j < brush->faces[ i ].numVertices; ++j, vertexBranch = acm_get_next_child( vertexBranch ) )
 				{
-					self->faces[ i ].vertices[ j ].posIndex = ACM_GET_INT( self->faces[ i ].vertices[ j ].posIndex, vertexBranch, "position", 0 );
-					assert( self->faces[ i ].vertices[ j ].posIndex <= self->numVertices );
+					brush->faces[ i ].vertices[ j ].posIndex = ACM_GET_INT( brush->faces[ i ].vertices[ j ].posIndex, vertexBranch, "position", 0 );
+					assert( brush->faces[ i ].vertices[ j ].posIndex <= brush->numVertices );
 
-					self->faces[ i ].vertices[ j ].textureCoords  = com_acm_get_vector2( vertexBranch, "uv", &QM_MATH_VECTOR2F_ZERO );
-					self->faces[ i ].vertices[ j ].lightmapCoords = com_acm_get_vector2( vertexBranch, "lightmap", &QM_MATH_VECTOR2F_ZERO );
-					self->faces[ i ].vertices[ j ].normal         = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
-					self->faces[ i ].vertices[ j ].colour         = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
+					brush->faces[ i ].vertices[ j ].textureCoords  = com_acm_get_vector2( vertexBranch, "uv", &QM_MATH_VECTOR2F_ZERO );
+					brush->faces[ i ].vertices[ j ].lightmapCoords = com_acm_get_vector2( vertexBranch, "lightmap", &QM_MATH_VECTOR2F_ZERO );
+					brush->faces[ i ].vertices[ j ].normal         = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
+					brush->faces[ i ].vertices[ j ].colour         = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
 				}
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
-				acm_get_array_i16( branch, "edgeLoop", edgeLoop, self->faces[ i ].numVertices );
-				for ( unsigned int j = 0; j < self->faces[ i ].numVertices; ++j )
+				acm_get_array_i16( branch, "edgeLoop", edgeLoop, brush->faces[ i ].numVertices );
+				for ( unsigned int j = 0; j < brush->faces[ i ].numVertices; ++j )
 				{
-					self->faces[ i ].edgeLoopOrder[ j ] = edgeLoop[ j ];
+					brush->faces[ i ].edgeLoopOrder[ j ] = edgeLoop[ j ];
 				}
 			}
 			else
 			{
 				ape_console_warning_( "No vertices specified for brush!\n" );
-				ape_world_node_destroy( APE_WORLD_NODE( self ) );
+				ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 				return nullptr;
 			}
 
-			snprintf( self->faces[ i ].tag, sizeof( self->faces[ i ].tag ), "%s", acm_get_string( branch, "id", "" ) );
-			if ( *self->faces[ i ].tag != '\0' )
+			snprintf( brush->faces[ i ].tag, sizeof( brush->faces[ i ].tag ), "%s", acm_get_string( branch, "id", "" ) );
+			if ( *brush->faces[ i ].tag != '\0' )
 			{
-				ApeRoom *room = ape_brush_face_get_room( &self->faces[ i ] );
+				ApeRoom *room = ape_brush_face_get_room( &brush->faces[ i ] );
 				if ( room != nullptr )
 				{
-					ape_room_add_tagged_surface( room, &self->faces[ i ] );
+					ape_room_add_tagged_surface( room, &brush->faces[ i ] );
 				}
 			}
 
@@ -1056,36 +1062,36 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *parent, AcmBranch *root )
 			const char *str;
 			if ( ( str = acm_get_string( branch, "material", nullptr ) ) != nullptr )
 			{
-				self->faces[ i ].material = ape_material_cache( str, APE_CACHE_GROUP_WORLD, true );
+				brush->faces[ i ].material = ape_material_cache( str, APE_CACHE_GROUP_WORLD, true );
 			}
 			else
 			{
 				ape_console_warning_( "No material specified for a brush face, using default!\n" );
-				self->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
+				brush->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 			}
-			self->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( QmMathVector2f ) {} );
-			self->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &( QmMathVector3f ) {} );
-			self->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &( QmMathVector3f ) {} );
+			brush->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( QmMathVector2f ) {} );
+			brush->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &( QmMathVector3f ) {} );
+			brush->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &( QmMathVector3f ) {} );
 
-			self->faces[ i ].flags = ACM_GET_UINT( self->faces[ i ].flags, branch, "flags", 0 );
+			brush->faces[ i ].flags = ACM_GET_UINT( brush->faces[ i ].flags, branch, "flags", 0 );
 
-			self->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &( QmMathVector3f ) {} );
-			self->faces[ i ].colour = com_acm_get_colour_f32( branch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
-			acm_get_array_f32( branch, "bounds", ( float * ) &self->faces[ i ].bounds, 12 );
+			brush->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &( QmMathVector3f ) {} );
+			brush->faces[ i ].colour = com_acm_get_colour_f32( branch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
+			acm_get_array_f32( branch, "bounds", ( float * ) &brush->faces[ i ].bounds, 12 );
 
-			compute_brush_face_tangents( &self->faces[ i ] );
+			compute_brush_face_tangents( &brush->faces[ i ] );
 
-			ape_brush_compute_bounds( self );
+			ape_brush_compute_bounds( brush );
 		}
 	}
 	else
 	{
 		ape_console_warning_( "No faces specified for brush!\n" );
-		ape_world_node_destroy( APE_WORLD_NODE( self ) );
+		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		return nullptr;
 	}
 
-	return APE_WORLD_NODE( self );
+	return APE_WORLD_NODE( brush );
 }
 
 static void on_change_room( void *self, ApeRoom *currentRoom, ApeRoom *newRoom )
@@ -1116,6 +1122,7 @@ const ApeWorldNodeClass ape_brushClass = {
         .identifier = "brush",
         .magic      = QM_OS_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
 
+        .create      = create_brush,
         .destroy     = destroy_brush,
         .serialize   = serialize_brush,
         .deserialize = deserialize_brush,

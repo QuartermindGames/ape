@@ -62,7 +62,7 @@ static void camera_save_pos_command( [[maybe_unused]] unsigned int argc, [[maybe
 	QmMathVector3f pos = ape_camera_get_position( ss1_gameState.camera );
 	QmMathVector3f ang = ape_camera_get_angles( ss1_gameState.camera );
 
-	char *path = qm_os_string_alloc( nullptr, "%s/camera.dat", com_get_app_data_directory() );
+	char *path = qm_os_string_alloc( "%s/camera.dat", com_get_app_data_directory() );
 	FILE *file = fopen( path, "w" );
 	if ( file != nullptr )
 	{
@@ -86,7 +86,7 @@ static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[ma
 		return;
 	}
 
-	char *path = qm_os_string_alloc( nullptr, "%s/camera.dat", com_get_app_data_directory() );
+	char *path = qm_os_string_alloc( "%s/camera.dat", com_get_app_data_directory() );
 	FILE *file = fopen( path, "r" );
 	if ( file != nullptr )
 	{

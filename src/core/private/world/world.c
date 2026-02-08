@@ -7,10 +7,10 @@
 #include "world.h"
 #include "renderer/renderer.h"
 
-ApeWorld *ape_world_create( void )
+static void *create_world( ApeWorldNode *parent )
 {
 	ApeWorld *world = QM_OS_MEMORY_NEW( ApeWorld );
-	ape_world_node_setup_( &world->base, nullptr, APE_WORLD_NODE_TYPE_ROOT, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &world->base, parent, APE_WORLD_NODE_TYPE_ROOT, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	world->entities = PlCreateLinkedList();
 	if ( world->entities == nullptr )
@@ -25,6 +25,11 @@ ApeWorld *ape_world_create( void )
 	}
 
 	return world;
+}
+
+ApeWorld *ape_world_create( void )
+{
+	return create_world( nullptr );
 }
 
 void ape_world_destroy_( void *data, ApeWorldNode *parent )
@@ -224,6 +229,7 @@ const ApeWorldNodeClass ape_rootClass = {
         .identifier = "root",
         .magic      = QM_OS_MAGIC_TO_NUM( 'W', 'L', 'D', ' ' ),
 
+        .create  = create_world,
         .destroy = ape_world_destroy_,
 
         .onAttachChild  = on_attach_child,

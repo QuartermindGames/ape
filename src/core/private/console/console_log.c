@@ -50,11 +50,11 @@ void ape_console_log_initialize_()
 	const char *c;
 	if ( ( c = PlGetCommandLineArgumentValue( "/log" ) ) != nullptr )
 	{
-		path = qm_os_string_alloc( nullptr, "%s", c );
+		path = qm_os_string_alloc( "%s", c );
 	}
 	else
 	{
-		path = qm_os_string_alloc( nullptr, "%s/log.txt", com_get_app_data_directory() );
+		path = qm_os_string_alloc( "%s/log.txt", com_get_app_data_directory() );
 	}
 
 	if ( PlFileExists( path ) )

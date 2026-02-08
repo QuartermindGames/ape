@@ -9,12 +9,23 @@
 
 #include "world/world.h"
 
-ApeLight *ape_create_light( ApeWorldNode *parent, const QmMathVector3f *position, const QmMathColour4f *colour, float radius, ApeLightType type, unsigned int flags )
+static void *create_light( ApeWorldNode *parent )
 {
 	ApeLight *light = QM_OS_MEMORY_NEW( ApeLight );
-	ape_world_node_setup_( &light->base, parent, APE_WORLD_NODE_TYPE_LIGHT, nullptr, position, &pl_vecOrigin3 );
+	ape_world_node_setup_( &light->base, parent, APE_WORLD_NODE_TYPE_LIGHT, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 
-	light->colour = *colour;
+	light->colour = QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 1.0f );
+
+	return light;
+}
+
+ApeLight *ape_create_light( ApeWorldNode *parent, const QmMathVector3f *position, const QmMathColour4f *colour, float radius, ApeLightType type, unsigned int flags )
+{
+	ApeLight *light = create_light( parent );
+
+	ape_light_set_position( light, position );
+	ape_light_set_colour( light, colour );
+
 	light->type   = type;
 	light->flags  = flags;
 	light->radius = radius;
@@ -182,16 +193,17 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *deserialize_light( ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_light( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
 {
-	ApeLight *light = ape_create_light( parent, &pl_vecOrigin3, &QM_MATH_COLOUR4F( 1.0f, 1.0f, 1.0f, 0.0f ), 0.0f, APE_LIGHT_TYPE_OMNI, 0 );
+	ApeLight *light = ( ApeLight * ) self;
 	light->type     = acm_get_uint( root, "type", light->type );
 	light->colour   = com_acm_get_colour_f32( root, "colour", &light->colour );
 	light->radius   = acm_get_f32( root, "radius", light->radius );
 	light->angle    = acm_get_f32( root, "angle", light->angle );
 	light->flags    = acm_get_uint( root, "flags", light->flags );
 	light->state    = acm_get_int( root, "state", light->state );
-	return APE_WORLD_NODE( light );
+
+	return self;
 }
 
 static void light_on_draw_editor( void *self, const bool isSelected )
@@ -256,6 +268,7 @@ const ApeWorldNodeClass ape_lightClass = {
         .identifier = "light",
         .magic      = QM_OS_MAGIC_TO_NUM( 'L', 'I', 'T', ' ' ),
 
+        .create      = create_light,
         .destroy     = destroy_light,
         .serialize   = serialize_light,
         .deserialize = deserialize_light,

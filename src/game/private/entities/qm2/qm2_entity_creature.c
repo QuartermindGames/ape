@@ -145,7 +145,7 @@ static void cache_creature_class( const char *path, void *user )
 
 	Qm2CreatureClass *creatureClass = QM_OS_MEMORY_NEW( Qm2CreatureClass );
 
-	creatureClass->name = qm_os_string_alloc( nullptr, "%s", acm_get_string( root, "name", "unnamed" ) );
+	creatureClass->name = qm_os_string_alloc( "%s", acm_get_string( root, "name", "unnamed" ) );
 
 	creatureClass->icon = ape_material_cache( acm_get_string( root, "icon", "creatures/creature_fallback_icon.mat.n" ), APE_CACHE_GROUP_WORLD, true );
 

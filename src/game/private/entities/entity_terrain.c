@@ -109,7 +109,7 @@ static void terrain_load_heightmap( GameTerrainEntity *terrain )
 		return;
 	}
 
-	char *path = qm_os_string_alloc( nullptr, "%s/%s.png", TERRAIN_HEIGHTMAP_BASE_PATH, terrain->heightmapName );
+	char *path = qm_os_string_alloc( "%s/%s.png", TERRAIN_HEIGHTMAP_BASE_PATH, terrain->heightmapName );
 	if ( path == nullptr )
 	{
 		game_warning_( "Failed to setup path for loading heightmap (%s/%s)!\n", TERRAIN_HEIGHTMAP_BASE_PATH, terrain->heightmapName );
@@ -311,7 +311,7 @@ static ApeBrush *create_terrain_chunk( ApeEntity *self, GameTerrainEntity *terra
 
 static void terrain_load_material( GameTerrainEntity *terrain )
 {
-	char *materialPath = qm_os_string_alloc( nullptr, "%s/%s.mat.n", TERRAIN_MATERIAL_BASE_PATH, terrain->materialName );
+	char *materialPath = qm_os_string_alloc( "%s/%s.mat.n", TERRAIN_MATERIAL_BASE_PATH, terrain->materialName );
 
 	// check if it's already loaded
 	if ( terrain->material != nullptr )

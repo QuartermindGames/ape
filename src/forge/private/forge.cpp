@@ -94,11 +94,11 @@ char *forge_dialog_save( void *self, const char *title, const char *extension, c
 	char *filename;
 	if ( saveName.length() >= extensionSize && strcmp( &saveName[ saveName.length() - extensionSize ], extension ) != 0 )
 	{
-		filename = qm_os_string_alloc( nullptr, "%s%s", saveName.text(), extension );
+		filename = qm_os_string_alloc( "%s%s", saveName.text(), extension );
 	}
 	else
 	{
-		filename = qm_os_string_alloc( nullptr, "%s", saveName.text() );
+		filename = qm_os_string_alloc( "%s", saveName.text() );
 	}
 
 	return filename;
@@ -190,7 +190,7 @@ char *forge_dialog_open( void *self, const char *title, const char *extension, c
 		if ( strlen( data.filename ) >= strlen( extension ) &&
 		     strcmp( &data.filename[ strlen( data.filename ) - strlen( extension ) ], extension ) != 0 )
 		{
-			filename = qm_os_string_alloc( nullptr, "%s%s", data.filename, extension );
+			filename = qm_os_string_alloc( "%s%s", data.filename, extension );
 		}
 
 		g_free( data.filename );
@@ -207,7 +207,7 @@ char *forge_dialog_open( void *self, const char *title, const char *extension, c
 		return nullptr;
 	}
 
-	return qm_os_string_alloc( nullptr, "%s", openName.text() );
+	return qm_os_string_alloc( "%s", openName.text() );
 
 #endif
 }

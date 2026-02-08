@@ -410,13 +410,13 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				{
 					p += 3;
 					materialVariable->type     = APE_MATERIAL_VAR_RENDERTARGET;
-					materialVariable->data.ptr = qm_os_string_alloc( nullptr, "%s", p );
+					materialVariable->data.ptr = qm_os_string_alloc( "%s", p );
 				}
 				else if ( strncmp( p, "depth_", 6 ) == 0 )
 				{
 					p += 6;
 					materialVariable->type     = APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP;
-					materialVariable->data.ptr = qm_os_string_alloc( nullptr, "%s", p );
+					materialVariable->data.ptr = qm_os_string_alloc( "%s", p );
 				}
 				else
 				{

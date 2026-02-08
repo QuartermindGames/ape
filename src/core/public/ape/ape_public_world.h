@@ -67,9 +67,10 @@ typedef struct ApeWorldNodeClass
 	const char       *identifier;
 	ApeWorldNodeMagic magic;
 
+	void *( *create )( ApeWorldNode *parent );
 	void ( *destroy )( void *self, ApeWorldNode *parent );
 	AcmBranch *( *serialize )( void *self, AcmBranch *root );
-	ApeWorldNode *( *deserialize )( ApeWorldNode *parent, AcmBranch *root );
+	ApeWorldNode *( *deserialize )( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root );
 	ApeWorldNode *( *clone )( ApeWorldNode *srcNode );
 
 	void ( *onAttachChild )( void *self, ApeWorldNode *child ); // called just after a child is attached
@@ -250,7 +251,7 @@ PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self );
  */
 PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self );
 
-AcmBranch    *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
+AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
 
 /**
  * Iterate through all of the children of the given node and collect up children by type.

@@ -603,10 +603,11 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 		return nullptr;
 	}
 
-	ApeWorldNode *self = worldNodeClass->deserialize( parent, classBranch );
+	assert( worldNodeClass->create != nullptr );
+	ApeWorldNode *self = worldNodeClass->create( parent );
 	if ( self == nullptr )
 	{
-		ape_console_warning_( "Failed to deserialize world node!\n" );
+		ape_console_warning_( "Failed to create world node!\n" );
 		return nullptr;
 	}
 
@@ -650,6 +651,12 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 	//acm_get_array_f32( root, "bounds", ( float * ) &self->bounds, 12 );
 
 	self->flags = acm_get_uint( root, "flags", 0 );
+
+	if ( worldNodeClass->deserialize( self, parent, classBranch ) == nullptr )
+	{
+		ape_console_warning_( "Failed to deserialize world node!\n" );
+		return nullptr;
+	}
 
 	// deal with the children
 	AcmBranch *childrenBranch = acm_get_child_by_name( root, "children" );

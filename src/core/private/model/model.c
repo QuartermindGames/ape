@@ -391,6 +391,25 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 // Model World Node Class
 /////////////////////////////////////////////////////////////////////////////////////
 
+static void *create_model_node( ApeWorldNode *parent )
+{
+	ApeModelNode *modelNode = QM_OS_MEMORY_NEW( ApeModelNode );
+	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	return modelNode;
+}
+
+static void assign_model_to_model_node( ApeModelNode *self, ApeModel *model, const char *path )
+{
+	self->model = model;
+	PlSetupPath( self->modelPath, true, "%s", path );
+
+	//TODO: these should be reversed!
+	self->base.bounds      = compute_model_bounds( self->model );
+	self->base.localBounds = self->base.bounds;
+
+	self->modelSceneNode = PlInsertLinkedListNode( model->sceneNodes, self );
+}
+
 ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, const char *path )
 {
 	ApeModel *model = ape_model_load( path );
@@ -400,17 +419,11 @@ ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, con
 		return nullptr;
 	}
 
-	ApeModelNode *modelNode = QM_OS_MEMORY_NEW( ApeModelNode );
-	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, name, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ApeModelNode *modelNode = create_model_node( parent );
 
-	modelNode->model = model;
-	PlSetupPath( modelNode->modelPath, true, "%s", path );
+	ape_world_node_set_name( APE_WORLD_NODE( modelNode ), name );
 
-	//TODO: these should be reversed!
-	modelNode->base.bounds      = compute_model_bounds( modelNode->model );
-	modelNode->base.localBounds = modelNode->base.bounds;
-
-	modelNode->modelSceneNode = PlInsertLinkedListNode( model->sceneNodes, modelNode );
+	assign_model_to_model_node( modelNode, model, path );
 
 	return modelNode;
 }
@@ -453,18 +466,28 @@ AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 	return root;
 }
 
-ApeWorldNode *deserialize_model_node( ApeWorldNode *parent, AcmBranch *root )
+ApeWorldNode *deserialize_model_node( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
 {
 	PLPath modelPath;
 	PlSetupPath( modelPath, true, "%s", acm_get_string( root, "path", "" ) );
-	ApeModelNode *modelNode = ape_model_node_create( parent, nullptr, modelPath );
 
-	return ( ApeWorldNode * ) modelNode;
+	ApeModel *model = ape_model_load( modelPath );
+	if ( model == nullptr )
+	{
+		ape_console_warning_( "Failed to load the specified model (%s) for node!\n", modelPath );
+		return nullptr;
+	}
+
+	assign_model_to_model_node( ( ApeModelNode * ) self, model, modelPath );
+
+	return self;
 }
 
 const ApeWorldNodeClass ape_modelClass = {
-        .identifier  = "model",
-        .magic       = QM_OS_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
+        .identifier = "model",
+        .magic      = QM_OS_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
+
+        .create      = create_model_node,
         .destroy     = destroy_model_node,
         .serialize   = serialize_model_node,
         .deserialize = deserialize_model_node,

@@ -204,7 +204,7 @@ static void handle_connection_state( void )
 
 static void connect_command( PL_UNUSED unsigned int argc, char **argv )
 {
-	char *address = qm_os_string_alloc( nullptr, "%s", argv[ 1 ] );
+	char *address = qm_os_string_alloc( "%s", argv[ 1 ] );
 	if ( address == nullptr )
 	{
 		ape_console_warning_( "Failed to allocate string for connect!\n" );

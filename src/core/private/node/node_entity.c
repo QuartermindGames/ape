@@ -108,42 +108,69 @@ const ApeEntityClassDefinition *ape_get_entity_class_table( const char *classNam
 	return ( const ApeEntityClassDefinition * ) PlLookupHashTableUserData( entityClassLookup, className, strlen( className ) );
 }
 
-ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const QmMathVector3f *position, const QmMathVector3f *angles )
+static void *create_entity( ApeWorldNode *parent )
 {
+	ApeEntity *entity = QM_OS_MEMORY_NEW( ApeEntity );
+	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
+
+	return entity;
+}
+
+static bool setup_entity_class( ApeEntity *self, const char *className )
+{
+	assert( self->classDefinition == nullptr && self->classData == nullptr );
+
 	const ApeEntityClassDefinition *classDefinition = ape_get_entity_class_table( className );
 	if ( classDefinition == NULL )
 	{
 		ape_console_warning_( "Failed to find entity class (%s)!\n", className );
-		return nullptr;
+		return false;
 	}
 
-	ApeEntity *entity = QM_OS_MEMORY_NEW( ApeEntity );
-	ape_world_node_setup_( &entity->base, parent, APE_WORLD_NODE_TYPE_ENTITY, name, position, angles );
-	entity->classDefinition = classDefinition;
-	entity->componentTable  = PlCreateHashTable();
+	self->classDefinition = classDefinition;
 
-	entity->classData = classDefinition->createFunction( entity, properties );
-	if ( entity->classData == nullptr )
+	self->componentTable = PlCreateHashTable();
+	if ( self->componentTable == nullptr )
 	{
-		ape_console_warning_( "Creation failed for entity (%s)!\n", entity->classDefinition->name );
-		ape_world_node_destroy( APE_WORLD_NODE( entity ) );
-		return nullptr;
+		ape_console_warning_( "Failed to create component table for entity!\n" );
+		return false;
 	}
 
-	ApeWorldNode *rootNode = ape_world_node_get_root( parent );
+	self->classData = classDefinition->createFunction( self, nullptr );
+	if ( self->classData == nullptr )
+	{
+		ape_console_warning_( "Creation failed for entity (%s)!\n", self->classDefinition->name );
+		ape_world_node_destroy( APE_WORLD_NODE( self ) );
+		return false;
+	}
+
+	ApeWorldNode *rootNode = ape_world_node_get_root( APE_WORLD_NODE( self ) );
 	if ( rootNode != nullptr && rootNode->type == APE_WORLD_NODE_TYPE_ROOT )
 	{
-		ApeWorld *world       = ( ApeWorld * ) rootNode;
-		entity->worldListNode = PlInsertLinkedListNode( world->entities, entity );
+		ApeWorld *world     = ( ApeWorld * ) rootNode;
+		self->worldListNode = PlInsertLinkedListNode( world->entities, self );
 	}
 
 #if !defined( APE_NO_EDITOR )
 	const char *editorSpritePath = classDefinition->editorSpritePath;
 	if ( editorSpritePath != nullptr )
 	{
-		entity->editorSprite = ape_material_cache( editorSpritePath, APE_CACHE_GROUP_EDITOR, true );
+		self->editorSprite = ape_material_cache( editorSpritePath, APE_CACHE_GROUP_EDITOR, true );
 	}
 #endif
+
+	return true;
+}
+
+ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const char *name, AcmBranch *properties, const QmMathVector3f *position, const QmMathVector3f *angles )
+{
+	ApeEntity *entity = create_entity( parent );
+
+	setup_entity_class( entity, className );
+
+	ape_world_node_set_name( APE_WORLD_NODE( entity ), name );
+	ape_world_node_set_position( APE_WORLD_NODE( entity ), position );
+	ape_world_node_set_angles( APE_WORLD_NODE( entity ), angles );
 
 	return entity;
 }
@@ -417,7 +444,7 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_entity( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
 {
 	const char *className = acm_get_string( root, "className", nullptr );
 	if ( className == nullptr )
@@ -433,10 +460,10 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *parent, AcmBranch *root )
 		return nullptr;
 	}
 
-	ApeEntity *entity = ape_entity_create( parent, className, "", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
-	if ( entity == nullptr )
+	ApeEntity *entity = ( ApeEntity * ) self;
+	if ( !setup_entity_class( entity, className ) )
 	{
-		ape_console_warning_( "Failed to deserialize entity: entity create failed!\n" );
+		ape_console_warning_( "Failed to setup entity class!\n" );
 		return nullptr;
 	}
 
@@ -502,8 +529,10 @@ static void ape_entity_draw_editor_( void *self, const bool isSelected )
 }
 
 const ApeWorldNodeClass ape_entityClass = {
-        .identifier  = "entity",
-        .magic       = QM_OS_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
+        .identifier = "entity",
+        .magic      = QM_OS_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
+
+        .create      = create_entity,
         .destroy     = ape_entity_destroy_,
         .serialize   = serialize_entity,
         .deserialize = deserialize_entity,

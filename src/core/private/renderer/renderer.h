@@ -59,6 +59,11 @@ typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 #endif
 } ApeLightmapPixel;
 
+static constexpr unsigned int APE_LIGHTMAP_WIDTH       = 256;//TODO: remove, this should be left up to the given room!
+static constexpr unsigned int APE_LIGHTMAP_HEIGHT      = 256;//TODO: remove, this should be left up to the given room!
+static constexpr unsigned int APE_LIGHTMAP_PIXELS      = APE_LIGHTMAP_WIDTH * APE_LIGHTMAP_HEIGHT;
+static constexpr unsigned int APE_LIGHTMAP_BUFFER_SIZE = APE_LIGHTMAP_HEIGHT * APE_LIGHTMAP_WIDTH * sizeof( ApeLightmapPixel );
+
 typedef struct ApeLight
 {
 	// This should always come first!
