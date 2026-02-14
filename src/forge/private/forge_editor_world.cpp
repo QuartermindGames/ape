@@ -10,7 +10,7 @@
 #include "forge_window_main.h"
 
 #include "aux/public/aux_project.h"
-#include "../../aux/public/aux_math.h"
+#include "aux/public/aux_math.h"
 
 #include "SurfaceInspector.h"
 
@@ -399,6 +399,7 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 		ape_world_node_set_name( APE_WORLD_NODE( activeRoom ), roomName.text() );
 		ape_room_set_ambience( activeRoom, roomCreationDialog.get_room_ambience() );
 		ape_room_set_reverb_preset( activeRoom, roomCreationDialog.get_room_audio_preset() );
+		ape_room_set_lightmap_edge_length( activeRoom, roomCreationDialog.get_edge_length() );
 
 		update_tree();
 
@@ -677,6 +678,15 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 	new FXLabel( matrix, "Name:" );
 	nameField = new FXTextField( matrix, 20 );
 
+	new FXLabel( matrix, "Lightmap Size:" );
+	lightmapEdgeSizeField = new FXListBox( matrix );
+	lightmapEdgeSizeField->setNumVisible( 8 );
+	lightmapEdgeSizeField->appendItem( "128" );
+	lightmapEdgeSizeField->appendItem( "256" );
+	lightmapEdgeSizeField->appendItem( "512" );
+	lightmapEdgeSizeField->appendItem( "1024" );
+	lightmapEdgeSizeField->appendItem( "4096" );
+
 	new FXLabel( matrix, "Audio Preset:" );
 	audioPresetField = new FXListBox( matrix );
 	audioPresetField->setNumVisible( 8 );
@@ -691,7 +701,7 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 	new FXSeparator( this );
 
 	FXHorizontalFrame *buttonFrame = new FXHorizontalFrame( this, LAYOUT_SIDE_RIGHT | PACK_UNIFORM_WIDTH );
-	new FXButton( buttonFrame, ( room == nullptr ) ? "Create" : "&OK", nullptr, this, FXDialogBox::ID_ACCEPT, BUTTON_NORMAL | BUTTON_INITIAL );
+	new FXButton( buttonFrame, room == nullptr ? "Create" : "&OK", nullptr, this, ID_ACCEPT, BUTTON_NORMAL | BUTTON_INITIAL );
 	new FXButton( buttonFrame, "&Cancel", nullptr, this, ID_CANCEL, BUTTON_NORMAL );
 
 	// if we've got a room, populate everything
@@ -701,15 +711,35 @@ forge::WorldEditor::RoomDialog::RoomDialog( FXWindow *parent, ApeRoom *room ) : 
 		assert( name != nullptr );
 		nameField->setText( name );
 
+		unsigned int edgeLength = ape_room_get_lightmap_edge_length( room );
+		switch ( edgeLength )
+		{
+			default:
+				lightmapEdgeSizeField->setCurrentItem( 0 );
+				break;
+			case 256:
+				lightmapEdgeSizeField->setCurrentItem( 1 );
+				break;
+			case 512:
+				lightmapEdgeSizeField->setCurrentItem( 2 );
+				break;
+			case 1024:
+				lightmapEdgeSizeField->setCurrentItem( 3 );
+				break;
+			case 4096:
+				lightmapEdgeSizeField->setCurrentItem( 4 );
+				break;
+		}
+
 		ApeAudioReverbPreset reverbPreset = ape_room_get_reverb_preset( room );
 		audioPresetField->setCurrentItem( reverbPreset );
 
 		QmMathColour4f ambience = ape_room_get_ambience( room );
 		ambienceField->setRGBA( FXRGBA(
 		        // sigh...
-		        PlFloatToByte( ambience.r ),
-		        PlFloatToByte( ambience.g ),
-		        PlFloatToByte( ambience.b ),
-		        PlFloatToByte( ambience.a ) ) );
+		        QM_MATH_FTOB( ambience.r ),
+		        QM_MATH_FTOB( ambience.g ),
+		        QM_MATH_FTOB( ambience.b ),
+		        QM_MATH_FTOB( ambience.a ) ) );
 	}
 }

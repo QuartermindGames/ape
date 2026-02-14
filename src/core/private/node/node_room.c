@@ -13,12 +13,16 @@
 
 #include "yin/core_game.h"
 
+static constexpr unsigned int ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH = 256;
+
 static void *create_room( ApeWorldNode *parent )
 {
 	ApeRoom *room = QM_OS_MEMORY_NEW( ApeRoom );
 	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
 
 	room->gravity = qm_math_vector3f( 0.0f, -0.9f, 0.0f );
+
+	room->lightmapEdgeLength = ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH;
 
 	room->taggedSurfaceLookup = PlCreateHashTable();
 
@@ -191,7 +195,34 @@ cleanup:
 }
 #endif
 
-void ape_room_upload_lightmap_( ApeRoom *self, unsigned int width, unsigned int height )
+void ape_room_set_lightmap_edge_length( ApeRoom *self, unsigned int edgeLength )
+{
+	if ( edgeLength == self->lightmapEdgeLength )
+	{
+		return;
+	}
+
+	if ( self->lightmap != nullptr )
+	{
+		qm_os_memory_free( self->lightmap );
+		self->lightmap = nullptr;
+	}
+
+	if ( self->lightmapTexture != nullptr )
+	{
+		ape_texture_release_( self->lightmapTexture );
+		self->lightmapTexture = nullptr;
+	}
+
+	self->lightmapEdgeLength = edgeLength;
+}
+
+unsigned int ape_room_get_lightmap_edge_length( const ApeRoom *self )
+{
+	return self->lightmapEdgeLength;
+}
+
+void ape_room_upload_lightmap_( ApeRoom *self )
 {
 	assert( self->lightmap != nullptr );
 
@@ -202,9 +233,9 @@ void ape_room_upload_lightmap_( ApeRoom *self, unsigned int width, unsigned int 
 	}
 
 #if defined( APE_RENDERER_LIGHTMAP_USE_FLOATS )
-	self->lightmapTexture = ape_texture_generate_( "lightmap", self->lightmap, width, height, &QM_IMAGE_FORMAT_RGB16F_DESC(), PLG_TEXTURE_FILTER_LINEAR );
+	self->lightmapTexture = ape_texture_generate_( "lightmap", self->lightmap, self->lightmapEdgeLength, self->lightmapEdgeLength, &QM_IMAGE_FORMAT_RGB16F_DESC(), PLG_TEXTURE_FILTER_LINEAR );
 #else
-	self->lightmapTexture = ape_texture_generate_( "lightmap", self->lightmap, width, height, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_LINEAR );
+	self->lightmapTexture = ape_texture_generate_( "lightmap", self->lightmap, self->lightmapEdgeLength, self->lightmapEdgeLength, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_LINEAR );
 #endif
 	if ( self->lightmapTexture != nullptr )
 	{
@@ -227,8 +258,12 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 
 	if ( room->lightmap != nullptr )
 	{
-		AcmBranch *lightmapArray = acm_push_array_f16( root, "lightmap", nullptr, 0 );
-		for ( unsigned int i = 0; i < APE_LIGHTMAP_PIXELS; ++i )
+		acm_push_ui16( root, "lightmapEdgeLength", room->lightmapEdgeLength );
+
+		AcmBranch   *lightmapArray = acm_push_array_f16( root, "lightmap", nullptr, 0 );
+		unsigned int lightmapSize  = room->lightmapEdgeLength * room->lightmapEdgeLength;
+
+		for ( unsigned int i = 0; i < lightmapSize; ++i )
 		{
 			for ( unsigned int j = 0; j < 3; ++j )
 			{
@@ -249,13 +284,16 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, ApeWorldNode *pa
 	room->ambientLight = com_acm_get_colour_f32( root, "ambience", &QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	room->reverbPreset = ACM_GET_INT( room->flags, root, "reverb", 0 );
 
+	room->lightmapEdgeLength  = acm_get_uint( root, "lightmapEdgeLength", ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH );
+	unsigned int lightmapSize = room->lightmapEdgeLength * room->lightmapEdgeLength;
+
 	AcmBranch *lightmapArray = acm_get_child_by_name( root, "lightmap" );
 	if ( lightmapArray != nullptr )
 	{
-		room->lightmap = QM_OS_MEMORY_NEW_( ApeLightmapPixel, APE_LIGHTMAP_PIXELS );
+		room->lightmap = QM_OS_MEMORY_NEW_( ApeLightmapPixel, lightmapSize );
 
 		AcmBranch *child = acm_get_first_child( lightmapArray );
-		for ( unsigned int i = 0; i < APE_LIGHTMAP_PIXELS; ++i )
+		for ( unsigned int i = 0; i < lightmapSize; ++i )
 		{
 			assert( child != nullptr );
 			for ( unsigned int j = 0; j < 3; ++j, child = acm_get_next_child( child ) )
@@ -264,7 +302,7 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, ApeWorldNode *pa
 			}
 		}
 
-		ape_room_upload_lightmap_( room, APE_LIGHTMAP_WIDTH, APE_LIGHTMAP_HEIGHT );
+		ape_room_upload_lightmap_( room );
 	}
 
 	ape_decal_manager_deserialize_( room->decalManager, root );

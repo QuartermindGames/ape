@@ -127,10 +127,19 @@ namespace forge
 				return ( ApeAudioReverbPreset ) audioPresetField->getCurrentItem();
 			}
 
+			inline unsigned int get_edge_length()
+			{
+				FXint    item   = lightmapEdgeSizeField->getCurrentItem();
+				FXString string = lightmapEdgeSizeField->getItem( item );
+				assert( !string.empty() );
+				return strtoul( string.text(), nullptr, 10 );
+			}
+
 		private:
 			FXTextField *nameField;
 			FXColorWell *ambienceField;
 			FXListBox   *audioPresetField;
+			FXListBox   *lightmapEdgeSizeField;
 		};
 
 	public:

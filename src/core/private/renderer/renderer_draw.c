@@ -4,6 +4,7 @@
 
 #include "ape_private.h"
 #include "renderer.h"
+#include "renderer_texture.h"
 #include "ape/ape_public_gui.h"
 #include "material/material.h"
 
@@ -37,7 +38,7 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *te
 
 void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMathColour4f *colour, const QmMathVector3f *position, const QmMathVector3f *origin, const QmMathVector3f *angles, float scale )
 {
-	PLGTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
+	ApeTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
 	assert( texture != nullptr );
 
 	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
@@ -52,7 +53,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMath
 	PlRotateMatrix3f( PL_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
 
 	float tw, th, tx, ty;
-	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
+	get_uv_coords_for_sub_rect( subRect, texture->internal, &tw, &th, &tx, &ty );
 
 	float w = subRect->w * scale;
 	float h = subRect->h * scale;

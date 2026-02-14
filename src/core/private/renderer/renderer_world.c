@@ -322,7 +322,7 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = room->ambientLight;
-		if ( room->lightmapTexture != nullptr )
+		if ( room->lightmapTexture != nullptr && camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 		{
 			ape_rendererState_.lightmapTexture = room->lightmapTexture->internal;
 		}

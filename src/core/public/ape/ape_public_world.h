@@ -516,6 +516,9 @@ QmMathColour4f ape_room_get_ambience( const ApeRoom *self );
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
 
+void         ape_room_set_lightmap_edge_length( ApeRoom *self, unsigned int edgeLength );
+unsigned int ape_room_get_lightmap_edge_length( const ApeRoom *self );
+
 void ape_room_add_tagged_surface( ApeRoom *self, ApeBrushFace *face );
 void ape_room_remove_tagged_surface( ApeRoom *self, ApeBrushFace *face );
 
@@ -617,6 +620,8 @@ typedef enum ApeLightFlag
 /// \return 		A pointer to the instance of the light. This is owned by the world.
 ApeLight *ape_create_light( ApeWorldNode *parent, const QmMathVector3f *position, const QmMathColour4f *colour, float radius, ApeLightType type, unsigned int flags );
 void      ape_light_destroy( ApeLight *light );
+
+QmMathVector3f ape_light_get_direction( const ApeLight *self );
 
 QmMathColour4f ape_light_get_colour( const ApeLight *self );
 void           ape_light_set_colour( ApeLight *light, const QmMathColour4f *colour );

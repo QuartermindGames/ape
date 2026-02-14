@@ -20,7 +20,6 @@ typedef struct ApeRoom
 
 	unsigned int flags;
 
-	QmMathColour4f colour;// an identifying colour
 	QmMathColour4f ambientLight;
 
 	struct PLHashTable *taggedSurfaceLookup;
@@ -32,8 +31,10 @@ typedef struct ApeRoom
 
 	ApeDecalManager *decalManager;
 
-	ApeLightmapPixel *lightmap;
-	ApeTexture       *lightmapTexture;
+	//TODO: introduce multiple lightmap pages...
+	ApeLightmapPixel *lightmap;          // lightmap buffer
+	unsigned int      lightmapEdgeLength;// represents w and h value
+	ApeTexture       *lightmapTexture;   // uploaded version
 } ApeRoom;
 
 PL_EXTERN_C

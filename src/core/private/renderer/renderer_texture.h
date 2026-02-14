@@ -9,6 +9,8 @@ PL_EXTERN_C
 typedef enum ApeDefaultTexture
 {
 	APE_TEXTURE_FALLBACK,
+	APE_TEXTURE_WHITE,
+	APE_TEXTURE_BLACK,
 
 	APE_MAX_DEFAULT_TEXTURES
 } ApeDefaultTexture;
@@ -18,16 +20,19 @@ typedef enum ApeDefaultTexture
 typedef struct ApeTexture
 {
 	ApeMemoryReference reference;
-	PLGTexture        *internal;
+
+	PLImage    *image;   // ram copy, usually free'd after load but editor will retain
+	PLGTexture *internal;// vram copy
 
 	PLGTextureWrapMode wrapMode;
 	PLGTextureFilter   filterMode;
 	unsigned int       flags;
 
-	PLPath path;// for reloading
+	QmMathColour4ub average;
+
+	char *path;// for reloading
 } ApeTexture;
 
-PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode );
 PLGTexture *ape_texture_get_fallback( void );
 
 ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, PLGTextureFilter filter );

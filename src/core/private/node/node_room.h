@@ -5,4 +5,4 @@
 typedef struct ApeRoom          ApeRoom;
 typedef struct ApeLightmapPixel ApeLightmapPixel;
 
-void ape_room_upload_lightmap_( ApeRoom *self, unsigned int width, unsigned int height );
+void ape_room_upload_lightmap_( ApeRoom *self );

@@ -64,7 +64,17 @@ static ApeWorldNode *clone_light( ApeWorldNode *src )
 	return APE_WORLD_NODE( dstLight );
 }
 
-QmMathColour4f ape_light_get_colour( const ApeLight *light ) { return light->colour; }
+QmMathVector3f ape_light_get_direction( const ApeLight *self )
+{
+	QmMathVector3f angles = ape_light_get_angles( self );
+	QmMathVector3f lightDirection;
+	PlAnglesAxes( angles, nullptr, nullptr, &lightDirection );
+	lightDirection = qm_math_vector3f_normalize( lightDirection );
+
+	return lightDirection;
+}
+
+QmMathColour4f ape_light_get_colour( const ApeLight *self ) { return self->colour; }
 void           ape_light_set_colour( ApeLight *light, const QmMathColour4f *colour ) { light->colour = *colour; }
 
 QmMathVector3f ape_light_get_position( const ApeLight *self )
@@ -149,19 +159,22 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 
 bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
 {
-	if ( self->type == APE_LIGHT_TYPE_SUN )
-	{
-		float dot = qm_math_vector3f_dot_product( face->normal, ape_light_get_position( self ) );
-		return dot <= 0;
-	}
-
-	if ( !com_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &face->bounds, nullptr ) )
+	if ( self->type != APE_LIGHT_TYPE_SUN && !com_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &face->bounds, nullptr ) )
 	{
 		return false;
 	}
 
-	QmMathVector3f dir = qm_math_vector3f_sub( face->bounds.absOrigin, ape_light_get_position( self ) );
-	float          dot = qm_math_vector3f_dot_product( face->normal, dir );
+	QmMathVector3f dir;
+	if ( self->type == APE_LIGHT_TYPE_SUN || self->type == APE_LIGHT_TYPE_SPOT )
+	{
+		dir = ape_light_get_direction( self );
+	}
+	else
+	{
+		dir = qm_math_vector3f_sub( face->bounds.absOrigin, ape_light_get_position( self ) );
+	}
+
+	float dot = qm_math_vector3f_dot_product( face->normal, dir );
 	return dot < 0;
 }
 
@@ -218,11 +231,10 @@ static void light_on_draw_editor( void *self, const bool isSelected )
 
 	ApeLightType type = ape_light_get_type( light );
 
-	if ( !isSelected )
+	if ( type == APE_LIGHT_TYPE_SUN || type == APE_LIGHT_TYPE_SPOT )
 	{
-		QmMathVector3f forward;
-		PlAnglesAxes( angles, nullptr, nullptr, &forward );
-		QmMathVector3f end = qm_math_vector3f_add( position, qm_math_vector3f_scale_float( forward, 16.0f ) );
+		QmMathVector3f forward = ape_light_get_direction( light );
+		QmMathVector3f end     = qm_math_vector3f_add( position, qm_math_vector3f_scale_float( forward, 16.0f + light->colour.a ) );
 		ape_draw_debug_arrow( position, end, PlColourF32ToU8( &light->colour ), 1.0f );
 	}
 

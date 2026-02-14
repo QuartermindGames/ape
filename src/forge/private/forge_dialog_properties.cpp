@@ -211,7 +211,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			break;
 		}
 		case APE_PROPERTY_TYPE_INTEGER:
-			*( ( int32_t * ) tableProperty->ptr ) = strtol( text, nullptr, 10 );
+			*( int32_t * ) tableProperty->ptr = strtol( text, nullptr, 10 );
 			break;
 		case APE_PROPERTY_TYPE_STRING:
 		case APE_PROPERTY_TYPE_PATH:
@@ -270,7 +270,8 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeProperty
 	switch ( internalProperty->type )
 	{
 		default:
-			assert( 0 );
+		case APE_PROPERTY_TYPE_INVALID:
+			forge_warning_( "Unhandled property type (%u)!\n", internalProperty->type );
 			break;
 		case APE_PROPERTY_TYPE_FLOAT:
 		{

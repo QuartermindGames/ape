@@ -22,8 +22,6 @@
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
-static ApeTexture *whiteFallbackTexture;
-static ApeTexture *blackFallbackTexture;
 static ApeTexture *normalFallbackTexture;
 
 static PLConsoleString materialTextureFilter;
@@ -58,7 +56,7 @@ ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial )
 	return defaultMaterials[ defaultMaterial ];
 }
 
-PLGTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint )
+ApeTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, const char *hint )
 {
 	if ( pass >= self->numPasses )
 	{
@@ -109,8 +107,6 @@ void ape_initialize_materials_( void )
 		}
 	}
 
-	whiteFallbackTexture  = ape_texture_cache_( "materials/shaders/textures/white.png", PLG_TEXTURE_FILTER_LINEAR, true );
-	blackFallbackTexture  = ape_texture_cache_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_LINEAR, true );
 	normalFallbackTexture = ape_texture_cache_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR, true );
 
 	// cache default materials we need
@@ -585,8 +581,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						break;
 					}
 
-					PLGTexture *texture = ape_texture_load_direct_( texturePath, materialPass->textureFilter );
-
+					ApeTexture *texture = ape_texture_cache_( texturePath, materialPass->textureFilter, true );
 					if ( pl_strcasecmp( materialVariable->name, "diffuseMap" ) == 0 )
 					{
 						materialVariable->hint = APE_MATERIAL_VAR_HINT_DIFFUSE;
@@ -595,15 +590,16 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						 * it needs to be able to pass a null material... probably revisit this later. */
 						// this now doubly sucks because we're assuming the diffuse map is representative of the "size" we care about,
 						// which isn't necessarily always going to be the case... *sigh*
+						PLGTexture *internal = texture->internal;
 						if ( material != nullptr )
 						{
-							if ( material->width < texture->w )
+							if ( material->width < internal->w )
 							{
-								material->width = texture->w;
+								material->width = internal->w;
 							}
-							if ( material->height < texture->h )
+							if ( material->height < internal->h )
 							{
-								material->height = texture->h;
+								material->height = internal->h;
 							}
 						}
 					}
@@ -825,8 +821,10 @@ static void ape_material_pass_free_( ApeMaterialPass *pass )
 		switch ( pass->variables[ i ].type )
 		{
 			case APE_MATERIAL_VAR_BUILTIN:
+				//TODO!!!
+				break;
 			case APE_MATERIAL_VAR_TEXTURE:
-				//TODO: right now this is all using the plgtexture crap directly, so... waaaahh!!!
+				ape_texture_release_( pass->variables[ i ].data.ptr );
 				break;
 			default:
 				qm_os_memory_free( pass->variables[ i ].data.ptr );
@@ -945,7 +943,7 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 			PLGTexture *texture = ape_rendererState_.lightmapTexture;
 			if ( texture == nullptr )
 			{
-				texture = blackFallbackTexture->internal;
+				texture = ape_get_default_texture_( APE_TEXTURE_WHITE )->internal;
 			}
 
 			PlgSetTexture( texture, *curUnit );
@@ -1027,13 +1025,11 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 		QmMathVector3f lightDirection;
 		if ( light != nullptr )
 		{
-			QmMathVector3f angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
-			PlAnglesAxes( angles, nullptr, nullptr, &lightDirection );
-			lightDirection = qm_math_vector3f_normalize( lightDirection );
+			lightDirection = ape_light_get_direction( light );
 		}
 		else
 		{
-			lightDirection = pl_vecOrigin3;
+			lightDirection = QM_MATH_VECTOR3F_ZERO;
 		}
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &lightDirection, false );
 	}
@@ -1180,7 +1176,7 @@ static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 	if ( ( var->hint == APE_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse ) ||
 	     ( var->hint == APE_MATERIAL_VAR_HINT_LIGHTMAP && materialSkipLightmap ) )
 	{
-		texture = whiteFallbackTexture->internal;
+		texture = ape_get_default_texture_( APE_TEXTURE_WHITE )->internal;
 	}
 	else if ( var->hint == APE_MATERIAL_VAR_HINT_NORMAL && materialSkipNormal )
 	{
@@ -1188,7 +1184,7 @@ static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 	}
 	else if ( var->hint == APE_MATERIAL_VAR_HINT_SPECULAR && materialSkipSpecular )
 	{
-		texture = blackFallbackTexture->internal;
+		texture = ape_get_default_texture_( APE_TEXTURE_BLACK )->internal;
 	}
 	else if ( var->type == APE_MATERIAL_VAR_RENDERTARGET )
 	{
@@ -1223,7 +1219,7 @@ static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 		}
 		else
 		{
-			texture = var->data.ptr;
+			texture = ( ( ApeTexture * ) var->data.ptr )->internal;
 		}
 	}
 

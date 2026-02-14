@@ -1,6 +1,7 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include "plcore/pl_hashtable.h"
+#include "qmos/public/qm_os_string.h"
 
 #include "ape_private.h"
 #include "ape_image.h"
@@ -8,17 +9,14 @@
 #include "renderer.h"
 #include "renderer_texture.h"
 
+#include "editor/editor.h"
+
 /////////////////////////////////////////////////////////////////
 // Old API crap
 
 PLGTexture *ape_texture_get_fallback( void )
 {
 	return ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
-}
-
-PLGTexture *ape_texture_load_direct_( const char *path, PLGTextureFilter filterMode )
-{
-	return ape_texture_cache_( path, filterMode, true )->internal;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -35,8 +33,79 @@ static void destroy_texture( void *userData )
 
 	//TODO: set hashtable lookup index to null...
 
+	qm_os_memory_free( texture->path );
+
+	PlDestroyImage( texture->image );
 	PlgDestroyTexture( texture->internal );
 	qm_os_memory_free( texture );
+}
+
+static void compute_average_colour( ApeTexture *texture )
+{
+	//BUG:	Turns out this doesn't work, because the textures
+	//		are getting loaded in before the editor instance is active...
+#if 0
+	if ( !ape_is_editor_active_() )
+	{
+		return;
+	}
+#endif
+
+	PLImageFormat format = PlGetImageFormat( texture->image );
+	if ( format != PL_IMAGEFORMAT_RGB8 && format != PL_IMAGEFORMAT_RGBA8 )
+	{
+		return;
+	}
+
+	// for the sake of speed, when determining the average colour,
+	// we're only going over parts of the image rather than the entire thing.
+	// this obviously isn't accurate but it's good enough for our needs.
+
+	unsigned int w     = PlGetImageWidth( texture->image );
+	unsigned int h     = PlGetImageHeight( texture->image );
+	unsigned int hw    = w / 2;
+	unsigned int hh    = h / 2;
+	unsigned int hsize = hw * hh;
+	if ( hsize == 0 )
+	{
+		ape_console_warning_( "Suspicious image size, skipping computation of average colour!\n" );
+		return;
+	}
+
+	unsigned int stride = PlGetImageFormatPixelSize( format );
+
+	struct
+	{
+		unsigned int r;
+		unsigned int g;
+		unsigned int b;
+		unsigned int a;
+	} out = {};
+
+	uint8_t *p = PlGetImageData( texture->image, 0, 0 );
+	for ( unsigned int i = 0; i < hsize; ++i, p += stride )
+	{
+		if ( format == PL_IMAGEFORMAT_RGB8 )
+		{
+			QmMathColour3ub *pixel = ( QmMathColour3ub * ) p;
+			out.r += pixel->r;
+			out.g += pixel->g;
+			out.b += pixel->b;
+		}
+		else
+		{
+			QmMathColour4ub *pixel = ( QmMathColour4ub * ) p;
+			out.r += pixel->r;
+			out.g += pixel->g;
+			out.b += pixel->b;
+			out.a += pixel->a;
+		}
+	}
+
+	texture->average.r = ( uint8_t ) ( out.r / hsize );
+	texture->average.g = ( uint8_t ) ( out.g / hsize );
+	texture->average.b = ( uint8_t ) ( out.b / hsize );
+	texture->average.a = ( uint8_t ) ( out.a / hsize );
 }
 
 ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, const PLGTextureFilter filter )
@@ -107,11 +176,18 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 		ape_console_error_( true, "Failed to generate texture from image (%s): %s\n", id, PlGetError() );
 	}
 
-	PlDestroyImage( imageData );
-
 	ApeTexture *texture = QM_OS_MEMORY_NEW( ApeTexture );
 	texture->filterMode = internalTexture->filter;
 	texture->internal   = internalTexture;
+	texture->image      = imageData;
+
+	compute_average_colour( texture );
+
+	if ( !ape_is_editor_active_() )
+	{
+		PlDestroyImage( texture->image );
+		texture->image = nullptr;
+	}
 
 	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 
@@ -213,6 +289,12 @@ void ape_initialize_textures_( void )
 	};
 	defaultTextures[ APE_TEXTURE_FALLBACK ] = ape_texture_generate_( "fallback", fallbackData, 2, 2, &QM_IMAGE_FORMAT_RGBA8_DESC(), PLG_TEXTURE_FILTER_NEAREST );
 	defaultTextures[ APE_TEXTURE_FALLBACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
+
+	defaultTextures[ APE_TEXTURE_WHITE ] = ape_texture_cache_( "materials/shaders/textures/white.png", PLG_TEXTURE_FILTER_NEAREST, true );
+	defaultTextures[ APE_TEXTURE_WHITE ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
+
+	defaultTextures[ APE_TEXTURE_BLACK ] = ape_texture_cache_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_NEAREST, true );
+	defaultTextures[ APE_TEXTURE_BLACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
 ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback )
@@ -225,18 +307,43 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 	}
 
 	texture             = QM_OS_MEMORY_NEW( ApeTexture );
+	texture->path       = qm_os_string_alloc( "%s", path );
 	texture->filterMode = filter;
 	texture->wrapMode   = PLG_TEXTURE_WRAP_MODE_REPEAT;
-	PlSetupPath( texture->path, true, "%s", path );
 
 	fetch_texture_config( texture );
 
-	texture->internal = PlgLoadTextureFromImage( path, texture->filterMode );
+	texture->image = PlLoadImage( path );
+	if ( texture->image == nullptr )
+	{
+		ape_console_warning_( "Failed to load image (%s): %s\n", path, PlGetError() );
+		goto cleanup;
+	}
+
+	// upload it
+
+	texture->internal = PlgCreateTexture();
 	if ( texture->internal == nullptr )
 	{
-		ape_console_warning_( "Failed to load texture (%s): %s\n", path, PlGetError() );
-		qm_os_memory_free( texture );
-		return ( useFallback ) ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
+		ape_console_warning_( "Failed to allocate internal texture (%s): %s\n", path, PlGetError() );
+		goto cleanup;
+	}
+
+	//TODO: wat?
+	texture->internal->filter = texture->filterMode;
+
+	if ( !PlgUploadTextureImage( texture->internal, texture->image ) )
+	{
+		ape_console_warning_( "Failed to upload texture (%s): %s\n", path, PlGetError() );
+		goto cleanup;
+	}
+
+	compute_average_colour( texture );
+
+	if ( !ape_is_editor_active_() )
+	{
+		PlDestroyImage( texture->image );
+		texture->image = nullptr;
 	}
 
 	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
@@ -246,6 +353,11 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 	ape_memory_add_reference( &texture->reference );
 
 	return texture;
+
+cleanup:
+	destroy_texture( texture );
+
+	return useFallback ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
 }
 
 void ape_texture_release_( ApeTexture *texture )
