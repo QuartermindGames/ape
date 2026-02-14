@@ -515,8 +515,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 	if ( ape_config_.world.showNodeVolumes && ( &self->pvs.rooms[ 0 ] == visibleRoom ) )
 	{
 		PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
-		PLMatrix4       transform         = ape_world_node_get_transform( worldNode );
-		QmMathVector3f  pos               = PlGetMatrix4Translation( &transform );
+		QmMathVector3f  pos               = ape_world_node_get_position( worldNode );
 		ape_draw_debug_axis( pos, worldNode->angles, 16.0f );
 		ape_draw_debug_aabb( &worldNode->bounds, PL_COLOUR_PURPLE );
 		ape_draw_debug_aabb( &transformedBounds, PL_COLOUR_ORANGE );

@@ -76,32 +76,37 @@ void *ape_world_node_get_property_pointer( ApeWorldNode *self, const ApeProperty
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+static void compute_bounds( ApeWorldNode *self, const ApeWorldNode *other )
+{
+	PLCollisionAABB localBounds = ape_world_node_get_transformed_local_bounds( other );
+	localBounds.mins            = qm_math_vector3f_add( localBounds.mins, localBounds.origin );
+	localBounds.maxs            = qm_math_vector3f_add( localBounds.maxs, localBounds.origin );
+
+	for ( unsigned int i = 0; i < 3; ++i )
+	{
+		if ( localBounds.maxs.v[ i ] > self->bounds.maxs.v[ i ] )
+		{
+			self->bounds.maxs.v[ i ] = localBounds.maxs.v[ i ];
+		}
+		if ( localBounds.mins.v[ i ] < self->bounds.mins.v[ i ] )
+		{
+			self->bounds.mins.v[ i ] = localBounds.mins.v[ i ];
+		}
+	}
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, other->children, i )
+	{
+		compute_bounds( self, child );
+	}
+}
+
 void ape_world_node_compute_bounds_( ApeWorldNode *self )
 {
 	self->bounds.maxs = qm_math_vector3f( -FLT_MAX, -FLT_MAX, -FLT_MAX );
 	self->bounds.mins = qm_math_vector3f( FLT_MAX, FLT_MAX, FLT_MAX );
 
-	for ( unsigned int i = 0; i < 3; ++i )
-	{
-		PLCollisionAABB localBounds = ape_world_node_get_transformed_local_bounds( self );
-		localBounds.mins            = qm_math_vector3f_add( localBounds.mins, localBounds.origin );
-		localBounds.maxs            = qm_math_vector3f_add( localBounds.maxs, localBounds.origin );
-
-		if ( PL_VECTOR3_I( localBounds.maxs, i ) > PL_VECTOR3_I( self->bounds.maxs, i ) )
-		{
-			PL_VECTOR3_I( self->bounds.maxs, i ) = PL_VECTOR3_I( localBounds.maxs, i );
-		}
-		if ( PL_VECTOR3_I( localBounds.mins, i ) < PL_VECTOR3_I( self->bounds.mins, i ) )
-		{
-			PL_VECTOR3_I( self->bounds.mins, i ) = PL_VECTOR3_I( localBounds.mins, i );
-		}
-	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, self->children, i )
-	{
-		ape_world_node_compute_bounds_( child );
-	}
+	compute_bounds( self, self );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -364,9 +369,6 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *
 	self->localBounds.maxs = *maxs;
 
 	// need to go ahead and recalc bounds
-
-	self->bounds = self->localBounds;
-
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
@@ -380,6 +382,8 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *
 	}
 
 	// and now wake our parents up...
+
+	ape_world_node_compute_bounds_( self );
 }
 
 ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type )
