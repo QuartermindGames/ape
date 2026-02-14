@@ -39,6 +39,7 @@ namespace forge
 		long on_toggle_selection_buffer( FXObject *, FXSelector, void * );
 		long on_toggle_post_processing( FXObject *, FXSelector, void * );
 		long on_toggle_room_visibility( FXObject *, FXSelector, void * );
+		long on_toggle_lightmap_overlay( FXObject *, FXSelector, void * );
 
 		long on_build_lightmap( FXObject *, FXSelector, void * );
 
@@ -72,6 +73,7 @@ namespace forge
 			ID_TOGGLE_SELECTION_BUFFER,
 			ID_TOGGLE_POST_PROCESSING,
 			ID_TOGGLE_ROOM_VISIBILITY,
+			ID_TOGGLE_LIGHTMAP_OVERLAY,
 
 			ID_BUILD_LIGHTMAPS,
 

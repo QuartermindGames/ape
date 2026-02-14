@@ -33,6 +33,7 @@ MainWindowMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_SELECTION_BUFFER, forge::MainWindow::on_toggle_selection_buffer ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_POST_PROCESSING, forge::MainWindow::on_toggle_post_processing ),
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_ROOM_VISIBILITY, forge::MainWindow::on_toggle_room_visibility ),
+        FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_TOGGLE_LIGHTMAP_OVERLAY, forge::MainWindow::on_toggle_lightmap_overlay ),
 
         FXMAPFUNC( SEL_COMMAND, forge::MainWindow::ID_BUILD_LIGHTMAPS, forge::MainWindow::on_build_lightmap ),
 
@@ -73,6 +74,7 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCheck( menuPane, "Show Selection Buffer\t\tFor debugging selection buffer.", this, ID_TOGGLE_SELECTION_BUFFER );
 	( new FXMenuCheck( menuPane, "Post Processing\t\tEnable/disable post-processing.", this, ID_TOGGLE_POST_PROCESSING ) )->setCheck( true );
 	new FXMenuCheck( menuPane, "Show All Rooms\t\tToggles visibility of all rooms.", this, ID_TOGGLE_ROOM_VISIBILITY );
+	new FXMenuCheck( menuPane, "Show Lightmap Overlay\t\tOverlays the lightmap on the screen.", this, ID_TOGGLE_LIGHTMAP_OVERLAY );
 	new FXMenuTitle( menuBar_, "&View", nullptr, menuPane );
 
 	// build
@@ -357,6 +359,12 @@ long forge::MainWindow::on_toggle_post_processing( FXObject *object, FXSelector,
 long forge::MainWindow::on_toggle_room_visibility( FXObject *object, FXSelector, void * )
 {
 	PlSetConsoleVariableByName( "world.showAllRooms", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	return TRUE;
+}
+
+long forge::MainWindow::on_toggle_lightmap_overlay( FXObject *object, FXSelector, void * )
+{
+	PlSetConsoleVariableByName( "editor.showLightmapOverlay", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
