@@ -368,21 +368,6 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *
 	self->localBounds.mins = *mins;
 	self->localBounds.maxs = *maxs;
 
-	// need to go ahead and recalc bounds
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, self->children, i )
-	{
-		//TODO: THIS SHOULD BE ACCOUNTING FOR TRANSFORMS YOU DUMB BASTARD
-		if ( child->bounds.mins.x < self->bounds.mins.x ) { self->bounds.mins.x = child->bounds.mins.x; }
-		if ( child->bounds.mins.y < self->bounds.mins.y ) { self->bounds.mins.y = child->bounds.mins.y; }
-		if ( child->bounds.mins.z < self->bounds.mins.z ) { self->bounds.mins.z = child->bounds.mins.z; }
-		if ( child->bounds.maxs.x > self->bounds.maxs.x ) { self->bounds.maxs.x = child->bounds.maxs.x; }
-		if ( child->bounds.maxs.y > self->bounds.maxs.y ) { self->bounds.maxs.y = child->bounds.maxs.y; }
-		if ( child->bounds.maxs.z > self->bounds.maxs.z ) { self->bounds.maxs.z = child->bounds.maxs.z; }
-	}
-
-	// and now wake our parents up...
-
 	ape_world_node_compute_bounds_( self );
 }
 
