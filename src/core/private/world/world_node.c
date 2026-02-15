@@ -107,6 +107,11 @@ void ape_world_node_compute_bounds_( ApeWorldNode *self )
 	self->bounds.mins = qm_math_vector3f( FLT_MAX, FLT_MAX, FLT_MAX );
 
 	compute_bounds( self, self );
+
+	if ( self->parent != nullptr )
+	{
+		ape_world_node_compute_bounds_( self->parent );
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -196,6 +201,8 @@ static void update_transform( ApeWorldNode *self )
 {
 	update_local_transform( self );
 	update_world_transform( self );
+
+	ape_world_node_compute_bounds_( self );
 }
 
 ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles )
@@ -658,8 +665,6 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 			childBranch = acm_get_next_child( childBranch );
 		}
 	}
-
-	ape_world_node_compute_bounds_( self );
 
 	update_transform( self );
 
