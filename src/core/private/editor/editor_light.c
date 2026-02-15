@@ -127,7 +127,10 @@ static bool setup_face_lightmap( const ApeRoom *room, ApeBrushFace *face, const 
 
 static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeLight *light )
 {
-	if ( light->radius <= 0.0f )
+	// we're only doing this check for anything other than the sun, because
+	// at the moment we don't really give a crap about the radius for sun sources
+	// (and also because some of our rooms have it set to 0 and some don't, wheee...)
+	if ( light->type != APE_LIGHT_TYPE_SUN && light->radius <= 0.0f )
 	{
 		return;
 	}
@@ -195,6 +198,8 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			{
 				PLCollisionAABB bounds = ape_world_node_get_bounds( APE_WORLD_NODE( room ) );
 
+				//TODO: this is unreliable, bounds will change at runtime - this should be reversed, cast from luxel out rather than casting from luxel to bounds...
+				//		we're also seeing weird precision issues because of this at times, so, yeah...
 				lightDir = ape_light_get_direction( light );
 				lightPos = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( qm_math_vector3f_invert( lightDir ), bounds.maxs.y * bounds.maxs.y ) );
 			}
