@@ -598,7 +598,8 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 
 		for ( unsigned int i = 0; i < visibleRoom->numLights; ++i )
 		{
-			if ( visibleRoom->lights[ i ]->colour.a == 0.0f )
+			ApeLight *light = visibleRoom->lights[ i ];
+			if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC && light->flags & APE_LIGHT_FLAG_ENABLED ) )
 			{
 				continue;
 			}
@@ -634,7 +635,7 @@ static void draw_solid_room_lit( const ApeCameraVisibleRoom *visibleRoom, ApeCam
 
 	//TODO: viewport clipping per light volume, there was some code below for it but I've scrapped it for now
 
-	const bool drawShadows = !depth && ape_config_.renderer.useStencilShadowVolumes && ( ape_light_get_shadow_type( light ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC );
+	const bool drawShadows = !depth && ape_config_.renderer.useStencilShadowVolumes && ape_light_get_shadow_type( light ) == APE_LIGHT_SHADOW_TYPE_DYNAMIC;
 	if ( drawShadows )
 	{
 		ape_rendererState_.cullMode = APE_RENDERER_CULL_MODE_NONE;
@@ -707,29 +708,6 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 			ApeLight *light = visibleRoom->lights[ i ];
 			if ( !( light->flags & APE_LIGHT_FLAG_DYNAMIC && light->flags & APE_LIGHT_FLAG_ENABLED ) )
 			{
-				continue;
-			}
-
-			if ( ape_config_.renderer.lightJitterSamples > 0 )
-			{
-				unsigned int seed = ape_config_.renderer.lightJitterSamples;
-
-				QmMathVector3f storePos   = light->base.position;
-				float          storePower = light->colour.a;
-				for ( unsigned int j = 0; j < ape_config_.renderer.lightJitterSamples; ++j )
-				{
-#define JITTER_VARIATION ( qm_os_random_float( &seed, ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) - \
-	                       qm_os_random_float( &seed, ( ( float ) i ) * ( ape_config_.renderer.lightJitterSamples * 2.0f ) / ape_config_.renderer.lightJitterSamples ) )
-					light->base.position.x += JITTER_VARIATION;
-					light->base.position.y += JITTER_VARIATION;
-					light->base.position.z += JITTER_VARIATION;
-					light->colour.a = ( i * 1.0f / ape_config_.renderer.lightJitterSamples );
-
-					draw_solid_room_lit( visibleRoom, camera, visibleRoom->lights[ i ], depth );
-				}
-
-				light->base.position = storePos;
-				light->colour.a      = storePower;
 				continue;
 			}
 

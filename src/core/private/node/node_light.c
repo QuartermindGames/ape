@@ -159,6 +159,14 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 
 bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
 {
+	// we're only doing this check for anything other than the sun, because
+	// at the moment we don't really give a crap about the radius for sun sources
+	// (and also because some of our rooms have it set to 0 and some don't, wheee...)
+	if ( self->type != APE_LIGHT_TYPE_SUN && self->radius <= 0.0f )
+	{
+		return false;
+	}
+
 	if ( self->type != APE_LIGHT_TYPE_SUN && !com_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &face->bounds, nullptr ) )
 	{
 		return false;
