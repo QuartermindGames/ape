@@ -77,6 +77,7 @@ set(SS1_SOURCES
 
         private/ss1/qm1_character.c
         private/ss1/qm1_menu.c
+        private/ss1/qm1_menu_hud.c
 
         private/ss1/ss1_actions.c
         private/ss1/ss1_game.c

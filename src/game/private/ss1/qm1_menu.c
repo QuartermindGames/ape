@@ -129,8 +129,14 @@ static GamePieMenu *interactPie;
 static ApeGuiFont *menuFont;
 static ApeGuiFont *menuTitleFont;
 
+void qm1_menu_hud_initialize_();
+void qm1_menu_hud_shutdown_();
+void qm1_menu_hud_draw_( const ApeViewport *viewport );
+
 void ss1_menu_initialize_( void )
 {
+	qm1_menu_hud_initialize_();
+
 	menuFont      = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
 	menuTitleFont = gui_font_load( menuTitleFontPath, gui_get_default_font( GUI_FONT_DEFAULT_LARGE ) );
 
@@ -187,6 +193,8 @@ void ss1_menu_initialize_( void )
 
 void ss1_menu_shutdown_()
 {
+	qm1_menu_hud_shutdown_();
+
 	ape_gui_font_destroy( menuFont );
 }
 
@@ -282,7 +290,7 @@ void ss1_menu_draw( const ApeViewport *viewport )
 		return;
 	}
 
-	draw_hud( viewport );
+	qm1_menu_hud_draw_( viewport );
 
 	// draw our fancy little pie menu for interactions
 	menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );
