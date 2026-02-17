@@ -127,14 +127,6 @@ static bool setup_face_lightmap( const ApeRoom *room, ApeBrushFace *face, const 
 
 static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeLight *light )
 {
-	// we're only doing this check for anything other than the sun, because
-	// at the moment we don't really give a crap about the radius for sun sources
-	// (and also because some of our rooms have it set to 0 and some don't, wheee...)
-	if ( light->type != APE_LIGHT_TYPE_SUN && light->radius <= 0.0f )
-	{
-		return;
-	}
-
 	if ( !ape_light_test_face( light, face ) )
 	{
 		return;
@@ -209,13 +201,58 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 				lightDir = qm_math_vector3f_normalize( lightDir );
 			}
 
-			ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
+			//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
 
 			QmMathColour4f lightColour = light->colour;
 
 			ApeMaterial *material = face->material;
 			if ( ape_material_can_receive_shadows( material ) && light->flags & APE_LIGHT_FLAG_SHADOWS )
 			{
+#if 0// penumbra - this should really just produce some sort of explicit sphere (but jittering works quite well anyway)
+
+				float                         shadowFactor       = 0.0f;
+				static constexpr unsigned int NUM_SHADOW_SAMPLES = 32;
+				unsigned int                  seed               = NUM_SHADOW_SAMPLES;
+				for ( unsigned int i = 0; i < NUM_SHADOW_SAMPLES; ++i )
+				{
+#	define JITTER_VARIATION ( qm_os_random_float( &seed, ( ( float ) i ) * ( NUM_SHADOW_SAMPLES * 0.5f ) / NUM_SHADOW_SAMPLES ) - \
+		                       qm_os_random_float( &seed, ( ( float ) i ) * ( NUM_SHADOW_SAMPLES * 0.5f ) / NUM_SHADOW_SAMPLES ) )
+
+					QmMathVector3f samplePos = lightPos;
+					samplePos.x += JITTER_VARIATION;
+					samplePos.y += JITTER_VARIATION;
+					samplePos.z += JITTER_VARIATION;
+
+					QmMathVector3f sampleDir = qm_math_vector3f_normalize( qm_math_vector3f_sub( luxelPos, samplePos ) );
+
+					PLCollisionRay ray = {};
+					ray.origin         = samplePos;
+					ray.direction      = sampleDir;
+
+					ApeCollisionIntersection result = {};
+					if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
+					{
+						continue;
+					}
+
+					if ( result.face == face )
+					{
+						shadowFactor += 1.0f;
+					}
+				}
+
+				shadowFactor /= NUM_SHADOW_SAMPLES;
+				if ( shadowFactor <= 0.0f )
+				{
+					continue;
+				}
+
+				lightColour.r *= shadowFactor;
+				lightColour.g *= shadowFactor;
+				lightColour.b *= shadowFactor;
+
+#else
+
 				PLCollisionRay ray = {};
 				ray.origin         = lightPos;
 				ray.direction      = lightDir;
@@ -223,11 +260,11 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 				ApeCollisionIntersection result = {};
 				if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
 				{
-					ape_draw_debug_line( lightPos, qm_math_vector3f_add( lightPos, qm_math_vector3f_scale_float( lightDir, 9999.0f ) ), PL_COLOUR_RED );
+					//ape_draw_debug_line( lightPos, qm_math_vector3f_add( lightPos, qm_math_vector3f_scale_float( lightDir, 9999.0f ) ), PL_COLOUR_RED );
 					continue;
 				}
 
-				ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_GREEN );
+				//ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_GREEN );
 
 				if ( result.face != face )
 				{
@@ -240,13 +277,13 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 					ApeTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
 					if ( texture != nullptr )
 					{
-#if 0
+#	if 0
 						if ( texture->image != nullptr )
 						{
 							//TODO: riiiight, need to fetch the specific pixel we hit
 						}
 						else
-#endif
+#	endif
 						{
 							lightColour.r *= QM_MATH_BTOF( texture->average.r );
 							lightColour.g *= QM_MATH_BTOF( texture->average.g );
@@ -257,7 +294,10 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 
 					//TODO: handle blended surfaces, refraction, yadda yadda
 				}
+
+#endif
 			}
+
 
 			// just pulled much of the below from our existing shaders...
 
