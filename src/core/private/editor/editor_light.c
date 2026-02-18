@@ -132,35 +132,23 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 		return;
 	}
 
-	unsigned int x = face->lightmapArea.x * room->lightmapEdgeLength;
-	unsigned int y = face->lightmapArea.y * room->lightmapEdgeLength;
 	unsigned int w = ( face->lightmapArea.z - face->lightmapArea.x ) * room->lightmapEdgeLength;
 	unsigned int h = ( face->lightmapArea.w - face->lightmapArea.y ) * room->lightmapEdgeLength;
+	if ( w == 0 || h == 0 )
+	{
+		return;
+	}
+
+	unsigned int x = face->lightmapArea.x * room->lightmapEdgeLength;
+	unsigned int y = face->lightmapArea.y * room->lightmapEdgeLength;
 
 	QmMathPlaneProjection projection = qm_math_plane_compute_projection( &( QmMathPlane ) {
 	        .normal = face->normal,
 	} );
 
-	QmMathVector3f axis1, axis2;
-	if ( projection == QM_MATH_PLANE_PROJECTION_XY )
-	{
-		axis1 = QM_MATH_PROJECT_XY[ 0 ];
-		axis2 = QM_MATH_PROJECT_XY[ 1 ];
-	}
-	else if ( projection == QM_MATH_PLANE_PROJECTION_XZ )
-	{
-		axis1 = QM_MATH_PROJECT_XZ[ 0 ];
-		axis2 = QM_MATH_PROJECT_XZ[ 1 ];
-	}
-	else
-	{
-		axis1 = QM_MATH_PROJECT_YZ[ 0 ];
-		axis2 = QM_MATH_PROJECT_YZ[ 1 ];
-	}
-
 	QmMathVector3f faceOrigin = face->bounds.absOrigin;
-	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( axis1, w / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
-	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( axis2, h / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
+	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_AXIS[ projection ][ 0 ], w / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
+	faceOrigin                = qm_math_vector3f_sub( faceOrigin, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_AXIS[ projection ][ 1 ], h / 2.0f * LIGHTMAP_LUXEL_SIZE ) );
 
 	float planeDistance = -qm_math_vector3f_dot_product( face->normal, face->bounds.absOrigin );
 
@@ -176,8 +164,8 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			float fy = row * LIGHTMAP_LUXEL_SIZE + LIGHTMAP_LUXEL_SIZE / 2.0f;
 
 			QmMathVector3f luxelPos = faceOrigin;
-			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis1, fx ) );
-			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( axis2, fy ) );
+			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_AXIS[ projection ][ 0 ], fx ) );
+			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_AXIS[ projection ][ 1 ], fy ) );
 
 			// this attempts to reproject it, so we can deal with angled surfaces
 			// though this isn't perfect, it's 2D reprojected to 3D so the luxel span isn't correct anymore (aaarrrghhh)
@@ -208,10 +196,10 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			ApeMaterial *material = face->material;
 			if ( ape_material_can_receive_shadows( material ) && light->flags & APE_LIGHT_FLAG_SHADOWS )
 			{
-#if 0// penumbra - this should really just produce some sort of explicit sphere (but jittering works quite well anyway)
+#if 1// penumbra - this should really just produce some sort of explicit sphere (but jittering works quite well anyway)
 
 				float                         shadowFactor       = 0.0f;
-				static constexpr unsigned int NUM_SHADOW_SAMPLES = 32;
+				static constexpr unsigned int NUM_SHADOW_SAMPLES = 16;
 				unsigned int                  seed               = NUM_SHADOW_SAMPLES;
 				for ( unsigned int i = 0; i < NUM_SHADOW_SAMPLES; ++i )
 				{
