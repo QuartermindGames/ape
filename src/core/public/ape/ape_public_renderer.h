@@ -173,8 +173,6 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material );
  */
 void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights );
 
-unsigned int ape_material_get_flags( const ApeMaterial *self );
-
 ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, unsigned int pass );
 
 ApeShaderProgram *ape_material_pass_get_shader_program( const ApeMaterialPass *self );

@@ -89,6 +89,18 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 	return stage;
 }
 
+static void check_shader_capability( ApeShaderProgram *self, const char *definition )
+{
+	if ( strcmp( definition, "LIGHTING" ) == 0 )
+	{
+		self->flags |= APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING;
+	}
+	else if ( strcmp( definition, "LIGHTMAP" ) == 0 )
+	{
+		self->flags |= APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTMAP;
+	}
+}
+
 static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBranch *root )
 {
 	const char *internalName = acm_get_string( root, "description", nullptr );
@@ -174,6 +186,8 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 				}
 
 				acm_branch_get_string( subChild, fragmentDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				check_shader_capability( program, fragmentDefinitions[ i ] );
+
 				subChild = acm_get_next_child( subChild );
 			}
 		}
@@ -196,6 +210,8 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 				}
 
 				acm_branch_get_string( subChild, vertexDefinitions[ i ], PLG_MAX_DEFINITION_LENGTH );
+				check_shader_capability( program, vertexDefinitions[ i ] );
+
 				subChild = acm_get_next_child( subChild );
 			}
 		}
@@ -217,12 +233,6 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	}
 
 	program->internal = internal;
-
-	if ( ( child = acm_get_child_by_name( root, "baseLightingPass" ) ) != nullptr )
-	{
-		// for now just apply a flag, we'll deal with fancy things later...
-		program->flags |= APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING;
-	}
 
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.

@@ -29,10 +29,11 @@ typedef enum ApeMaterialBuiltinVar
 
 typedef enum ApeMaterialFlag
 {
-	PL_BITFLAG( APE_MATERIAL_FLAG_MIRROR, 0U ),
-	PL_BITFLAG( APE_MATERIAL_FLAG_CAST_SHADOWS, 1U ),
-	PL_BITFLAG( APE_MATERIAL_FLAG_RECEIVE_SHADOWS, 2U ),
-	PL_BITFLAG( APE_MATERIAL_FLAG_BLENDED, 3U ),
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_MIRROR, 0U ),
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_CAST_SHADOWS, 1U ),
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_RECEIVE_SHADOWS, 2U ),
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_BLENDED, 3U ),
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_LIGHTMAP, 4U ),// material supports a lightmap
 } ApeMaterialFlag;
 
 #define APE_MATERIAL_VAR_NAME_LENGTH 64
@@ -247,9 +248,10 @@ typedef enum ApeShaderProgramGlobalUniform
 	APE_SHADER_MAX_UNIFORMS
 } ApeShaderProgramGlobalUniform;
 
-typedef enum ApeShaderprogramFlag
+typedef enum ApeShaderProgramFlag
 {
 	PL_BITFLAG( APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING, 0 ),
+	PL_BITFLAG( APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTMAP, 1 ),
 } ApeShaderProgramFlag;
 
 typedef struct ApeShaderProgram
@@ -291,6 +293,8 @@ ApeTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 bool ape_material_can_cast_shadows( const ApeMaterial *self );
 bool ape_material_can_receive_shadows( const ApeMaterial *self );
 bool ape_material_is_blended( const ApeMaterial *self );
+
+unsigned int ape_material_get_flags_( const ApeMaterial *self );
 
 void ape_tick_materials_( double delta );
 

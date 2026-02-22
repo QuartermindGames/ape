@@ -171,11 +171,6 @@ const char *ape_material_get_path( const ApeMaterial *material )
 	return material->path;
 }
 
-unsigned int ape_material_get_flags( const ApeMaterial *self )
-{
-	return self->flags;
-}
-
 ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, const unsigned int pass )
 {
 	if ( pass >= self->numPasses )
@@ -761,6 +756,11 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 			*currentPass                   = programIndex->defaultPass;
 			currentPass->program           = programIndex;
 
+			if ( programIndex->flags & APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTMAP )
+			{
+				material->flags |= APE_MATERIAL_FLAG_LIGHTMAP;
+			}
+
 			ape_parse_material_pass_( material, node, currentPass );
 			if ( currentPass->blendMode[ 0 ] != PLG_BLEND_NONE || currentPass->blendMode[ 1 ] != PLG_BLEND_NONE )
 			{
@@ -1168,6 +1168,11 @@ bool ape_material_can_receive_shadows( const ApeMaterial *self )
 bool ape_material_is_blended( const ApeMaterial *self )
 {
 	return self->flags & APE_MATERIAL_FLAG_BLENDED;
+}
+
+unsigned int ape_material_get_flags_( const ApeMaterial *self )
+{
+	return self->flags;
 }
 
 static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
