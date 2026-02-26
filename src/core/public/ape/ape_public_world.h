@@ -55,7 +55,7 @@ typedef enum ApeWorldNodeType
 
 typedef enum ApeWorldNodeClassFlag
 {
-	PL_BITFLAG( APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR, 0 ),
+	QM_OS_BIT_FLAG( APE_WORLD_NODE_CLASS_FLAG_NO_EDITOR, 0 ),
 } ApeWorldNodeClassFlag;
 
 typedef void *( *ApeWorldNodeClassNetSerializeFunction )( ApeWorldNode *self, unsigned int *dstLength );
@@ -104,8 +104,8 @@ typedef struct ApeWorldNodeClass
 
 typedef enum ApeWorldNodeFlag
 {
-	PL_BITFLAG( APE_WORLD_NODE_FLAG_HIDDEN, 0 ), // shouldn't be displayed visually
-	PL_BITFLAG( APE_WORLD_NODE_FLAG_DISCARD, 1 ),// if marked, won't be serialized and will be discarded
+	QM_OS_BIT_FLAG( APE_WORLD_NODE_FLAG_HIDDEN, 0 ), // shouldn't be displayed visually
+	QM_OS_BIT_FLAG( APE_WORLD_NODE_FLAG_DISCARD, 1 ),// if marked, won't be serialized and will be discarded
 } ApeWorldNodeFlag;
 
 //TODO: why is this public!?
@@ -315,10 +315,10 @@ typedef enum ApeBrushType
 
 typedef enum ApeBrushFaceFlag
 {
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0U ),// hides the face
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),// reflects the current room
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),// allows for passing through to another destination
-	PL_BITFLAG( APE_BRUSH_FACE_FLAG_CLOSED, 3U ),// if a portal/mirror, indicates that the vis-test shouldn't pass
+	QM_OS_BIT_FLAG( APE_BRUSH_FACE_FLAG_HIDDEN, 0U ),// hides the face
+	QM_OS_BIT_FLAG( APE_BRUSH_FACE_FLAG_MIRROR, 1U ),// reflects the current room
+	QM_OS_BIT_FLAG( APE_BRUSH_FACE_FLAG_PORTAL, 2U ),// allows for passing through to another destination
+	QM_OS_BIT_FLAG( APE_BRUSH_FACE_FLAG_CLOSED, 3U ),// if a portal/mirror, indicates that the vis-test shouldn't pass
 } ApeBrushFaceFlag;
 
 typedef struct ApeBrushFaceVertex
@@ -335,6 +335,9 @@ typedef struct ApeBrushFaceVertex
 
 static constexpr unsigned int APE_BRUSH_FACE_MAX_TAG  = 64;
 static constexpr unsigned int APE_BRUSH_FACE_MAX_PATH = sizeof( PLPath );
+
+static constexpr uint8_t APE_BRUSH_FACE_LIGHTMAP_INVALID        = ( uint8_t ) -1;
+static constexpr uint8_t APE_BRUSH_FACE_LIGHTMAP_DEFAULT_LUXELS = 4;
 
 typedef struct ApeBrushFace
 {
@@ -354,9 +357,11 @@ typedef struct ApeBrushFace
 	ApeBrushFaceVertex vertices[ APE_BRUSH_MAX_FACE_VERTICES ];     // list of vertices
 	unsigned int       numVertices;
 
-	PLCollisionAABB bounds;
+	PLCollisionAABB bounds;//TODO: replace this with a sphere check
 
 	QmMathVector4f lightmapArea;
+	uint8_t        lightmapIndex;
+	uint8_t        lightmapLuxelDensity;
 
 	unsigned int flags;
 
@@ -368,6 +373,8 @@ typedef struct ApeBrushFace
 
 	struct QmOsSharedPtr *ptr;
 } ApeBrushFace;
+
+void ape_brush_face_setup( ApeBrushFace *self );
 
 void ape_brush_face_fit_material( ApeBrushFace *self );
 
@@ -542,7 +549,7 @@ typedef enum ApeCollisionType
 
 typedef enum ApeCollisionGroup
 {
-	PL_BITFLAG( APE_COLLISION_GROUP_BRUSHES, 0U ),
+	QM_OS_BIT_FLAG( APE_COLLISION_GROUP_BRUSHES, 0U ),
 
 	// games can provide custom flags after this...
 	APE_COLLISION_GROUP_END = APE_COLLISION_GROUP_BRUSHES,
@@ -607,11 +614,11 @@ typedef enum ApeLightType
 
 typedef enum ApeLightFlag
 {
-	PL_BITFLAG( APE_LIGHT_FLAG_DYNAMIC, 0U ),        // means the light is not baked, and can be moved at runtime
-	PL_BITFLAG( APE_LIGHT_FLAG_SHADOWS, 1U ),        // if enabled without runtime shadows flag, will cast lightmap shadows
-	PL_BITFLAG( APE_LIGHT_FLAG_RUNTIME_SHADOWS, 2U ),// treated as stencil shadow volumes
-	PL_BITFLAG( APE_LIGHT_FLAG_ENABLED, 3U ),        // light will only be active if this flag is present
-	PL_BITFLAG( APE_LIGHT_FLAG_FLARE, 4U ),          // light will produce a lensflare effect when visible
+	QM_OS_BIT_FLAG( APE_LIGHT_FLAG_DYNAMIC, 0U ),        // means the light is not baked, and can be moved at runtime
+	QM_OS_BIT_FLAG( APE_LIGHT_FLAG_SHADOWS, 1U ),        // if enabled without runtime shadows flag, will cast lightmap shadows
+	QM_OS_BIT_FLAG( APE_LIGHT_FLAG_RUNTIME_SHADOWS, 2U ),// treated as stencil shadow volumes
+	QM_OS_BIT_FLAG( APE_LIGHT_FLAG_ENABLED, 3U ),        // light will only be active if this flag is present
+	QM_OS_BIT_FLAG( APE_LIGHT_FLAG_FLARE, 4U ),          // light will produce a lensflare effect when visible
 } ApeLightFlag;
 
 /// A light can only be spawned in while the world is active.

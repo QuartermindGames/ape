@@ -14,6 +14,8 @@ typedef struct PLHashTable PLHashTable;
 
 typedef struct QmMathPlane QmMathPlane;
 
+typedef struct AuxTexturePackerNode AuxTexturePackerNode;
+
 typedef struct ApeRendererStats
 {
 	unsigned int numBatches;
@@ -46,18 +48,25 @@ static constexpr PLGCullMode        APE_RENDERER_DEFAULT_CULL_FUNCTION  = PLG_CU
 // Lighting
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define APE_RENDERER_LIGHTMAP_USE_FLOATS
-
 typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 {
-#if defined( APE_RENDERER_LIGHTMAP_USE_FLOATS )
 	QmMathColour3f16 colour;
 	//QmMathVector3f position;
 	//QmMathVector3f normal;
-#else
-	QmMathColour3ub colour;
-#endif
 } ApeLightmapPixel;
+
+typedef struct ApeLightmap
+{
+	ApeLightmapPixel     *pixels;
+	ApeTexture           *texture;
+	AuxTexturePackerNode *packer;
+} ApeLightmap;
+
+ApeLightmap *ape_lightmap_create_( unsigned int edgeLength );
+void         ape_lightmap_destroy_( ApeLightmap *self );
+void         ape_lightmap_upload_( ApeLightmap *self, unsigned int edgeLength );
+void         ape_lightmap_serialize_( const ApeLightmap *self, unsigned int edgeLength, AcmBranch *root );
+ApeLightmap *ape_lightmap_deserialize_( unsigned int edgeLength, AcmBranch *root );
 
 typedef struct ApeLight
 {
@@ -92,10 +101,10 @@ typedef enum ApeCullMode
 
 typedef enum ApeRendererPassFlag
 {
-	PL_BITFLAG( APE_RENDERER_PASS_FLAG_DEPTH_PREPASS, 0 ),
-	PL_BITFLAG( APE_RENDERER_PASS_FLAG_OPAQUE, 1 ),
-	PL_BITFLAG( APE_RENDERER_PASS_FLAG_TRANSLUCENT, 2 ),
-	PL_BITFLAG( APE_RENDERER_PASS_FLAG_PORTAL, 3 ),
+	QM_OS_BIT_FLAG( APE_RENDERER_PASS_FLAG_DEPTH_PREPASS, 0 ),
+	QM_OS_BIT_FLAG( APE_RENDERER_PASS_FLAG_OPAQUE, 1 ),
+	QM_OS_BIT_FLAG( APE_RENDERER_PASS_FLAG_TRANSLUCENT, 2 ),
+	QM_OS_BIT_FLAG( APE_RENDERER_PASS_FLAG_PORTAL, 3 ),
 } ApeRendererPassFlag;
 
 typedef struct ApeRendererPassState
@@ -122,7 +131,8 @@ typedef struct ApeRendererPassState
 	ApeLightPointerArray lights;
 	unsigned int         numLights;
 
-	PLGTexture *lightmapTexture;
+	PLGTexture  *lightmapTexture;
+	unsigned int lightmapIndex;
 } ApeRendererPassState;
 extern ApeRendererPassState ape_rendererState_;
 

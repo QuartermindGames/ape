@@ -144,6 +144,9 @@ static void spawn_portal( ApeEntity *self )
 	GamePortalEntity *lastPortal       = lastPortalEntity != nullptr ? GAME_PORTAL_ENTITY( lastPortalEntity ) : nullptr;
 
 	ApeBrushFace *face = &brush->faces[ 0 ];
+
+	ape_brush_face_setup( face );
+
 	face->parent       = brush;
 	face->numVertices  = brush->numVertices;
 	face->flags        = APE_BRUSH_FACE_FLAG_PORTAL;

@@ -305,6 +305,10 @@ static ApeBrush *create_terrain_chunk( ApeEntity *self, GameTerrainEntity *terra
 
 	brush->numFaces = terrain_get_num_chunk_tiles( terrain );
 	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
+	for ( unsigned int i = 0; i < brush->numFaces; ++i )
+	{
+		ape_brush_face_setup( &brush->faces[ i ] );
+	}
 
 	return brush;
 }

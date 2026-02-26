@@ -576,8 +576,9 @@ void forge::WorldEditor::link_new_room( ApeBrushFace *face )
 		brush->vertices[ i ] = face->parent->vertices[ face->vertices[ i ].posIndex ];
 	}
 
-	brush->numFaces               = 1;
-	brush->faces                  = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
+	brush->numFaces = 1;
+	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
+	ape_brush_face_setup( &brush->faces[ 0 ] );
 	brush->faces[ 0 ].parent      = brush;
 	brush->faces[ 0 ].numVertices = brush->numVertices;
 	brush->faces[ 0 ].flags       = APE_BRUSH_FACE_FLAG_PORTAL;

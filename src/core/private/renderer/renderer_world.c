@@ -158,147 +158,171 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 
 static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
 {
-	if ( node->flags != APE_WORLD_NODE_FLAG_HIDDEN && node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	if ( node->flags == APE_WORLD_NODE_FLAG_HIDDEN || node->type != APE_WORLD_NODE_TYPE_BRUSH )
 	{
-		const ApeBrush *brush = ( ApeBrush * ) node;
-		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+		return;
+	}
+
+	COM_PROFILE_FUNCTION_START();
+
+	const ApeBrush *brush = ( ApeBrush * ) node;
+	for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+	{
+		assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
+		if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
 		{
-			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
-			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
-			{
-				ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
-				break;
-			}
+			ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+			break;
+		}
 
-			ApeBrushFace *face = &brush->faces[ i ];
-			// check the face isn't the same face we're looking in from
-			if ( visibleRoom->entrance != nullptr && visibleRoom->entrance->portalFace == face )
+		ApeBrushFace *face = &brush->faces[ i ];
+
+		if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED && stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS && face->lightmapIndex != ape_rendererState_.lightmapIndex )
+		{
+			continue;
+		}
+
+		// check the face isn't the same face we're looking in from
+		if ( visibleRoom->entrance != nullptr && visibleRoom->entrance->portalFace == face )
+		{
+			continue;
+		}
+
+		if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && !showHiddenFaces )
+		{
+			continue;
+		}
+
+		if ( ( !( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) && material != face->material ) || ( ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && material != ape_material_get_default( APE_MATERIAL_DEFAULT_HIDDEN ) ) ) )
+		{
+			continue;
+		}
+
+		if ( ape_brush_face_is_portal( face ) && !( stage & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) )
+		{
+			continue;
+		}
+
+		if ( light != nullptr )
+		{
+			QmMathVector3f lightPos = ape_light_get_position( light );
+			if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &face->bounds ) )
 			{
 				continue;
 			}
-
-			if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && !showHiddenFaces )
-			{
-				continue;
-			}
-
-			if ( ( !( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) && material != face->material ) || ( ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && material != ape_material_get_default( APE_MATERIAL_DEFAULT_HIDDEN ) ) ) )
-			{
-				continue;
-			}
-
-			if ( ape_brush_face_is_portal( face ) && !( stage & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) )
-			{
-				continue;
-			}
-
-			if ( light != nullptr )
-			{
-				QmMathVector3f lightPos = ape_light_get_position( light );
-				if ( light->type == APE_LIGHT_TYPE_OMNI && !PlIsSphereIntersectingAabb( &PlSetupCollisionSphere( lightPos, light->radius ), &face->bounds ) )
-				{
-					continue;
-				}
 
 #if 0// ditched for speed...
-				PLCollisionPlane plane = { .normal = face->normal, .origin = face->bounds.absOrigin };
-				if ( ape_light_test_plane_shadow( light, material, &plane ) )
-				{
-					continue;
-				}
-#endif
-			}
-
-			if ( PlgIsBoxInsideView( camera->internal, &face->bounds ) )
+			PLCollisionPlane plane = { .normal = face->normal, .origin = face->bounds.absOrigin };
+			if ( ape_light_test_plane_shadow( light, material, &plane ) )
 			{
-				subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
-				firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
-				numSubMeshes[ 0 ]++;
-
-				ape_rendererPerformance_.numFacesDrawn++;
+				continue;
 			}
+#endif
+		}
+
+		if ( PlgIsBoxInsideView( camera->internal, &face->bounds ) )
+		{
+			subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
+			firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
+			numSubMeshes[ 0 ]++;
+
+			ape_rendererPerformance_.numFacesDrawn++;
 		}
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
-static void draw_visible_camera_nodes( ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
+static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *visibleRoom, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
-#if 0//TODO
-	unsigned int   num;
-	ApeWorldNode **visibleNodes = ape_camera_get_visible_nodes_( camera, &num );
-	for ( unsigned int i = 0; i < num; ++i )
+	COM_PROFILE_FUNCTION_START();
+
+	//TODO: this is operating off a universal list, should only operate on *world* materials!!!
+	PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
+	assert( materialList != nullptr );
+
+	ApeMemoryCacheHeader *header;
+	COM_ITERATE_LINKED_LIST( header, materialList, i )
 	{
-		if ( visibleNodes[ i ]->type == APE_WORLD_NODE_TYPE_ENTITY )
+		ApeMaterial *material = header->userData;
+		assert( material != nullptr );
+
+		// blended materials get drawn later
+		if ( ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
 		{
-			ApeEntity *entity = ( ApeEntity * ) visibleNodes[ i ];
-			ape_entity_draw( entity, light, flags );
+			continue;
 		}
+
+		unsigned int offset = 0;
+		build_brush_display_list( worldNode, material, light, camera, visibleRoom, &offset, flags );
+
+		ApeWorldNode *child;
+		COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
+		{
+			build_brush_display_list( child, material, light, camera, visibleRoom, &offset, flags );
+		}
+
+		if ( numSubMeshes[ 0 ] == 0 )
+		{
+			continue;
+		}
+
+		PLGMesh *mesh        = worldNode->mesh;
+		mesh->numSubMeshes   = numSubMeshes[ 0 ];
+		mesh->firstSubMeshes = firstSubMeshes[ 0 ];
+		mesh->subMeshCounts  = subMeshes[ 0 ];
+
+		ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
+
+		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 	}
-#endif
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *visibleRoom, ApeCamera *camera, ApeLight *light, const ApeRendererPassFlag flags )
 {
 	ape_world_node_update_mesh_cache_( worldNode );
 
-	PlMatrixMode( PL_MODELVIEW_MATRIX );
-	PlPushMatrix();
-
-	PLMatrix4 transform = ape_world_node_get_transform( worldNode );
-	PlLoadMatrix( &transform );
-
 	if ( worldNode->mesh != nullptr )
 	{
 		PlgPushDebugGroupMarker( "Node Mesh Draw" );
 
-		//TODO: this is operating off a universal list, should only operate on *world* materials!!!
-		PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
-		assert( materialList != nullptr );
+		PlMatrixMode( PL_MODELVIEW_MATRIX );
+		PlPushMatrix();
 
-		ApeMemoryCacheHeader *header;
-		COM_ITERATE_LINKED_LIST( header, materialList, i )
+		PLMatrix4 transform = ape_world_node_get_transform( worldNode );
+		PlLoadMatrix( &transform );
+
+		if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS && camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 		{
-			ApeMaterial *material = header->userData;
-			assert( material != nullptr );
-
-			// blended materials get drawn later
-			if ( ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
+			// yes, this is very inefficient - this is just temporary!
+			// we'll update this to use texture arrays for the other lightmaps
+			// in future so we can do all this in one draw as before, but that
+			// will require expanding our graphics abstraction a bit to expose
+			// support for it...
+			ApeRoom *room = visibleRoom->room;
+			for ( unsigned int i = 0; i < room->numLightmaps; ++i )
 			{
-				continue;
+				assert( room->lightmaps[ i ] != nullptr );
+
+				ape_rendererState_.lightmapTexture = room->lightmaps[ i ]->texture->internal;
+				ape_rendererState_.lightmapIndex   = i;
+
+				draw_brushes( worldNode, visibleRoom, camera, light, flags );
 			}
 
-			COM_PROFILE_START( "build_brush_display_list" );
-
-			unsigned int offset = 0;
-			build_brush_display_list( worldNode, material, light, camera, visibleRoom, &offset, flags );
-
-			ApeWorldNode *child;
-			COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
-			{
-				build_brush_display_list( child, material, light, camera, visibleRoom, &offset, flags );
-			}
-
-			COM_PROFILE_END( "build_brush_display_list" );
-
-			if ( numSubMeshes[ 0 ] == 0 )
-			{
-				continue;
-			}
-
-			PLGMesh *mesh        = worldNode->mesh;
-			mesh->numSubMeshes   = numSubMeshes[ 0 ];
-			mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-			mesh->subMeshCounts  = subMeshes[ 0 ];
-
-			ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
-
-			mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
+			// now draw the last set without an assigned lightmap
+			ape_rendererState_.lightmapTexture = nullptr;
+			ape_rendererState_.lightmapIndex   = APE_BRUSH_FACE_LIGHTMAP_INVALID;
 		}
+
+		draw_brushes( worldNode, visibleRoom, camera, light, flags );
+
+		PlPopMatrix();
 
 		PlgPopDebugGroupMarker();
 	}
-
-	PlPopMatrix();
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
@@ -322,15 +346,7 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
 		ape_rendererState_.ambience = room->ambientLight;
-		if ( room->lightmapTexture != nullptr && camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
-		{
-			ape_rendererState_.lightmapTexture = room->lightmapTexture->internal;
-		}
 	}
-
-	// draw other node types
-	//TODO: all this needs sorting for transparency... temporary!!!
-	draw_visible_camera_nodes( camera, light, flags );
 
 	// recurse down the tree to draw all nodes with explicit meshes
 	draw_node_meshes( APE_WORLD_NODE( room ), visibleRoom, camera, light, flags );
@@ -343,8 +359,7 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience        = QM_MATH_COLOUR4F_ZERO;
-		ape_rendererState_.lightmapTexture = nullptr;
+		ape_rendererState_.ambience = QM_MATH_COLOUR4F_ZERO;
 	}
 
 	COM_PROFILE_FUNCTION_END();
@@ -356,7 +371,7 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 
 static constexpr float F_INFINITY = 10000.0f;
 
-static QmMathVector3f get_projection( const ApeLight *light, const QmMathVector3f *vertex, const QmMathVector3f *faceOrigin )
+static QmMathVector3f get_shadow_projection( const ApeLight *light, const QmMathVector3f *vertex, const QmMathVector3f *faceOrigin )
 {
 	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( light ) );
 	if ( light->type == APE_LIGHT_TYPE_SUN )
@@ -434,7 +449,7 @@ static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLi
 		const ApeBrushFaceVertex *vertex = &face->vertices[ face->edgeLoopOrder[ i ] ];
 
 		// get the projected position (if start, just uses the initial position)
-		const QmMathVector3f ppos = start ? brush->vertices[ vertex->posIndex ] : get_projection( light, &brush->vertices[ vertex->posIndex ], &face->bounds.absOrigin );
+		const QmMathVector3f ppos = start ? brush->vertices[ vertex->posIndex ] : get_shadow_projection( light, &brush->vertices[ vertex->posIndex ], &face->bounds.absOrigin );
 
 		indices[ i ] = PlgImmPushVertex( ppos.x, ppos.y, ppos.z );
 	}
@@ -582,7 +597,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
 }
 
-static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, float depth )
+static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -1017,7 +1032,7 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 		case APE_CAMERA_DRAW_MODE_SHADED:
 		{
 			draw_solid_room( camera, visibleRoom, false );
-			draw_translucent_room( camera, visibleRoom, false );
+			draw_translucent_room( camera, visibleRoom );
 
 			ape_decal_manager_draw_( visibleRoom->room->decalManager );
 			break;

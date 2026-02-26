@@ -13,6 +13,8 @@
 
 #include "yin/core_game.h"
 
+#include "node_room.h"
+
 static constexpr unsigned int ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH = 256;
 
 static void *create_room( ApeWorldNode *parent )
@@ -52,11 +54,7 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 
 	ape_decal_manager_destroy_( self->decalManager );
 
-	qm_os_memory_free( self->lightmap );
-	if ( self->lightmapTexture != nullptr )
-	{
-		ape_texture_release_( self->lightmapTexture );
-	}
+	ape_room_destroy_lightmaps_( self );
 
 	qm_os_memory_free( self );
 }
@@ -130,6 +128,10 @@ const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *
 	return face->tag;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Room Lightmaps
+/////////////////////////////////////////////////////////////////////////////////////
+
 #if 0
 /**
  * A very gross method to form a path for a lightmap, from the given room.
@@ -202,17 +204,7 @@ void ape_room_set_lightmap_edge_length( ApeRoom *self, unsigned int edgeLength )
 		return;
 	}
 
-	if ( self->lightmap != nullptr )
-	{
-		qm_os_memory_free( self->lightmap );
-		self->lightmap = nullptr;
-	}
-
-	if ( self->lightmapTexture != nullptr )
-	{
-		ape_texture_release_( self->lightmapTexture );
-		self->lightmapTexture = nullptr;
-	}
+	ape_room_destroy_lightmaps_( self );
 
 	self->lightmapEdgeLength = edgeLength;
 }
@@ -222,32 +214,46 @@ unsigned int ape_room_get_lightmap_edge_length( const ApeRoom *self )
 	return self->lightmapEdgeLength;
 }
 
-void ape_room_upload_lightmap_( ApeRoom *self )
+void ape_room_upload_lightmaps_( ApeRoom *self )
 {
-	assert( self->lightmap != nullptr );
-
-	if ( self->lightmapTexture != nullptr )
+	for ( unsigned int i = 0; i < self->numLightmaps; ++i )
 	{
-		ape_texture_release_( self->lightmapTexture );
-		ape_memory_flush_unreferenced_resources();
-	}
-
-#if defined( APE_RENDERER_LIGHTMAP_USE_FLOATS )
-	self->lightmapTexture = ape_texture_generate_( "lightmap", self->lightmap, self->lightmapEdgeLength, self->lightmapEdgeLength, &QM_IMAGE_FORMAT_RGB16F_DESC(), PLG_TEXTURE_FILTER_LINEAR );
-#else
-	self->lightmapTexture = ape_texture_generate_( "lightmap", self->lightmap, self->lightmapEdgeLength, self->lightmapEdgeLength, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_LINEAR );
-#endif
-	if ( self->lightmapTexture != nullptr )
-	{
-		//TODO: remove this!!! ITS A BOTCH - this should be updated by the material draw method, probably
-		self->lightmapTexture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
-		PlgSetTextureWrapMode( self->lightmapTexture->internal, self->lightmapTexture->wrapMode );
-	}
-	else
-	{
-		ape_console_warning_( "Failed to create lightmap texture!\n" );
+		ape_lightmap_upload_( self->lightmaps[ i ], self->lightmapEdgeLength );
 	}
 }
+
+ApeLightmap *ape_room_create_lightmap_( ApeRoom *self )
+{
+	if ( self->numLightmaps >= APE_ROOM_MAX_LIGHTMAPS )
+	{
+		return nullptr;
+	}
+
+	ApeLightmap *lightmap = ape_lightmap_create_( self->lightmapEdgeLength );
+	if ( lightmap == nullptr )
+	{
+		return nullptr;
+	}
+
+	self->lightmaps[ self->numLightmaps ] = lightmap;
+	self->numLightmaps++;
+
+	return lightmap;
+}
+
+void ape_room_destroy_lightmaps_( ApeRoom *self )
+{
+	for ( unsigned int i = 0; i < self->numLightmaps; ++i )
+	{
+		ape_lightmap_destroy_( self->lightmaps[ i ] );
+		self->lightmaps[ i ] = nullptr;
+	}
+
+	self->numLightmaps = 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 {
@@ -256,19 +262,14 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 	acm_push_array_f32( root, "ambience", ( float * ) &room->ambientLight, 4 );
 	acm_push_ui32( root, "reverb", room->reverbPreset );
 
-	if ( room->lightmap != nullptr )
+	if ( room->numLightmaps > 0 )
 	{
 		acm_push_ui16( root, "lightmapEdgeLength", room->lightmapEdgeLength );
 
-		AcmBranch   *lightmapArray = acm_push_array_f16( root, "lightmap", nullptr, 0 );
-		unsigned int lightmapSize  = room->lightmapEdgeLength * room->lightmapEdgeLength;
-
-		for ( unsigned int i = 0; i < lightmapSize; ++i )
+		AcmBranch *lightmapArray = acm_push_array_object( root, "lightmaps" );
+		for ( unsigned int i = 0; i < room->numLightmaps; ++i )
 		{
-			for ( unsigned int j = 0; j < 3; ++j )
-			{
-				acm_push_f16( lightmapArray, nullptr, room->lightmap[ i ].colour.v[ j ] );
-			}
+			ape_lightmap_serialize_( room->lightmaps[ i ], room->lightmapEdgeLength, acm_push_object( lightmapArray, nullptr ) );
 		}
 	}
 
@@ -284,25 +285,19 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, ApeWorldNode *pa
 	room->ambientLight = com_acm_get_colour_f32( root, "ambience", &QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	room->reverbPreset = ACM_GET_INT( room->flags, root, "reverb", 0 );
 
-	room->lightmapEdgeLength  = acm_get_uint( root, "lightmapEdgeLength", ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH );
-	unsigned int lightmapSize = room->lightmapEdgeLength * room->lightmapEdgeLength;
+	room->lightmapEdgeLength = acm_get_uint( root, "lightmapEdgeLength", ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH );
 
-	AcmBranch *lightmapArray = acm_get_child_by_name( root, "lightmap" );
-	if ( lightmapArray != nullptr )
+	AcmBranch *lightmapArray;
+	if ( ( lightmapArray = acm_get_child_by_name( root, "lightmaps" ) ) != nullptr )
 	{
-		room->lightmap = QM_OS_MEMORY_NEW_( ApeLightmapPixel, lightmapSize );
+		// new multi lightmap solution
+		room->numLightmaps = acm_get_num_of_children( lightmapArray );
 
 		AcmBranch *child = acm_get_first_child( lightmapArray );
-		for ( unsigned int i = 0; i < lightmapSize; ++i )
+		for ( unsigned int i = 0; i < room->numLightmaps; ++i, child = acm_get_next_child( child ) )
 		{
-			assert( child != nullptr );
-			for ( unsigned int j = 0; j < 3; ++j, child = acm_get_next_child( child ) )
-			{
-				acm_branch_get_float16( child, &room->lightmap[ i ].colour.v[ j ] );
-			}
+			room->lightmaps[ i ] = ape_lightmap_deserialize_( room->lightmapEdgeLength, child );
 		}
-
-		ape_room_upload_lightmap_( room );
 	}
 
 	ape_decal_manager_deserialize_( room->decalManager, root );
@@ -311,6 +306,10 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, ApeWorldNode *pa
 
 	return self;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Room Collisions
+/////////////////////////////////////////////////////////////////////////////////////
 
 static constexpr unsigned int RAY_HIT_INC = 256;
 

@@ -127,6 +127,8 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 	dstBrush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, dstBrush->numFaces );
 	for ( unsigned int j = 0; j < dstBrush->numFaces; ++j )
 	{
+		ape_brush_face_setup( &dstBrush->faces[ j ] );
+
 		//TODO: materials are an annoying pain in the ass because of how we're handling references... this should be fixed...
 		const char  *materialPath     = ape_material_get_path( srcBrush->faces[ j ].material );
 		ApeMaterial *material         = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
@@ -135,6 +137,10 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 		dstBrush->faces[ j ].materialScale  = srcBrush->faces[ j ].materialScale;
 		dstBrush->faces[ j ].materialOffset = srcBrush->faces[ j ].materialOffset;
 		dstBrush->faces[ j ].materialAngle  = srcBrush->faces[ j ].materialAngle;
+
+		dstBrush->faces[ j ].lightmapArea         = srcBrush->faces[ j ].lightmapArea;
+		dstBrush->faces[ j ].lightmapIndex        = srcBrush->faces[ j ].lightmapIndex;
+		dstBrush->faces[ j ].lightmapLuxelDensity = srcBrush->faces[ j ].lightmapLuxelDensity;
 
 		dstBrush->faces[ j ].normal = srcBrush->faces[ j ].normal;
 
@@ -356,6 +362,12 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 	compute_brush_face_tangents( face );
 }
 
+void ape_brush_face_setup( ApeBrushFace *self )
+{
+	self->lightmapIndex        = APE_BRUSH_FACE_LIGHTMAP_INVALID;
+	self->lightmapLuxelDensity = APE_BRUSH_FACE_LIGHTMAP_DEFAULT_LUXELS;
+}
+
 void ape_brush_face_fit_material( ApeBrushFace *self )
 {
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
@@ -441,17 +453,17 @@ bool ape_brush_face_is_portal( const ApeBrushFace *self )
 		return true;
 	}
 
-	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR;
+	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags_( self->material ) & APE_MATERIAL_FLAG_MIRROR;
 }
 
 bool ape_brush_face_is_mirror( const ApeBrushFace *self )
 {
-	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR;
+	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags_( self->material ) & APE_MATERIAL_FLAG_MIRROR;
 }
 
 ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self )
 {
-	if ( self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags( self->material ) & APE_MATERIAL_FLAG_MIRROR )
+	if ( self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags_( self->material ) & APE_MATERIAL_FLAG_MIRROR )
 	{
 		return self;
 	}
@@ -634,6 +646,10 @@ static void build_block_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 
 	self->numFaces = numVertices + 2;// plus two for top and bottom
 	self->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
+	for ( unsigned int i = 0; i < self->numFaces; ++i )
+	{
+		ape_brush_face_setup( &self->faces[ i ] );
+	}
 
 	// set up the top and bottom faces first
 	self->faces[ 0 ].numVertices = self->faces[ 1 ].numVertices = numVertices;
@@ -679,8 +695,9 @@ static void build_plane_brush( ApeBrush *self, const QmMathVector3f *vertices, u
 	self->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, self->numVertices );
 	memcpy( self->vertices, vertices, numVertices * sizeof( QmMathVector3f ) );
 
-	self->numFaces               = 1;
-	self->faces                  = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
+	self->numFaces = 1;
+	self->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, self->numFaces );
+	ape_brush_face_setup( &self->faces[ 0 ] );
 	self->faces[ 0 ].numVertices = self->numVertices;
 	for ( unsigned int i = 0; i < self->numVertices; ++i )
 	{
@@ -968,6 +985,8 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 
 		acm_push_ui32( faceBranch, "flags", face->flags );
 
+		acm_push_ui8( faceBranch, "lightmapIndex", face->lightmapIndex );
+
 		AcmBranch *edgeBranch     = acm_push_array_i16( faceBranch, "edgeLoop", nullptr, 0 );
 		AcmBranch *verticesBranch = acm_push_array_object( faceBranch, "vertices" );
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
@@ -1015,6 +1034,8 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, ApeWorldNode *parent
 		branch = acm_get_first_child( branch );
 		for ( unsigned int i = 0; i < brush->numFaces; ++i, branch = acm_get_next_child( branch ) )
 		{
+			ape_brush_face_setup( &brush->faces[ i ] );
+
 			brush->faces[ i ].parent = brush;
 
 			AcmBranch *vertexBranch = acm_get_child_by_name( branch, "vertices" );
@@ -1069,13 +1090,16 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, ApeWorldNode *parent
 				ape_console_warning_( "No material specified for a brush face, using default!\n" );
 				brush->faces[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR );
 			}
-			brush->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &( QmMathVector2f ) {} );
-			brush->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &( QmMathVector3f ) {} );
-			brush->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &( QmMathVector3f ) {} );
+			brush->faces[ i ].materialScale  = com_acm_get_vector2( branch, "materialScale", &QM_MATH_VECTOR2F_ZERO );
+			brush->faces[ i ].materialOffset = com_acm_get_vector3( branch, "materialOffset", &QM_MATH_VECTOR3F_ZERO );
+			brush->faces[ i ].materialAngle  = com_acm_get_vector3( branch, "materialAngle", &QM_MATH_VECTOR3F_ZERO );
 
 			brush->faces[ i ].flags = ACM_GET_UINT( brush->faces[ i ].flags, branch, "flags", 0 );
 
-			brush->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &( QmMathVector3f ) {} );
+			brush->faces[ i ].lightmapIndex        = ACM_GET_UINT( brush->faces[ i ].lightmapIndex, branch, "lightmapIndex", APE_BRUSH_FACE_LIGHTMAP_INVALID );
+			brush->faces[ i ].lightmapLuxelDensity = ACM_GET_UINT( brush->faces[ i ].lightmapLuxelDensity, branch, "lightmapLuxelDensity", APE_BRUSH_FACE_LIGHTMAP_DEFAULT_LUXELS );
+
+			brush->faces[ i ].normal = com_acm_get_vector3( branch, "normal", &QM_MATH_VECTOR3F_ZERO );
 			brush->faces[ i ].colour = com_acm_get_colour_f32( branch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
 			acm_get_array_f32( branch, "bounds", ( float * ) &brush->faces[ i ].bounds, 12 );
 
