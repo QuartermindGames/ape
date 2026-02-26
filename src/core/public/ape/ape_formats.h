@@ -35,7 +35,7 @@ PL_EXTERN_C
 
 typedef enum ApeModelAnimationFlag
 {
-	PL_BITFLAG( APE_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
+	QM_OS_BIT_FLAG( APE_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
 } ApeModelAnimationFlag;
 
 typedef struct ApeFormatWeight
@@ -62,7 +62,7 @@ typedef struct ApeFormatBone
 // Texture Format
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define APE_FORMAT_TEXTURE_MAGIC     PL_MAGIC_TO_NUM( 'A', 'T', 'E', 'X' )
+#define APE_FORMAT_TEXTURE_MAGIC     QM_OS_MAGIC_TO_NUM( 'A', 'T', 'E', 'X' )
 #define APE_FORMAT_TEXTURE_VERSION   1
 #define APE_FORMAT_TEXTURE_EXTENSION "tex"
 

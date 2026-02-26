@@ -10,7 +10,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-#define MD2_MAGIC   PL_MAGIC_TO_NUM( 'I', 'D', 'P', '2' )
+#define MD2_MAGIC   QM_OS_MAGIC_TO_NUM( 'I', 'D', 'P', '2' )
 #define MD2_VERSION 8
 
 typedef struct Md2Header

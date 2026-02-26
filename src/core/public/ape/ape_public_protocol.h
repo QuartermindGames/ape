@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define APE_PROTOCOL_MAGIC   PL_MAGIC_TO_NUM( 'A', 'P', 'E', '0' )
+#define APE_PROTOCOL_MAGIC   QM_OS_MAGIC_TO_NUM( 'A', 'P', 'E', '0' )
 #define APE_PROTOCOL_VERSION 1
 
 #define APE_PROTOCOL_MESSAGE_SIZE 4096

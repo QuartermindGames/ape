@@ -4,7 +4,7 @@
 
 #include "../aux_private.h"
 
-#define PKG_MAGIC PL_MAGIC_TO_NUM( 'P', 'K', 'G', '2' )
+#define PKG_MAGIC QM_OS_MAGIC_TO_NUM( 'P', 'K', 'G', '2' )
 
 typedef struct PkgHeader
 {

@@ -94,9 +94,9 @@ typedef enum ApeInputState
 {
 	APE_INPUT_STATE_NONE = 0, /* key has no state */
 
-	PL_BITFLAG( APE_INPUT_STATE_DOWN, 1 ),     /* key is still down */
-	PL_BITFLAG( APE_INPUT_STATE_PRESSED, 2 ),  /* key has been pressed */
-	PL_BITFLAG( APE_INPUT_STATE_RELEASED, 3 ), /* key is up */
+	QM_OS_BIT_FLAG( APE_INPUT_STATE_DOWN, 1 ),     /* key is still down */
+	QM_OS_BIT_FLAG( APE_INPUT_STATE_PRESSED, 2 ),  /* key has been pressed */
+	QM_OS_BIT_FLAG( APE_INPUT_STATE_RELEASED, 3 ), /* key is up */
 } ApeInputState;
 
 PL_EXTERN_C

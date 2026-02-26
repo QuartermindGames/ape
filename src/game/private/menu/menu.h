@@ -51,8 +51,8 @@ typedef struct GameMenuOption
 
 typedef enum GameMenuFlag
 {
-	PL_BITFLAG( GAME_MENU_FLAG_PROMPT, 0U ),    // appears centered in the screen
-	PL_BITFLAG( GAME_MENU_FLAG_BACKGROUND, 1U ),// background is visible
+	QM_OS_BIT_FLAG( GAME_MENU_FLAG_PROMPT, 0U ),    // appears centered in the screen
+	QM_OS_BIT_FLAG( GAME_MENU_FLAG_BACKGROUND, 1U ),// background is visible
 } GameMenuFlag;
 
 typedef struct GameMenu
