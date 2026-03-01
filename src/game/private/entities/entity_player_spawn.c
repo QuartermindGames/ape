@@ -6,9 +6,9 @@
 
 #include "entity_player_spawn.h"
 
-static PLLinkedList *playerSpawnPoints;
+static QmOsLinkedList *playerSpawnPoints;
 
-PLLinkedList *game_player_spawn_get_spawn_points()
+QmOsLinkedList *game_player_spawn_get_spawn_points()
 {
 	return playerSpawnPoints;
 }
@@ -19,10 +19,10 @@ static void *create_player_spawn( ApeEntity *self, AcmBranch *properties )
 
 	if ( playerSpawnPoints == nullptr )
 	{
-		playerSpawnPoints = PlCreateLinkedList();
+		playerSpawnPoints = qm_os_linked_list_create();
 	}
 
-	spawnEntity->listNode = PlInsertLinkedListNode( playerSpawnPoints, self );
+	spawnEntity->listNode = qm_os_linked_list_push_back( playerSpawnPoints, self );
 
 	return spawnEntity;
 }
@@ -32,10 +32,10 @@ static void destroy_player_spawn( ApeEntity *self )
 	GamePlayerSpawnEntity *spawnEntity = PLAYER_SPAWN_ENTITY( self );
 	assert( spawnEntity != nullptr );
 
-	PlDestroyLinkedListNode( spawnEntity->listNode );
-	if ( playerSpawnPoints != nullptr && PlGetNumLinkedListNodes( playerSpawnPoints ) == 0 )
+	qm_os_memory_free( spawnEntity->listNode );
+	if ( playerSpawnPoints != nullptr && qm_os_linked_list_get_size( playerSpawnPoints ) == 0 )
 	{
-		PlDestroyLinkedList( playerSpawnPoints );
+		qm_os_memory_free( playerSpawnPoints );
 		playerSpawnPoints = nullptr;
 	}
 

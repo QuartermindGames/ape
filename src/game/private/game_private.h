@@ -4,10 +4,10 @@
 
 #include "qmos/public/qm_os.h"
 #include "qmos/public/qm_os_memory.h"
+#include "qmos/public/qm_os_linked_list.h"
 
 #include <plcore/pl_console.h>
 #include <plcore/pl_physics.h>
-#include <plcore/pl_linkedlist.h>
 #include <plcore/pl_hashtable.h>
 
 #include <acm/acm.h>

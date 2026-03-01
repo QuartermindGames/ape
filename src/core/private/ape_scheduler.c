@@ -1,203 +1,110 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include <plcore/pl_linkedlist.h>
-
 #include "ape_private.h"
 #include "ape_scheduler.h"
 
-static PLLinkedList *scheduleList = NULL;
+static QmOsLinkedList *scheduleList;
 
 typedef struct SchTask
 {
-	double delay;
-	char desc[ 32 ];
-	void *userData;
+	double               delay;
+	char                 desc[ 32 ];
+	void                *userData;
 	ApeSchedulerCallback callback;
-	PLLinkedListNode *node;
+	QmOsLinkedListNode  *node;
 } SchTask;
 
-static void Cmd_FlushTasks( unsigned int argc, char **argv )
-{
-	ss_acl_flush_tasks_();
-}
-
-static void Cmd_IsTaskRunning( unsigned int argc, char **argv )
-{
-	if ( argc <= 1 )
-		return;
-
-	ape_console_print_( "%s\n", apeIsScheduledTaskRunning( argv[ 1 ] ) ? "true" : "false" );
-}
-
-static void Cmd_KillTask( unsigned int argc, char **argv )
-{
-	if ( argc <= 1 )
-		return;
-
-	apeKillScheduledTask( argv[ 1 ] );
-}
-
-static void Cmd_SetTaskDelay( unsigned int argc, char **argv )
-{
-	if ( argc <= 2 )
-		return;
-
-	double delay = strtod( argv[ 2 ], NULL );
-	apeSetScheduledTaskDelay( argv[ 1 ], delay );
-}
-
-void ape_initialize_scheduler_( void )
+void ape_scheduler_initialize_( void )
 {
 	ape_console_print_( "Initializing scheduler\n" );
 
-	PlRegisterConsoleCommand( "sch/flushtasks", "Flush all running tasks.", 0, Cmd_FlushTasks );
-	PlRegisterConsoleCommand( "sch/istaskrunning", "Displays 'true' if the specified task is running.", 1, Cmd_IsTaskRunning );
-	PlRegisterConsoleCommand( "sch/killtask", "Kill the specified task.", 1, Cmd_KillTask );
-	PlRegisterConsoleCommand( "sch/settaskdelay", "Set the delay for the specified task.", 1, Cmd_SetTaskDelay );
-
-	scheduleList = PlCreateLinkedList();
-	if ( scheduleList == NULL )
+	scheduleList = qm_os_linked_list_create();
+	if ( scheduleList == nullptr )
+	{
 		ape_console_error_( true, "Failed to create schedule linked list!\nPL: %s\n", PlGetError() );
+	}
 }
 
-void ape_shutdown_scheduler_( void )
+void ape_scheduler_shutdown_( void )
 {
 	ape_console_print_( "Shutting down scheduler\n" );
 
-	PlDestroyLinkedList( scheduleList );
+	ape_scheduler_flush_();
+
+	qm_os_memory_free( scheduleList );
 }
 
-unsigned int apeGetNumScheduledTasks( void )
+unsigned int ape_scheduler_get_num_tasks_( void )
 {
-	return PlGetNumLinkedListNodes( scheduleList );
+	return qm_os_linked_list_get_size( scheduleList );
 }
 
-const char *apeGetScheduledTaskDescription( unsigned int index, double *delay )
+const char *ape_scheduler_get_task_desc_( unsigned int index, double *delay )
 {
-	if ( scheduleList == NULL )
-		return NULL;
+	if ( scheduleList == nullptr )
+		return nullptr;
 
-	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	if ( node != NULL )
+	QmOsLinkedListNode *node = qm_os_linked_list_get_front( scheduleList );
+	if ( node != nullptr )
 	{
 		for ( unsigned int i = 0; i < index; ++i )
 		{
-			node = PlGetNextLinkedListNode( node );
-			if ( node == NULL )
+			node = qm_os_linked_list_node_get_next( node );
+			if ( node == nullptr )
 				break;
 		}
 	}
 
-	if ( node == NULL )
-		return NULL;
+	if ( node == nullptr )
+		return nullptr;
 
-	const SchTask *task = PlGetLinkedListNodeUserData( node );
+	const SchTask *task = qm_os_linked_list_node_get_data( node );
 
-	if ( delay != NULL )
+	if ( delay != nullptr )
 		*delay = task->delay;
 
 	return task->desc;
 }
 
-bool apeIsScheduledTaskRunning( const char *desc )
+void ape_scheduler_push_task_( const char *desc, const ApeSchedulerCallback callback, void *userData, double delay )
 {
-	if ( scheduleList == NULL )
-		return false;
-
-	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL )
-	{
-		SchTask *task = PlGetLinkedListNodeUserData( node );
-		if ( strcmp( task->desc, desc ) == 0 )
-			return true;
-
-		node = PlGetNextLinkedListNode( node );
-	}
-
-	return false;
-}
-
-void apePushScheduledTask( const char *desc, ApeSchedulerCallback callback, void *userData, double delay )
-{
-	SchTask *task = QM_OS_MEMORY_MALLOC_( sizeof( SchTask ) );
+	SchTask *task = QM_OS_MEMORY_NEW( SchTask );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay = delay + ape_get_num_ticks();
+	task->delay    = delay + ape_get_num_ticks();
 	task->callback = callback;
 	task->userData = userData;
-	task->node = PlInsertLinkedListNode( scheduleList, task );
+	task->node     = qm_os_linked_list_push_back( scheduleList, task );
 }
 
-void ape_tick_tasks_( void )
+void ape_scheduler_tick_( void )
 {
-	if ( scheduleList == NULL )
+	if ( scheduleList == nullptr )
 		return;
 
-	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL )
+	SchTask *task;
+	QM_OS_LINKED_LIST_ITERATE( task, scheduleList, i )
 	{
-		PLLinkedListNode *nextNode = PlGetNextLinkedListNode( node );
-		SchTask *task = PlGetLinkedListNodeUserData( node );
 		if ( task->delay < ape_get_num_ticks() )
 		{
-			PlDestroyLinkedListNode( node );
-			task->callback( task->userData, ( task->delay - ape_get_num_ticks() ) + 1 );
+			task->callback( task->userData, task->delay - ape_get_num_ticks() + 1 );
 			task->delay = 0.0;
+
+			qm_os_memory_free( task->node );
 			qm_os_memory_free( task );
 		}
-
-		node = nextNode;
 	}
 }
 
-void ss_acl_flush_tasks_( void )
+void ape_scheduler_flush_( void )
 {
-	unsigned int numTasks = PlGetNumLinkedListNodes( scheduleList );
-	PlDestroyLinkedListNodes( scheduleList );
+	unsigned int numTasks = qm_os_linked_list_get_size( scheduleList );
+
+	SchTask *task;
+	QM_OS_LINKED_LIST_ITERATE( task, scheduleList, i )
+	{
+		qm_os_memory_free( task->node );
+		qm_os_memory_free( task );
+	}
+
 	ape_console_print_( "Flushed " PL_FMT_uint32 " tasks\n", numTasks );
-}
-
-void apePrintPendingTasks( void )
-{
-	unsigned int i = 0;
-	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL )
-	{
-		SchTask *task = PlGetLinkedListNodeUserData( node );
-		ape_console_print_( " (%d) %s %f\n", i++, task->desc, task->delay - ape_get_num_ticks() );
-		node = PlGetNextLinkedListNode( node );
-	}
-	ape_console_print_( "%d scheduled tasks pending\n", i );
-}
-
-static SchTask *GetTaskByDescription( const char *desc )
-{
-	PLLinkedListNode *node = PlGetFirstNode( scheduleList );
-	while ( node != NULL )
-	{
-		SchTask *task = PlGetLinkedListNodeUserData( node );
-		if ( strcmp( task->desc, desc ) == 0 )
-			return task;
-
-		node = PlGetNextLinkedListNode( node );
-	}
-	return NULL;
-}
-
-void apeKillScheduledTask( const char *desc )
-{
-	SchTask *task = GetTaskByDescription( desc );
-	if ( task == NULL )
-		return;
-
-	PlDestroyLinkedListNode( task->node );
-	qm_os_memory_free( task );
-}
-
-void apeSetScheduledTaskDelay( const char *desc, double delay )
-{
-	SchTask *task = GetTaskByDescription( desc );
-	if ( task == NULL )
-		return;
-
-	task->delay = delay + ape_get_num_ticks();
 }

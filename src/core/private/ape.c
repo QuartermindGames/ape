@@ -140,7 +140,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 	ape_console_print_( "Initializing core services...\n" );
 
-	ape_initialize_scheduler_();
+	ape_scheduler_initialize_();
 	ape_memory_initialize_();
 	ape_initialize_net_();
 	ape_script_manager_initialize_();
@@ -164,8 +164,6 @@ void ape_shutdown( void )
 {
 	ape_console_print_( "Shutting down...\n" );
 
-	ss_acl_flush_tasks_();
-
 	ape_shutdown_editor_();
 	ape_shutdown_game_();
 	ape_shutdown_client_();
@@ -173,7 +171,7 @@ void ape_shutdown( void )
 	ape_shutdown_console_();
 	ape_script_manager_shutdown_();
 	ape_memory_shutdown_();
-	ape_shutdown_scheduler_();
+	ape_scheduler_shutdown_();
 	ape_shutdown_net_();
 
 	com_write_config( engineConfig, "engine" );
@@ -207,7 +205,8 @@ void ape_tick_frame()
 
 	ape_draw_debug_clear_();
 
-	ape_tick_tasks_();
+	ape_scheduler_tick_();
+
 	//TODO: what order should these be?
 	ape_tick_server_( delta );
 	ape_tick_client_( delta );

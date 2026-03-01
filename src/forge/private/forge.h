@@ -16,11 +16,12 @@
 #include <plcore/pl_linkedlist.h>
 
 #include "qmos/public/qm_os_memory.h"
+#include "qmos/public/qm_os_linked_list.h"
 
 #include <acm/acm.h>
 
 #include "aux/public/aux.h"
-#include "../../aux/public/aux_math.h"
+#include "aux/public/aux_math.h"
 
 // Yin
 #include <yin/core.h>

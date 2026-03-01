@@ -536,7 +536,7 @@ static void ss1_draw_menu( const ApeViewport *viewport )
 static void spawn_characters()
 {
 	// create all the characters for each spawn point
-	PLLinkedList *playerSpawns = game_player_spawn_get_spawn_points();
+	QmOsLinkedList *playerSpawns = game_player_spawn_get_spawn_points();
 	if ( playerSpawns == nullptr )
 	{
 		game_warning_( "Unable to spawn player entities, no spawn points!\n" );
@@ -544,7 +544,7 @@ static void spawn_characters()
 	}
 
 	ApeEntity *spawnEntity;
-	COM_ITERATE_LINKED_LIST( spawnEntity, playerSpawns, i )
+	QM_OS_LINKED_LIST_ITERATE( spawnEntity, playerSpawns, i )
 	{
 		ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( spawnEntity ) );
 		if ( room == nullptr )

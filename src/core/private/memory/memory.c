@@ -190,7 +190,7 @@ static void cleanup_callback( PL_UNUSED void *unused0, PL_UNUSED double unused1 
 {
 	cleanup_unreferenced_resources( false );
 
-	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
+	ape_scheduler_push_task_( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
 }
 
 void ape_memory_initialize_( void )
@@ -205,7 +205,7 @@ void ape_memory_initialize_( void )
 		ape_console_error_( true, "Failed to create memory manager linked list!\n" );
 	}
 
-	apePushScheduledTask( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
+	ape_scheduler_push_task_( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
 }
 
 void ape_memory_shutdown_( void )

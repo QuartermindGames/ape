@@ -12,18 +12,18 @@
 
 typedef struct GamePieMenu
 {
-	PLLinkedList     *options;
-	PLLinkedListNode *activeOption;// option we're currently selecting
-	PLLinkedListNode *targetOption;// option we want to be at, for animating
-	bool              isActive;
-	float             angle, scale, velocity;
-	QmMathVector2f         cursor;
-	int               w, h;
+	QmOsLinkedList     *options;
+	QmOsLinkedListNode *activeOption;// option we're currently selecting
+	QmOsLinkedListNode *targetOption;// option we want to be at, for animating
+	bool                isActive;
+	float               angle, scale, velocity;
+	QmMathVector2f      cursor;
+	int                 w, h;
 } GamePieMenu;
 
 typedef struct GamePieMenuOption
 {
-	PLLinkedListNode         *node;
+	QmOsLinkedListNode       *node;
 	char                      label[ 64 ];
 	ApeMaterial              *icon;
 	GamePieMenuOptionCallback callback;
@@ -34,7 +34,7 @@ GamePieMenu *menu_pie_create( void )
 {
 	// don't need to do much here, just allocate and return
 	GamePieMenu *menu = QM_OS_MEMORY_NEW( GamePieMenu );
-	menu->options     = PlCreateLinkedList();
+	menu->options     = qm_os_linked_list_create();
 	menu->w           = PIE_MENU_WIDTH;
 	menu->h           = PIE_MENU_HEIGHT;
 	return menu;
@@ -48,14 +48,13 @@ void menu_pie_destroy( GamePieMenu *menu )
 	}
 
 	// destroy all the pie options
-	PLLinkedListNode *node = PlGetFirstNode( menu->options );
-	while ( node != NULL )
+	GamePieMenuOption *option;
+	QM_OS_LINKED_LIST_ITERATE( option, menu->options, i )
 	{
-		qm_os_memory_free( PlGetLinkedListNodeUserData( node ) );
-		node = PlGetNextLinkedListNode( node );
+		qm_os_memory_free( option );
 	}
-	PlDestroyLinkedList( menu->options );
 
+	qm_os_memory_free( menu->options );
 	qm_os_memory_free( menu );
 }
 
@@ -85,7 +84,7 @@ bool menu_pie_handle_input( GamePieMenu *menu )
 	// if the active option is null, reset it to the first slot
 	if ( menu->activeOption == NULL )
 	{
-		menu->activeOption = PlGetFirstNode( menu->options );
+		menu->activeOption = qm_os_linked_list_get_front( menu->options );
 		if ( menu->activeOption == NULL )
 		{// probably no options available, just return...
 			return false;
@@ -128,7 +127,7 @@ bool menu_pie_handle_input( GamePieMenu *menu )
 #endif
 
 	QmMathVector2f joyPos = ape_client_input_get_controller_axis_state( 0, 0 );
-	menu->cursor     = joyPos;
+	menu->cursor          = joyPos;
 
 	if ( ape_client_input_get_button_state( 0, INPUT_A ) == APE_INPUT_STATE_PRESSED )
 	{
@@ -137,11 +136,11 @@ bool menu_pie_handle_input( GamePieMenu *menu )
 		GamePieMenuOption *option;
 		if ( menu->targetOption != NULL )
 		{// option we're trying to get to
-			option = PlGetLinkedListNodeUserData( menu->targetOption );
+			option = qm_os_linked_list_node_get_data( menu->targetOption );
 		}
 		else if ( menu->activeOption != NULL )
 		{// option we're currently at
-			option = PlGetLinkedListNodeUserData( menu->activeOption );
+			option = qm_os_linked_list_node_get_data( menu->activeOption );
 		}
 		else
 		{// nothing to select!
@@ -162,7 +161,8 @@ bool menu_pie_handle_input( GamePieMenu *menu )
 		menu->velocity -= 1.5f;
 		return true;
 	}
-	else if ( ape_client_input_get_button_state( 0, INPUT_LB ) != APE_INPUT_STATE_NONE )
+
+	if ( ape_client_input_get_button_state( 0, INPUT_LB ) != APE_INPUT_STATE_NONE )
 	{
 		menu->velocity += 1.5f;
 		return true;
@@ -212,11 +212,11 @@ static GamePieMenuOption *get_selected_option( GamePieMenu *menu )
 {
 	if ( menu->targetOption != NULL )
 	{
-		return PlGetLinkedListNodeUserData( menu->targetOption );
+		return qm_os_linked_list_node_get_data( menu->targetOption );
 	}
 	if ( menu->activeOption != NULL )
 	{
-		return PlGetLinkedListNodeUserData( menu->activeOption );
+		return qm_os_linked_list_node_get_data( menu->activeOption );
 	}
 
 	return nullptr;
@@ -236,8 +236,8 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 	float cursorX = x + ( menu->cursor.x * ( ( float ) menu->w / 2.0f ) );
 	float cursorY = y + ( menu->cursor.y * ( ( float ) menu->h / 2.0f ) );
 
-	unsigned int      numElements = PlGetNumLinkedListNodes( menu->options );
-	PLLinkedListNode *node        = PlGetFirstNode( menu->options );
+	unsigned int        numElements = qm_os_linked_list_get_size( menu->options );
+	QmOsLinkedListNode *node        = qm_os_linked_list_get_front( menu->options );
 	for ( unsigned int i = 0, pos = 0; i < 360; i += ( 360 / numElements ) )
 	{
 		if ( pos >= numElements || node == NULL )
@@ -256,7 +256,7 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 		// and now the scale
 		float dc = menu->scale * ( qm_math_vector2f_length( QM_MATH_VECTOR2F( 1.0f, 1.0f ) ) - qm_math_vector2f_length( QM_MATH_VECTOR2F( xc, yc ) ) );
 
-		GamePieMenuOption *option     = PlGetLinkedListNodeUserData( node );
+		GamePieMenuOption *option     = qm_os_linked_list_node_get_data( node );
 		bool               isSelected = ( option == get_selected_option( menu ) );
 		draw_pie_option( option, xo, yo, isSelected, dc );
 		if ( isSelected )
@@ -264,10 +264,10 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 			PlgDrawSimpleLine( qm_math_vector3f( x, y, 0.0f ), qm_math_vector3f( xo, yo, 0.0f ), PL_COLOUR_RED );
 		}
 
-		node = PlGetNextLinkedListNode( node );
+		node = qm_os_linked_list_node_get_next( node );
 	}
 
-	draw_pie_option( PlGetLinkedListNodeUserData( PlGetFirstNode( menu->options ) ), cursorX, cursorY, false, 1.0f );
+	draw_pie_option( qm_os_linked_list_node_get_data( qm_os_linked_list_get_front( menu->options ) ), cursorX, cursorY, false, 1.0f );
 }
 
 void menu_pie_make_active( GamePieMenu *menu, bool active )
@@ -279,7 +279,7 @@ void menu_pie_make_active( GamePieMenu *menu, bool active )
 GamePieMenuOption *menu_pie_add_option( GamePieMenu *menu, const char *label, struct ApeMaterial *icon, GamePieMenuOptionCallback callback )
 {
 	GamePieMenuOption *option = QM_OS_MEMORY_NEW( GamePieMenuOption );
-	option->node              = PlInsertLinkedListNode( menu->options, option );
+	option->node              = qm_os_linked_list_push_back( menu->options, option );
 	option->callback          = callback;
 	option->icon              = icon;
 	option->parent            = menu;
@@ -291,7 +291,7 @@ GamePieMenuOption *menu_pie_add_option( GamePieMenu *menu, const char *label, st
 	// if we have no active option, set it to this
 	if ( menu->activeOption == NULL )
 	{
-		menu->activeOption = PlGetFirstNode( menu->options );
+		menu->activeOption = qm_os_linked_list_get_front( menu->options );
 	}
 
 	return option;
@@ -309,9 +309,9 @@ void menu_pie_destroy_option( GamePieMenuOption *option )
 			menu->targetOption = nullptr;
 		}
 		// And reset the active option to the first node if it's the same as our selection
-		if ( menu->activeOption != NULL && ( ( GamePieMenuOption * ) PlGetLinkedListNodeUserData( menu->activeOption ) ) == option )
+		if ( menu->activeOption != NULL && ( ( GamePieMenuOption * ) qm_os_linked_list_node_get_data( menu->activeOption ) ) == option )
 		{
-			menu->activeOption = PlGetFirstNode( menu->options );
+			menu->activeOption = qm_os_linked_list_get_front( menu->options );
 		}
 
 		menu->w -= 32;

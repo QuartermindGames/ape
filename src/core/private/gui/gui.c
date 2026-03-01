@@ -306,13 +306,13 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	snprintf( buf, sizeof( buf ), "Total memory:     %.2lfMB\n", PlBytesToMegabytes( qm_os_memory_get_usage() ) );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	unsigned int numTasks = apeGetNumScheduledTasks();
+	unsigned int numTasks = ape_scheduler_get_num_tasks_();
 	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
 		double      taskDelay;
-		const char *taskDescription = apeGetScheduledTaskDescription( i, &taskDelay );
+		const char *taskDescription = ape_scheduler_get_task_desc_( i, &taskDelay );
 		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
 		gui_font_draw_string( font, tx + 8.0f, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
