@@ -329,10 +329,17 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_AXIS[ projection ][ 0 ], fx ) );
 			luxelPos                = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_AXIS[ projection ][ 1 ], fy ) );
 
-			// this attempts to reproject it, so we can deal with angled surfaces
-			// though this isn't perfect, it's 2D reprojected to 3D so the luxel span isn't correct anymore (aaarrrghhh)
-			float sd = qm_math_vector3f_dot_product( face->normal, luxelPos ) + planeDistance;
-			luxelPos = qm_math_vector3f_sub( luxelPos, qm_math_vector3f_scale_float( face->normal, sd ) );
+			// reproject the luxel position back onto the face plane along the dropped axis
+			float nDotD = qm_math_vector3f_dot_product( face->normal, QM_MATH_PROJECTION_NORMAL[ projection ] );
+			if ( fabsf( nDotD ) > QM_MATH_EPSILON )
+			{
+				//TODO: hmmm we really should just have a 'plane' computed for a face on update,
+				//		and use our 'plane_distance' method here instead, but that'll require some
+				//		rework I can't be bothered with right now
+				//		(also I'm not much of a math person but I can think of likely better way of doing this in future)
+				float t  = -( qm_math_vector3f_dot_product( face->normal, luxelPos ) + planeDistance ) / nDotD;
+				luxelPos = qm_math_vector3f_add( luxelPos, qm_math_vector3f_scale_float( QM_MATH_PROJECTION_NORMAL[ projection ], t ) );
+			}
 
 			QmMathVector3f lightPos = ape_light_get_position( light );
 			QmMathVector3f lightDir;
@@ -350,8 +357,6 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 				lightDir = qm_math_vector3f_sub( luxelPos, lightPos );
 				lightDir = qm_math_vector3f_normalize( lightDir );
 			}
-
-			//ape_draw_debug_axis( luxelPos, QM_MATH_VECTOR3F_ZERO, 2.0f );
 
 			QmMathColour4f lightColour = light->colour;
 
