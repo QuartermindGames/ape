@@ -1456,6 +1456,11 @@ void ape_tick_materials_( double delta )
 	}
 }
 
+PLLinkedList *ape_material_get_group_( ApeCacheGroup group )
+{
+	return materials[ group ];
+}
+
 unsigned int ape_material_get_width( const ApeMaterial *self )
 {
 	return self->width;

@@ -298,6 +298,8 @@ unsigned int ape_material_get_flags_( const ApeMaterial *self );
 
 void ape_tick_materials_( double delta );
 
+PLLinkedList *ape_material_get_group_( ApeCacheGroup group );
+
 unsigned int ape_material_get_width( const ApeMaterial *self );
 unsigned int ape_material_get_height( const ApeMaterial *self );
 

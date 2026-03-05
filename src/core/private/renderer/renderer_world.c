@@ -238,13 +238,12 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 	COM_PROFILE_FUNCTION_START();
 
 	//TODO: this is operating off a universal list, should only operate on *world* materials!!!
-	PLLinkedList *materialList = ape_memory_get_pool_list_( APE_CACHE_POOL_MATERIALS );
+	PLLinkedList *materialList = ape_material_get_group_( APE_CACHE_GROUP_WORLD );
 	assert( materialList != nullptr );
 
-	ApeMemoryCacheHeader *header;
-	COM_ITERATE_LINKED_LIST( header, materialList, i )
+	ApeMaterial *material;
+	COM_ITERATE_LINKED_LIST( material, materialList, i )
 	{
-		ApeMaterial *material = header->userData;
 		assert( material != nullptr );
 
 		// blended materials get drawn later
