@@ -579,27 +579,12 @@ static void ss1_spawn_world( ApeRoom *room )
 	ape_world_node_attach( APE_WORLD_NODE( ss1_gameState.camera ), roomNode );
 	ape_world_node_set_position( APE_WORLD_NODE( ss1_gameState.camera ), &QM_MATH_VECTOR3F( 0.0f, 128.0f, 0.0f ) );
 
-	//TODO: make this configurable via editor?
-	ss1_gameState.simulation.seconds = 40000;
-
-#if 0
-	//TODO: these shouldn't be hard-coded this way as we might not want our level to have sun/moon lights
-	ss1_gameState.sunLight  = ape_create_light( roomNode, &SS1_DEFAULT_SUN_POSITION, &SS1_DEFAULT_SUN_COLOUR, 0.0f,
-	                                            APE_LIGHT_TYPE_SUN,
-	                                            APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-	ss1_gameState.moonLight = ape_create_light( roomNode, &SS1_DEFAULT_SUN_POSITION, &SS1_DEFAULT_MOON_COLOUR, 0.0f,
-	                                            APE_LIGHT_TYPE_SUN,
-	                                            APE_LIGHT_FLAG_ENABLED | APE_LIGHT_FLAG_DYNAMIC | APE_LIGHT_FLAG_RUNTIME_SHADOWS );
-#endif
-
-	ape_entity_create( roomNode, "ss1_airship", "airship_0", nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
-
 	const char *path = ape_world_node_get_path( APE_WORLD_NODE( room ) );
 	if ( *path == '\0' )
 	{
 		path = "unknown";
 	}
-	const char *c = G_STR_( "Invading %s" );
+	const char *c = G_STR_( "Exploring %s" );
 	char        buf[ 128 ];
 	snprintf( buf, sizeof( buf ), c, path );
 	game_integrations_discord_update_activity_( buf, nullptr, "qm1-logo", QM1_GAME_TITLE );

@@ -22,24 +22,27 @@ static void capture_screenshot_callback( const GameMenuOption * )
 }
 
 static GameMenuOption debugMenuOptions[] = {
-        {"Test Model\n",        nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_model" }                    },
-        {"Test Net\n",          nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_net" }                      },
-        {"Test Audio\n",        nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_play" }                    },
-        {"Test Audio 3D\n",     nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_test_3d" }                 },
+        {"Profiler\n",                     nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "gui.profiler" }                },
+        {"Cap Render Rate to Tick Rate\n", nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderTimeLock" }              },
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Show Lights\n",       nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" }         },
-        {"Show Node Volumes\n", nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" }       },
-        {"Show Portals\n",      nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" }           },
-        {"Show Face Bounds\n",  nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceBounds" }     },
-        {"Show Face Normals\n", nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" }    },
-        {"Wireframe\n",         nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" }          },
-        {"Shadow Wireframe\n",  nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" }},
+        {"Test Model\n",                   nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_model" }                    },
+        {"Test Net\n",                     nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_net" }                      },
+        {"Test Audio\n",                   nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_play" }                    },
+        {"Test Audio 3D\n",                nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_test_3d" }                 },
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Capture\n",           nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "capture" }                       },
-        {"Screenshot\n",        nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "screenshot" }                    },
+        {"Show Lights\n",                  nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" }         },
+        {"Show Node Volumes\n",            nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" }       },
+        {"Show Portals\n",                 nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" }           },
+        {"Show Face Bounds\n",             nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceBounds" }     },
+        {"Show Face Normals\n",            nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" }    },
+        {"Wireframe\n",                    nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" }          },
+        {"Shadow Wireframe\n",             nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" }},
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Save Camera\n",       nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "qm1_camera_save_pos" }           },
-        {"Restore Camera\n",    nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "qm1_camera_restore_pos" }        },
+        {"Capture\n",                      nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "capture" }                       },
+        {"Screenshot\n",                   nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "screenshot" }                    },
+        GAME_MENU_OPTION_SEPERATOR(),
+        {"Save Camera\n",                  nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "qm1_camera_save_pos" }           },
+        {"Restore Camera\n",               nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "qm1_camera_restore_pos" }        },
 };
 static GameMenu debugMenu = {
         "Debug Menu\n",
@@ -73,24 +76,23 @@ static GameMenu startMenu = {
 };
 
 static GameMenuOption optionsMenuOptions[] = {
-        {"FPS Counter\n",                  nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" }                },
+        {"FPS Counter\n",         nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFps" }                },
 
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Post-Processing\n",              nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" }                          },
-        {"Depth of Field\n",               nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dof" }                        },
-        {"Bloom\n",                        nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_bloom" }                      },
-        {"Dithering\n",                    nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dither" }                     },
-        {"FXAA\n",                         nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx_fxaa" }                     },
+        {"Post-Processing\n",     nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx" }                          },
+        {"Depth of Field\n",      nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dof" }                        },
+        {"Bloom\n",               nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_bloom" }                      },
+        {"Dithering\n",           nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "post_dither" }                     },
+        {"FXAA\n",                nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "postfx_fxaa" }                     },
 
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Stencil Shadows\n",              nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.useStencilShadowVolumes" }},
-        {"Cap Render Rate to Tick Rate\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderTimeLock" }                  },
+        {"Stencil Shadows\n",     nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.useStencilShadowVolumes" }},
 
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Lens Flares\n",                  nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.flareEnabled" }           },
+        {"Lens Flares\n",         nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.flareEnabled" }           },
 
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Use Qoi for Capture\n",          nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "capture.useQoi" }                  },
+        {"Use Qoi for Capture\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "capture.useQoi" }                  },
 };
 static GameMenu optionsMenu = {
         "Options\n",
