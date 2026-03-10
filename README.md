@@ -1,8 +1,6 @@
 <div align="center">
 
-![Logo](resources/ape_logo_v4_256.png)
-
-# ApeTech
+![Logo](resources/branding/ape_logo_256.png)
 
 ApeTech is a 3D game engine written in C23, being developed by
 [Mark "hogsy" Sowden](https://hogsy.me/), for game jams and prototyping.
