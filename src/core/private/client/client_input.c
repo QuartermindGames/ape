@@ -7,6 +7,7 @@
 #include "ape_private.h"
 #include "client_input.h"
 #include "gui/gui_private.h"
+#include "yin/core_fs.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -349,20 +350,18 @@ void ape_input_initialize_( void )
 	}
 
 	// load in the game controller mappings for sdl2
-	PLFile *mapFile = PlOpenFile( "mappings/gamecontrollerdb.txt", false );
-	if ( mapFile != NULL )
+	// read it into a null-terminated buffer
+	size_t         bufSize;
+	unsigned char *buf = ape_fs_load_file_buffer( "mappings/gamecontrollerdb.txt", &bufSize );
+	if ( buf != nullptr )
 	{
-		// read it into a null-terminated buffer
-		size_t size = PlGetFileSize( mapFile );
-		char  *buf  = QM_OS_MEMORY_NEW_( char, size + 1 );
-		PlReadFile( mapFile, buf, sizeof( char ), size );
-		PlCloseFile( mapFile );
-
-		SDL_IOStream *rw = SDL_IOFromMem( buf, ( int ) ( size + 1 ) );
+		SDL_IOStream *rw = SDL_IOFromMem( buf, ( int ) ( bufSize + 1 ) );
 		if ( SDL_AddGamepadMappingsFromIO( rw, true ) == -1 )
 		{
 			ape_console_warning_( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
 		}
+
+		qm_os_memory_free( buf );
 	}
 	else
 	{

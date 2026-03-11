@@ -51,7 +51,7 @@ static PLPath configPath;
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const char *ss_acl_fs_get_user_config_location( void )
+const char *ape_fs_get_user_config_location( void )
 {
 	if ( *configPath == '\0' )
 	{
@@ -101,7 +101,7 @@ void ape_fs_setup_config( AcmBranch *root )
 	// TODO: move this into the project handler
 }
 
-void *ss_acl_fs_load_file_buffer( const char *path, size_t *outSize )
+void *ape_fs_load_file_buffer( const char *path, size_t *outSize )
 {
 	PLFile *file = PlOpenFile( path, true );
 	if ( file == NULL )
@@ -132,7 +132,7 @@ void ape_fs_mount_base_locations( void )
 	PlMountLocalLocation( exePath );
 }
 
-char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
+char *ape_fs_parse_string( PLFile *file, uint16_t *size )
 {
 	bool status;
 	*size = PL_READUINT16( file, false, &status );
@@ -146,15 +146,15 @@ char *ss_acl_fs_parse_string( PLFile *file, uint16_t *size )
 	return buf;
 }
 
-char *ss_acl_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion )
+char *ape_fs_parse_string_ex( PLFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion )
 {
 	if ( version < minVersion || version > maxVersion )
 		return nullptr;
 
-	return ss_acl_fs_parse_string( file, size );
+	return ape_fs_parse_string( file, size );
 }
 
-uint8_t ss_acl_fs_parse_byte( PLFile *file )
+uint8_t ape_fs_parse_byte( PLFile *file )
 {
 	bool    status;
 	uint8_t i = PL_READUINT8( file, &status );
@@ -167,7 +167,7 @@ uint8_t ss_acl_fs_parse_byte_ex( PLFile *file, unsigned int version, unsigned in
 	if ( version < minVersion || version > maxVersion )
 		return fallback;
 
-	return ss_acl_fs_parse_byte( file );
+	return ape_fs_parse_byte( file );
 }
 
 int ss_acl_fs_parse_int( PLFile *file )

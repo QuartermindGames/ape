@@ -86,7 +86,7 @@ CMD_CALLBACK( Version )
 static void save_user_config( void );
 static void load_user_config( void )
 {
-	AcmBranch *root = com_acm_load_file( ss_acl_fs_get_user_config_location(), "config" );
+	AcmBranch *root = com_acm_load_file( ape_fs_get_user_config_location(), "config" );
 	if ( root == NULL )
 		return;
 
@@ -112,7 +112,7 @@ static void load_user_config( void )
 static void save_user_config( void )
 {
 	char path[ PL_SYSTEM_MAX_PATH ];
-	snprintf( path, sizeof( path ), "%s", ss_acl_fs_get_user_config_location() );
+	snprintf( path, sizeof( path ), "%s", ape_fs_get_user_config_location() );
 	ape_console_verbose_( "Saving user config: \"%s\"\n", path );
 
 	PLConsoleVariable **cvars;
