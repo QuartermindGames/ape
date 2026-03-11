@@ -26,25 +26,13 @@ set(YIN_CORE_CLIENT
         private/renderer/renderer_sprite.c
 )
 
-set(APE_SOURCE_GUI
-        private/gui/gui.c
-        private/gui/gui_draw.c
-        private/gui/gui_font.c
-)
-
-set(APE_SOURCE_EDITORS
-        private/editor/editor.c
-        private/editor/editor_grid.c
-        private/editor/editor_light.c
-        private/editor/editor_selection.c
-)
-
 add_library(ape-core STATIC
-        private/ape.c
-        private/ape_filesystem.c
-        private/ape_interface_game.c
-        private/ape_image.c
-        private/ape_scheduler.c
+        # Audio
+        private/audio/audio.c
+        private/audio/audio_openal.c
+        private/audio/audio_format_vorbis.c
+        private/audio/audio_format_wav.c
+        private/audio/audio_xaudio2.cpp
 
         private/camera/camera.c
 
@@ -70,21 +58,36 @@ add_library(ape-core STATIC
 
         ${YIN_CORE_CLIENT}
 
-        private/audio/audio.c
-        private/audio/audio_openal.c
-        private/audio/audio_format_vorbis.c
-        private/audio/audio_format_wav.c
-        private/audio/audio_xaudio2.cpp
-
+        # Script
         private/script/script.c
 
-        ${APE_SOURCE_GUI}
-        ${APE_SOURCE_EDITORS}
+        # GUI
+        private/gui/gui.c
+        private/gui/gui_draw.c
+        private/gui/gui_font.c
 
+        # Editor
+        private/editor/editor.c
+        private/editor/editor_grid.c
+        private/editor/editor_light.c
+        private/editor/editor_selection.c
+
+        # Memory
         private/memory/memory.c
 
+        # Server
         private/server/server.c
 
+        # Video
+        private/video/video.c
+        private/video/video_smk.c
+
+        # Other
+        private/ape.c
+        private/ape_filesystem.c
+        private/ape_interface_game.c
+        private/ape_image.c
+        private/ape_scheduler.c
         private/ape_test.c
 )
 add_dependencies(ape-core
