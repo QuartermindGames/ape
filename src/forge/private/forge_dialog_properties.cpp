@@ -164,7 +164,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			forge_warning_( "Unhandled property type (%u)!\n", editorProperty->type );
 			break;
 		case APE_PROPERTY_TYPE_FLOAT:
-			*( float * ) tableProperty->ptr = strtof( text, nullptr );
+			*( ApeFloatProperty * ) tableProperty->ptr = strtof( text, nullptr );
 			break;
 		case APE_PROPERTY_TYPE_VEC2:
 		{
@@ -197,6 +197,26 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			}
 			break;
 		}
+		case APE_PROPERTY_TYPE_BITFLAG:
+		{
+			for ( unsigned int i = 0; i < editorProperty->bitFlagType.numBitFlags; ++i )
+			{
+				if ( strcmp( text, editorProperty->bitFlagType.bitFlags[ i ].name ) != 0 )
+				{
+					continue;
+				}
+
+				if ( strcmp( text, "True" ) == 0 )
+				{
+					*( ApeIntegerProperty * ) tableProperty->ptr |= editorProperty->bitFlagType.bitFlags[ i ].value;
+				}
+				else
+				{
+					*( ApeIntegerProperty * ) tableProperty->ptr &= ~editorProperty->bitFlagType.bitFlags[ i ].value;
+				}
+			}
+			break;
+		}
 		case APE_PROPERTY_TYPE_ENUM:
 		{
 			for ( unsigned int i = 0; i < editorProperty->enumType.numEnums; ++i )
@@ -206,12 +226,12 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 					continue;
 				}
 
-				*( uint32_t * ) tableProperty->ptr = editorProperty->enumType.enums[ i ].value;
+				*( ApeEnumProperty * ) tableProperty->ptr = editorProperty->enumType.enums[ i ].value;
 			}
 			break;
 		}
 		case APE_PROPERTY_TYPE_INTEGER:
-			*( int32_t * ) tableProperty->ptr = strtol( text, nullptr, 10 );
+			*( ApeIntegerProperty * ) tableProperty->ptr = strtol( text, nullptr, 10 );
 			break;
 		case APE_PROPERTY_TYPE_STRING:
 		case APE_PROPERTY_TYPE_PATH:
@@ -221,11 +241,11 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 		case APE_PROPERTY_TYPE_BOOLEAN:
 			if ( strcmp( text, "True" ) == 0 )
 			{
-				*( bool * ) tableProperty->ptr = true;
+				*( ApeBooleanProperty * ) tableProperty->ptr = true;
 			}
 			else
 			{
-				*( bool * ) tableProperty->ptr = false;
+				*( ApeBooleanProperty * ) tableProperty->ptr = false;
 			}
 			break;
 	}
@@ -307,6 +327,16 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeProperty
 			numSubRows += 3;
 			break;
 		}
+#if 0
+		case APE_PROPERTY_TYPE_BITFLAG:
+		{
+			for ( unsigned int i = 0; i < internalProperty->bitFlagType.numBitFlags; ++i, ++numSubRows )
+			{
+				table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) internalProperty ) );
+			}
+			break;
+		}
+#endif
 		case APE_PROPERTY_TYPE_ENUM:
 		{
 			FXString options;
