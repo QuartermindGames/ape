@@ -108,8 +108,42 @@ static void toggle_camera( ApeInputState state, PL_UNUSED const char *id )
 	}
 }
 
+static void spawn_portal_action( ApeInputState state, const char *id )
+{
+	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	{
+		return;
+	}
+
+	if ( ss1_gameState.camera == nullptr )
+	{
+		return;
+	}
+
+	ApeRoom *room = ape_camera_get_room( ss1_gameState.camera );
+	if ( room == nullptr )
+	{
+		return;
+	}
+
+	QmMathVector3f pos = ape_camera_get_position( ss1_gameState.camera );
+	QmMathVector3f dir = ape_camera_get_forward( ss1_gameState.camera );
+	dir                = qm_math_vector3f_invert( dir );//TODO: sigh... camera is inverted
+
+	ApeEntity *entity = ape_entity_create( APE_WORLD_NODE( room ), "portal", nullptr, nullptr, &pos, &dir );
+	if ( entity != nullptr )
+	{
+		ape_entity_spawn( entity );
+
+		char tmp[ 64 ];
+		qm_math_vector3f_print( pos, tmp, sizeof( tmp ) );
+		game_debug_( "Spawned portal entity at %s\n", tmp );
+	}
+}
+
 void ss1_actions_register_()
 {
-	ape_client_input_register_action( "ss1_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
-	ape_client_input_register_action( "ss1_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal );
+	ape_client_input_register_action( "qm1_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
+	ape_client_input_register_action( "qm1_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal );
+	ape_client_input_register_action( "qm1_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
 }

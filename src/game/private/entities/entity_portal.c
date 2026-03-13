@@ -258,6 +258,7 @@ static void tick_portal( ApeEntity *self, double delta )
 			if ( !updating )
 			{
 				ape_world_node_destroy( APE_WORLD_NODE( self ) );
+				return;
 			}
 			break;
 		}

@@ -77,39 +77,6 @@ static void move_action( ApeInputState state, const char *id )
 	}
 }
 
-static void spawn_portal_action( ApeInputState state, const char *id )
-{
-	if ( !( state & APE_INPUT_STATE_PRESSED ) )
-	{
-		return;
-	}
-
-	ApeEntity *entity = game_server_get_host_entity_();
-	if ( entity == nullptr )
-	{
-		return;
-	}
-
-	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
-	if ( room == nullptr )
-	{
-		return;
-	}
-
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
-
-	entity = ape_entity_create( APE_WORLD_NODE( room ), "portal", nullptr, nullptr, &pos, &ang );
-	if ( entity != nullptr )
-	{
-		ape_entity_spawn( entity );
-
-		char tmp[ 64 ];
-		qm_math_vector3f_print( pos, tmp, sizeof( tmp ) );
-		game_debug_( "Spawned portal entity at %s\n", tmp );
-	}
-}
-
 static void close_portals_action( ApeInputState state, const char * )
 {
 	void game_entity_close_all_portals();
@@ -129,6 +96,5 @@ void game_client_actions_register_()
 
 	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action );
 
-	ape_client_input_register_action( "game_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
 	ape_client_input_register_action( "game_close_portals", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'c' }, 1, close_portals_action );
 }
