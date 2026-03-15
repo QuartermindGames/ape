@@ -126,15 +126,15 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 		ape_console_print_( "Operating in command-line mode!\n" );
 	}
 
-	ape_console_register_variables_( engineTerminalMode );
-	ape_console_register_commands_( engineTerminalMode );
-
 	// Need to do this before anything else IO related
 	ape_fs_mount_base_locations();
 
 	// And now we can fetch the configs that provide mount locations, aliases, and more
 	engineConfig = com_get_config( config != nullptr ? config : "engine" );
 	userConfig   = com_get_config( "user" );
+
+	ape_console_register_variables_( engineTerminalMode );
+	ape_console_register_commands_( engineTerminalMode );
 
 	ape_fs_setup_config( engineConfig );
 
