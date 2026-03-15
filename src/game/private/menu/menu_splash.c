@@ -2,6 +2,8 @@
 // Purpose: Splash screen, for showing fancy logos on startup.
 // Author:  Mark E. Sowden
 
+#include "core/public/ape_video.h"
+
 #include "menu.h"
 
 static constexpr unsigned int MAX_SPLASHES = 4;
@@ -13,16 +15,24 @@ void game_menu_splash_cleanup_()
 {
 	for ( unsigned int i = 0; i < splashNum; ++i )
 	{
-		if ( splashScreens[ i ].p.material != nullptr )
+		GameMenuSplash *splash = &splashScreens[ splashNum ];
+		if ( splash->type == GAME_MENU_SPLASH_TYPE_IMAGE )
 		{
-			ape_material_release( splashScreens[ i ].p.material );
-			splashScreens[ i ].p.material = nullptr;
+			if ( splash->image.p.material != nullptr )
+			{
+				ape_material_release( splash->image.p.material );
+				splash->image.p.material = nullptr;
+			}
+			if ( splash->image.p.sample != nullptr )
+			{
+				ape_audio_sample_release( splash->image.p.sample );
+				splash->image.p.sample = nullptr;
+			}
 		}
-
-		if ( splashScreens[ i ].p.sample != nullptr )
+		else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video != nullptr )
 		{
-			ape_audio_sample_release( splashScreens[ i ].p.sample );
-			splashScreens[ i ].p.sample = nullptr;
+			ape_video_destroy( splash->video );
+			splash->video = nullptr;
 		}
 	}
 
@@ -48,25 +58,28 @@ void game_menu_splash_setup_queue_( const GameMenuSplash *splashes, const unsign
 		GameMenuSplash *splash = &splashScreens[ splashNum ];
 		*splash                = splashes[ i ];
 
-		splash->p.material = ape_material_cache( splash->materialPath, APE_CACHE_GROUP_GLOBAL, false );
-		if ( splash->p.material == nullptr )
+		if ( splash->type == GAME_MENU_SPLASH_TYPE_IMAGE )
 		{
-			game_warning_( "Failed to load splash screen material (%s)!\n", splash->materialPath );
-			continue;
-		}
-
-		// the sample is totally optional; if it fails to load,
-		// we just throw the warning but otherwise continue
-		if ( splash->samplePath != nullptr )
-		{
-			splash->p.sample = ape_audio_sample_cache( splash->samplePath );
-			if ( splash->p.sample == nullptr )
+			splash->image.p.material = ape_material_cache( splash->image.materialPath, APE_CACHE_GROUP_GLOBAL, false );
+			if ( splash->image.p.material == nullptr )
 			{
-				game_warning_( "Failed to load splash screen sample (%s)!\n", splash->samplePath );
+				game_warning_( "Failed to load splash screen material (%s)!\n", splash->image.materialPath );
+				continue;
 			}
-		}
 
-		splash->p.maxLifetime = splash->fadeInTime + splash->fadeOutTime;
+			// the sample is totally optional; if it fails to load,
+			// we just throw the warning but otherwise continue
+			if ( splash->image.samplePath != nullptr )
+			{
+				splash->image.p.sample = ape_audio_sample_cache( splash->image.samplePath );
+				if ( splash->image.p.sample == nullptr )
+				{
+					game_warning_( "Failed to load splash screen sample (%s)!\n", splash->image.samplePath );
+				}
+			}
+
+			splash->image.p.maxLifetime = splash->image.fadeInTime + splash->image.fadeOutTime;
+		}
 
 		splashNum++;
 	}
@@ -92,10 +105,22 @@ void game_menu_splash_tick_( const double delta )
 		return;
 	}
 
-	splash->p.lifetime += 1.0f * delta;
-	if ( splash->p.lifetime > splash->p.maxLifetime )
+	if ( splash->type == GAME_MENU_SPLASH_TYPE_IMAGE )
 	{
-		splashCur++;
+		splash->image.p.lifetime += 1.0f * delta;
+		if ( splash->image.p.lifetime > splash->image.p.maxLifetime )
+		{
+			splashCur++;
+		}
+	}
+	else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video != nullptr )
+	{
+		ape_video_tick( splash->video, delta );
+
+		if ( !ape_video_is_playing( splash->video ) )
+		{
+			splashCur++;
+		}
 	}
 }
 
@@ -122,6 +147,35 @@ static void draw_rect( const float x, const float y, const float w, const float 
 	ape_material_draw( material, mesh, nullptr );
 }
 
+static void splash_draw_image( const ApeViewport *viewport, GameMenuSplashImage *image )
+{
+	float w = viewport->width / 3.0f;
+	float h = w;
+	if ( h > viewport->height )
+	{
+		w = viewport->height / 3.0f;
+		h = w;
+	}
+
+	float prog = image->p.lifetime / image->p.maxLifetime;
+	float fade = 1.0f;
+	if ( image->p.lifetime < image->fadeInTime )
+	{
+		fade = image->p.lifetime / image->fadeInTime;
+	}
+	else if ( prog > 1.0f - image->fadeOutTime / image->p.maxLifetime )
+	{
+		float fadeOutStart = 1.0f - image->fadeOutTime / image->p.maxLifetime;
+		fade               = 1.0f - ( prog - fadeOutStart ) / ( image->fadeOutTime / image->p.maxLifetime );
+	}
+
+	draw_rect( viewport->width / 2.0f - w / 2.0f, // x
+	           viewport->height / 2.0f - h / 2.0f,// y
+	           w, h,
+	           &QM_MATH_COLOUR4UB( 255, 255, 255, PlFloatToByte( fade ) ),
+	           image->p.material );
+}
+
 void game_menu_splash_draw_( const ApeViewport *viewport )
 {
 	assert( splashCur < splashNum );
@@ -132,29 +186,12 @@ void game_menu_splash_draw_( const ApeViewport *viewport )
 		return;
 	}
 
-	float w = viewport->width / 3.0f;
-	float h = w;
-	if ( h > viewport->height )
+	if ( splash->type == GAME_MENU_SPLASH_TYPE_IMAGE )
 	{
-		w = viewport->height / 3.0f;
-		h = w;
+		splash_draw_image( viewport, &splash->image );
 	}
-
-	float prog = splash->p.lifetime / splash->p.maxLifetime;
-	float fade = 1.0f;
-	if ( splash->p.lifetime < splash->fadeInTime )
+	else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video != nullptr )
 	{
-		fade = splash->p.lifetime / splash->fadeInTime;
+		ape_video_draw( splash->video, viewport );
 	}
-	else if ( prog > ( 1.0f - splash->fadeOutTime / splash->p.maxLifetime ) )
-	{
-		float fadeOutStart = 1.0f - splash->fadeOutTime / splash->p.maxLifetime;
-		fade               = 1.0f - ( prog - fadeOutStart ) / ( splash->fadeOutTime / splash->p.maxLifetime );
-	}
-
-	draw_rect( viewport->width / 2.0f - w / 2.0f, // x
-	           viewport->height / 2.0f - h / 2.0f,// y
-	           w, h,
-	           &QM_MATH_COLOUR4UB( 255, 255, 255, PlFloatToByte( fade ) ),
-	           splash->p.material );
 }

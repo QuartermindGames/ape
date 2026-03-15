@@ -2,8 +2,9 @@
 
 #include "qmos/public/qm_os_random.h"
 
-#include "menu/menu.h"
+#include "ape_video.h"
 
+#include "menu/menu.h"
 #include "menu/menu.h"
 #include "menu/menu_pie.h"
 #include "menu/menu_compass.h"
@@ -157,13 +158,10 @@ void ss1_menu_initialize_( void )
 	//menu_pie_make_active( interactPie, true );
 
 	// setup the splash screens that will get shown on startup
-	static const GameMenuSplash splashes[] = {
-	        {
-             .materialPath = "materials/ui/qm_logo.mat.n",
-             .samplePath   = nullptr,
-             .fadeInTime   = 2.0f,
-             .fadeOutTime  = 2.0f,
-	         },
+	const GameMenuSplash splashes[] = {
+	        //GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_qm.mat.n", nullptr, 2.0f, 2.0f ),
+	        GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_ape.mat.n", nullptr, 2.0f, 2.0f ),
+	        GAME_MENU_SPLASH_VIDEO( "videos/CRE8LOGO.SMK" ),
 	};
 	game_menu_splash_setup_queue_( splashes, QM_OS_ARRAY_ELEMENTS( splashes ) );
 

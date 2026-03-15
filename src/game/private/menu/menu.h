@@ -4,6 +4,8 @@
 
 #include "../game_private.h"
 
+typedef struct ApeVideo ApeVideo;
+
 typedef struct GameMenu       GameMenu;
 typedef struct GameMenuOption GameMenuOption;
 
@@ -90,7 +92,13 @@ GameMenu *game_menu_get_active( void );
 // Splash Screen
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct GameMenuSplash
+typedef enum GameMenuSplashType
+{
+	GAME_MENU_SPLASH_TYPE_IMAGE,
+	GAME_MENU_SPLASH_TYPE_VIDEO,
+} GameMenuSplashType;
+
+typedef struct GameMenuSplashImage
 {
 	const char *materialPath;// required
 	const char *samplePath;  // optional
@@ -105,7 +113,30 @@ typedef struct GameMenuSplash
 		float           lifetime;
 		float           maxLifetime;
 	} p;// private data
+} GameMenuSplashImage;
+
+typedef struct GameMenuSplash
+{
+	GameMenuSplashType type;
+
+	union
+	{
+		GameMenuSplashImage image;
+		ApeVideo           *video;
+	};
 } GameMenuSplash;
+
+#define GAME_MENU_SPLASH_IMAGE( PATH, SAMPLE, FADEIN, FADEOUT ) { \
+	    .type               = GAME_MENU_SPLASH_TYPE_IMAGE,        \
+	    .image.materialPath = ( PATH ),                           \
+	    .image.samplePath   = ( SAMPLE ),                         \
+	    .image.fadeInTime   = ( FADEIN ),                         \
+	    .image.fadeOutTime  = ( FADEOUT ),                        \
+}
+#define GAME_MENU_SPLASH_VIDEO( PATH ) {      \
+	    .type  = GAME_MENU_SPLASH_TYPE_VIDEO, \
+	    .video = ape_video_load( ( PATH ) ),  \
+}
 
 /**
  * Cleanup everything that's queued, essentially skipping.
