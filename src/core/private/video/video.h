@@ -12,6 +12,11 @@ typedef struct ApeVideo
 	unsigned int numFrames;
 	ApeTexture **frames;
 
+	float playtime;
+	float framerate;
+
+	bool isPaused;
+
 	unsigned int width;
 	unsigned int height;
 } ApeVideo;

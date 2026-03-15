@@ -3,17 +3,19 @@
 //			https://libsmacker.sourceforge.net/
 // Author:  Mark E. Sowden
 
-#include <smacker.h>
+#if defined( APE_SUPPORT_SMACKER )
+
+#	include <smacker.h>
 
 // this just appears to be a magic number otherwise...
 static constexpr unsigned int SMK_TRACKS = 7;
 
-#include "yin/core_fs.h"
+#	include "yin/core_fs.h"
 
-#include "ape_private.h"
+#	include "ape_private.h"
 
-#include "video.h"
-#include "renderer/renderer_texture.h"
+#	include "video.h"
+#	include "renderer/renderer_texture.h"
 
 ApeVideo *ape_video_smk_load_( const char *path )
 {
@@ -69,7 +71,16 @@ ApeVideo *ape_video_smk_load_( const char *path )
 			out[ j ] = pal[ vidFrame[ j ] ];
 		}
 
-		frames[ i ] = ape_texture_generate_( "frame", out, w, h, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_NEAREST );
+		char tmp[ 64 ];
+		snprintf( tmp, sizeof( tmp ), "frame_%u.png", i );
+
+#	if 0
+		PLImage *image = PlCreateImage( out, w, h, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_RGB8 );
+		PlWriteImage( image, tmp, 0 );
+		PlDestroyImage( image );
+#	endif
+
+		frames[ i ] = ape_texture_generate_( tmp, out, w, h, &QM_IMAGE_FORMAT_RGB8_DESC(), PLG_TEXTURE_FILTER_NEAREST );
 	}
 
 	// populate video object
@@ -78,6 +89,7 @@ ApeVideo *ape_video_smk_load_( const char *path )
 	video->height    = h;
 	video->numFrames = numFrames;
 	video->frames    = frames;
+	video->framerate = ( float ) usf;
 
 cleanup:
 	qm_os_memory_free( buf );
@@ -89,3 +101,5 @@ cleanup:
 
 	return video;
 }
+
+#endif

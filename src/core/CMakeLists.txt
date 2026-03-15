@@ -1,3 +1,5 @@
+find_library(SMACKER_LIBRARY NAMES smacker)
+
 set(YIN_CORE_CLIENT
         private/client/client.c
         private/client/client_input.c
@@ -96,6 +98,12 @@ add_dependencies(ape-core
         pl_gl_driver
 )
 
+if(SMACKER_LIBRARY)
+    message("Found libsmacker, smk support will be enabled!")
+    target_compile_definitions(ape-core PRIVATE APE_SUPPORT_SMACKER)
+    target_link_libraries(ape-core ${SMACKER_LIBRARY})
+endif()
+
 target_include_directories(ape-core PRIVATE
         private/
         ../game/public/
@@ -114,12 +122,15 @@ target_link_libraries(ape-core
 
         # qmfw libraries
         qm-os
+
         # platform libraries
         plcore
         plgraphics
+
         # ape libraries
         ape-aux
         acm
+
         # other
         OpenAL
         lua
