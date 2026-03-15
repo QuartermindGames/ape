@@ -21,7 +21,7 @@ static void cleanup_transform_widget();
 static void render_transform_widget( ApeEditorInstance *instance );
 
 static constexpr float SELECTION_OBJECT_SIZE = 8.0f;
-static constexpr float SELECTION_VERTEX_SIZE = 2.0f;
+static constexpr float SELECTION_VERTEX_SIZE = 0.5f;
 
 // todo: these should be linked against the active instance
 static ApeViewport *selectionViewport;
