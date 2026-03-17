@@ -11,6 +11,8 @@
 
 #include "ss1_game.h"
 
+#include "aux/public/aux_project.h"
+
 static const char *menuFontPath      = "guis/fonts/dejavu_sans_mono_bold_24.fnt";
 static const char *menuTitleFontPath = "guis/fonts/cinzel_decorative_black_64.fnt";
 
@@ -143,8 +145,11 @@ void ss1_menu_initialize_( void )
 	menuFont      = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
 	menuTitleFont = gui_font_load( menuTitleFontPath, gui_get_default_font( GUI_FONT_DEFAULT_LARGE ) );
 
+	// use the name from the project conf. for the title, so mods etc. can set their own thing
+	const char *title = acm_get_string( com_project_get_config(), "name", "QM1" );
+
 	game_menu_initialize();
-	game_menu_set_title( "Nihlexa" );
+	game_menu_set_title( G_STR_( title ) );
 	game_menu_set_font( menuFont );
 	game_menu_set_title_font( menuTitleFont );
 
@@ -159,7 +164,7 @@ void ss1_menu_initialize_( void )
 
 	// setup the splash screens that will get shown on startup
 	const GameMenuSplash splashes[] = {
-	        //GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_qm.mat.n", nullptr, 2.0f, 2.0f ),
+	        GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_qm.mat.n", nullptr, 2.0f, 2.0f ),
 	        GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_ape.mat.n", nullptr, 2.0f, 2.0f ),
 	        GAME_MENU_SPLASH_VIDEO( "videos/CRE8LOGO.SMK" ),
 	};
