@@ -29,10 +29,10 @@ void game_menu_splash_cleanup_()
 				splash->image.p.sample = nullptr;
 			}
 		}
-		else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video != nullptr )
+		else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video.p.video != nullptr )
 		{
-			ape_video_destroy( splash->video );
-			splash->video = nullptr;
+			ape_video_destroy( splash->video.p.video );
+			splash->video.p.video = nullptr;
 		}
 	}
 
@@ -80,6 +80,15 @@ void game_menu_splash_setup_queue_( const GameMenuSplash *splashes, const unsign
 
 			splash->image.p.maxLifetime = splash->image.fadeInTime + splash->image.fadeOutTime;
 		}
+		else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO )
+		{
+			splash->video.p.video = ape_video_load( splash->video.path );
+			if ( splash->video.p.video == nullptr )
+			{
+				game_warning_( "Failed to load splash screen video (%s)!\n", splash->image.materialPath );
+				continue;
+			}
+		}
 
 		splashNum++;
 	}
@@ -113,11 +122,11 @@ void game_menu_splash_tick_( const double delta )
 			splashCur++;
 		}
 	}
-	else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video != nullptr )
+	else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video.p.video != nullptr )
 	{
-		ape_video_tick( splash->video, delta );
+		ape_video_tick( splash->video.p.video, delta );
 
-		if ( !ape_video_is_playing( splash->video ) )
+		if ( !ape_video_is_playing( splash->video.p.video ) )
 		{
 			splashCur++;
 		}
@@ -190,8 +199,8 @@ void game_menu_splash_draw_( const ApeViewport *viewport )
 	{
 		splash_draw_image( viewport, &splash->image );
 	}
-	else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video != nullptr )
+	else if ( splash->type == GAME_MENU_SPLASH_TYPE_VIDEO && splash->video.p.video != nullptr )
 	{
-		ape_video_draw( splash->video, viewport );
+		ape_video_draw( splash->video.p.video, viewport );
 	}
 }

@@ -115,6 +115,16 @@ typedef struct GameMenuSplashImage
 	} p;// private data
 } GameMenuSplashImage;
 
+typedef struct GameMenuSplashVideo
+{
+	const char *path;
+
+	struct
+	{
+		ApeVideo *video;
+	} p;
+} GameMenuSplashVideo;
+
 typedef struct GameMenuSplash
 {
 	GameMenuSplashType type;
@@ -122,7 +132,7 @@ typedef struct GameMenuSplash
 	union
 	{
 		GameMenuSplashImage image;
-		ApeVideo           *video;
+		GameMenuSplashVideo video;
 	};
 } GameMenuSplash;
 
@@ -133,9 +143,9 @@ typedef struct GameMenuSplash
 	    .image.fadeInTime   = ( FADEIN ),                         \
 	    .image.fadeOutTime  = ( FADEOUT ),                        \
 }
-#define GAME_MENU_SPLASH_VIDEO( PATH ) {      \
-	    .type  = GAME_MENU_SPLASH_TYPE_VIDEO, \
-	    .video = ape_video_load( ( PATH ) ),  \
+#define GAME_MENU_SPLASH_VIDEO( PATH ) {           \
+	    .type       = GAME_MENU_SPLASH_TYPE_VIDEO, \
+	    .video.path = ( PATH ),                    \
 }
 
 /**
