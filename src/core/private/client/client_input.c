@@ -294,7 +294,7 @@ static float clamp_axis_input( float value, float deadzone )
 	return copysignf( ( float ) ( t > 0.0f ), value ) * fminf( t / ( 1.0f - deadzone ), 1.0f ) * ( float ) ( t > 0.0f );
 }
 
-static void list_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+static void list_actions_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
 {
 	ApeInputAction *action;
 	QM_OS_LINKED_LIST_ITERATE( action, actionableList, i )
@@ -303,7 +303,7 @@ static void list_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **
 	}
 }
 
-static void dump_actions_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+static void dump_actions_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
 {
 	static const char *FILENAME = "dump.txt";
 

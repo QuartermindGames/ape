@@ -319,14 +319,14 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 		ApeRoom *room = ape_camera_get_room( self );
 		if ( room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
 		{
-			ape_draw_debug_sphere( position, PlColourF32ToU8( &light->colour ), light->radius );
+			ape_draw_debug_sphere( position, QM_MATH_COLOUR4F_TO_4UB( light->colour ), light->radius );
 			if ( light->type != APE_LIGHT_TYPE_OMNI )
 			{
 				QmMathVector3f angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
 				QmMathVector3f forward;
 				PlAnglesAxes( angles, nullptr, nullptr, &forward );
 				QmMathVector3f end = qm_math_vector3f_add( position, qm_math_vector3f_scale_float( forward, 16.0f ) );
-				ape_draw_debug_arrow( position, end, PlColourF32ToU8( &light->colour ), 1.0f );
+				ape_draw_debug_arrow( position, end, QM_MATH_COLOUR4F_TO_4UB( light->colour ), 1.0f );
 			}
 		}
 	}

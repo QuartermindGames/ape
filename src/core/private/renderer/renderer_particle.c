@@ -264,7 +264,7 @@ void ss_arl_particle_emitter_draw( const ApeParticleEmitter *emitter, const ApeC
 		float y = particle->transform.translation.y;
 		float z = particle->transform.translation.z;
 
-		QmMathColour4ub colour = PlColourF32ToU8( &particle->colour );
+		QmMathColour4ub colour = QM_MATH_COLOUR4F_TO_4UB( particle->colour );
 
 		unsigned int a = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
 		unsigned int b = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 1.0f ) );

@@ -918,7 +918,7 @@ static void draw_node_text_overlay( ApeEditorInstance *self, ApeWorldNode *root,
 			if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 			{
 				ApeLight *light = ( ApeLight * ) node;
-				colour          = PL_COLOURF32_TO_U8( light->colour );
+				colour          = QM_MATH_COLOUR4F_TO_4UB( light->colour );
 				colour.a        = 255;
 			}
 			else

@@ -12,8 +12,6 @@
 // I'm not going to lie, much of this is stolen from various books,
 // and I'm absolutely clueless how much of it works... so don't ask
 
-static constexpr float EPSILON = 1e-6f;
-
 static QmMathVector3f closest_point_on_line_segment( const QmMathVector3f *a, const QmMathVector3f *b, const QmMathVector3f *point )
 {
 	QmMathVector3f ab = qm_math_vector3f_sub( *b, *a );
@@ -159,7 +157,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 		QmMathVector3f edge         = qm_math_vector3f_sub( v1, v0 );
 		QmMathVector3f toPoint      = qm_math_vector3f_sub( projectedPoint, v0 );
 		float          edgeLengthSq = qm_math_vector3f_dot_product( edge, edge );
-		if ( edgeLengthSq < EPSILON )
+		if ( edgeLengthSq < QM_MATH_EPSILON )
 		{
 			continue;
 		}
@@ -276,7 +274,7 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 	float          distanceToPlane;
 
 	float denom = db - da;
-	if ( fabsf( denom ) < EPSILON )
+	if ( fabsf( denom ) < QM_MATH_EPSILON )
 	{
 		if ( fabsf( da ) < fabsf( db ) )
 		{
@@ -362,7 +360,7 @@ bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule
 		QmMathVector3f edge         = qm_math_vector3f_sub( v1, v0 );
 		QmMathVector3f toPoint      = qm_math_vector3f_sub( projectedPoint, v0 );
 		float          edgeLengthSq = qm_math_vector3f_dot_product( edge, edge );
-		if ( edgeLengthSq < EPSILON )
+		if ( edgeLengthSq < QM_MATH_EPSILON )
 		{
 			continue;
 		}
@@ -512,7 +510,7 @@ bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, con
 	QmMathVector3f P = qm_math_vector3f_add( sphere->origin, qm_math_vector3f_scale_float( difference, h / distance ) );
 
 	float a_squared = r1 * r1 - h * h;
-	if ( a_squared < EPSILON )
+	if ( a_squared < QM_MATH_EPSILON )
 	{
 		*result = P;
 		return true;
@@ -522,7 +520,7 @@ bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, con
 	QmMathVector3f dir = qm_math_vector3f_normalize( difference );
 
 	QmMathVector3f perp = qm_math_vector3f_cross_product( dir, QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
-	if ( qm_math_vector3f_length( perp ) < EPSILON )
+	if ( qm_math_vector3f_length( perp ) < QM_MATH_EPSILON )
 	{
 		perp = qm_math_vector3f_cross_product( dir, QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 	}

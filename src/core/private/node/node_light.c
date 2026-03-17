@@ -243,7 +243,7 @@ static void light_on_draw_editor( void *self, const bool isSelected )
 	{
 		QmMathVector3f forward = ape_light_get_direction( light );
 		QmMathVector3f end     = qm_math_vector3f_add( position, qm_math_vector3f_scale_float( forward, 16.0f + light->colour.a ) );
-		ape_draw_debug_arrow( position, end, PlColourF32ToU8( &light->colour ), 1.0f );
+		ape_draw_debug_arrow( position, end, QM_MATH_COLOUR4F_TO_4UB( light->colour ), 1.0f );
 	}
 
 	if ( type == APE_LIGHT_TYPE_OMNI && isSelected )

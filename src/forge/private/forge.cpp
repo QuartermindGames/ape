@@ -338,7 +338,7 @@ static void setup_paths( const char *exePath )
 	PlSetupPath( forge::cachedPaths[ forge::PATH_EXE ], true, "%s", exePath );
 	PlSetupPath( forge::cachedPaths[ forge::PATH_RESOURCES ], true, "%s/../../resources", forge::cachedPaths[ forge::PATH_EXE ] );
 	PlSetupPath( forge::cachedPaths[ forge::PATH_PROJECTS ], true, "%s/../../projects", forge::cachedPaths[ forge::PATH_EXE ] );
-	PlSetupPath( forge::cachedPaths[ forge::PATH_COOK ], true, "%s/cook" PL_SYSTEM_EXE_EXTENSION, forge::cachedPaths[ forge::PATH_EXE ] );
+	PlSetupPath( forge::cachedPaths[ forge::PATH_COOK ], true, "%s/cook" QM_OS_SYSTEM_EXE_EXT, forge::cachedPaths[ forge::PATH_EXE ] );
 
 	if ( !PlFileExists( forge::cachedPaths[ forge::PATH_CONFIG ] ) )
 	{

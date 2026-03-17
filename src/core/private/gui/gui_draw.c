@@ -139,7 +139,7 @@ void ape_gui_draw_quad( PLGMesh *mesh, const QmMathVector2i tl, const QmMathVect
 	assert( mesh->primitive == PLG_MESH_TRIANGLES );
 
 	// todo: drawing API should take floating-point colours!
-	QmMathColour4ub bColour = PlColourF32ToU8( colour );
+	QmMathColour4ub bColour = QM_MATH_COLOUR4F_TO_4UB( *colour );
 
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( tl.x, tl.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),

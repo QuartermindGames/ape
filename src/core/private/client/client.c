@@ -202,7 +202,7 @@ static void handle_connection_state( void )
 	}
 }
 
-static void connect_command( PL_UNUSED unsigned int argc, char **argv )
+static void connect_command( [[maybe_unused]] unsigned int argc, char **argv )
 {
 	char *address = qm_os_string_alloc( "%s", argv[ 1 ] );
 	if ( address == nullptr )

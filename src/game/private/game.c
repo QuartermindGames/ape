@@ -104,7 +104,7 @@ static void register_standard_entity_components()
 	ape_register_entity_component( &game_inventoryComponent_ );
 }
 
-static void load_room_command( PL_UNUSED unsigned int argc, char **argv )
+static void load_room_command( [[maybe_unused]] unsigned int argc, char **argv )
 {
 	ApeWorld *world = ape_world_create();
 	assert( world != nullptr );

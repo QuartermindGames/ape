@@ -274,7 +274,7 @@ static void destroy_shader( void *user )
 	qm_os_memory_free( programIndex );
 }
 
-static void load_shader_program_callback( const char *path, PL_UNUSED void *userData )
+static void load_shader_program_callback( const char *path, [[maybe_unused]] void *userData )
 {
 	ape_console_print_( "Loading program: \"%s\"\n", path );
 

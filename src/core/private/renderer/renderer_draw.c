@@ -62,7 +62,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMath
 	float y = origin->y * scale;
 
 	//FIXME: plgraphics should support using floats for colours damn it!!!!
-	QmMathColour4ub c = PlColourF32ToU8( colour );
+	QmMathColour4ub c = QM_MATH_COLOUR4F_TO_4UB( *colour );
 
 	PlgImmPushVertex( x, y, 0.0f );
 	PlgImmColour( c.r, c.g, c.b, c.a );

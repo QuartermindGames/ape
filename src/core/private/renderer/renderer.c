@@ -103,7 +103,7 @@ static void *process_capture_queue( void * )
 	return NULL;
 }
 
-static void capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+static void capture_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
 {
 	numCaptureFrames = 0;
 	isCapturing      = !isCapturing;
@@ -302,7 +302,7 @@ void ape_prepare_screenshot_capture_( void )
 	isScreenshotPending = true;
 }
 
-static void prepare_screenshot_capture_command( PL_UNUSED unsigned int argc, PL_UNUSED char **argv )
+static void prepare_screenshot_capture_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
 {
 	ape_prepare_screenshot_capture_();
 }

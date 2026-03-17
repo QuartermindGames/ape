@@ -22,7 +22,7 @@ void game_server_initialize_()
 	PL_ZERO_( serverClients );
 }
 
-bool game_server_client_validate_( PL_UNUSED ApeServerClient *clientHandle )
+bool game_server_client_validate_( [[maybe_unused]] ApeServerClient *clientHandle )
 {
 	if ( numServerClients >= GAME_MAX_CLIENTS )
 	{

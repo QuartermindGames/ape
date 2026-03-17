@@ -186,7 +186,7 @@ static void cleanup_unreferenced_resources( bool force )
 
 #define MEM_CLEANUP_TASK_NAME "mem_cleanup"
 
-static void cleanup_callback( PL_UNUSED void *unused0, PL_UNUSED double unused1 )
+static void cleanup_callback( [[maybe_unused]] void *unused0, [[maybe_unused]] double unused1 )
 {
 	cleanup_unreferenced_resources( false );
 

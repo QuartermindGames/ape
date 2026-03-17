@@ -10,8 +10,8 @@
 
 static bool discordEnabled;
 
-static const char *DISCORD_DLL = "discord_game_sdk";
-static PLLibrary  *discordLibrary;
+static const char  *DISCORD_DLL = "discord_game_sdk";
+static QmOsLibrary *discordLibrary;
 
 typedef struct DiscordAppData
 {
@@ -60,7 +60,7 @@ bool game_integrations_discord_initialize_( int64_t clientId )
 	PLPath path;
 	PlSetupPath( path, true, "%s/%s", exePath, DISCORD_DLL );
 
-	discordLibrary = PlLoadLibrary( path, true );
+	discordLibrary = qm_os_library_load( path, true );
 	if ( discordLibrary == nullptr )
 	{
 		game_warning_( "Failed to load Discord GameSDK library (%s): %s\n",
@@ -68,7 +68,7 @@ bool game_integrations_discord_initialize_( int64_t clientId )
 		return false;
 	}
 
-	DiscordCreatePtr = PlGetLibraryProcedure( discordLibrary, "DiscordCreate" );
+	DiscordCreatePtr = qm_os_library_get_procedure( discordLibrary, "DiscordCreate" );
 	if ( DiscordCreatePtr == nullptr )
 	{
 		game_warning_( "Failed to get \"DiscordCreate\" function in Discord GameSDK library: %s\n",
@@ -115,7 +115,7 @@ void game_integrations_discord_shutdown_()
 {
 	if ( discordLibrary != nullptr )
 	{
-		PlUnloadLibrary( discordLibrary );
+		qm_os_library_unload( discordLibrary );
 		discordLibrary = nullptr;
 
 		DiscordCreatePtr = nullptr;

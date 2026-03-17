@@ -497,7 +497,7 @@ static void world_tick( const double delta )
 			if ( viewport != nullptr )
 			{
 				// BLEH
-				QmMathColour4ub bamb = PlColourF32ToU8( &ambience );
+				QmMathColour4ub bamb = QM_MATH_COLOUR4F_TO_4UB( ambience );
 				ape_viewport_set_clear_colour( viewport, &bamb );
 			}
 		}

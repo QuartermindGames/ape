@@ -49,7 +49,7 @@ int8_t GetSurfaceTypeForName( const char *name )
 	return 0;
 }
 
-static void GenerateMaterial( const char *path, PL_UNUSED void *user )
+static void GenerateMaterial( const char *path, [[maybe_unused]] void *user )
 {
 	printf( "%s - ", path );
 

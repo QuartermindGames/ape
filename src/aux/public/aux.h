@@ -171,8 +171,8 @@ void com_profiler_update_samples( unsigned int freq );
 #	define COM_PROFILE_START( NAME ) com_profiler_start( ( NAME ) )
 #	define COM_PROFILE_END( NAME )   com_profiler_end( ( NAME ) )
 
-#	define COM_PROFILE_FUNCTION_START() com_profiler_start( PL_FUNCTION )
-#	define COM_PROFILE_FUNCTION_END()   com_profiler_end( PL_FUNCTION )
+#	define COM_PROFILE_FUNCTION_START() com_profiler_start( __FUNCTION__ )
+#	define COM_PROFILE_FUNCTION_END()   com_profiler_end( __FUNCTION__ )
 #else
 #	define COM_PROFILE_START( NAME )
 #	define COM_PROFILE_END( NAME )

@@ -54,7 +54,7 @@ static void fire_decal( ApeInputState state, const char * )
 	nextFire = ape_get_num_ticks() + 8;
 }
 
-static void toggle_camera( ApeInputState state, PL_UNUSED const char *id )
+static void toggle_camera( ApeInputState state, [[maybe_unused]] const char *id )
 {
 	if ( !( state & APE_INPUT_STATE_PRESSED ) )
 	{
