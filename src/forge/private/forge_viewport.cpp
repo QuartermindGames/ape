@@ -104,6 +104,8 @@ Viewport::Viewport( FXComposite *composite, FXGLVisual *visual, EditorTab *edito
 	camera = ape_create_camera( nullptr, "editor_camera", &position, &pl_vecOrigin3, viewMode_, APE_CAMERA_DRAW_MODE_SHADED );
 	ape_camera_set_draw_mode( camera, drawMode_ );
 
+	APE_WORLD_NODE( camera )->flags |= APE_WORLD_NODE_FLAG_DISCARD;
+
 	if ( editor != nullptr )
 	{
 		// make sure the given editor knows about the camera
@@ -414,7 +416,7 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 		return FALSE;
 	}
 
-	float     speed = ( float ) cameraSpeedSlider->getValue();
+	float          speed = ( float ) cameraSpeedSlider->getValue();
 	QmMathVector3f pos   = ape_camera_get_position( camera );
 	QmMathVector3f ang   = ape_camera_get_angles( camera );
 
