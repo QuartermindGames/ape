@@ -349,14 +349,9 @@ void ape_gui_draw_( ApeViewport *viewport )
 
 #endif
 
-	float x = ( float ) viewport->x;
-	float y = ( float ) viewport->y;
-	float w = ( float ) viewport->width;
-	float h = ( float ) viewport->height;
-
 	if ( ape_postfx_is_enabled_() && postMaterial != nullptr )
 	{
-		ape_draw_textured_quad( postMaterial, x, y, w, h, &PL_COLOUR_WHITE, 0 );
+		ape_draw_textured_quad( postMaterial, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
 	}
 
 	//TODO: whaa... these have nothing to do with the gui!?

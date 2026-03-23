@@ -75,9 +75,12 @@ static void cleanup_decal( ApeDecal *self )
 
 	// decals are a little weird here (given they're from a pool),
 	// so we need to set self to null first in the shared ptr
-	qm_os_shared_ptr_set( self->ptr, nullptr );
-	qm_os_shared_ptr_release( self->ptr );
-	self->ptr = nullptr;
+	if ( self->ptr != nullptr )
+	{
+		qm_os_shared_ptr_set( self->ptr, nullptr );
+		qm_os_shared_ptr_release( self->ptr );
+		self->ptr = nullptr;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

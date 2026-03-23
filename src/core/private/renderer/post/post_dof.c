@@ -55,7 +55,6 @@ static bool setup_dof_effect()
 		return false;
 	}
 
-	dofEnabled = true;
 	return true;
 }
 
@@ -80,9 +79,8 @@ static void draw_dof_effect( const ApeViewport *viewport, const ApeCamera *camer
 	assert( colourTexture != nullptr && depthTexture != nullptr );
 
 	{
-		int bw, bh;
-		bw = viewport->width;
-		bh = viewport->height;
+		int bw = viewport->width;
+		int bh = viewport->height;
 
 		ape_setup_2d_viewport_( bw, bh );
 
