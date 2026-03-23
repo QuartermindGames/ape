@@ -386,6 +386,7 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 {
 	assert( activeRoom != nullptr );
 
+#if 0
 	RoomDialog roomCreationDialog( this, activeRoom );
 	if ( roomCreationDialog.execute() )
 	{
@@ -405,6 +406,11 @@ long forge::WorldEditor::on_edit_room( FXObject *, FXSelector, void * )
 
 		return true;
 	}
+#else
+
+	mainWindow->open_properties( APE_WORLD_NODE( activeRoom ) );
+
+#endif
 
 	return false;
 }

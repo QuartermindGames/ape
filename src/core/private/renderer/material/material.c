@@ -971,7 +971,7 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 	}
 }
 
-static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
+static void set_global_uniforms( const ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
 {
 	ApeWorld *world = game_get_current_world();
 
@@ -991,18 +991,15 @@ static void set_global_uniforms( ApeShaderProgram *program, const ApeMaterialPas
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
-		QmMathColour4f fogColour = ( light == NULL && world != NULL ) ? world->fogColour : ( QmMathColour4f ) {};
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &fogColour, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &ape_rendererState_.fogColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
 	{
-		float fogNear = QM_MATH_CLAMP( 0.0f, ( ( ape_config_.renderer.fogNearOverride > -1.f ) || world == NULL ) ? ape_config_.renderer.fogNearOverride : world->fogNear, FLT_MAX );
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &fogNear, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &ape_rendererState_.fogNear, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ] >= 0 )
 	{
-		float fogFar = ape_config_.renderer.fogFarOverride > -1.f || world == NULL ? ape_config_.renderer.fogFarOverride : world->fogFar;
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &fogFar, false );
+		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &ape_rendererState_.fogFar, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )

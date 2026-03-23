@@ -632,6 +632,11 @@ static ApePropertyEnum reverbPresetsEnum[] = {
 static const ApeProperty properties[] = {
         APE_PROPERTY_BASIC( "Ambience", "Set the ambient light level.", ApeRoom, ambientLight, COLOUR ),
         APE_PROPERTY_ENUM( "Reverb", "Type of reverb to fallback to for the given room.", ApeRoom, reverbPreset, reverbPresetsEnum ),
+
+        // fog
+        APE_PROPERTY_BASIC( "Fog Colour", "Colour of the fog.", ApeRoom, fogColour, COLOUR ),
+        APE_PROPERTY_BASIC( "Fog Near", "Near level of fog.", ApeRoom, fogNear, FLOAT ),
+        APE_PROPERTY_BASIC( "Fog Far", "Far level of fog.", ApeRoom, fogFar, FLOAT ),
 };
 
 const ApeWorldNodeClass ape_roomClass = {

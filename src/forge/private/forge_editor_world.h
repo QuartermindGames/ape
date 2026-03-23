@@ -142,7 +142,6 @@ namespace forge
 			FXListBox   *lightmapEdgeSizeField;
 		};
 
-	public:
 		inline ApeWorld *get_world() { return _world; }
 	};
 }// namespace forge

@@ -975,12 +975,24 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 		return;
 	}
 
+	ApeRoom *room = visibleRoom->room;
+	assert( room != nullptr );
+
+	// handle fog overrides
+
+	QmMathColour4f fogColourRestore = ape_rendererState_.fogColour;
+	float          fogNearRestore   = ape_rendererState_.fogNear;
+	float          fogFarRestore    = ape_rendererState_.fogFar;
+
+	ape_rendererState_.fogColour = room->fogColour;
+	ape_rendererState_.fogNear   = ape_config_.renderer.fogNearOverride > -1.0f ? ape_config_.renderer.fogNearOverride : room->fogNear;
+	ape_rendererState_.fogFar    = ape_config_.renderer.fogFarOverride > -1.0f ? ape_config_.renderer.fogFarOverride : room->fogFar;
+
 	PlgPushDebugGroupMarker( "room_draw" );
 
 	// deal with the portals first
 	if ( ape_config_.world.showAllRooms )
 	{
-		ApeRoom        *room       = visibleRoom->room;
 		PLCollisionAABB roomBounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( room ) );
 		ape_draw_debug_aabb( &roomBounds, PL_COLOUR_GREEN );
 
@@ -1033,10 +1045,14 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 			draw_solid_room( camera, visibleRoom, false );
 			draw_translucent_room( camera, visibleRoom );
 
-			ape_decal_manager_draw_( visibleRoom->room->decalManager );
+			ape_decal_manager_draw_( room->decalManager );
 			break;
 		}
 	}
+
+	ape_rendererState_.fogColour = fogColourRestore;
+	ape_rendererState_.fogNear   = fogNearRestore;
+	ape_rendererState_.fogFar    = fogFarRestore;
 
 	draw_room_editor( visibleRoom );
 

@@ -23,7 +23,11 @@ typedef struct ApeRoom
 
 	unsigned int flags;
 
-	QmMathColour4f ambientLight;
+	ApeColour4fProperty ambientLight;
+
+	ApeColour4fProperty fogColour;
+	ApeFloatProperty    fogNear;
+	ApeFloatProperty    fogFar;
 
 	struct PLHashTable *taggedSurfaceLookup;
 

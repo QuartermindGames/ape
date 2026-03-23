@@ -123,6 +123,10 @@ typedef struct ApeRendererPassState
 	PLGCompareFunction depthMode;
 	bool               overrideDepthMode;
 
+	QmMathColour4f fogColour;
+	float          fogNear;
+	float          fogFar;
+
 	bool         mirror;
 	unsigned int depth;
 
