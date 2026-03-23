@@ -109,6 +109,12 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
 	PL_ZERO_( ape_config_ );
 
+	if ( config != nullptr && strcmp( config, "editor" ) == 0 )
+	{
+		extern bool ape_editorStatus_;
+		ape_editorStatus_ = true;
+	}
+
 	PlRegisterStandardPackageLoaders( PL_PACKAGE_LOAD_FORMAT_ALL );
 
 	// Call this first, so we can buffer console output

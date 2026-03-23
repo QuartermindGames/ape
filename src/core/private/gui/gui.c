@@ -362,7 +362,7 @@ void ape_gui_draw_( ApeViewport *viewport )
 	//TODO: whaa... these have nothing to do with the gui!?
 	ape_flare_draw_( viewport );
 
-	if ( !ape_is_editor_active_() && ape_gameInterface->drawUI != nullptr )
+	if ( !ape_editor_is_active() && ape_gameInterface->drawUI != nullptr )
 	{
 		ape_gameInterface->drawUI( viewport );
 	}

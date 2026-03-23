@@ -194,15 +194,14 @@ typedef struct ApeEditorInstance
 	struct PLHashTable *subSelectionTable;
 	QmOsLinkedList     *selectedObjects;
 	void               *hoverSelection;
-
-	struct PLLinkedListNode *listNode;// index in the table of instances
-	bool                     managed; // indicates the engine manages the instance
 } ApeEditorInstance;
 
 ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditorMode mode );
 void               ape_editor_instance_cleanup( ApeEditorInstance *self );
 void               ape_editor_set_active_instance( ApeEditorInstance *self );
 ApeEditorInstance *ape_editor_get_active_instance( void );
+
+bool ape_editor_is_active();
 
 AcmBranch *ape_editor_get_config();
 

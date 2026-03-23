@@ -26,6 +26,8 @@ static bool         showIcons;
 static ApeMaterial *nodeIcons[ APE_WORLD_MAX_NODE_TYPES ];
 static float        iconFade = 0.25f;
 
+bool ape_editorStatus_ = false;
+
 static void cache_node_icons( void )
 {
 	nodeIcons[ APE_WORLD_NODE_TYPE_EMPTY ]  = ape_material_cache( "materials/editor/icons/icon_node.mat.n", APE_CACHE_GROUP_EDITOR, true );
@@ -55,6 +57,11 @@ static void release_node_icons( void )
 	}
 }
 
+bool ape_editor_is_active()
+{
+	return ape_editorStatus_;
+}
+
 AcmBranch *ape_editor_get_config()
 {
 	return editorConfigRoot;
@@ -66,7 +73,6 @@ AcmBranch *ape_editor_get_config()
 
 void ape_grid_setup_( ApeEditorGrid *self );
 
-static PLLinkedList      *editorInstanceList;
 static ApeEditorInstance *editorInstance;
 
 ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode )
@@ -77,11 +83,6 @@ ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode )
 	{
 		qm_os_memory_free( instance );
 		instance = nullptr;
-	}
-
-	if ( instance != NULL )
-	{
-		instance->managed = true;
 	}
 
 	return instance;
@@ -96,18 +97,7 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 	ape_grid_setup_( &self->grid );
 
-	if ( editorInstanceList == nullptr )
-	{
-		editorInstanceList = PlCreateLinkedList();
-		if ( editorInstanceList == nullptr )
-		{
-			ape_console_error_( true, "Failed to create editor instance list: %s\n", PlGetError() );
-		}
-
-		cache_node_icons();
-	}
-
-	self->listNode = PlInsertLinkedListNode( editorInstanceList, self );
+	cache_node_icons();
 
 	self->selectionTable = PlCreateHashTable();
 	if ( self->selectionTable == nullptr )
@@ -134,9 +124,6 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 {
 	self->numPolygonPoints = 0;
 
-	PlDestroyLinkedListNode( self->listNode );
-	self->listNode = nullptr;
-
 	PlDestroyHashTable( self->selectionTable );
 	self->selectionTable = nullptr;
 	PlDestroyHashTable( self->subSelectionTable );
@@ -146,25 +133,11 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 	self->selectedObjects = nullptr;
 	self->hoverSelection  = nullptr;
 
-	if ( editorInstanceList != nullptr && PlIsLinkedListEmpty( editorInstanceList ) )
-	{
-		// no instances left, completely clean up!
-
-		PlDestroyLinkedList( editorInstanceList );
-		editorInstanceList = nullptr;
-
-		release_node_icons();
-	}
+	release_node_icons();
 
 	if ( editorInstance == self )
 	{
 		ape_editor_set_active_instance( nullptr );
-	}
-
-	// the engine needs to destroy managed ones itself
-	if ( self->managed )
-	{
-		qm_os_memory_free( self );
 	}
 }
 
@@ -785,7 +758,7 @@ static void render_plot_polygon( ApeEditorInstance *self )
 
 void ape_editor_pre_render_scene_( ApeCamera *camera )
 {
-	if ( !ape_is_editor_active_() )
+	if ( !ape_editor_is_active() )
 	{
 		return;
 	}
@@ -935,7 +908,7 @@ void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instan
 
 void ape_editor_draw_gui_( const ApeViewport *viewport )
 {
-	if ( !ape_is_editor_active_() || editorInstance == nullptr )
+	if ( !ape_editor_is_active() || editorInstance == nullptr )
 	{
 		return;
 	}
@@ -1016,11 +989,6 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	draw_brush_gui( viewport, font );
 
 	gui_font_display( font );
-}
-
-bool ape_is_editor_active_( void )
-{
-	return ape_editor_get_active_instance() != nullptr;
 }
 
 void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewport, int x, int y )

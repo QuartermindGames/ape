@@ -292,7 +292,7 @@ void ape_render_frame_( ApeViewport *viewport )
 	ape_draw_begin_( viewport );
 
 	// Let the game draw from its own camera
-	if ( !ape_is_editor_active_() && ape_gameInterface->draw != nullptr )
+	if ( !ape_editor_is_active() && ape_gameInterface->draw != nullptr )
 	{
 		ape_gameInterface->draw( viewport );
 	}

@@ -42,14 +42,10 @@ static void destroy_texture( void *userData )
 
 static void compute_average_colour( ApeTexture *texture )
 {
-	//BUG:	Turns out this doesn't work, because the textures
-	//		are getting loaded in before the editor instance is active...
-#if 0
-	if ( !ape_is_editor_active_() )
+	if ( !ape_editor_is_active() )
 	{
 		return;
 	}
-#endif
 
 	PLImageFormat format = PlGetImageFormat( texture->image );
 	if ( format != PL_IMAGEFORMAT_RGB8 && format != PL_IMAGEFORMAT_RGBA8 )
@@ -183,7 +179,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 
 	compute_average_colour( texture );
 
-	if ( !ape_is_editor_active_() )
+	if ( !ape_editor_is_active() )
 	{
 		PlDestroyImage( texture->image );
 		texture->image = nullptr;
@@ -340,7 +336,7 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 
 	compute_average_colour( texture );
 
-	if ( !ape_is_editor_active_() )
+	if ( !ape_editor_is_active() )
 	{
 		PlDestroyImage( texture->image );
 		texture->image = nullptr;
