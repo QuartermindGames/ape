@@ -251,6 +251,14 @@ PLMatrix4 ape_world_node_get_transform( const ApeWorldNode *self );
  */
 PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self );
 
+/**
+ * Returns the forward vector relative to the local angles.
+ * Mind this isn't cached, so use sparingly for now.
+ * @param self Instance of the node.
+ * @return Forward vector.
+ */
+QmMathVector3f ape_world_node_get_forward( const ApeWorldNode *self );
+
 AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root );
 
 /**
@@ -453,10 +461,6 @@ typedef struct ApeWorld
 
 	PLLinkedList       *entities;//ApeEntity
 	struct PLHashTable *roomLookup;
-
-	QmMathColour4f fogColour;
-	float          fogNear;
-	float          fogFar;
 } ApeWorld;
 
 #define APE_WORLD_VERSION   3

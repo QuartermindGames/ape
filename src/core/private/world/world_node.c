@@ -507,6 +507,13 @@ PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self )
 	return self->localTransform;
 }
 
+QmMathVector3f ape_world_node_get_forward( const ApeWorldNode *self )
+{
+	QmMathVector3f forward;
+	PlAnglesAxes( self->angles, nullptr, nullptr, &forward );
+	return qm_math_vector3f_normalize( forward );
+}
+
 //!! KEEP THIS PRIVATE !!
 // don't want to end up with a can of worms with other
 // code trying to do version-specific behaviour
