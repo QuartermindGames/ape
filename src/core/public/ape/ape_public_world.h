@@ -197,10 +197,14 @@ void           ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs );
 
 ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type );
-ApeWorldNode *ape_world_node_get_parent_by_pointer( const ApeWorldNode *self, const ApeWorldNode *lookup );
+ApeWorldNode *ape_world_node_get_parent_by_name( const ApeWorldNode *self, const char *name );
+
+bool ape_world_node_is_descendant_of_node( const ApeWorldNode *self, const ApeWorldNode *lookup );
 
 /**
- * Travels up the tree until it encounters a room.
+ * Returns the room the given node is attached to.
+ * @param self	Instance of the node.
+ * @return		Pointer to the room the node is attached to.
  */
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self );
 
@@ -213,7 +217,8 @@ ApeRoom *ape_world_node_get_room( ApeWorldNode *self );
 void ape_world_node_set_room( ApeWorldNode *self, ApeRoom *room );
 
 ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self );
-ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *name );
+ApeWorldNode *ape_world_node_get_child_by_name( const ApeWorldNode *self, const char *name );
+ApeWorldNode *ape_world_node_get_descendant_by_name( const ApeWorldNode *self, const char *name );
 
 /**
  * Fetch the name of the given node.

@@ -779,7 +779,7 @@ void ape_brush_merge_brushes( ApeBrush *self, ApeBrush **brushes, const unsigned
 		ApeBrush *brush = brushes[ i ];
 		assert( brush != nullptr && brush != self );
 
-		if ( ape_world_node_get_parent_by_pointer( APE_WORLD_NODE( self ), APE_WORLD_NODE( brush ) ) )
+		if ( ape_world_node_is_descendant_of_node( APE_WORLD_NODE( self ), APE_WORLD_NODE( brush ) ) )
 		{
 			ape_console_warning_( "Cannot merge brush, as it is a parent of the brush it's being merged into!\n" );
 			brushes[ i ] = nullptr;

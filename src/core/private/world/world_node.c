@@ -394,7 +394,23 @@ ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNod
 	return parent;
 }
 
-ApeWorldNode *ape_world_node_get_parent_by_pointer( const ApeWorldNode *self, const ApeWorldNode *lookup )
+ApeWorldNode *ape_world_node_get_parent_by_name( const ApeWorldNode *self, const char *name )
+{
+	ApeWorldNode *parent = self->parent;
+	while ( parent != nullptr )
+	{
+		if ( strcmp( parent->name, name ) == 0 )
+		{
+			break;
+		}
+
+		parent = parent->parent;
+	}
+
+	return parent;
+}
+
+bool ape_world_node_is_descendant_of_node( const ApeWorldNode *self, const ApeWorldNode *lookup )
 {
 	assert( self != lookup );
 
@@ -403,13 +419,13 @@ ApeWorldNode *ape_world_node_get_parent_by_pointer( const ApeWorldNode *self, co
 	{
 		if ( parent == lookup )
 		{
-			return parent;
+			return true;
 		}
 
 		parent = parent->parent;
 	}
 
-	return nullptr;
+	return false;
 }
 
 ApeRoom *ape_world_node_get_room( ApeWorldNode *self )
@@ -451,22 +467,38 @@ ApeWorldNode *ape_world_node_get_root( ApeWorldNode *self )
 	return root->type == APE_WORLD_NODE_TYPE_ROOT ? root : nullptr;
 }
 
-ApeWorldNode *ape_world_node_get_child_by_name( ApeWorldNode *self, const char *name )
+ApeWorldNode *ape_world_node_get_child_by_name( const ApeWorldNode *self, const char *name )
 {
-	assert( ape_world_node_is_valid( self, self->type ) );
-
-	ApeWorldNode *child = nullptr;
-	ApeWorldNode *current;
-	COM_ITERATE_LINKED_LIST( current, self->children, i )
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
-		if ( strcmp( current->name, name ) == 0 )
+		if ( strcmp( child->name, name ) == 0 )
 		{
-			child = current;
-			break;
+			return child;
 		}
 	}
 
-	return child;
+	return nullptr;
+}
+
+ApeWorldNode *ape_world_node_get_descendant_by_name( const ApeWorldNode *self, const char *name )
+{
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, self->children, i )
+	{
+		if ( strcmp( child->name, name ) == 0 )
+		{
+			return child;
+		}
+
+		ApeWorldNode *next = ape_world_node_get_descendant_by_name( self, name );
+		if ( next != nullptr )
+		{
+			return next;
+		}
+	}
+
+	return nullptr;
 }
 
 const char *ape_world_node_get_name( const ApeWorldNode *self )
