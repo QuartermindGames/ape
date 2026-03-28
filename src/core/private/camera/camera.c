@@ -290,11 +290,6 @@ static QmMathVector4f get_face_screen_rect( const ApeBrushFace *face, const ApeC
 
 static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 {
-	if ( !ape_light_is_active( light ) )
-	{
-		return false;
-	}
-
 	QmMathVector3f position = ape_light_get_position( light );
 	if ( light->type != APE_LIGHT_TYPE_SUN )
 	{
@@ -304,8 +299,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 			return false;
 		}
 
-		const PLCollisionSphere sphere = PlSetupCollisionSphere( position, light->radius );
-		if ( !PlgIsSphereInsideView( self->internal, &sphere ) )
+		if ( !qm_gfx_camera_test_sphere( self->internal, &PlSetupCollisionSphere( position, light->radius <= 0.0f ? 1.0f : light->radius ) ) )
 		{
 			return false;
 		}
@@ -330,7 +324,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 
 	// for now, for simplicity-sake, flares only work so long as the camera is in the same room
 	ApeRoom *room = ape_camera_get_room( self );
-	if ( ( light->flags & APE_LIGHT_FLAG_FLARE ) && room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
+	if ( light->flags & APE_LIGHT_FLAG_FLARE && room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
 	{
 		//TODO: test the flare is actually visible!!
 		ape_add_flare_to_queue( self, &position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
@@ -367,7 +361,7 @@ static void setup_reflection_matrix( const QmMathVector3f *normal, const QmMathV
 static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBrush *brush, ApeCameraVisibleRoom *visibleRoom )
 {
 	PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( brush ) );
-	if ( !PlgIsBoxInsideView( self->internal, &bounds ) )
+	if ( !qm_gfx_camera_test_box( self->internal, &bounds ) )
 	{
 		return false;
 	}
@@ -386,7 +380,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 		bounds.origin       = PlGetMatrix4Translation( &transform );
 
 		// check that the bounds are in view
-		if ( !PlgIsBoxInsideView( self->internal, &bounds ) )
+		if ( !qm_gfx_camera_test_box( self->internal, &bounds ) )
 		{
 			continue;
 		}
@@ -548,7 +542,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 			else
 			{
 				PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
-				isVisible                         = PlgIsBoxInsideView( self->internal, &transformedBounds );
+				isVisible                         = qm_gfx_camera_test_box( self->internal, &transformedBounds );
 			}
 
 			if ( isVisible )

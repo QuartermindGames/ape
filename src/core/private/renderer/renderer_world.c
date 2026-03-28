@@ -133,7 +133,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 				{
 					if ( ( ApeBrushFace * ) p == face )
 					{
-						if ( PlgIsBoxInsideView( instance->camera->internal, &face->bounds ) )
+						if ( qm_gfx_camera_test_box( instance->camera->internal, &face->bounds ) )
 						{
 							subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
 							firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
@@ -220,7 +220,7 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 #endif
 		}
 
-		if ( PlgIsBoxInsideView( camera->internal, &face->bounds ) )
+		if ( qm_gfx_camera_test_box( camera->internal, &face->bounds ) )
 		{
 			subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
 			firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
