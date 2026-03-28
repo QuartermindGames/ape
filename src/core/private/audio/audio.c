@@ -213,6 +213,33 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	return sample;
 }
 
+ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigned int bufferSize, ApeAudioSampleFormat format, unsigned int channels, unsigned int sampleRate )
+{
+	ApeAudioSample *sample = QM_OS_MEMORY_NEW( ApeAudioSample );
+	sample->buffer         = QM_OS_MEMORY_NEW_( uint8_t, bufferSize );
+	sample->bufferSize     = bufferSize;
+	sample->channels       = channels;
+	sample->type           = format;
+	sample->sampleRate     = sampleRate;
+
+	memcpy( sample->buffer, buffer, bufferSize );
+
+	if ( audioDriverInterface != nullptr && audioDriverInterface->cacheSample != nullptr )
+	{
+		if ( !audioDriverInterface->cacheSample( sample ) )
+		{
+			ape_console_warning_( "Driver upload for audio sample failed!\n" );
+			destroy_sample( sample );
+			return nullptr;
+		}
+	}
+
+	ape_memory_setup_reference( "sound_proc", APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
+	ape_memory_add_reference( &sample->reference );
+
+	return sample;
+}
+
 void ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch )
 {
 	DRIVER_CALLBACK( emitSample, audioSample, position, volume, pitch );

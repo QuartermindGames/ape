@@ -8,15 +8,6 @@
 
 PL_EXTERN_C
 
-typedef enum ApeAudioSampleFormat
-{
-	APE_AUDIO_SAMPLE_FORMAT_INVALID,
-	APE_AUDIO_SAMPLE_FORMAT_MONO8,
-	APE_AUDIO_SAMPLE_FORMAT_STEREO8,
-	APE_AUDIO_SAMPLE_FORMAT_MONO16,
-	APE_AUDIO_SAMPLE_FORMAT_STEREO16,
-} ApeAudioSampleFormat;
-
 typedef struct ApeAudioSample
 {
 	ApeAudioSampleFormat type;

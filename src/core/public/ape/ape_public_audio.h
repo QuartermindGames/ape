@@ -111,7 +111,17 @@ QmMathVector3f ape_audio_get_listener_velocity( void );
 /////////////////////////////////////////////////////////////////////////////////////
 // Sample
 
+typedef enum ApeAudioSampleFormat
+{
+	APE_AUDIO_SAMPLE_FORMAT_INVALID,
+	APE_AUDIO_SAMPLE_FORMAT_MONO8,
+	APE_AUDIO_SAMPLE_FORMAT_STEREO8,
+	APE_AUDIO_SAMPLE_FORMAT_MONO16,
+	APE_AUDIO_SAMPLE_FORMAT_STEREO16,
+} ApeAudioSampleFormat;
+
 ApeAudioSample *ape_audio_sample_cache( const char *path );
+ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigned int bufferSize, ApeAudioSampleFormat format, unsigned int channels, unsigned int sampleRate );
 void            ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch );
 void            ape_audio_sample_release( ApeAudioSample *audioSample );
 
