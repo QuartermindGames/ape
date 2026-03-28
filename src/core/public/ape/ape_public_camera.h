@@ -5,7 +5,7 @@
 
 #include "ape_public_world.h"
 
-typedef enum ApeCameraViewMode
+typedef enum ApeCameraViewMode : int8_t
 {
 	APE_CAMERA_MODE_INVALID = -1,
 	APE_CAMERA_MODE_PERSPECTIVE,
@@ -18,7 +18,7 @@ typedef enum ApeCameraViewMode
 	APE_CAMERA_MAX_MODES
 } ApeCameraViewMode;
 
-typedef enum ApeCameraDrawMode
+typedef enum ApeCameraDrawMode : int8_t
 {
 	APE_CAMERA_DRAW_MODE_INVALID = -1,
 

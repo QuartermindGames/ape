@@ -43,6 +43,31 @@ void ape_camera_set_draw_mode( ApeCamera *camera, ApeCameraDrawMode drawMode )
 void ape_camera_set_view_mode( ApeCamera *camera, ApeCameraViewMode viewMode )
 {
 	camera->mode = viewMode;
+
+	static constexpr float DEFAULT_FAR  = 1000000.0f;
+	static constexpr float DEFAULT_FOV  = 75.0f;
+	static constexpr float DEFAULT_NEAR = 0.1f;
+
+	if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
+	{
+		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
+		camera->internal->fov  = DEFAULT_FOV;
+		camera->internal->far  = DEFAULT_FAR;
+		camera->internal->near = DEFAULT_NEAR;
+	}
+	else if ( camera->mode == APE_CAMERA_MODE_ISOMETRIC )
+	{
+		camera->internal->mode = PLG_CAMERA_MODE_ISOMETRIC;
+		camera->internal->fov  = DEFAULT_FOV;
+		camera->internal->far  = DEFAULT_FAR;
+		camera->internal->near = DEFAULT_NEAR;
+	}
+	else
+	{
+		camera->internal->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
+		camera->internal->near = -10000.0f;
+		camera->internal->far  = 10000.0f;
+	}
 }
 
 const char *ape_get_camera_draw_mode_label( ApeCameraDrawMode drawMode )
@@ -82,13 +107,10 @@ const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode )
 /****************************************
  ****************************************/
 
-ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
+static void *camera_create( ApeWorldNode *parent )
 {
 	ApeCamera *camera = QM_OS_MEMORY_NEW( ApeCamera );
-	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, name, position, angles );
-
-	camera->mode     = cameraMode;
-	camera->drawMode = drawMode;
+	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 
 	camera->internal = PlgCreateCamera();
 	if ( camera->internal == nullptr )
@@ -96,34 +118,24 @@ ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMa
 		ape_console_error_( true, "Failed to create camera: %s\n", PlGetError() );
 	}
 
-	static constexpr float DEFAULT_FAR  = 1000000.0f;
-	static constexpr float DEFAULT_FOV  = 75.0f;
-	static constexpr float DEFAULT_NEAR = 0.1f;
-
-	if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
-	{
-		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
-		camera->internal->fov  = DEFAULT_FOV;
-		camera->internal->far  = DEFAULT_FAR;
-		camera->internal->near = DEFAULT_NEAR;
-	}
-	else if ( camera->mode == APE_CAMERA_MODE_ISOMETRIC )
-	{
-		camera->internal->mode = PLG_CAMERA_MODE_ISOMETRIC;
-		camera->internal->fov  = DEFAULT_FOV;
-		camera->internal->far  = DEFAULT_FAR;
-		camera->internal->near = DEFAULT_NEAR;
-	}
-	else
-	{
-		camera->internal->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
-		camera->internal->near = -10000.0f;
-		camera->internal->far  = 10000.0f;
-	}
-
 	camera->dof.focusPoint = APE_CAMERA_DEFAULT_FOCUS_POINT;
 	camera->dof.focusScale = APE_CAMERA_DEFAULT_FOCUS_SCALE;
 	camera->dof.aperture   = APE_CAMERA_DEFAULT_APERTURE;
+
+	ape_camera_set_view_mode( camera, APE_CAMERA_MODE_PERSPECTIVE );
+	ape_camera_set_draw_mode( camera, APE_CAMERA_DRAW_MODE_SHADED );
+
+	return camera;
+}
+
+ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode )
+{
+	ApeCamera *camera = camera_create( parent );
+
+	ape_world_node_set_name( APE_WORLD_NODE( camera ), name );
+
+	ape_camera_set_view_mode( camera, cameraMode );
+	ape_camera_set_draw_mode( camera, drawMode );
 
 	ape_camera_set_position( camera, position );
 	ape_camera_set_angles( camera, angles );
@@ -223,10 +235,59 @@ void ape_camera_set_aperture( ApeCamera *self, const float aperture )
 	self->dof.aperture = aperture;
 }
 
+static ApeWorldNode *camera_clone( ApeWorldNode *src )
+{
+	ApeCamera *srcCamera = ( ApeCamera * ) src;
+	ApeCamera *dstCamera = ape_create_camera( src->parent, src->name, &src->position, &src->angles, srcCamera->mode, srcCamera->drawMode );
+	if ( dstCamera == nullptr )
+	{
+		ape_console_warning_( "Failed to create camera for duplication!\n" );
+		return nullptr;
+	}
+
+	dstCamera->active = srcCamera->active;
+	dstCamera->dof    = srcCamera->dof;
+
+	return APE_WORLD_NODE( dstCamera );
+}
+
+static AcmBranch *camera_serialize( void *self, AcmBranch *root )
+{
+	ApeCamera *camera = self;
+	acm_push_bool( root, "active", camera->active );
+	acm_push_f32( root, "aperture", camera->dof.aperture );
+	acm_push_f32( root, "focusPoint", camera->dof.focusPoint );
+	acm_push_f32( root, "focusScale", camera->dof.focusScale );
+	acm_push_i8( root, "drawMode", camera->drawMode );
+	acm_push_i8( root, "mode", camera->mode );
+
+	return root;
+}
+
+static ApeWorldNode *camera_deserialize( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+{
+	ApeCamera *camera      = ( ApeCamera * ) self;
+	camera->active         = acm_get_bool( root, "active", camera->active );
+	camera->dof.aperture   = acm_get_f32( root, "aperture", camera->dof.aperture );
+	camera->dof.focusPoint = acm_get_f32( root, "focusPoint", camera->dof.focusPoint );
+	camera->dof.focusScale = acm_get_f32( root, "focusScale", camera->dof.focusScale );
+	camera->drawMode       = acm_get_int( root, "drawMode", camera->drawMode );
+	camera->mode           = acm_get_int( root, "mode", camera->mode );
+
+	return self;
+}
+
 const ApeWorldNodeClass ape_cameraClass = {
         .identifier = "camera",
         .magic      = QM_OS_MAGIC_TO_NUM( 'C', 'A', 'M', ' ' ),
-        .destroy    = ape_camera_destroy_,
+
+        .create  = camera_create,
+        .destroy = ape_camera_destroy_,
+
+        .serialize   = camera_serialize,
+        .deserialize = camera_deserialize,
+
+        .clone = camera_clone,
 
         .editorIcon = "resources/new_camera.gif",
 };
