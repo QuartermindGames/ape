@@ -260,6 +260,11 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 	ApeRoom *room = self;
 	acm_push_ui32( root, "flags", room->flags );
 	acm_push_array_f32( root, "ambience", ( float * ) &room->ambientLight, 4 );
+
+	com_acm_push_colour4f( root, "fogColour", &room->fogColour, true );
+	acm_push_f32( root, "fogNear", room->fogNear );
+	acm_push_f32( root, "fogFar", room->fogFar );
+
 	acm_push_ui32( root, "reverb", room->reverbPreset );
 
 	if ( room->numLightmaps > 0 )
@@ -281,9 +286,14 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
 {
 	ApeRoom *room      = ( ApeRoom * ) self;
-	room->flags        = ACM_GET_INT( room->flags, root, "flags", 0 );
+	room->flags        = ACM_GET_INT( room->flags, root, "flags", room->flags );
 	room->ambientLight = com_acm_get_colour_f32( root, "ambience", &QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	room->reverbPreset = ACM_GET_INT( room->flags, root, "reverb", 0 );
+
+	room->fogColour = com_acm_get_colour_f32( root, "fogColour", &room->fogColour );
+	room->fogNear   = acm_get_f32( root, "fogNear", room->fogNear );
+	room->fogFar    = acm_get_f32( root, "fogFar", room->fogFar );
+
+	room->reverbPreset = ACM_GET_INT( room->flags, root, "reverb", room->reverbPreset );
 
 	room->lightmapEdgeLength = acm_get_uint( root, "lightmapEdgeLength", ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH );
 
