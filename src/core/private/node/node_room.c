@@ -20,7 +20,7 @@ static constexpr unsigned int ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH = 256;
 static void *create_room( ApeWorldNode *parent )
 {
 	ApeRoom *room = QM_OS_MEMORY_NEW( ApeRoom );
-	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &room->base, parent, APE_WORLD_NODE_TYPE_ROOM, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 
 	room->gravity = qm_math_vector3f( 0.0f, -0.9f, 0.0f );
 

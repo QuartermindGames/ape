@@ -347,7 +347,7 @@ static void compute_brush_face_texture_coordinates( ApeBrushFace *face, bool com
 		coord.y = qm_math_vector3f_dot_product( verticies[ i ], v );
 
 		// apply rotation
-		float ang  = PL_DEG2RAD( face->materialAngle.x );
+		float ang  = QM_MATH_DEG2RAD( face->materialAngle.x );
 		float cos  = cosf( ang );
 		float sin  = sinf( ang );
 		float rotX = coord.x * cos - coord.y * sin;

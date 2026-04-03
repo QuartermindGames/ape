@@ -123,9 +123,9 @@ void ape_postfx_draw_( const ApeViewport *viewport, const ApeCamera *camera )
 	ape_render_target_set_size_( ppRenderTarget, viewport->width, viewport->height );
 	ape_render_target_bind_( ppRenderTarget, PLG_FRAMEBUFFER_DEFAULT );
 
-	PLGFrameBuffer *src = ape_render_target_get_frame_buffer_( viewport->renderTarget );
-	PLGFrameBuffer *dst = ape_render_target_get_frame_buffer_( ppRenderTarget );
-	PlgBlitFrameBuffers( src, src->width, src->height, dst, viewport->width, viewport->height, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, true );
+	QmGfxFramebuffer *src = ape_render_target_get_frame_buffer_( viewport->renderTarget );
+	QmGfxFramebuffer *dst = ape_render_target_get_frame_buffer_( ppRenderTarget );
+	qm_gfx_framebuffer_blit( src, src->width, src->height, dst, viewport->width, viewport->height, PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH, true );
 
 	for ( unsigned int i = 0; i < MAX_POST_EFFECTS; ++i )
 	{

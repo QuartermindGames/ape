@@ -529,7 +529,7 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst )
 {
 	ApeViewport    *selectionViewport = ape_editor_selection_get_viewport_();
-	PLGFrameBuffer *frameBuffer       = ape_render_target_get_frame_buffer_( selectionViewport->renderTarget );
+	QmGfxFramebuffer *frameBuffer       = ape_render_target_get_frame_buffer_( selectionViewport->renderTarget );
 	if ( frameBuffer == nullptr )
 	{
 		return nullptr;
@@ -537,7 +537,7 @@ QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *
 
 	size_t           size = frameBuffer->width * frameBuffer->height * 4;
 	QmMathColour4ub *buf  = QM_OS_MEMORY_NEW_( QmMathColour4ub, size );
-	if ( PlgReadFrameBufferRegion( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
+	if ( qm_gfx_framebuffer_read_region( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
 	{
 		int x, y;
 		ape_client_input_get_mouse_position( &x, &y );

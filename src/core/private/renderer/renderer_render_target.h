@@ -28,4 +28,4 @@ PLGTexture      *ape_render_target_get_texture_( ApeRenderTarget *self, ApeRende
  */
 void ape_render_target_bind_( ApeRenderTarget *self, PLGFrameBufferObjectTarget target );
 
-PLGFrameBuffer *ape_render_target_get_frame_buffer_( ApeRenderTarget *renderTarget );
+QmGfxFramebuffer *ape_render_target_get_frame_buffer_( ApeRenderTarget *renderTarget );

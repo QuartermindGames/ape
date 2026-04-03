@@ -11,9 +11,9 @@ void ape_draw_sprite_animation_frame( ApeSpriteFrame *frame, const QmMathVector3
 
 	PlLoadIdentityMatrix();
 
-	PlRotateMatrix( PL_DEG2RAD( 0.0f ), 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix( PL_DEG2RAD( spriteAngle ), 0.0f, 1.0f, 0.0f );
-	PlRotateMatrix( PL_DEG2RAD( 180.0f ), 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix( QM_MATH_DEG2RAD( 0.0f ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix( QM_MATH_DEG2RAD( spriteAngle ), 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix( QM_MATH_DEG2RAD( 180.0f ), 0.0f, 0.0f, 1.0f );
 
 	PlPopMatrix();
 
@@ -48,7 +48,7 @@ void ape_draw_sprite_animation( ApeSpriteFrame **animation, unsigned int numFram
 	QmMathVector2f b = QmMathVector2f( camera->cameraPtr->position.x, camera->cameraPtr->position.z );
 	QmMathVector2f normal = plComputeLineNormal( &a, &b );
 
-	float spriteAngle = atan2f( normal.y, normal.x ) * PL_180_DIV_PI;
+	float spriteAngle = atan2f( normal.y, normal.x ) * QM_MATH_180_DIV_PI;
 
 	/* should really account for the intended angle, but hey ho...
 	 * there are some further improvements to make here - again, running out of time! */

@@ -76,13 +76,8 @@ PLGTexture *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas )
 /****************************************
  ****************************************/
 
-void ape_gui_draw_initialize_()
-{
-	camera       = PlgCreateCamera();
-	camera->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
-	camera->near = 0.0f;
-	camera->far  = 1000.0f;
-}
+static PLMatrix4 view;
+static PLMatrix4 proj;
 
 void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 {
@@ -90,20 +85,27 @@ void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 	{
 		// restore
 		PlgSetViewMatrix( &canvas->oldViewMatrix );
-		PlgSetViewport( canvas->oldViewport[ 0 ], canvas->oldViewport[ 1 ], canvas->oldViewport[ 2 ], canvas->oldViewport[ 3 ] );
+		qm_gfx_set_viewport( canvas->oldViewport[ 0 ], canvas->oldViewport[ 1 ], canvas->oldViewport[ 2 ], canvas->oldViewport[ 3 ] );
 
 		guiCanvasCurrent = nullptr;
 	}
 
 	// store old state
-	PlgGetViewport( &canvas->oldViewport[ 0 ], &canvas->oldViewport[ 1 ], &canvas->oldViewport[ 2 ], &canvas->oldViewport[ 3 ] );
+	qm_gfx_get_viewport( &canvas->oldViewport[ 0 ], &canvas->oldViewport[ 1 ], &canvas->oldViewport[ 2 ], &canvas->oldViewport[ 3 ] );
 	canvas->oldViewMatrix = PlgGetViewMatrix();
 
 	ape_setup_2d_viewport_( canvas->width, canvas->height );
 
 	ape_render_target_bind_( canvas->renderTarget, PLG_FRAMEBUFFER_DRAW );
 
-	PlgSetupCamera( camera );
+	//PlgSetupCamera( camera );
+
+	proj = PlOrtho( 0.0f, canvas->width, canvas->height, 0.0f, -10000.0f, 10000.0f );
+	PlgSetProjectionMatrix( &proj );
+
+	view = PlMatrix4Identity();
+	PlgSetViewMatrix( &view );
+
 	PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 
 	guiCanvasCurrent = canvas;
@@ -111,7 +113,7 @@ void ape_gui_canvas_make_active( ApeGuiCanvas *canvas )
 
 void ape_gui_canvas_display( ApeGuiCanvas *canvas )
 {
-	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
+	qm_gfx_framebuffer_bind( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
 }
@@ -121,10 +123,10 @@ void ape_gui_draw_filled_rectangle( PLGMesh *mesh, const int x, const int y, con
 	assert( mesh->primitive == PLG_MESH_TRIANGLES );
 
 	unsigned int vertices[] = {
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y + h, z ), &pl_vecOrigin3, colour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, z ), &QM_MATH_VECTOR3F_ZERO, colour, &QM_MATH_VECTOR2F_ZERO ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y + h, z ), &QM_MATH_VECTOR3F_ZERO, colour, &QM_MATH_VECTOR2F_ZERO ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y, z ), &QM_MATH_VECTOR3F_ZERO, colour, &QM_MATH_VECTOR2F_ZERO ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y + h, z ), &QM_MATH_VECTOR3F_ZERO, colour, &QM_MATH_VECTOR2F_ZERO ),
 	};
 
 	PlgAddMeshTriangle( mesh, vertices[ 0 ], vertices[ 1 ], vertices[ 2 ] );
@@ -142,10 +144,10 @@ void ape_gui_draw_quad( PLGMesh *mesh, const QmMathVector2i tl, const QmMathVect
 	QmMathColour4ub bColour = QM_MATH_COLOUR4F_TO_4UB( *colour );
 
 	unsigned int vertices[] = {
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( tl.x, tl.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( tr.x, tr.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( ll.x, ll.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
-	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( lr.x, lr.y, z ), &pl_vecOrigin3, &bColour, &pl_vecOrigin2 ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( tl.x, tl.y, z ), &QM_MATH_VECTOR3F_ZERO, &bColour, &QM_MATH_VECTOR2F_ZERO ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( tr.x, tr.y, z ), &QM_MATH_VECTOR3F_ZERO, &bColour, &QM_MATH_VECTOR2F_ZERO ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( ll.x, ll.y, z ), &QM_MATH_VECTOR3F_ZERO, &bColour, &QM_MATH_VECTOR2F_ZERO ),
+	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( lr.x, lr.y, z ), &QM_MATH_VECTOR3F_ZERO, &bColour, &QM_MATH_VECTOR2F_ZERO ),
 	};
 
 	PlgAddMeshTriangle( mesh, vertices[ 0 ], vertices[ 1 ], vertices[ 2 ] );

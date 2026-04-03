@@ -24,10 +24,10 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *te
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
 
-	unsigned int vX = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, 0 ), &pl_vecOrigin3, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx, ty ) );
-	unsigned int vY = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y + h, 0 ), &pl_vecOrigin3, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx, ty + th ) );
-	unsigned int vZ = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y, 0 ), &pl_vecOrigin3, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx + tw, ty ) );
-	unsigned int vW = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y + h, 0 ), &pl_vecOrigin3, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx + tw, ty + th ) );
+	unsigned int vX = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, 0 ), &QM_MATH_VECTOR3F_ZERO, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx, ty ) );
+	unsigned int vY = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y + h, 0 ), &QM_MATH_VECTOR3F_ZERO, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx, ty + th ) );
+	unsigned int vZ = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y, 0 ), &QM_MATH_VECTOR3F_ZERO, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx + tw, ty ) );
+	unsigned int vW = PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x + w, y + h, 0 ), &QM_MATH_VECTOR3F_ZERO, &QM_MATH_COLOUR4UB_RGB( 255, 255, 255 ), &QM_MATH_VECTOR2F( tx + tw, ty + th ) );
 
 	PlgAddMeshTriangle( mesh, vX, vY, vZ );
 	PlgAddMeshTriangle( mesh, vZ, vY, vW );
@@ -48,9 +48,9 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMath
 	PlPushMatrix();
 
 	PlTranslateMatrix( *position );
-	PlRotateMatrix3f( PL_DEG2RAD( angles->x ), 1.0f, 0.0f, 0.0f );
-	PlRotateMatrix3f( PL_DEG2RAD( angles->y ), 0.0f, 1.0f, 0.0f );
-	PlRotateMatrix3f( PL_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
+	PlRotateMatrix3f( QM_MATH_DEG2RAD( angles->x ), 1.0f, 0.0f, 0.0f );
+	PlRotateMatrix3f( QM_MATH_DEG2RAD( angles->y ), 0.0f, 1.0f, 0.0f );
+	PlRotateMatrix3f( QM_MATH_DEG2RAD( angles->z ), 0.0f, 0.0f, 1.0f );
 
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture->internal, &tw, &th, &tx, &ty );
@@ -126,9 +126,9 @@ void ape_draw_axis_pivot( QmMathVector3f position, QmMathVector3f rotation, floa
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 	QmMathVector3f angles;
-	angles.x = PL_DEG2RAD( rotation.x );
-	angles.y = PL_DEG2RAD( rotation.y );
-	angles.z = PL_DEG2RAD( rotation.z );
+	angles.x = QM_MATH_DEG2RAD( rotation.x );
+	angles.y = QM_MATH_DEG2RAD( rotation.y );
+	angles.z = QM_MATH_DEG2RAD( rotation.z );
 
 	PlTranslateMatrix( position );
 
@@ -480,8 +480,8 @@ void ape_draw_debug_mesh_display_()
 
 void ape_draw_debug_line( QmMathVector3f start, QmMathVector3f end, QmMathColour4ub colour )
 {
-	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
-	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &start, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
+	PlgAddMeshVertex( debugDrawMesh, &end, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
 }
 
 void ape_draw_debug_arrow( QmMathVector3f start, QmMathVector3f end, QmMathColour4ub colour, float scale )
@@ -493,20 +493,20 @@ void ape_draw_debug_arrow( QmMathVector3f start, QmMathVector3f end, QmMathColou
 	QmMathVector3f arrowLeft  = qm_math_vector3f_add( arrowHead, qm_math_vector3f_scale_float( qm_math_vector3f_normalize( qm_math_vector3f_cross_product( direction, qm_math_vector3f( 0.0f, 0.0f, 1.0f ) ) ), scale ) );
 	QmMathVector3f arrowRight = qm_math_vector3f_add( arrowHead, qm_math_vector3f_scale_float( qm_math_vector3f_normalize( qm_math_vector3f_cross_product( qm_math_vector3f( 0.0f, 0.0f, 1.0f ), direction ) ), scale ) );
 
-	PlgAddMeshVertex( debugDrawMesh, &start, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
-	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &start, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
+	PlgAddMeshVertex( debugDrawMesh, &end, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
 
-	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
-	PlgAddMeshVertex( debugDrawMesh, &arrowLeft, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &end, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
+	PlgAddMeshVertex( debugDrawMesh, &arrowLeft, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
 
-	PlgAddMeshVertex( debugDrawMesh, &end, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
-	PlgAddMeshVertex( debugDrawMesh, &arrowRight, &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+	PlgAddMeshVertex( debugDrawMesh, &end, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
+	PlgAddMeshVertex( debugDrawMesh, &arrowRight, &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
 }
 
 void ape_draw_debug_sphere( QmMathVector3f origin, QmMathColour4ub colour, float scale )
 {
 	static constexpr unsigned int NUM_SEGMENTS = 16;
-	static constexpr float        DELTA        = 2.0f * PL_PI / NUM_SEGMENTS;
+	static constexpr float        DELTA        = 2.0f * QM_MATH_PI / NUM_SEGMENTS;
 
 	// array to store the vertices
 	QmMathVector3f vertices[ NUM_SEGMENTS + 1 ][ NUM_SEGMENTS + 1 ];
@@ -534,8 +534,8 @@ void ape_draw_debug_sphere( QmMathVector3f origin, QmMathColour4ub colour, float
 	{
 		for ( int j = 0; j < NUM_SEGMENTS; ++j )
 		{
-			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
-			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j + 1 ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j ], &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j + 1 ], &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
 		}
 	}
 
@@ -544,8 +544,8 @@ void ape_draw_debug_sphere( QmMathVector3f origin, QmMathColour4ub colour, float
 	{
 		for ( int j = 0; j <= NUM_SEGMENTS; ++j )
 		{
-			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
-			PlgAddMeshVertex( debugDrawMesh, &vertices[ i + 1 ][ j ], &pl_vecOrigin3, &colour, &pl_vecOrigin2 );
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i ][ j ], &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
+			PlgAddMeshVertex( debugDrawMesh, &vertices[ i + 1 ][ j ], &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F_ZERO );
 		}
 	}
 }
@@ -605,7 +605,7 @@ void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const QmMath
 	QmMathVector3f vertices[ MAX_RESOLUTION ] = {};
 	for ( unsigned int i = 0; i < resolution; ++i )
 	{
-		float angle   = PL_DEG2RAD( 360.0f * i / resolution );
+		float angle   = QM_MATH_DEG2RAD( 360.0f * i / resolution );
 		vertices[ i ] = qm_math_vector3f(
 		        cylinder->origin.x + cosf( angle ) * cylinder->radius,
 		        cylinder->origin.y,
@@ -643,9 +643,9 @@ void ape_draw_debug_cone( QmMathVector3f origin, QmMathVector3f angles, const Qm
 
 	resolution = PL_MIN( resolution, MAX_RESOLUTION - 1 );
 
-	PLMatrix4 mx = PlRotateMatrix4( PL_DEG2RAD( angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
-	PLMatrix4 my = PlRotateMatrix4( PL_DEG2RAD( angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
-	PLMatrix4 mz = PlRotateMatrix4( PL_DEG2RAD( angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
+	PLMatrix4 mx = PlRotateMatrix4( QM_MATH_DEG2RAD( angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
+	PLMatrix4 my = PlRotateMatrix4( QM_MATH_DEG2RAD( angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
+	PLMatrix4 mz = PlRotateMatrix4( QM_MATH_DEG2RAD( angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 
 	PLMatrix4 rt = PlMatrix4Identity();
 	rt           = PlMultiplyMatrix4( &rt, &mx );
@@ -655,7 +655,7 @@ void ape_draw_debug_cone( QmMathVector3f origin, QmMathVector3f angles, const Qm
 	QmMathVector3f vertices[ MAX_RESOLUTION ] = {};
 	for ( unsigned int i = 0; i < resolution; ++i )
 	{
-		float          angle = PL_DEG2RAD( 360.0f * i / resolution );
+		float          angle = QM_MATH_DEG2RAD( 360.0f * i / resolution );
 		QmMathVector3f pos   = qm_math_vector3f( cosf( angle ) * radius, range, sinf( angle ) * radius );
 		vertices[ i ]        = qm_math_vector3f_add( origin, PlTransformVector3( &pos, &rt ) );
 	}

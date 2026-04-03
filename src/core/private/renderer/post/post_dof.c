@@ -45,9 +45,9 @@ static bool setup_dof_effect()
 		return false;
 	}
 
-	dofFocusPointSlot = PlgGetShaderUniformSlot( dofShader->internal, "focusPoint" );
-	dofFocusScaleSlot = PlgGetShaderUniformSlot( dofShader->internal, "focusScale" );
-	dofApertureSlot   = PlgGetShaderUniformSlot( dofShader->internal, "aperture" );
+	dofFocusPointSlot = qm_gfx_shader_program_get_uniform_slot( dofShader->internal, "focusPoint" );
+	dofFocusScaleSlot = qm_gfx_shader_program_get_uniform_slot( dofShader->internal, "focusScale" );
+	dofApertureSlot   = qm_gfx_shader_program_get_uniform_slot( dofShader->internal, "aperture" );
 
 	if ( ( dofTarget = ape_render_target_create_( "post_dof", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_NEAREST, 0 ) ) == nullptr )
 	{

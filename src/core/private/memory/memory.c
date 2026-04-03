@@ -12,7 +12,6 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static PLMemoryGroup *cacheMemoryGroups[ APE_MAX_CACHE_POOLS ];
 static PLLinkedList  *cachePoolsList[ APE_MAX_CACHE_POOLS ];
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -23,11 +22,6 @@ static void initialize_cache_pools( void )
 {
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
 	{
-		cacheMemoryGroups[ i ] = PlCreateMemoryGroup();
-		if ( cacheMemoryGroups[ i ] == nullptr )
-		{
-			ape_console_error_( true, "Failed to create memory group (%u): %s\n", i, PlGetError() );
-		}
 		cachePoolsList[ i ] = PlCreateLinkedList();
 		if ( cachePoolsList[ i ] == NULL )
 		{
@@ -220,9 +214,6 @@ void ape_memory_shutdown_( void )
 
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
 	{
-		PlDestroyMemoryGroup( cacheMemoryGroups[ i ] );
-		cacheMemoryGroups[ i ] = nullptr;
-
 		PlDestroyLinkedList( cachePoolsList[ i ] );
 		cachePoolsList[ i ] = nullptr;
 	}

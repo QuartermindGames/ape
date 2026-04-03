@@ -23,7 +23,7 @@ static ApeCamera *auxCamera;
 
 void ape_initialize_gui_( void )
 {
-	auxCamera = ape_create_camera( nullptr, nullptr, &pl_vecOrigin3, &pl_vecOrigin3, APE_CAMERA_MODE_FRONT, APE_CAMERA_DRAW_MODE_SHADED );
+	auxCamera = ape_create_camera( nullptr, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO, APE_CAMERA_MODE_ORTHOGRAPHIC, APE_CAMERA_DRAW_MODE_SHADED );
 	if ( auxCamera == nullptr )
 	{
 		ape_console_error_( true, "Failed to create auxiliary camera!\n" );
@@ -41,13 +41,13 @@ void ape_shutdown_gui_( void )
 
 void ape_setup_2d_viewport_( int w, int h )
 {
-	PlgSetViewport( 0, 0, w, h );
-	PlgSetupCamera( ape_camera_get_internal( auxCamera ) );
+	qm_gfx_set_viewport( 0, 0, w, h );
+	ape_camera_setup( auxCamera );
 }
 
 void ape_get_2d_viewport_size_( int *width, int *height )
 {
-	PlgGetViewport( nullptr, nullptr, width, height );
+	qm_gfx_get_viewport( nullptr, nullptr, width, height );
 }
 
 void ape_draw_menu_( ApeViewport *viewport )

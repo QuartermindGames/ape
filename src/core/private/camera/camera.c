@@ -11,15 +11,19 @@
 #include "renderer/post/post.h"
 #include "world/world.h"
 
-static constexpr float APE_CAMERA_DEFAULT_FOCUS_POINT = 16.0f;
-static constexpr float APE_CAMERA_DEFAULT_FOCUS_SCALE = 0.f;
-static constexpr float APE_CAMERA_DEFAULT_APERTURE    = 0.f;
+static constexpr float CAMERA_DEFAULT_FOCUS_POINT = 16.0f;
+static constexpr float CAMERA_DEFAULT_FOCUS_SCALE = 0.f;
+static constexpr float CAMERA_DEFAULT_APERTURE    = 0.f;
+
+static constexpr float CAMERA_DEFAULT_FOV  = 75.0f;
+static constexpr float CAMERA_DEFAULT_NEAR = 0.1f;
+static constexpr float CAMERA_DEFAULT_FAR  = 1000.0f;
 
 void ape_camera_make_active( ApeCamera *camera )
 {
 	if ( camera != nullptr )
 	{
-		PlgSetupCamera( camera->internal );
+		ape_camera_setup( camera );
 	}
 
 	ape_rendererState_.camera = camera;
@@ -44,29 +48,16 @@ void ape_camera_set_view_mode( ApeCamera *camera, ApeCameraViewMode viewMode )
 {
 	camera->mode = viewMode;
 
-	static constexpr float DEFAULT_FAR  = 1000000.0f;
-	static constexpr float DEFAULT_FOV  = 75.0f;
-	static constexpr float DEFAULT_NEAR = 0.1f;
-
-	if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE )
+	if ( camera->mode == APE_CAMERA_MODE_PERSPECTIVE || camera->mode == APE_CAMERA_MODE_ISOMETRIC )
 	{
-		camera->internal->mode = PLG_CAMERA_MODE_PERSPECTIVE;
-		camera->internal->fov  = DEFAULT_FOV;
-		camera->internal->far  = DEFAULT_FAR;
-		camera->internal->near = DEFAULT_NEAR;
-	}
-	else if ( camera->mode == APE_CAMERA_MODE_ISOMETRIC )
-	{
-		camera->internal->mode = PLG_CAMERA_MODE_ISOMETRIC;
-		camera->internal->fov  = DEFAULT_FOV;
-		camera->internal->far  = DEFAULT_FAR;
-		camera->internal->near = DEFAULT_NEAR;
+		camera->fov  = CAMERA_DEFAULT_FOV;
+		camera->far  = CAMERA_DEFAULT_FAR;
+		camera->near = CAMERA_DEFAULT_NEAR;
 	}
 	else
 	{
-		camera->internal->mode = PLG_CAMERA_MODE_ORTHOGRAPHIC;
-		camera->internal->near = -10000.0f;
-		camera->internal->far  = 10000.0f;
+		camera->near = -10000.0f;
+		camera->far  = 10000.0f;
 	}
 }
 
@@ -112,15 +103,9 @@ static void *camera_create( ApeWorldNode *parent )
 	ApeCamera *camera = QM_OS_MEMORY_NEW( ApeCamera );
 	ape_world_node_setup_( &camera->base, parent, APE_WORLD_NODE_TYPE_CAMERA, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 
-	camera->internal = PlgCreateCamera();
-	if ( camera->internal == nullptr )
-	{
-		ape_console_error_( true, "Failed to create camera: %s\n", PlGetError() );
-	}
-
-	camera->dof.focusPoint = APE_CAMERA_DEFAULT_FOCUS_POINT;
-	camera->dof.focusScale = APE_CAMERA_DEFAULT_FOCUS_SCALE;
-	camera->dof.aperture   = APE_CAMERA_DEFAULT_APERTURE;
+	camera->dof.focusPoint = CAMERA_DEFAULT_FOCUS_POINT;
+	camera->dof.focusScale = CAMERA_DEFAULT_FOCUS_SCALE;
+	camera->dof.aperture   = CAMERA_DEFAULT_APERTURE;
 
 	ape_camera_set_view_mode( camera, APE_CAMERA_MODE_PERSPECTIVE );
 	ape_camera_set_draw_mode( camera, APE_CAMERA_DRAW_MODE_SHADED );
@@ -156,20 +141,16 @@ void ape_camera_destroy_( void *data, ApeWorldNode *parent )
 		return;
 	}
 
-	PlgDestroyCamera( self->internal );
-
 	qm_os_memory_free( self );
 }
 
 void ape_camera_set_position( ApeCamera *self, const QmMathVector3f *position )
 {
-	self->internal->position = *position;
 	ape_world_node_set_position( &self->base, position );
 }
 
 void ape_camera_set_angles( ApeCamera *camera, const QmMathVector3f *angles )
 {
-	camera->internal->angles = *angles;
 	ape_world_node_set_angles( &camera->base, angles );
 }
 
@@ -185,8 +166,102 @@ QmMathVector3f ape_camera_get_angles( const ApeCamera *camera )
 
 QmMathVector3f ape_camera_get_forward( const ApeCamera *camera )
 {
-	PLMatrix4 view = camera->internal->internal.view;
+	PLMatrix4 view = camera->view;
 	return qm_math_vector3f( view.mm[ 0 ][ 2 ], view.mm[ 1 ][ 2 ], view.mm[ 2 ][ 2 ] );
+}
+
+void ape_camera_setup_frustum( ApeCamera *camera )
+{
+	PLMatrix4 viewProj = PlMultiplyMatrix4( &camera->proj, &camera->view );
+
+	// Right
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_RIGHT ].x = viewProj.m[ 3 ] - viewProj.m[ 0 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_RIGHT ].y = viewProj.m[ 7 ] - viewProj.m[ 4 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_RIGHT ].z = viewProj.m[ 11 ] - viewProj.m[ 8 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_RIGHT ].w = viewProj.m[ 15 ] - viewProj.m[ 12 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_RIGHT ]   = PlNormalizePlane( camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_RIGHT ] );
+	// Left
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_LEFT ].x = viewProj.m[ 3 ] + viewProj.m[ 0 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_LEFT ].y = viewProj.m[ 7 ] + viewProj.m[ 4 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_LEFT ].z = viewProj.m[ 11 ] + viewProj.m[ 8 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_LEFT ].w = viewProj.m[ 15 ] + viewProj.m[ 12 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_LEFT ]   = PlNormalizePlane( camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_LEFT ] );
+	// Bottom
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_BOTTOM ].x = viewProj.m[ 3 ] - viewProj.m[ 1 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_BOTTOM ].y = viewProj.m[ 7 ] - viewProj.m[ 5 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_BOTTOM ].z = viewProj.m[ 11 ] - viewProj.m[ 9 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_BOTTOM ].w = viewProj.m[ 15 ] - viewProj.m[ 13 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_BOTTOM ]   = PlNormalizePlane( camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_BOTTOM ] );
+	// Top
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_TOP ].x = viewProj.m[ 3 ] + viewProj.m[ 1 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_TOP ].y = viewProj.m[ 7 ] + viewProj.m[ 5 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_TOP ].z = viewProj.m[ 11 ] + viewProj.m[ 9 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_TOP ].w = viewProj.m[ 15 ] + viewProj.m[ 13 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_TOP ]   = PlNormalizePlane( camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_TOP ] );
+	// Far
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_FAR ].x = viewProj.m[ 3 ] - viewProj.m[ 2 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_FAR ].y = viewProj.m[ 7 ] - viewProj.m[ 6 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_FAR ].z = viewProj.m[ 11 ] - viewProj.m[ 10 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_FAR ].w = viewProj.m[ 15 ] - viewProj.m[ 14 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_FAR ]   = PlNormalizePlane( camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_FAR ] );
+	// Near
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_NEAR ].x = viewProj.m[ 3 ] + viewProj.m[ 2 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_NEAR ].y = viewProj.m[ 7 ] + viewProj.m[ 6 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_NEAR ].z = viewProj.m[ 11 ] + viewProj.m[ 10 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_NEAR ].w = viewProj.m[ 15 ] + viewProj.m[ 14 ];
+	camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_NEAR ]   = PlNormalizePlane( camera->frustum[ APE_CAMERA_FRUSTUM_PLANE_NEAR ] );
+}
+
+void ape_camera_setup( ApeCamera *camera )
+{
+	int w, h;
+	qm_gfx_get_viewport( nullptr, nullptr, &w, &h );
+
+	switch ( camera->mode )
+	{
+		case APE_CAMERA_MODE_PERSPECTIVE:
+		{
+			camera->proj = PlPerspective( camera->fov, ( float ) w / ( float ) h, camera->near, camera->far );
+			break;
+		}
+		case APE_CAMERA_MODE_ORTHOGRAPHIC:
+		{
+			camera->proj = PlOrtho( 0, ( float ) w, ( float ) h, 0, camera->near, camera->far );
+			camera->view = PlMatrix4Identity();
+			break;
+		}
+		case APE_CAMERA_MODE_ISOMETRIC:
+		{
+			camera->proj = PlOrtho( -camera->fov, camera->fov, -camera->fov, 5, -5, 40 );
+			camera->view = PlMatrix4Identity();
+			break;
+		}
+		default:
+			break;
+	}
+
+	if ( camera->mode != APE_CAMERA_MODE_ORTHOGRAPHIC )
+	{
+		PlMatrixMode( PL_VIEW_MATRIX );
+		PlLoadIdentityMatrix();
+
+		QmMathVector3f angles = ape_camera_get_angles( camera );
+		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.x ), 1.0f, 0.0f, 0.0f );
+		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.y ), 0.0f, 1.0f, 0.0f );
+		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.z ), 0.0f, 0.0f, 1.0f );
+
+		QmMathVector3f position = ape_camera_get_position( camera );
+		PlTranslateMatrix( QM_MATH_VECTOR3F( -position.x, -position.y, -position.z ) );
+
+		camera->view = *PlGetMatrix( PL_VIEW_MATRIX );
+	}
+
+	// setup the camera frustum
+	ape_camera_setup_frustum( camera );
+
+	// copy camera matrices
+	PlgSetViewMatrix( &camera->view );
+	PlgSetProjectionMatrix( &camera->proj );
 }
 
 void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport );
@@ -196,6 +271,7 @@ void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport
 
 	COM_PROFILE_FUNCTION_START();
 
+#if 0
 	//TODO: ditch this mechanism, probably!
 	if ( camera->mode == APE_CAMERA_MODE_ISOMETRIC )
 	{
@@ -203,8 +279,9 @@ void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport
 		// this is what the other modes are there for!
 		camera->internal->angles.x = -35.264f;
 	}
+#endif
 
-	PlgSetupCamera( camera->internal );
+	ape_camera_setup( camera );
 
 	// Draw the scene into a buffer
 	ape_draw_scene_( camera, viewport );
@@ -215,9 +292,23 @@ void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport
 	COM_PROFILE_FUNCTION_END();
 }
 
-PLGCamera *ape_camera_get_internal( ApeCamera *camera )
+void ape_camera_set_fov( ApeCamera *camera, float fov )
 {
-	return camera->internal;
+	if ( fov < 1.0f )
+	{
+		fov = 1.0f;
+	}
+	else if ( fov > 179.0f )
+	{
+		fov = 179.0f;
+	}
+
+	camera->fov = fov;
+}
+
+float ape_camera_get_fov( const ApeCamera *camera )
+{
+	return camera->fov;
 }
 
 void ape_camera_set_focus_point( ApeCamera *self, const float focusPoint )
@@ -233,6 +324,79 @@ void ape_camera_set_focus_scale( ApeCamera *self, const float focusScale )
 void ape_camera_set_aperture( ApeCamera *self, const float aperture )
 {
 	self->dof.aperture = aperture;
+}
+
+/**
+ * Checks that the given bounding box is within the view space.
+ */
+bool ape_camera_test_box( const ApeCamera *camera, const PLCollisionAABB *bounds )
+{
+	QmMathVector3f mins = qm_math_vector3f_add( bounds->mins, bounds->origin );
+	QmMathVector3f maxs = qm_math_vector3f_add( bounds->maxs, bounds->origin );
+	for ( unsigned int i = 0; i < APE_CAMERA_MAX_FRUSTUM_PLANES; ++i )
+	{
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, mins.y, mins.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( maxs.x, mins.y, mins.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, maxs.y, mins.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( maxs.x, maxs.y, mins.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, mins.y, maxs.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, maxs.y, maxs.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( maxs.x, maxs.y, maxs.z ) ) >= 0.0f )
+		{
+			continue;
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * Checks that the given sphere is within the view space.
+ */
+bool ape_camera_test_sphere( const ApeCamera *camera, const PLCollisionSphere *sphere )
+{
+	for ( unsigned int i = 0; i < APE_CAMERA_MAX_FRUSTUM_PLANES; ++i )
+	{
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &sphere->origin ) < -sphere->radius )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool ape_camera_test_point( const ApeCamera *camera, const QmMathVector3f point )
+{
+	for ( unsigned int i = 0; i < APE_CAMERA_MAX_FRUSTUM_PLANES; ++i )
+	{
+		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &point ) < 0.0f )
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 static ApeWorldNode *camera_clone( ApeWorldNode *src )
@@ -301,9 +465,7 @@ static QmMathVector4f get_face_screen_rect( const ApeBrushFace *face, const ApeC
 {
 	COM_PROFILE_FUNCTION_START();
 
-	PLMatrix4 view     = camera->internal->internal.view;
-	PLMatrix4 proj     = camera->internal->internal.proj;
-	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
+	PLMatrix4 viewProj = PlMultiplyMatrix4( &camera->proj, &camera->view );
 
 	QmMathVector4f rect = qm_math_vector4f( viewport->width, viewport->height, 0.0f, 0.0f );
 
@@ -360,7 +522,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 			return false;
 		}
 
-		if ( !qm_gfx_camera_test_sphere( self->internal, &PlSetupCollisionSphere( position, light->radius <= 0.0f ? 1.0f : light->radius ) ) )
+		if ( !ape_camera_test_sphere( self, &PlSetupCollisionSphere( position, light->radius <= 0.0f ? 1.0f : light->radius ) ) )
 		{
 			return false;
 		}
@@ -388,7 +550,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 	if ( light->flags & APE_LIGHT_FLAG_FLARE && room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
 	{
 		//TODO: test the flare is actually visible!!
-		ape_add_flare_to_queue( self, &position, &PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
+		ape_add_flare_to_queue( self, &position, &QM_MATH_COLOUR4F_RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
 	}
 
 	return true;
@@ -422,7 +584,7 @@ static void setup_reflection_matrix( const QmMathVector3f *normal, const QmMathV
 static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBrush *brush, ApeCameraVisibleRoom *visibleRoom )
 {
 	PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( brush ) );
-	if ( !qm_gfx_camera_test_box( self->internal, &bounds ) )
+	if ( !ape_camera_test_box( self, &bounds ) )
 	{
 		return false;
 	}
@@ -441,7 +603,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 		bounds.origin       = PlGetMatrix4Translation( &transform );
 
 		// check that the bounds are in view
-		if ( !qm_gfx_camera_test_box( self->internal, &bounds ) )
+		if ( !ape_camera_test_box( self, &bounds ) )
 		{
 			continue;
 		}
@@ -509,7 +671,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 					self->pvs.numRooms++;
 
 					// update the view matrix
-					visiblePortal->nextRoom->viewMatrix = self->internal->internal.view;
+					visiblePortal->nextRoom->viewMatrix = self->view;
 					if ( ape_brush_face_is_mirror( &brush->faces[ i ] ) )
 					{
 						PLMatrix4 reflection;
@@ -528,9 +690,9 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 
 					visiblePortal->nextRoom->room = ape_brush_face_get_room( destinationFace );
 
-					self->internal->internal.view = visiblePortal->nextRoom->viewMatrix;
+					self->view = visiblePortal->nextRoom->viewMatrix;
 					PlgSetViewMatrix( &visiblePortal->nextRoom->viewMatrix );
-					PlgSetupCameraFrustum( self->internal );
+					ape_camera_setup_frustum( self );
 
 					ape_rendererState_.depth++;
 
@@ -539,9 +701,9 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 
 					ape_rendererState_.depth--;
 
-					self->internal->internal.view = visibleRoom->viewMatrix;
+					self->view = visibleRoom->viewMatrix;
 					PlgSetViewMatrix( &visibleRoom->viewMatrix );
-					PlgSetupCameraFrustum( self->internal );
+					ape_camera_setup_frustum( self );
 				}
 				else
 				{
@@ -603,7 +765,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 			else
 			{
 				PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
-				isVisible                         = qm_gfx_camera_test_box( self->internal, &transformedBounds );
+				isVisible                         = ape_camera_test_box( self, &transformedBounds );
 			}
 
 			if ( isVisible )
@@ -638,7 +800,7 @@ void ape_camera_build_pvs_( ApeCamera *self, const ApeViewport *viewport )
 	COM_PROFILE_FUNCTION_START();
 
 	self->pvs.rooms[ 0 ].room       = room;
-	self->pvs.rooms[ 0 ].viewMatrix = self->internal->internal.view;
+	self->pvs.rooms[ 0 ].viewMatrix = self->view;
 	self->pvs.numRooms++;
 
 	pvs_navigate_node_tree( self, viewport, APE_WORLD_NODE( room ), &self->pvs.rooms[ 0 ] );

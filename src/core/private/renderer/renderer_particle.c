@@ -152,7 +152,7 @@ static void tick_particle( ApeParticle *particle, ApeParticleEmitter *emitter )
 	particle->bounds.origin = particle->transform.translation;
 
 	particle->oldColour = particle->colour;
-	particle->colour    = PlAddColourF32( &particle->colour, &particle->deltaColour );
+	particle->colour    = qm_math_colour4f_add( particle->colour, particle->deltaColour );
 
 	particle->scale += particle->deltaScale;
 
@@ -266,8 +266,8 @@ void ss_arl_particle_emitter_draw( const ApeParticleEmitter *emitter, const ApeC
 
 		QmMathColour4ub colour = QM_MATH_COLOUR4F_TO_4UB( particle->colour );
 
-		unsigned int a = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z - particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
-		unsigned int b = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z + particle->scale ), &pl_vecOrigin3, &colour, &QM_MATH_VECTOR2F( 0.0f, 1.0f ) );
+		unsigned int a = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z - particle->scale ), &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
+		unsigned int b = PlgAddMeshVertex( emitter->mesh, &QM_MATH_VECTOR3F( x - particle->scale, y - particle->scale, z + particle->scale ), &QM_MATH_VECTOR3F_ZERO, &colour, &QM_MATH_VECTOR2F( 0.0f, 1.0f ) );
 		//unsigned int c = PlgAddMeshVertex( emitter->mesh, QmMathVector3f( x + particle->scale, y - particle->scale, z - particle->scale ), pl_vecOrigin3, colour, QmMathVector2f( 1.0f, 0.0f ) );
 		//unsigned int d = PlgAddMeshVertex( emitter->mesh, QmMathVector3f( x + particle->scale, y - particle->scale, z + particle->scale ), pl_vecOrigin3, colour, QmMathVector2f( 1.0f, 1.0f ) );
 

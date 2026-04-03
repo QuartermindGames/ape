@@ -35,7 +35,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	unsigned int i = 0;
 	for ( ; i < MAX_VIEWPORTS; ++i )
 	{
-		if ( viewports[ i ] != NULL )
+		if ( viewports[ i ] != nullptr )
 		{
 			continue;
 		}
@@ -62,11 +62,11 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 	char viewportTag[ 64 ];
 	snprintf( viewportTag, sizeof( viewportTag ), "viewport_%u", i );
 	viewports[ i ]->renderTarget = ape_render_target_create_( viewportTag,
-	                                                         width, height,
-	                                                         PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
-	                                                         PLG_BUFFER_COLOUR,
-	                                                         PLG_TEXTURE_FILTER_LINEAR, msaa );
-	if ( viewports[ i ]->renderTarget == NULL )
+	                                                          width, height,
+	                                                          PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH | PLG_BUFFER_STENCIL,
+	                                                          PLG_BUFFER_COLOUR,
+	                                                          PLG_TEXTURE_FILTER_LINEAR, msaa );
+	if ( viewports[ i ]->renderTarget == nullptr )
 	{
 		ape_console_warning_( "Failed to create render target for viewport!\n" );
 		qm_os_memory_free( viewports[ i ] );
@@ -79,20 +79,20 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 
 void ape_viewport_destroy( ApeViewport *self )
 {
-	if ( self == NULL )
+	if ( self == nullptr )
 	{
 		return;
 	}
 
-	if ( self->renderTarget != NULL )
+	if ( self->renderTarget != nullptr )
 	{
 		ape_render_target_release_( self->renderTarget );
-		self->renderTarget = NULL;
+		self->renderTarget = nullptr;
 	}
 
 	unsigned int index = self->index;
 	qm_os_memory_free( viewports[ index ] );
-	viewports[ index ] = NULL;
+	viewports[ index ] = nullptr;
 }
 
 /**
@@ -104,7 +104,7 @@ ApeViewport *ape_get_viewport_by_slot( unsigned int slot )
 	if ( slot >= MAX_VIEWPORTS )
 	{
 		ape_console_warning_( "Invalid slot specified!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	return viewports[ slot ];
@@ -119,7 +119,7 @@ ApeCamera *ape_viewport_get_camera( ApeViewport *viewport ) { return viewport->c
 
 static void update_render_target_size( ApeViewport *self )
 {
-	if ( self->renderTarget == NULL )
+	if ( self->renderTarget == nullptr )
 	{
 		return;
 	}
@@ -147,11 +147,11 @@ void ape_viewport_set_size( ApeViewport *self, int width, int height )
 
 void ape_viewport_get_size( const ApeViewport *self, int *width, int *height )
 {
-	if ( width != NULL )
+	if ( width != nullptr )
 	{
 		*width = self->width;
 	}
-	if ( height != NULL )
+	if ( height != nullptr )
 	{
 		*height = self->height;
 	}
@@ -190,12 +190,12 @@ void ape_viewport_make_active( ApeViewport *self )
 	// though to be honest, it probably shouldn't be called as often from the editor either...
 	update_render_target_size( self );
 
-	int rw = self->width * ( int ) ape_config_.renderer.framebufferScale;
-	int rh = self->height * ( int ) ape_config_.renderer.framebufferScale;
 	ape_viewport_set_clip( self );
-	PlgSetViewport( self->x, self->y, rw, rh );
+	qm_gfx_set_viewport( self->x, self->y,
+	                     self->width * ( int ) ape_config_.renderer.framebufferScale,
+	                     self->height * ( int ) ape_config_.renderer.framebufferScale );
 
-	if ( self->camera != NULL )
+	if ( self->camera != nullptr )
 	{
 		ape_camera_make_active( self->camera );
 	}
@@ -210,9 +210,9 @@ ApeViewport *ape_viewport_get_active( void )
 
 void ape_viewport_set_clip( const ApeViewport *self )
 {
-	int rw = self->width * ( int ) ape_config_.renderer.framebufferScale;
-	int rh = self->height * ( int ) ape_config_.renderer.framebufferScale;
-	PlgClipViewport( self->x, self->y, rw, rh );
+	qm_gfx_clip_viewport( self->x, self->y,
+	                      self->width * ( int ) ape_config_.renderer.framebufferScale,
+	                      self->height * ( int ) ape_config_.renderer.framebufferScale );
 }
 
 void ape_viewport_set_clear_colour( ApeViewport *self, const QmMathColour4ub *clearColour )

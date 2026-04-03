@@ -9,11 +9,12 @@ typedef enum ApeCameraViewMode : int8_t
 {
 	APE_CAMERA_MODE_INVALID = -1,
 	APE_CAMERA_MODE_PERSPECTIVE,
+	APE_CAMERA_MODE_ORTHOGRAPHIC,
+	APE_CAMERA_MODE_ISOMETRIC,
+
 	APE_CAMERA_MODE_TOP,
 	APE_CAMERA_MODE_LEFT,
 	APE_CAMERA_MODE_FRONT,
-
-	APE_CAMERA_MODE_ISOMETRIC,
 
 	APE_CAMERA_MAX_MODES
 } ApeCameraViewMode;
@@ -48,6 +49,9 @@ QmMathVector3f ape_camera_get_position( const ApeCamera *camera );
 QmMathVector3f ape_camera_get_angles( const ApeCamera *camera );
 QmMathVector3f ape_camera_get_forward( const ApeCamera *camera );
 
+void ape_camera_setup_frustum( ApeCamera *camera );
+void ape_camera_setup( ApeCamera *camera );
+
 void ape_camera_make_active( ApeCamera *camera );
 
 ApeRoom *ape_camera_get_room( ApeCamera *self );
@@ -60,11 +64,16 @@ void ape_camera_set_view_mode( ApeCamera *camera, ApeCameraViewMode viewMode );
 const char *ape_get_camera_draw_mode_label( ApeCameraDrawMode drawMode );
 const char *ape_get_camera_view_mode_label( ApeCameraViewMode viewMode );
 
-struct PLGCamera *ape_camera_get_internal( ApeCamera *camera );
+void  ape_camera_set_fov( ApeCamera *camera, float fov );
+float ape_camera_get_fov( const ApeCamera *camera );
 
 void ape_camera_set_focus_point( ApeCamera *self, float focusPoint );
 void ape_camera_set_focus_scale( ApeCamera *self, float focusScale );
 void ape_camera_set_aperture( ApeCamera *self, float aperture );
+
+bool ape_camera_test_box( const ApeCamera *camera, const PLCollisionAABB *bounds );
+bool ape_camera_test_sphere( const ApeCamera *camera, const PLCollisionSphere *sphere );
+bool ape_camera_test_point( const ApeCamera *camera, QmMathVector3f point );
 
 //TODO: this shouldn't be public...
 void ape_camera_draw_perspective( ApeCamera *camera, const ApeViewport *viewport );

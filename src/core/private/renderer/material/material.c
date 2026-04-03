@@ -300,7 +300,7 @@ static ApeMaterialBuiltinVar get_built_in_by_tag( const char *tag )
  * actually be applied for the uniform it's pointing to. Also known
  * as a shit block of code.
  */
-static bool validate_material_variable( ApeMaterialVariable *variable, PLGShaderUniformType uniformType )
+static bool validate_material_variable( ApeMaterialVariable *variable, QmGfxShaderUniformType uniformType )
 {
 	switch ( variable->type )
 	{
@@ -308,7 +308,7 @@ static bool validate_material_variable( ApeMaterialVariable *variable, PLGShader
 			break;
 
 		case SS_ARL_MATERIAL_VAR_FLOAT:
-			return ( uniformType == PLG_UNIFORM_FLOAT );
+			return ( uniformType == QM_GFX_SHADER_UNIFORM_TYPE_FLOAT );
 		case SS_ARL_MATERIAL_VAR_DOUBLE:
 			return ( uniformType == PLG_UNIFORM_DOUBLE );
 
@@ -368,7 +368,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		 * in the long-term we'll be doing this against our own shader program object, but
 		 * for now, just do it directly against the shader itself */
 		const char *propertyName      = acm_branch_get_name( node );
-		materialVariable->programSlot = PlgGetShaderUniformSlot( materialPass->program->internal, propertyName );
+		materialVariable->programSlot = qm_gfx_shader_program_get_uniform_slot( materialPass->program->internal, propertyName );
 		if ( materialVariable->programSlot == -1 )
 		{
 			ape_console_warning_( "Failed to fetch uniform slot for variable \"%s\"!\n", propertyName );
@@ -386,7 +386,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 		snprintf( materialVariable->name, sizeof( materialVariable->name ), "%s", propertyName );
 
-		PLGShaderUniformType uniformType = PlgGetShaderUniformType( materialPass->program->internal, materialVariable->programSlot );
+		QmGfxShaderUniformType uniformType = qm_gfx_shader_program_get_uniform_type( materialPass->program->internal, materialVariable->programSlot );
 
 		/* if it's a string, it *could* be a built-in type */
 		if ( acm_branch_get_type( node ) == ACM_PROPERTY_TYPE_STRING )
@@ -461,7 +461,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					break;
 				}
 
-				case PLG_UNIFORM_FLOAT:
+				case QM_GFX_SHADER_UNIFORM_TYPE_FLOAT:
 				{
 					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( float, materialVariable->numElements );
 
@@ -919,7 +919,7 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 		return;
 	}
 
-	PLGShaderProgram *program = pass->program->internal;
+	QmGfxShaderProgram *program = pass->program->internal;
 	switch ( variable )
 	{
 		case APE_MATERIAL_BUILTIN_TIME:
@@ -1032,7 +1032,7 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ] >= 0 )
 	{
-		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( PL_DEG2RAD( light->angle ) ) : 0.0f;
+		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( QM_MATH_DEG2RAD( light->angle ) ) : 0.0f;
 		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ], &lightCutOff, false );
 	}
 

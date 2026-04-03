@@ -182,13 +182,13 @@ void forge::WorldEditor::create_new_object( const char *name, ApeWorldNodeType t
 		case APE_WORLD_NODE_TYPE_EMPTY:
 			break;
 		case APE_WORLD_NODE_TYPE_BRUSH:
-			data = ape_brush_create( parentNode, nullptr, &pos, &pl_vecOrigin3 );
+			data = ape_brush_create( parentNode, nullptr, &pos, &QM_MATH_VECTOR3F_ZERO );
 			break;
 		case APE_WORLD_NODE_TYPE_LIGHT:
 			data = ape_create_light( parentNode, &pos, &colour, 1.0f, APE_LIGHT_TYPE_OMNI, APE_LIGHT_FLAG_ENABLED );
 			break;
 		case APE_WORLD_NODE_TYPE_CAMERA:
-			data = ape_create_camera( parentNode, nullptr, &pos, &pl_vecOrigin3, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
+			data = ape_create_camera( parentNode, nullptr, &pos, &QM_MATH_VECTOR3F_ZERO, APE_CAMERA_MODE_PERSPECTIVE, APE_CAMERA_DRAW_MODE_SHADED );
 			break;
 		case APE_WORLD_NODE_TYPE_ENTITY: break;
 	}

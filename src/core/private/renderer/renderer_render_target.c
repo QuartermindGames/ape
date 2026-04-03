@@ -12,10 +12,10 @@ typedef struct ApeRenderTarget
 {
 	char id[ 16 ];// 'rt_menu_0'
 
-	PLGFrameBuffer  *frameBuffer;
-	PLGTexture      *attachments[ APE_RENDER_TARGET_MAX_ATTACHMENT_TYPES ];
-	unsigned int     desiredAttachments;
-	PLGTextureFilter attachmentFilter;
+	QmGfxFramebuffer *frameBuffer;
+	PLGTexture       *attachments[ APE_RENDER_TARGET_MAX_ATTACHMENT_TYPES ];
+	unsigned int      desiredAttachments;
+	PLGTextureFilter  attachmentFilter;
 
 	ApeMemoryReference reference;
 } ApeRenderTarget;
@@ -44,7 +44,7 @@ static void destroy_render_target( void *user )
 
 	if ( renderTarget->frameBuffer != nullptr )
 	{
-		PlgDestroyFrameBuffer( renderTarget->frameBuffer );
+		qm_gfx_framebuffer_destroy( renderTarget->frameBuffer );
 	}
 
 	qm_os_memory_free( renderTarget );
@@ -145,7 +145,7 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 
 		if ( renderTarget->frameBuffer == NULL )
 		{
-			renderTarget->frameBuffer = PlgCreateFrameBuffer( width, height, flags, numSamples );
+			renderTarget->frameBuffer = qm_gfx_framebuffer_create( width, height, flags, numSamples );
 			if ( renderTarget->frameBuffer == NULL )
 			{
 				ape_console_warning_( "Failed to create specified framebuffer for target \"%s\": %s\n", key, PlGetError() );
@@ -160,10 +160,10 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 		return renderTarget;
 	}
 
-	PLGFrameBuffer *frameBuffer;
+	QmGfxFramebuffer *frameBuffer;
 	if ( flags != 0 )
 	{
-		frameBuffer = PlgCreateFrameBuffer( width, height, flags, numSamples );
+		frameBuffer = qm_gfx_framebuffer_create( width, height, flags, numSamples );
 		if ( frameBuffer == NULL )
 		{
 			ape_console_warning_( "Failed to create specified framebuffer: %s\n", PlGetError() );
@@ -202,7 +202,7 @@ void ape_render_target_release_( ApeRenderTarget *renderTarget )
 
 void ape_render_target_set_size_( ApeRenderTarget *self, unsigned int width, unsigned int height )
 {
-	if ( !PlgSetFrameBufferSize( self->frameBuffer, width, height ) )
+	if ( !qm_gfx_framebuffer_set_resolution( self->frameBuffer, width, height ) )
 	{
 		ape_console_warning_( "Failed to resize framebuffer: %s\n", PlGetError() );
 	}
@@ -225,10 +225,10 @@ PLGTexture *ape_render_target_get_texture_( ApeRenderTarget *self, const ApeRend
 
 void ape_render_target_bind_( ApeRenderTarget *self, PLGFrameBufferObjectTarget target )
 {
-	PlgBindFrameBuffer( ( self == NULL ) ? nullptr : self->frameBuffer, target );
+	qm_gfx_framebuffer_bind( ( self == NULL ) ? nullptr : self->frameBuffer, target );
 }
 
-PLGFrameBuffer *ape_render_target_get_frame_buffer_( ApeRenderTarget *renderTarget )
+QmGfxFramebuffer *ape_render_target_get_frame_buffer_( ApeRenderTarget *renderTarget )
 {
 	return renderTarget->frameBuffer;
 }

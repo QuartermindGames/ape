@@ -7,7 +7,6 @@
 #include "forge_window_main.h"
 
 #include <plgraphics/plg.h>
-#include <plgraphics/plg_camera.h>
 
 #include <FXGLCanvas.h>
 #include <FXGLVisual.h>
@@ -161,7 +160,7 @@ void Viewport::draw()
 
 	if ( !ape_is_running() )
 	{
-		PlgSetViewport( 0, 0, w, h );
+		qm_gfx_set_viewport( 0, 0, w, h );
 		PlgSetClearColour( QM_MATH_COLOUR4UB_RGB( 255, 0, 0 ) );
 		PlgClearBuffers( PLG_BUFFER_COLOUR | PLG_BUFFER_DEPTH );
 		return;

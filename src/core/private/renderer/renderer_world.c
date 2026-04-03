@@ -133,7 +133,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 				{
 					if ( ( ApeBrushFace * ) p == face )
 					{
-						if ( qm_gfx_camera_test_box( instance->camera->internal, &face->bounds ) )
+						if ( ape_camera_test_box( instance->camera, &face->bounds ) )
 						{
 							subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
 							firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
@@ -220,7 +220,18 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 #endif
 		}
 
-		if ( qm_gfx_camera_test_box( camera->internal, &face->bounds ) )
+		ApeRoom *room = visibleRoom->room;
+		if ( room->fogFar != 0.f )
+		{
+			QmMathVector3f cameraPos = ape_camera_get_position( camera );
+			float          distance  = qm_math_vector3f_distance( cameraPos, face->bounds.absOrigin );
+			if ( distance > room->fogFar * 2.0f )
+			{
+				continue;
+			}
+		}
+
+		if ( ape_camera_test_box( camera, &face->bounds ) )
 		{
 			subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
 			firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
@@ -285,7 +296,7 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 
 	if ( worldNode->mesh != nullptr )
 	{
-		PlgPushDebugGroupMarker( "Node Mesh Draw" );
+		qm_gfx_debug_push_group_marker( "Node Mesh Draw" );
 
 		PlMatrixMode( PL_MODELVIEW_MATRIX );
 		PlPushMatrix();
@@ -320,7 +331,7 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 
 		PlPopMatrix();
 
-		PlgPopDebugGroupMarker();
+		qm_gfx_debug_pop_group_marker();
 	}
 
 	ApeWorldNode *child;
@@ -391,7 +402,7 @@ static QmMathVector3f get_shadow_projection( const ApeLight *light, const QmMath
 
 	// first determine the project from the face origin
 
-	static constexpr float F_PI = 4.0f / 3.0f * PL_PI;
+	static constexpr float F_PI = 4.0f / 3.0f * QM_MATH_PI;
 
 	float c = light->radius * light->radius * light->radius;
 	float r = powf( F_PI * c, 1.0f / 3.0f );
@@ -428,7 +439,7 @@ static QmMathVector3f get_shadow_projection( const ApeLight *light, const QmMath
 
 #else// this restricts each vertex to a volume derived from the light radius
 
-	static constexpr float F_PI = 4.0f / 3.0f * PL_PI;
+	static constexpr float F_PI = 4.0f / 3.0f * QM_MATH_PI;
 
 	float          c = light->radius * light->radius * light->radius;
 	float          r = powf( F_PI * c, 1.0f / 3.0f );
@@ -600,7 +611,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 {
 	COM_PROFILE_FUNCTION_START();
 
-	PlgPushDebugGroupMarker( "Translucent Room" );
+	qm_gfx_debug_push_group_marker( "Translucent Room" );
 
 	// and now depth pre-pass
 	draw_room( camera, visibleRoom, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_TRANSLUCENT );
@@ -633,7 +644,7 @@ static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom
 		ape_rendererState_.depthMask         = true;
 	}
 
-	PlgPopDebugGroupMarker();
+	qm_gfx_debug_pop_group_marker();
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -705,14 +716,14 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 {
 	COM_PROFILE_FUNCTION_START();
 
-	PlgPushDebugGroupMarker( "Solid Room" );
+	qm_gfx_debug_push_group_marker( "Solid Room" );
 
 	// and now depth pre-pass
 	draw_room( camera, visibleRoom, nullptr, APE_RENDERER_PASS_FLAG_DEPTH_PREPASS | APE_RENDERER_PASS_FLAG_OPAQUE );
 
 	if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED )
 	{
-		PlgPushDebugGroupMarker( "Shaded" );
+		qm_gfx_debug_push_group_marker( "Shaded" );
 
 		ape_rendererState_.overrideDepthMask = true;
 		ape_rendererState_.depthMask         = false;
@@ -731,10 +742,10 @@ static void draw_solid_room( ApeCamera *camera, const ApeCameraVisibleRoom *visi
 		ape_rendererState_.overrideDepthMask = false;
 		ape_rendererState_.depthMask         = depth;
 
-		PlgPopDebugGroupMarker();
+		qm_gfx_debug_pop_group_marker();
 	}
 
-	PlgPopDebugGroupMarker();
+	qm_gfx_debug_pop_group_marker();
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -849,12 +860,12 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	ApeBrushFace *portal            = visiblePortal->portalFace;
 	ApeBrushFace *destinationPortal = ape_brush_face_get_portal_destination( portal );
 
-	PlgPushDebugGroupMarker( "portal" );
+	qm_gfx_debug_push_group_marker( "portal" );
 
 	// first draw the portal stencil we'll test again
 
-	PlgClipViewport( visiblePortal->screenRect.x, visiblePortal->screenRect.y,
-	                 visiblePortal->screenRect.z, visiblePortal->screenRect.w );
+	qm_gfx_clip_viewport( visiblePortal->screenRect.x, visiblePortal->screenRect.y,
+	                      visiblePortal->screenRect.z, visiblePortal->screenRect.w );
 
 	PlgEnableGraphicsState( PLG_GFX_STATE_STENCILTEST );
 	PlgStencilBufferFunction( PLG_COMPARE_ALWAYS, 4, 0xFF );
@@ -888,16 +899,16 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	ape_rendererState_.depth++;
 
 	// set the view matrix we need
-	camera->internal->internal.view = nextVisibleRoom->viewMatrix;
+	camera->view = nextVisibleRoom->viewMatrix;
 	PlgSetViewMatrix( &nextVisibleRoom->viewMatrix );
-	PlgSetupCameraFrustum( camera->internal );
+	ape_camera_setup_frustum( camera );
 
 	ape_room_draw_( camera, nextVisibleRoom, viewport );
 
 	// reset the view matrix back
-	camera->internal->internal.view = visibleRoom->viewMatrix;
-	PlgSetViewMatrix( &camera->internal->internal.view );
-	PlgSetupCameraFrustum( camera->internal );
+	camera->view = visibleRoom->viewMatrix;
+	PlgSetViewMatrix( &camera->view );
+	ape_camera_setup_frustum( camera );
 
 	// and pop out
 
@@ -924,7 +935,7 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	// reset the viewport
 	ape_viewport_set_clip( viewport );
 
-	PlgPopDebugGroupMarker();
+	qm_gfx_debug_pop_group_marker();
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -988,7 +999,7 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 	ape_rendererState_.fogNear   = ape_config_.renderer.fogNearOverride > -1.0f ? ape_config_.renderer.fogNearOverride : room->fogNear;
 	ape_rendererState_.fogFar    = ape_config_.renderer.fogFarOverride > -1.0f ? ape_config_.renderer.fogFarOverride : room->fogFar;
 
-	PlgPushDebugGroupMarker( "room_draw" );
+	qm_gfx_debug_push_group_marker( "room_draw" );
 
 	// deal with the portals first
 	if ( ape_config_.world.showAllRooms )
@@ -1058,5 +1069,5 @@ void ape_room_draw_( ApeCamera *camera, ApeCameraVisibleRoom *visibleRoom, const
 
 	ape_draw_debug_mesh_display_();
 
-	PlgPopDebugGroupMarker();
+	qm_gfx_debug_pop_group_marker();
 }

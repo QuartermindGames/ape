@@ -273,7 +273,7 @@ static QmMathVector3f get_transformed_bone_position( const ApeModel *model, cons
 
 void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
 {
-	PlgPushDebugGroupMarker( "Draw Model" );
+	qm_gfx_debug_push_group_marker( "Draw Model" );
 
 	if ( modelShowSkeleton )
 	{
@@ -315,7 +315,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 
 	PlPopMatrix();
 
-	PlgPopDebugGroupMarker();
+	qm_gfx_debug_pop_group_marker();
 }
 
 void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, unsigned int numTransforms )
@@ -350,7 +350,7 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 {
 	COM_PROFILE_FUNCTION_START();
 
-	PlgPushDebugGroupMarker( "Draw Models" );
+	qm_gfx_debug_push_group_marker( "Draw Models" );
 
 	// fetch all the models currently cached in the scene
 	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
@@ -374,7 +374,7 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 		}
 	}
 
-	PlgPopDebugGroupMarker();
+	qm_gfx_debug_pop_group_marker();
 
 	COM_PROFILE_FUNCTION_END();
 }
@@ -386,7 +386,7 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 static void *create_model_node( ApeWorldNode *parent )
 {
 	ApeModelNode *modelNode = QM_OS_MEMORY_NEW( ApeModelNode );
-	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 	return modelNode;
 }
 

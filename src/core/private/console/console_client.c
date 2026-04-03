@@ -186,12 +186,12 @@ static void draw_notifications( const ApeViewport *viewport )
 		double timeLeft = consoleMaxNotificationTime - notification->time;
 		if ( timeLeft > consoleMaxNotificationTime * ( 1.0 - consoleNotificationFadeThreshold ) )
 		{
-			notification->colour.a = PlFloatToByte( 1.0f );
+			notification->colour.a = QM_MATH_FTOB( 1.0f );
 		}
 		else
 		{
 			float fadeProgress     = timeLeft / ( consoleMaxNotificationTime * ( 1.0 - consoleNotificationFadeThreshold ) );
-			notification->colour.a = PlFloatToByte( QM_MATH_CLAMP( 0.0f, fadeProgress, 1.0f ) );
+			notification->colour.a = QM_MATH_FTOB( QM_MATH_CLAMP( 0.0f, fadeProgress, 1.0f ) );
 		}
 
 		gui_font_draw_string( font, 8.0f * scale, y, nullptr, &y, scale, &notification->colour, notification->buffer, strlen( notification->buffer ), true );

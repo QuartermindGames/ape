@@ -164,11 +164,11 @@ static void update_local_transform( ApeWorldNode *self )
 	PLMatrix4 transform = PlTranslateMatrix4( self->position );
 
 	PLMatrix4 rotate;
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
+	rotate    = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
 	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
+	rotate    = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
 	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( PL_DEG2RAD( self->angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
+	rotate    = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 	transform = PlMultiplyMatrix4( &transform, &rotate );
 
 	transform = PlScaleMatrix4( transform, self->scale );
@@ -667,11 +667,11 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 
 	snprintf( self->name, sizeof( self->name ), "%s", acm_get_string( root, "name", "" ) );
 
-	self->position = com_acm_get_vector3( root, "position", &pl_vecOrigin3 );
-	self->angles   = com_acm_get_vector3( root, "angles", &pl_vecOrigin3 );
+	self->position = com_acm_get_vector3( root, "position", &QM_MATH_VECTOR3F_ZERO );
+	self->angles   = com_acm_get_vector3( root, "angles", &QM_MATH_VECTOR3F_ZERO );
 	if ( version > 0 )
 	{
-		self->scale = com_acm_get_vector3( root, "scale", &pl_vecOrigin3 );
+		self->scale = com_acm_get_vector3( root, "scale", &QM_MATH_VECTOR3F_ZERO );
 	}
 	else
 	{

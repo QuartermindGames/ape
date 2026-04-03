@@ -3,6 +3,8 @@
 #include "plcore/pl_parse.h"
 #include <plcore/pl_filesystem.h>
 
+#include "qmos/public/qm_os_string.h"
+
 #include "../cook.h"
 
 #include "model.h"
@@ -153,7 +155,7 @@ static SmdModel *parse_smd( const char *path, const char *p )
 						// setup a new slot
 						smdMesh = &model->meshes[ i ];
 						snprintf( smdMesh->material, sizeof( smdMesh->material ), "%s", material );
-						pl_strtolower( smdMesh->material );
+						qm_os_string_to_lower( smdMesh->material, sizeof( smdMesh->material ) );
 						model->numMeshes++;
 						break;
 					}
@@ -279,7 +281,7 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 
 		PLPath tmp;
 		strcpy( tmp, smd->meshes[ i ].material );
-		pl_strntolower( tmp, sizeof( tmp ) );
+		qm_os_string_to_lower( tmp, sizeof( tmp ) );
 		char *c = strrchr( tmp, '.' );
 		if ( c != nullptr )
 		{

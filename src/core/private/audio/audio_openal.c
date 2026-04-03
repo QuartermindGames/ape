@@ -303,7 +303,7 @@ static void al_emit_sample( ApeAudioSample *sample, const QmMathVector3f *positi
 
 	if ( position == nullptr )
 	{
-		position = &pl_vecOrigin3;
+		position = &QM_MATH_VECTOR3F_ZERO;
 	}
 
 	XAL_CALL( alSourcei( source->user, AL_BUFFER, sample->user ) );

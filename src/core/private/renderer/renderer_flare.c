@@ -87,7 +87,7 @@ void ape_add_flare_to_queue( const ApeCamera *camera, const QmMathVector3f *worl
 		return;
 	}
 
-	PLMatrix4      m              = PlMultiplyMatrix4( &camera->internal->internal.proj, &camera->internal->internal.view );
+	PLMatrix4      m              = PlMultiplyMatrix4( &camera->proj, &camera->view );
 	int            viewportSize[] = { viewport->x, viewport->y, viewport->width, viewport->height };
 	float          depth;
 	QmMathVector2f screenPos = PlConvertWorldToScreen( worldPos, &m, viewportSize, &depth, true );
@@ -122,7 +122,7 @@ static void draw_flare( const Flare *flare, float deltaX, float deltaY, float in
 		QmMathColour4f      colour   = { 1.0f, 1.0f, 1.0f, intensity };
 		QmMathVector3f      position = { x, y, 0.0f };
 		QmMathVector3f      origin   = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
-		QmMathVector3f      angles   = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / PL_PI : 0.0f };
+		QmMathVector3f      angles   = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / QM_MATH_PI : 0.0f };
 
 		// area of the texture we want to use
 		PLQuad quad = { element->x, element->y, element->w, element->h };
@@ -175,7 +175,7 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
 		PlgSetBlendMode( PLG_BLEND_ADDITIVE );
-		PlgDrawRectangle( 0.0f, 0.0f, w, h, qm_math_colour4ub( 255, 255, 255, PlFloatToByte( sumFlareIntensity ) ) );
+		PlgDrawRectangle( 0.0f, 0.0f, w, h, qm_math_colour4ub( 255, 255, 255, QM_MATH_FTOB( sumFlareIntensity ) ) );
 		PlgSetBlendMode( PLG_BLEND_DISABLE );
 	}
 #endif

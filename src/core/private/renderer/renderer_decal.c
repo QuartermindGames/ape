@@ -206,7 +206,7 @@ static bool decal_build_rect( ApeDecal *self )
 
 	if ( self->angle != 0.0f )
 	{
-		PLMatrix4 rotation = PlRotateMatrix4( PL_DEG2RAD( self->angle ), &face->normal );
+		PLMatrix4 rotation = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angle ), &face->normal );
 		self->tangent      = PlTransformVector3( &self->tangent, &rotation );
 		self->bitangent    = PlTransformVector3( &self->bitangent, &rotation );
 	}
@@ -409,7 +409,7 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 		{
 			PlgImmPushVertex( decal->vertices[ j ].x, decal->vertices[ j ].y, decal->vertices[ j ].z );
 			PlgImmNormal( decal->normal.x, decal->normal.y, decal->normal.z );
-			PlgImmColour( 255, 255, 255, PlFloatToByte( fade ) );
+			PlgImmColour( 255, 255, 255, QM_MATH_FTOB( fade ) );
 
 			// and now for the texture coords
 			QmMathVector3f delta = qm_math_vector3f_sub( decal->vertices[ j ], decal->position );

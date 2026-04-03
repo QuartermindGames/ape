@@ -44,7 +44,7 @@ static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
         [APE_SHADER_UNIFORM_MODEL_MATRIX]      = "pl_model",
 };
 
-static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
+static QmGfxShaderStage *register_shader_stage( QmGfxShaderProgram *program, QmGfxShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
 	PLFile *filePtr = PlOpenFile( path, true );
 	if ( filePtr == NULL )
@@ -53,8 +53,8 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 		return nullptr;
 	}
 
-	PLGShaderStage *stage = PlgCreateShaderStage( type );
-	PlgSetShaderStageDefinitions( stage, definitions, numDefinitions );
+	QmGfxShaderStage *stage = qm_gfx_shader_stage_create( type );
+	qm_gfx_shader_stage_set_definitions( stage, definitions, numDefinitions );
 
 	size_t length = PlGetFileSize( filePtr );
 	char  *buffer = QM_OS_MEMORY_NEW_( char, length + 1 );
@@ -72,15 +72,14 @@ static PLGShaderStage *register_shader_stage( PLGShaderProgram *program, PLGShad
 		*sep = '\0';
 	}
 
-	PlgCompileShaderStage( stage, buffer, length, directory );
-	if ( PlGetFunctionResult() == PL_RESULT_SUCCESS )
+	if ( qm_gfx_shader_stage_compile( stage, buffer, length, directory ) )
 	{
-		PlgAttachShaderStage( program, stage );
+		qm_gfx_shader_program_attach_stage( program, stage );
 	}
 	else
 	{
 		ape_console_warning_( "Failed to register stage, \"%s\"!\nPL: %s\n", path, PlGetError() );
-		PlgDestroyShaderStage( stage );
+		qm_os_memory_free( stage );
 		stage = nullptr;
 	}
 
@@ -134,20 +133,20 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		return nullptr;
 	}
 
-	PLGShaderProgram *internal = PlgCreateShaderProgram();
+	QmGfxShaderProgram *internal = qm_gfx_shader_program_create();
 	if ( internal == NULL )
 	{
 		ape_console_warning_( "Failed to create shader program!\nPL: %s\n", PlGetError() );
 		return nullptr;
 	}
 
-	if ( PlResolveVirtualPath( vertexPath, program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ], sizeof( program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ] ) ) != nullptr )
+	if ( PlResolveVirtualPath( vertexPath, program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ], sizeof( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] ) ) != nullptr )
 	{
-		program->sourceTimestamps[ PLG_SHADER_TYPE_VERTEX ] = PlGetLocalFileTimeStamp( program->sourcePaths[ PLG_SHADER_TYPE_VERTEX ] );
+		program->sourceTimestamps[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] = PlGetLocalFileTimeStamp( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] );
 	}
-	if ( PlResolveVirtualPath( fragmentPath, program->sourcePaths[ PLG_SHADER_TYPE_FRAGMENT ], sizeof( program->sourcePaths[ PLG_SHADER_TYPE_FRAGMENT ] ) ) != nullptr )
+	if ( PlResolveVirtualPath( fragmentPath, program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ], sizeof( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] ) ) != nullptr )
 	{
-		program->sourceTimestamps[ PLG_SHADER_TYPE_FRAGMENT ] = PlGetLocalFileTimeStamp( program->sourcePaths[ PLG_SHADER_TYPE_FRAGMENT ] );
+		program->sourceTimestamps[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = PlGetLocalFileTimeStamp( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] );
 	}
 
 	/* these allow for the program to specify what
@@ -160,8 +159,8 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	char vertexDefinitions[ PLG_MAX_DEFINITIONS ][ PLG_MAX_DEFINITION_LENGTH ];
 	PL_ZERO( vertexDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
 
-	unsigned int numDefinitions[ PLG_MAX_SHADER_TYPES ];
-	PL_ZERO( numDefinitions, sizeof( unsigned int ) * PLG_MAX_SHADER_TYPES );
+	unsigned int numDefinitions[ QM_GFX_MAX_SHADER_STAGE_TYPES ];
+	PL_ZERO( numDefinitions, sizeof( unsigned int ) * QM_GFX_MAX_SHADER_STAGE_TYPES );
 
 	AcmBranch *child = acm_get_child_by_name( root, "definitions" );
 	if ( child != NULL )
@@ -169,19 +168,19 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		AcmBranch *subChild;
 		if ( ( subChild = acm_get_child_by_name( child, "fragment" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = acm_get_num_of_children( subChild );
-			if ( numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
+			numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = acm_get_num_of_children( subChild );
+			if ( numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
 			{
-				numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
+				numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = PLG_MAX_DEFINITIONS;
 			}
 
 			subChild = acm_get_first_child( subChild );
-			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ]; ++i )
+			for ( unsigned int i = 0; i < numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ]; ++i )
 			{
 				if ( subChild == NULL )
 				{
 					ape_console_warning_( "Hit an invalid child, aborting early!\n" );
-					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
+					numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = i;
 					break;
 				}
 
@@ -193,19 +192,19 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		}
 		if ( ( subChild = acm_get_child_by_name( child, "vertex" ) ) != NULL )
 		{
-			numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = acm_get_num_of_children( subChild );
-			if ( numDefinitions[ PLG_SHADER_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
+			numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] = acm_get_num_of_children( subChild );
+			if ( numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
 			{
-				numDefinitions[ PLG_SHADER_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
+				numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] = PLG_MAX_DEFINITIONS;
 			}
 
 			subChild = acm_get_first_child( subChild );
-			for ( unsigned int i = 0; i < numDefinitions[ PLG_SHADER_TYPE_VERTEX ]; ++i )
+			for ( unsigned int i = 0; i < numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ]; ++i )
 			{
 				if ( subChild == NULL )
 				{
 					ape_console_warning_( "Hit an invalid child, aborting early!\n" );
-					numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] = i;
+					numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = i;
 					break;
 				}
 
@@ -217,19 +216,19 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		}
 	}
 
-	register_shader_stage( internal, PLG_SHADER_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ PLG_SHADER_TYPE_VERTEX ] );
-	register_shader_stage( internal, PLG_SHADER_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ PLG_SHADER_TYPE_FRAGMENT ] );
+	register_shader_stage( internal, QM_GFX_SHADER_STAGE_TYPE_VERTEX, vertexPath, vertexDefinitions, numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] );
+	register_shader_stage( internal, QM_GFX_SHADER_STAGE_TYPE_FRAGMENT, fragmentPath, fragmentDefinitions, numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] );
 
-	if ( !PlgLinkShaderProgram( internal ) )
+	if ( !qm_gfx_shader_program_link( internal ) )
 	{
 		ape_console_warning_( "Failed to link shader stages (%s): %s\n", program->internalName, PlGetError() );
-		PlgDestroyShaderProgram( internal, true );
+		qm_os_memory_free( internal );
 		return nullptr;
 	}
 
 	if ( program->internal != nullptr )
 	{
-		PlgDestroyShaderProgram( program->internal, true );
+		qm_os_memory_free( program->internal );
 	}
 
 	program->internal = internal;
@@ -256,7 +255,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	// now lookup all the default uniforms
 	for ( unsigned int i = 0; i < APE_SHADER_MAX_UNIFORMS; ++i )
 	{
-		program->globalUniforms[ i ] = PlgGetShaderUniformSlot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
+		program->globalUniforms[ i ] = qm_gfx_shader_program_get_uniform_slot( program->internal, GLOBAL_UNIFORM_NAMES[ i ] );
 		if ( program->globalUniforms[ i ] < 0 )
 		{
 			ape_console_verbose_( "Didn't find global uniform (%s) per shader program (%s).\n", GLOBAL_UNIFORM_NAMES[ i ], program->internalName );
@@ -268,9 +267,9 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 static void destroy_shader( void *user )
 {
-	ApeShaderProgram *programIndex = ( ApeShaderProgram * ) user;
+	ApeShaderProgram *programIndex = user;
 	assert( programIndex != nullptr );
-	PlgDestroyShaderProgram( programIndex->internal, true );
+	qm_os_memory_free( programIndex->internal );
 	qm_os_memory_free( programIndex );
 }
 
@@ -434,7 +433,7 @@ void ape_material_shaders_check_hot_reload_()
 		// now check the other files
 		if ( !reload )
 		{
-			for ( unsigned int i = 0; i < PLG_MAX_SHADER_TYPES; ++i )
+			for ( unsigned int i = 0; i < QM_GFX_MAX_SHADER_STAGE_TYPES; ++i )
 			{
 				const char *path = program->sourcePaths[ i ];
 				if ( *path == '\0' )

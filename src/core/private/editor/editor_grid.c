@@ -47,7 +47,7 @@ static QmMathVector2f transform_world_to_grid( ApeEditorGrid *self, const QmMath
 QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, const ApeCamera *camera, const ApeViewport *viewport )
 {
 	// convert from screen to world
-	QmMathVector3f pos = ape_viewport_convert_screen_to_world( viewport, ( int[] ) { mx, my }, &camera->internal->internal.view, &camera->internal->internal.proj );
+	QmMathVector3f pos = ape_viewport_convert_screen_to_world( viewport, ( int[] ) { mx, my }, &camera->view, &camera->proj );
 
 	QmMathVector3f cameraPos = ape_camera_get_position( camera );
 

@@ -3,7 +3,6 @@
 #pragma once
 
 #include <plcore/pl_math.h>
-#include <plgraphics/plg_camera.h>
 #include <plgraphics/plg_texture.h>
 
 #include "ape_public_renderer.h"

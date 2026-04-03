@@ -261,14 +261,14 @@ typedef struct ApeShaderProgram
 	PLPath path;
 	time_t timestamp;
 
-	PLPath sourcePaths[ PLG_MAX_SHADER_TYPES ];
-	time_t sourceTimestamps[ PLG_MAX_SHADER_TYPES ];
+	PLPath sourcePaths[ QM_GFX_MAX_SHADER_STAGE_TYPES ];
+	time_t sourceTimestamps[ QM_GFX_MAX_SHADER_STAGE_TYPES ];
 
 	int globalUniforms[ APE_SHADER_MAX_UNIFORMS ];
 
 	ApeMaterialPass defaultPass;
 
-	PLGShaderProgram *internal;
+	QmGfxShaderProgram *internal;
 
 	unsigned int flags;
 } ApeShaderProgram;

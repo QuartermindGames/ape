@@ -193,7 +193,7 @@ static CookModel *md2_to_ape( const Md2Model *model, CookModel *out )
 		pos.y = ( frames[ 0 ].scale.y * frames[ 0 ].vertices[ i ].v[ 1 ] ) + frames[ 0 ].translate.y;
 		pos.z = ( frames[ 0 ].scale.z * frames[ 0 ].vertices[ i ].v[ 2 ] ) + frames[ 0 ].translate.z;
 
-		PlgAddMeshVertex( mesh, &pos, &pl_vecOrigin3, &PL_COLOUR_WHITE, &pl_vecOrigin2 );
+		PlgAddMeshVertex( mesh, &pos, &QM_MATH_VECTOR3F_ZERO, &PL_COLOUR_WHITE, &QM_MATH_VECTOR2F_ZERO );
 		//Print( "%s\n", PlPrintVector3( &pos, pl_float_var ) );
 	}
 

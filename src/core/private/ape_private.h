@@ -18,7 +18,6 @@
 #include <plcore/pl_timer.h>
 
 #include <plgraphics/plg.h>
-#include <plgraphics/plg_camera.h>
 #include <plgraphics/plg_polygon.h>
 
 #include <acm/acm.h>

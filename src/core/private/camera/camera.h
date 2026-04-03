@@ -53,6 +53,20 @@ typedef struct ApeCameraVisibleSet
 	unsigned int         numRooms;
 } ApeCameraVisibleSet;
 
+enum
+{
+	APE_CAMERA_FRUSTUM_PLANE_RIGHT,
+	APE_CAMERA_FRUSTUM_PLANE_LEFT,
+	APE_CAMERA_FRUSTUM_PLANE_BOTTOM,
+	APE_CAMERA_FRUSTUM_PLANE_TOP,
+	APE_CAMERA_FRUSTUM_PLANE_FAR,
+	APE_CAMERA_FRUSTUM_PLANE_NEAR,
+
+	APE_CAMERA_MAX_FRUSTUM_PLANES
+};
+
+typedef QmMathVector4f ApeCameraViewFrustum[ APE_CAMERA_MAX_FRUSTUM_PLANES ];
+
 typedef struct ApeCamera
 {
 	// This should always come first!
@@ -69,7 +83,13 @@ typedef struct ApeCamera
 
 	bool active;
 
-	PLGCamera *internal; /* the camera used for this viewport */
+	float fov;
+	float near, far;
+
+	PLMatrix4 proj;
+	PLMatrix4 view;
+
+	ApeCameraViewFrustum frustum;
 
 	ApeCameraViewMode mode;
 	ApeCameraDrawMode drawMode;

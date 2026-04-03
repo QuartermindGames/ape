@@ -198,12 +198,12 @@ static void write_screenshot( void )
 	unsigned int w, h;
 	ape_render_target_get_size_( renderTarget, &w, &h );
 
-	PLGFrameBuffer *fboBuffer = ape_render_target_get_frame_buffer_( renderTarget );
+	QmGfxFramebuffer *fboBuffer = ape_render_target_get_frame_buffer_( renderTarget );
 	assert( fboBuffer != NULL );
 
 	size_t         bufSize = ( ( w * h ) * 4 );
 	unsigned char *buf     = QM_OS_MEMORY_NEW_( unsigned char, bufSize );
-	if ( PlgReadFrameBufferRegion( nullptr, 0, 0, w, h, bufSize, buf ) != NULL )
+	if ( qm_gfx_framebuffer_read_region( nullptr, 0, 0, w, h, bufSize, buf ) != NULL )
 	{
 		if ( isCapturing )
 		{
@@ -254,10 +254,10 @@ static void write_screenshot( void )
 
 void ape_draw_end_( ApeViewport *viewport )
 {
-	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DEFAULT );
+	qm_gfx_framebuffer_bind( nullptr, PLG_FRAMEBUFFER_DEFAULT );
 
-	PLGFrameBuffer *src = ape_render_target_get_frame_buffer_( viewport->renderTarget );
-	PlgBlitFrameBuffers( src, src->width, src->height, nullptr, viewport->width, viewport->height, PLG_BUFFER_COLOUR, true );
+	QmGfxFramebuffer *src = ape_render_target_get_frame_buffer_( viewport->renderTarget );
+	qm_gfx_framebuffer_blit( src, src->width, src->height, nullptr, viewport->width, viewport->height, PLG_BUFFER_COLOUR, true );
 
 	ape_rendererPerformance_.numBatches    = 0;
 	ape_rendererPerformance_.numTriangles  = 0;
@@ -443,7 +443,7 @@ void ape_draw_scene_( ApeCamera *camera, const ApeViewport *viewport )
 
 	ape_editor_post_render_scene_();
 
-	PlgBindFrameBuffer( nullptr, PLG_FRAMEBUFFER_DRAW );
+	qm_gfx_framebuffer_bind( nullptr, PLG_FRAMEBUFFER_DRAW );
 
 	currentCamera = nullptr;
 

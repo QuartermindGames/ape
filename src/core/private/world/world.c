@@ -10,7 +10,7 @@
 static void *create_world( ApeWorldNode *parent )
 {
 	ApeWorld *world = QM_OS_MEMORY_NEW( ApeWorld );
-	ape_world_node_setup_( &world->base, parent, APE_WORLD_NODE_TYPE_ROOT, nullptr, &pl_vecOrigin3, &pl_vecOrigin3 );
+	ape_world_node_setup_( &world->base, parent, APE_WORLD_NODE_TYPE_ROOT, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 
 	world->entities = PlCreateLinkedList();
 	if ( world->entities == nullptr )

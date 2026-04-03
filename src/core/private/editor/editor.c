@@ -601,11 +601,11 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 			if ( worldNode->type == APE_WORLD_NODE_TYPE_LIGHT )
 			{
 				ApeLight *light = ( ApeLight * ) worldNode;
-				colour          = PL_COLOURF32RGB( light->colour.r, light->colour.g, light->colour.b );
+				colour          = QM_MATH_COLOUR4F_RGB( light->colour.r, light->colour.g, light->colour.b );
 			}
 			else
 			{
-				colour = PL_COLOURF32RGB( 1.0f, 1.0f, 1.0f );
+				colour = QM_MATH_COLOUR4F_RGB( 1.0f, 1.0f, 1.0f );
 			}
 
 			ape_draw_sprite( nodeIcons[ worldNode->type ],
@@ -921,11 +921,6 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 	ApeGuiFont *font = gui_get_default_font( GUI_FONT_DEFAULT_SMALL );
 
-	// sigh...
-	PLMatrix4 view     = camera->internal->internal.view;
-	PLMatrix4 proj     = camera->internal->internal.proj;
-	PLMatrix4 viewProj = PlMultiplyMatrix4( &proj, &view );
-
 	if ( editorInstance->camera != nullptr )
 	{
 		char label[ 64 ];
@@ -934,6 +929,8 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 		float dw, dh;
 		gui_font_get_string_pixel_size( font, 1.0f, label, strlen( label ), &dw, &dh );
 		gui_font_draw_string( font, ( float ) viewport->width - ( dw + dh ), ( float ) viewport->height - ( ( dh * 2.0f ) - 2.0f ), nullptr, nullptr, 1.0f, &PL_COLOUR_WHITE, label, strlen( label ), true );
+
+		PLMatrix4 viewProj = PlMultiplyMatrix4( &camera->proj, &camera->view );
 
 		// check the camera has a valid room, otherwise display a warning
 		ApeRoom *room = ape_camera_get_room( editorInstance->camera );

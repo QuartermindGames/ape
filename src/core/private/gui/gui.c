@@ -31,7 +31,6 @@ static float profilerHeight = 256;
 ApeGUIState ape_guiState_;
 
 bool ape_gui_initialize_fonts_();
-void ape_gui_draw_initialize_();
 
 /**
  * Initialize the GUI sub-system.
@@ -44,8 +43,6 @@ bool ape_gui_initialize_( void )
 	PlRegisterConsoleVariable( "gui.profiler", "Enable profiler.", "false", PL_VAR_BOOL, &guiProfilerOverlay, nullptr, false );
 	PlRegisterConsoleVariable( "gui.profilerWidth", "Set the width of the on-screen profiler.", "512", PL_VAR_F32, &profilerWidth, nullptr, true );
 	PlRegisterConsoleVariable( "gui.profilerHeight", "Set the width of the on-screen profiler.", "256", PL_VAR_F32, &profilerHeight, nullptr, true );
-
-	ape_gui_draw_initialize_();
 
 #if USE_GUI_CANVAS == 1
 
@@ -191,7 +188,7 @@ static void draw_profiler( const ApeViewport *viewport )
 	draw_debug_window( "CPU Profiler", graphX, graphY, graphW, graphH );
 
 	//TODO: this clipping API sucks balls... I need to rework it!
-	PlgClipViewport( graphX, viewport->height - graphY - 1.0f - graphH, graphW, graphH );
+	qm_gfx_clip_viewport( graphX, viewport->height - graphY - 1.0f - graphH, graphW, graphH );
 
 	float sx = sidebarX + PADDING;
 	float sy = sidebarY + PADDING;
