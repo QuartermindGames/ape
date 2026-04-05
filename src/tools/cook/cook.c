@@ -70,8 +70,8 @@ int main( int argc, char **argv )
 
 	aux_initialize( argc, argv );
 
-	PlMountLocalLocation( com_get_app_data_directory() );
-	PlMountLocalLocation( com_get_local_data_directory() );
+	qm_fs_mount_local_location( com_get_app_data_directory() );
+	qm_fs_mount_local_location( com_get_local_data_directory() );
 
 	AcmBranch  *config;
 	const char *projectName = argv[ 1 ];

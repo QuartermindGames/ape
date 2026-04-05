@@ -1074,14 +1074,14 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 				break;
 			}
 
-			PLFileSystemMount *mount = PlGetMountLocationForPath( filename.text() );
+			QmFsMount *mount = PlGetMountLocationForPath( filename.text() );
 			if ( mount == nullptr )
 			{
 				forge_warning_( "Model (%s) must be placed under a mounted location!\n", path );
 				break;
 			}
 
-			const char   *mountPath = PlGetMountLocationPath( mount );
+			const char   *mountPath = qm_fs_mount_get_path( mount );
 			ApeModelNode *node      = ape_model_node_create( APE_WORLD_NODE( room ), nullptr, &filename[ strlen( mountPath ) + 1 ] );
 			if ( node == nullptr )
 			{

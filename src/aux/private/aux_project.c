@@ -24,10 +24,10 @@ typedef struct ComProject
 	char developer[ 64 ];
 	int  version[ 3 ];
 
-	PLFileSystemMount *mountLocation;// x/projects/blah
+	QmFsMount *mountLocation;// x/projects/blah
 
 #define MAX_FILESYSTEM_MOUNTS 255
-	PLFileSystemMount *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
+	QmFsMount *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
 	unsigned int       numSubMountLocations;
 
 	struct ComProject *parent;
@@ -63,7 +63,7 @@ static void parse_mount_config( AcmBranch *root, ComProject *out )
 		acm_branch_get_string( child, path, sizeof( PLPath ) );
 		child = acm_get_next_child( child );
 
-		if ( ( out->subMountLocations[ out->numSubMountLocations ] = PlMountLocation( path ) ) == NULL )
+		if ( ( out->subMountLocations[ out->numSubMountLocations ] = qm_fs_mount_location( path ) ) == NULL )
 		{
 			com_warning_( "Failed to mount \"%s\": %s\n", path, PlGetError() );
 			continue;
@@ -77,7 +77,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 {
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s", com_get_local_data_directory(), name );
-	out->mountLocation = PlMountLocalLocation( path );
+	out->mountLocation = qm_fs_mount_local_location( path );
 	if ( out->mountLocation == NULL )
 	{
 		com_warning_( "Failed to mount project location: %s\n", PlGetError() );

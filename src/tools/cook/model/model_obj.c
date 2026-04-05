@@ -12,15 +12,15 @@
 
 static void parse_material_template_library( ObjModel *obj, const char *path )
 {
-	PLFile *file = PlOpenFile( path, true );
+	QmFsFile *file = qm_fs_file_open( path, true );
 	if ( file == NULL )
 	{
 		ERROR( "Failed to open OBJ material library: %s\n", PlGetError() );
 	}
 
 	// Copy it into a buffer we can parse
-	size_t      fileBufSize = PlGetFileSize( file );
-	const char *fileBuf     = PlGetFileData( file );
+	size_t      fileBufSize = qm_fs_file_get_size( file );
+	const char *fileBuf     = qm_fs_file_get_data( file );
 	char       *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
@@ -95,13 +95,13 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 
 ObjModel *model_obj_load( const char *path )
 {
-	PLFile *file = PlOpenFile( path, true );
+	QmFsFile *file = qm_fs_file_open( path, true );
 	if ( file == NULL )
 		ERROR( "Failed to open OBJ: %s\n", PlGetError() );
 
 	// Copy it into a buffer we can parse
-	size_t      fileBufSize = PlGetFileSize( file );
-	const char *fileBuf     = PlGetFileData( file );
+	size_t      fileBufSize = qm_fs_file_get_size( file );
+	const char *fileBuf     = qm_fs_file_get_data( file );
 	char       *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 

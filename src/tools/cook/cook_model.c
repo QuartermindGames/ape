@@ -314,7 +314,7 @@ static void write_ape_format_model( const CookModel *model, const char *folder )
 void cook_model_process( const char *modelName )
 {
 	PLPath path = {};
-	if ( PlResolveVirtualPath( modelName, path, sizeof( path ) ) == nullptr )
+	if ( qm_fs_resolve_virtual_path( modelName, path, sizeof( path ) ) == nullptr )
 	{
 		WARN( "Failed to resolve virtual path: %s\n", PlGetError() );
 		return;

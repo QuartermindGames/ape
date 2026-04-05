@@ -232,7 +232,7 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 
 static void read_map( IdMap *map, const char *path )
 {
-	PLFile *file = PlOpenFile( path, true );
+	QmFsFile *file = qm_fs_file_open( path, true );
 	if ( file == NULL )
 	{
 		ERROR( "Failed to open \"%s\"!\nPL: %s\n", path, PlGetError() );
@@ -240,7 +240,7 @@ static void read_map( IdMap *map, const char *path )
 
 	/* now start reading through every line */
 	static unsigned int lineNum = 0;
-	const char         *p       = ( const char * ) PlGetFileData( file );
+	const char         *p       = ( const char * ) qm_fs_file_get_data( file );
 	while ( *p != '\0' )
 	{
 		lineNum++;

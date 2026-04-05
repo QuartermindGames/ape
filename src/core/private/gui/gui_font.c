@@ -100,7 +100,7 @@ void ape_gui_font_destroy( ApeGuiFont *font )
 	qm_os_memory_free( font );
 }
 
-static ApeGuiFont *font_deserialize( PLFile *file )
+static ApeGuiFont *font_deserialize( QmFsFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
 	if ( magic != COM_FORMAT_FONT_MAGIC )
@@ -137,8 +137,8 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 
 		if ( version >= 2 )
 		{
-			font->glyphs[ i ].rect.x = PlReadInt16( file, false, nullptr );
-			font->glyphs[ i ].rect.y = PlReadInt16( file, false, nullptr );
+			font->glyphs[ i ].rect.x = qm_fs_file_read_int16( file, false, nullptr );
+			font->glyphs[ i ].rect.y = qm_fs_file_read_int16( file, false, nullptr );
 			font->glyphs[ i ].rect.z = PL_READUINT16( file, false, nullptr );
 			font->glyphs[ i ].rect.w = PL_READUINT16( file, false, nullptr );
 		}
@@ -195,7 +195,7 @@ static ApeGuiFont *font_deserialize( PLFile *file )
 
 ApeGuiFont *gui_font_load( const char *path, ApeGuiFont *fallback )
 {
-	PLFile *file = PlOpenFile( path, false );
+	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == NULL )
 	{
 		ape_console_warning_( "Failed to load font: %s\n", PlGetError() );

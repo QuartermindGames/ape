@@ -19,7 +19,7 @@ typedef struct ApeAudioSample
 	ApeMemoryReference   reference;
 } ApeAudioSample;
 
-typedef ApeAudioSample *( *ApeAudioSampleLoadCallback )( PLFile *file );
+typedef ApeAudioSample *( *ApeAudioSampleLoadCallback )( QmFsFile *file );
 
 typedef struct ApeAudioSource
 {

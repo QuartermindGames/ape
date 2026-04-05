@@ -214,7 +214,7 @@ char *forge_dialog_open( void *self, const char *title, const char *extension, c
 
 ApeRoom *forge_new_room_( const char *path )
 {
-	PLFileSystemMount *mount = PlGetMountLocationForPath( path );
+	QmFsMount *mount = PlGetMountLocationForPath( path );
 	if ( mount == nullptr )
 	{
 		forge_warning_( "Room (%s) must be placed under a mounted location!\n", path );
@@ -230,7 +230,7 @@ ApeRoom *forge_new_room_( const char *path )
 		return nullptr;
 	}
 
-	const char *mountPath = PlGetMountLocationPath( mount );
+	const char *mountPath = qm_fs_mount_get_path( mount );
 	snprintf( APE_WORLD_NODE( room )->path, sizeof( APE_WORLD_NODE( room )->path ), "%s", &path[ strlen( mountPath ) + 1 ] );
 
 	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
@@ -247,7 +247,7 @@ ApeRoom *forge_new_room_( const char *path )
 
 ApeRoom *forge_load_room_( const char *path )
 {
-	PLFileSystemMount *mount = PlGetMountLocationForPath( path );
+	QmFsMount *mount = PlGetMountLocationForPath( path );
 	if ( mount == nullptr )
 	{
 		forge_warning_( "Room (%s) must be placed under a mounted location!\n", path );
@@ -340,7 +340,7 @@ static void setup_paths( const char *exePath )
 	PlSetupPath( forge::cachedPaths[ forge::PATH_PROJECTS ], true, "%s/../../projects", forge::cachedPaths[ forge::PATH_EXE ] );
 	PlSetupPath( forge::cachedPaths[ forge::PATH_COOK ], true, "%s/cook" QM_OS_SYSTEM_EXE_EXT, forge::cachedPaths[ forge::PATH_EXE ] );
 
-	if ( !PlFileExists( forge::cachedPaths[ forge::PATH_CONFIG ] ) )
+	if ( !qm_fs_check_file_exists( forge::cachedPaths[ forge::PATH_CONFIG ] ) )
 	{
 		forge::isCookAvailable = false;
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
@@ -479,8 +479,8 @@ int main( int argc, char **argv )
 	editorLogLevels[ EDITOR_LOG_WARNING ] = PlAddLogLevel( "forge/warning", PL_COLOUR_YELLOW, true );
 	editorLogLevels[ EDITOR_LOG_ERROR ]   = PlAddLogLevel( "forge/error", PL_COLOUR_RED, true );
 
-	PlMountLocalLocation( com_get_app_data_directory() );
-	PlMountLocalLocation( com_get_local_data_directory() );
+	qm_fs_mount_local_location( com_get_app_data_directory() );
+	qm_fs_mount_local_location( com_get_local_data_directory() );
 
 	forge::editorConfig = com_get_config( "forge" );
 

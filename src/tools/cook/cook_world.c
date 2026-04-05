@@ -134,10 +134,10 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		{
 			char tmp[ 128 ];
 			snprintf( tmp, sizeof( tmp ), "materials/%s.mat.n", model->materials[ i ].name );
-			if ( !PlFileExists( tmp ) )
+			if ( !qm_fs_check_file_exists( tmp ) )
 			{
 				snprintf( tmp, sizeof( tmp ), "textures/%s.mat.n", model->materials[ i ].name );
-				if ( !PlFileExists( tmp ) )
+				if ( !qm_fs_check_file_exists( tmp ) )
 				{
 					WARN( "Failed to find material (%s)!\n", tmp );
 				}

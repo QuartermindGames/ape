@@ -1110,7 +1110,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 	if ( PlCreatePath( cachePath ) )
 	{
 		PlSetupPath( cachePath, true, "%s/cache/preview_%lu.qoi", appDataDir, PlGenerateHashFNV1( hashName, hashNameLength ) );
-		if ( PlFileExists( cachePath ) )
+		if ( qm_fs_check_file_exists( cachePath ) )
 		{
 			if ( ( preview = PlLoadImage( cachePath ) ) != nullptr )
 			{

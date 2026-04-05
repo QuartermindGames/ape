@@ -46,7 +46,7 @@ static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
 
 static QmGfxShaderStage *register_shader_stage( QmGfxShaderProgram *program, QmGfxShaderStageType type, const char *path, char definitions[][ PLG_MAX_DEFINITION_LENGTH ], unsigned int numDefinitions )
 {
-	PLFile *filePtr = PlOpenFile( path, true );
+	QmFsFile *filePtr = qm_fs_file_open( path, true );
 	if ( filePtr == NULL )
 	{
 		ape_console_warning_( "Failed to find shader \"%s\"!\nPL: %s\n", path, PlGetError() );
@@ -56,7 +56,7 @@ static QmGfxShaderStage *register_shader_stage( QmGfxShaderProgram *program, QmG
 	QmGfxShaderStage *stage = qm_gfx_shader_stage_create( type );
 	qm_gfx_shader_stage_set_definitions( stage, definitions, numDefinitions );
 
-	size_t length = PlGetFileSize( filePtr );
+	size_t length = qm_fs_file_get_size( filePtr );
 	char  *buffer = QM_OS_MEMORY_NEW_( char, length + 1 );
 	PlReadFile( filePtr, buffer, length, 1 );
 
@@ -140,13 +140,13 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 		return nullptr;
 	}
 
-	if ( PlResolveVirtualPath( vertexPath, program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ], sizeof( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] ) ) != nullptr )
+	if ( qm_fs_resolve_virtual_path( vertexPath, program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ], sizeof( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] ) ) != nullptr )
 	{
-		program->sourceTimestamps[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] = PlGetLocalFileTimeStamp( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] );
+		program->sourceTimestamps[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] = qm_fs_get_local_file_timestamp( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] );
 	}
-	if ( PlResolveVirtualPath( fragmentPath, program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ], sizeof( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] ) ) != nullptr )
+	if ( qm_fs_resolve_virtual_path( fragmentPath, program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ], sizeof( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] ) ) != nullptr )
 	{
-		program->sourceTimestamps[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = PlGetLocalFileTimeStamp( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] );
+		program->sourceTimestamps[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = qm_fs_get_local_file_timestamp( program->sourcePaths[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] );
 	}
 
 	/* these allow for the program to specify what
@@ -299,9 +299,9 @@ static void load_shader_program_callback( const char *path, [[maybe_unused]] voi
 		return;
 	}
 
-	if ( PlResolveVirtualPath( path, program->path, sizeof( program->path ) ) != nullptr )
+	if ( qm_fs_resolve_virtual_path( path, program->path, sizeof( program->path ) ) != nullptr )
 	{
-		program->timestamp = PlGetLocalFileTimeStamp( program->path );
+		program->timestamp = qm_fs_get_local_file_timestamp( program->path );
 	}
 	else
 	{
@@ -328,7 +328,7 @@ static void reload_shader_program( ApeShaderProgram *program )
 
 	acm_branch_destroy( root );
 
-	program->timestamp = PlGetLocalFileTimeStamp( program->path );
+	program->timestamp = qm_fs_get_local_file_timestamp( program->path );
 }
 
 static void reload_shader_program_command( unsigned int argc, char **argv )
@@ -424,7 +424,7 @@ void ape_material_shaders_check_hot_reload_()
 		bool reload = false;
 
 		// first attempt to check the original program file to see if anything changed...
-		time_t timestamp = PlGetLocalFileTimeStamp( program->path );
+		time_t timestamp = qm_fs_get_local_file_timestamp( program->path );
 		if ( timestamp != 0 && timestamp != program->timestamp )
 		{
 			reload = true;
@@ -441,7 +441,7 @@ void ape_material_shaders_check_hot_reload_()
 					continue;
 				}
 
-				timestamp = PlGetLocalFileTimeStamp( path );
+				timestamp = qm_fs_get_local_file_timestamp( path );
 				if ( timestamp == 0 || timestamp == program->sourceTimestamps[ i ] )
 				{
 					continue;

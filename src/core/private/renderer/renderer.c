@@ -231,7 +231,7 @@ static void write_screenshot( void )
 			PLPath       path;
 			unsigned int num = 0;
 			PlSetupPath( path, true, "%s/%s.png", com_get_app_data_directory(), filename );
-			while ( PlFileExists( path ) )
+			while ( qm_fs_check_file_exists( path ) )
 			{
 				PlSetupPath( path, true, "%s/%s (%u).png", com_get_app_data_directory(), filename, ++num );
 			}

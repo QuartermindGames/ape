@@ -71,7 +71,7 @@ static void GenerateMaterial( const char *path, [[maybe_unused]] void *user )
 
 	PLPath writePath;
 	PlSetupPath( writePath, true, "%s/%s." APE_FORMAT_MATERIAL_EXTENSION, matGen.dir, name );
-	if ( matGen.overwrite || ( !matGen.overwrite && !PlFileExists( writePath ) ) )
+	if ( matGen.overwrite || ( !matGen.overwrite && !qm_fs_check_file_exists( writePath ) ) )
 	{
 #if 0// old hard-coded method
 

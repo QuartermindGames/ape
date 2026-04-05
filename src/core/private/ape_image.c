@@ -22,9 +22,9 @@ static uint8_t GetNumChannels( uint8_t channelFlags )
 	return numChannels;
 }
 
-PLImage *Image_LoadPackedImage( PLFile *filePtr )
+PLImage *Image_LoadPackedImage( QmFsFile *filePtr )
 {
-	const char *path = PlGetFilePath( filePtr );
+	const char *path = qm_fs_file_get_path( filePtr );
 
 	/* read in the header */
 
@@ -42,10 +42,10 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 	}
 
 	bool status;
-	uint8_t flags = PlReadInt8( filePtr, &status );
-	uint16_t width = PlReadInt16( filePtr, false, &status );
-	uint16_t height = PlReadInt16( filePtr, false, &status );
-	uint16_t numBlocks = PlReadInt16( filePtr, false, &status );
+	uint8_t flags = qm_fs_file_read_int8( filePtr, &status );
+	uint16_t width = qm_fs_file_read_int16( filePtr, false, &status );
+	uint16_t height = qm_fs_file_read_int16( filePtr, false, &status );
+	uint16_t numBlocks = qm_fs_file_read_int16( filePtr, false, &status );
 	if ( !status )
 	{
 		ape_console_warning_( "Failed to read header for \"%s\"!\n", path );
@@ -78,10 +78,10 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 		uint8_t *pixelPos = image->data[ 0 ];
 		for ( unsigned int i = 0; i < pixelSize; ++i )
 		{
-			if ( flags & CHANNEL_RED ) { pixelPos[ 0 ] = PlReadInt8( filePtr, &status ); }
-			if ( flags & CHANNEL_GREEN ) { pixelPos[ 1 ] = PlReadInt8( filePtr, &status ); }
-			if ( flags & CHANNEL_BLUE ) { pixelPos[ 2 ] = PlReadInt8( filePtr, &status ); }
-			if ( flags & CHANNEL_ALPHA ) { pixelPos[ 3 ] = PlReadInt8( filePtr, &status ); }
+			if ( flags & CHANNEL_RED ) { pixelPos[ 0 ] = qm_fs_file_read_int8( filePtr, &status ); }
+			if ( flags & CHANNEL_GREEN ) { pixelPos[ 1 ] = qm_fs_file_read_int8( filePtr, &status ); }
+			if ( flags & CHANNEL_BLUE ) { pixelPos[ 2 ] = qm_fs_file_read_int8( filePtr, &status ); }
+			if ( flags & CHANNEL_ALPHA ) { pixelPos[ 3 ] = qm_fs_file_read_int8( filePtr, &status ); }
 			pixelPos += ( imageFormat == PL_IMAGEFORMAT_RGBA8 ) ? 4 : 3;
 		}
 	}
@@ -89,7 +89,7 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 	{
 		for ( unsigned int i = 0; i < numBlocks; ++i )
 		{
-			uint8_t blockFlags = PlReadInt8( filePtr, &status );
+			uint8_t blockFlags = qm_fs_file_read_int8( filePtr, &status );
 			if ( !status )
 			{
 				ape_console_error_( true, "Failed to read in block %d header in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
@@ -97,14 +97,14 @@ PLImage *Image_LoadPackedImage( PLFile *filePtr )
 
 			/* fetch the number of channels and then create our colour store */
 			uint8_t colour[ 4 ] = { 0, 0, 0, 255 };
-			if ( blockFlags & CHANNEL_RED ) { colour[ 0 ] = PlReadInt8( filePtr, &status ); }
-			if ( blockFlags & CHANNEL_GREEN ) { colour[ 1 ] = PlReadInt8( filePtr, &status ); }
-			if ( blockFlags & CHANNEL_BLUE ) { colour[ 2 ] = PlReadInt8( filePtr, &status ); }
-			if ( blockFlags & CHANNEL_ALPHA ) { colour[ 3 ] = PlReadInt8( filePtr, &status ); }
+			if ( blockFlags & CHANNEL_RED ) { colour[ 0 ] = qm_fs_file_read_int8( filePtr, &status ); }
+			if ( blockFlags & CHANNEL_GREEN ) { colour[ 1 ] = qm_fs_file_read_int8( filePtr, &status ); }
+			if ( blockFlags & CHANNEL_BLUE ) { colour[ 2 ] = qm_fs_file_read_int8( filePtr, &status ); }
+			if ( blockFlags & CHANNEL_ALPHA ) { colour[ 3 ] = qm_fs_file_read_int8( filePtr, &status ); }
 
 			/* now fetch the offsets */
 
-			uint16_t numBlockPixels = PlReadInt16( filePtr, false, &status );
+			uint16_t numBlockPixels = qm_fs_file_read_int16( filePtr, false, &status );
 
 			size_t offsetSize;
 			if ( pixelSize < UINT8_MAX )

@@ -16,10 +16,10 @@ static const size_t PKG_HEADER_SIZE = sizeof( PkgHeader );
 /////////////////////////////////////////////////////////////////
 // READ
 
-static PLPackage *parse_pkg_file( PLFile *file )
+static QmFsPackage *parse_pkg_file( QmFsFile *file )
 {
 	PkgHeader header;
-	header.magic = PlReadInt32( file, false, NULL );
+	header.magic = qm_fs_file_read_int32( file, false, NULL );
 	if ( header.magic != PKG_MAGIC )
 	{
 		com_warning_( "Unexpected magic for pkg: %d\n", header.magic );
@@ -33,8 +33,8 @@ static PLPackage *parse_pkg_file( PLFile *file )
 		return NULL;
 	}
 
-	const char *path = PlGetFilePath( file );
-	PLPackage *package = PlCreatePackageHandle( path, header.numFiles, NULL );
+	const char *path = qm_fs_file_get_path( file );
+	QmFsPackage *package = PlCreatePackageHandle( path, header.numFiles, NULL );
 	for ( unsigned int i = 0; i < header.numFiles; ++i )
 	{
 		PLPackageIndex *index = &package->table[ i ];
@@ -52,10 +52,10 @@ static PLPackage *parse_pkg_file( PLFile *file )
 		if ( index->fileSize != index->compressedSize )
 			index->compressionType = PL_COMPRESSION_DEFLATE;
 
-		index->offset = PlGetFileOffset( file );
+		index->offset = qm_fs_file_get_offset( file );
 
 		// now seek to the next file
-		if ( !PlFileSeek( file, ( PLFileOffset ) index->compressedSize, PL_SEEK_CUR ) )
+		if ( !qm_fs_file_seek( file, ( PLFileOffset ) index->compressedSize, QM_FS_SEEK_CUR ) )
 		{
 			com_warning_( "Failed to seek to the next file within package: %s\n", PlGetError() );
 			package->table_size = ( i + 1 );
@@ -66,13 +66,13 @@ static PLPackage *parse_pkg_file( PLFile *file )
 	return package;
 }
 
-static PLPackage *load_pkg_file( const char *path )
+static QmFsPackage *load_pkg_file( const char *path )
 {
-	PLFile *file = PlOpenFile( path, false );
+	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == NULL )
 		return NULL;
 
-	PLPackage *package = parse_pkg_file( file );
+	QmFsPackage *package = parse_pkg_file( file );
 
 	PlCloseFile( file );
 

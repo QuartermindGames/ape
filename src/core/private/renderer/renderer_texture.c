@@ -211,7 +211,7 @@ static void fetch_texture_config( ApeTexture *texture )
 	*c = '\0';
 	strcat( configPath, ".tex.n" );
 
-	if ( !PlFileExists( configPath ) )
+	if ( !qm_fs_check_file_exists( configPath ) )
 	{
 		return;
 	}

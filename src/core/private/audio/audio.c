@@ -149,8 +149,8 @@ void ape_audio_sample_release( ApeAudioSample *audioSample )
 	ape_memory_release( &audioSample->reference );
 }
 
-ApeAudioSample *ape_audio_format_vorbis_load_( PLFile *file );
-ApeAudioSample *ape_audio_format_wav_load_( PLFile *file );
+ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file );
+ApeAudioSample *ape_audio_format_wav_load_( QmFsFile *file );
 ApeAudioSample *ape_audio_sample_cache( const char *path )
 {
 	ApeAudioSample *sample = ape_memory_get_from_pool_( path, APE_CACHE_POOL_SAMPLES );
@@ -167,7 +167,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 		return nullptr;
 	}
 
-	PLFile *file = PlOpenFile( path, false );
+	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == nullptr )
 	{
 		ape_console_warning_( "Failed to open audio file (%s): %s\n", path, PlGetError() );

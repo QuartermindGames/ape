@@ -57,7 +57,7 @@ void ape_console_log_initialize_()
 		path = qm_os_string_alloc( "%s/log.txt", com_get_app_data_directory() );
 	}
 
-	if ( PlFileExists( path ) )
+	if ( qm_fs_check_file_exists( path ) )
 	{
 		unlink( path );
 	}

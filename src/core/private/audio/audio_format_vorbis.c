@@ -6,10 +6,10 @@
 #define STB_VORBIS_NO_STDIO
 #include "stb_vorbis.c"
 
-ApeAudioSample *ape_audio_format_vorbis_load_( PLFile *file )
+ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file )
 {
-	const uint8 *data   = PlGetFileData( file );
-	const int    length = ( int ) PlGetFileSize( file );
+	const uint8 *data   = qm_fs_file_get_data( file );
+	const int    length = ( int ) qm_fs_file_get_size( file );
 
 	int    channels;
 	int    sampleRate;

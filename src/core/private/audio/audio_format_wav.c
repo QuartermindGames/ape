@@ -5,9 +5,9 @@
 
 #include "audio.h"
 
-ApeAudioSample *ape_audio_format_wav_load_( PLFile *file )
+ApeAudioSample *ape_audio_format_wav_load_( QmFsFile *file )
 {
-	uint32_t size = PlGetFileSize( file );
+	uint32_t size = qm_fs_file_get_size( file );
 	uint8_t *buf  = QM_OS_MEMORY_NEW_( uint8_t, size );
 
 	ApeAudioSample *sample = nullptr;

@@ -234,7 +234,7 @@ long forge::MaterialBrowser::on_material_edit( FXObject *, FXSelector, void * )
 	}
 
 	PLPath resolvedPath;
-	PlResolveVirtualPath( path, resolvedPath, sizeof( resolvedPath ) );
+	qm_fs_resolve_virtual_path( path, resolvedPath, sizeof( resolvedPath ) );
 
 #if ( PL_SYSTEM_OS == PL_SYSTEM_OS_LINUX )
 	pid_t pid = fork();

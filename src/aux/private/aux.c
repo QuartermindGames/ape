@@ -279,7 +279,7 @@ AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const QmM
 
 AcmBranch *com_acm_load_file( const char *path, const char *object )
 {
-	PLFile *file = PlOpenFile( path, false );
+	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == nullptr )
 	{
 		return nullptr;
@@ -287,7 +287,7 @@ AcmBranch *com_acm_load_file( const char *path, const char *object )
 
 	AcmBranch *root = nullptr;
 
-	size_t size = PlGetFileSize( file );
+	size_t size = qm_fs_file_get_size( file );
 	if ( size > 0 )
 	{
 		uint8_t *buf = QM_OS_MEMORY_NEW_( uint8_t, size + 1 );

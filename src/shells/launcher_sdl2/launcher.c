@@ -515,8 +515,8 @@ int launcher_initialize( int argc, char **argv )
 		PrintError( "Failed to initialize SDL: %s\n", SDL_GetError() );
 	}
 
-	PlMountLocalLocation( com_get_app_data_directory() );
-	PlMountLocalLocation( com_get_local_data_directory() );
+	qm_fs_mount_local_location( com_get_app_data_directory() );
+	qm_fs_mount_local_location( com_get_local_data_directory() );
 
 	shellConfig = com_get_config( "shell" );
 

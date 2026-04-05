@@ -650,10 +650,10 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 	//		I've not done so yet just to avoid mass refactoring :(
 	if ( path != nullptr )
 	{
-		PLFileSystemMount *mount = PlGetMountLocationForPath( path );
+		QmFsMount *mount = PlGetMountLocationForPath( path );
 		if ( mount != nullptr )
 		{
-			const char *mountPath = PlGetMountLocationPath( mount );
+			const char *mountPath = qm_fs_mount_get_path( mount );
 			assert( mountPath != nullptr );
 			snprintf( self->path, sizeof( self->path ), "%s", &path[ strlen( mountPath ) + 1 ] );
 		}

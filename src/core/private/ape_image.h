@@ -2,4 +2,4 @@
 
 #pragma once
 
-PLImage *Image_LoadPackedImage( PLFile *filePtr );
+PLImage *Image_LoadPackedImage( QmFsFile *filePtr );

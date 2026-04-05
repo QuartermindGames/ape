@@ -202,14 +202,14 @@ bool ape_script_manager_do_string( const char *buf )
 
 bool ape_script_manager_do_file( const char *path )
 {
-	PLFile *file = PlOpenFile( path, false );
+	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == nullptr )
 	{
 		ape_console_warning_( "Failed to open file (%s): %s\n", path, PlGetError() );
 		return false;
 	}
 
-	size_t size = PlGetFileSize( file );
+	size_t size = qm_fs_file_get_size( file );
 	if ( size == 0 || size >= PlMegabytesToBytes( 64 ) )
 	{
 		ape_console_warning_( "Invalid size for file (%s) (%u)!\n", path, size );

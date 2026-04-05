@@ -75,7 +75,7 @@ typedef struct Md2Model
 	unsigned int numFrames;
 } Md2Model;
 
-static Md2Model *parse_md2( PLFile *file )
+static Md2Model *parse_md2( QmFsFile *file )
 {
 	Md2Header header = {};
 	if ( PlReadFile( file, &header, sizeof( header ), 1 ) != 1 )
@@ -99,7 +99,7 @@ static Md2Model *parse_md2( PLFile *file )
      * this only loads in the first skin, as MD2s only actually use 1 skin
      * per mesh - we'll need to load this later to convert the uv coords */
 	Md2Skin skin;
-	PlFileSeek( file, header.offsetSkins, PL_SEEK_SET );
+	qm_fs_file_seek( file, header.offsetSkins, QM_FS_SEEK_SET );
 	if ( PlReadFile( file, skin, sizeof( Md2Skin ), 1 ) != 1 )
 	{
 		WARN( "Failed to read in MD2 skin: %s\n", PlGetError() );
@@ -108,17 +108,17 @@ static Md2Model *parse_md2( PLFile *file )
 
 	/* and now read in all the tex coordinates */
 	Md2TexCoord *texCoords = QM_OS_MEMORY_NEW_( Md2TexCoord, header.numST );
-	PlFileSeek( file, header.offsetST, PL_SEEK_SET );
+	qm_fs_file_seek( file, header.offsetST, QM_FS_SEEK_SET );
 	PlReadFile( file, texCoords, sizeof( Md2TexCoord ), header.numST );
 
 	/* triangles */
 	Md2Triangle *triangles = QM_OS_MEMORY_NEW_( Md2Triangle, header.numTriangles );
-	PlFileSeek( file, header.offsetTriangles, PL_SEEK_SET );
+	qm_fs_file_seek( file, header.offsetTriangles, QM_FS_SEEK_SET );
 	PlReadFile( file, triangles, sizeof( Md2Triangle ), header.numTriangles );
 
 	/* frames */
 	Md2Frame *frames = QM_OS_MEMORY_NEW_( Md2Frame, header.numFrames );
-	PlFileSeek( file, header.offsetFrames, PL_SEEK_SET );
+	qm_fs_file_seek( file, header.offsetFrames, QM_FS_SEEK_SET );
 	for ( int32_t i = 0; i < header.numFrames; ++i )
 	{
 		PlReadFile( file, &frames[ i ].scale, sizeof( QmMathVector3f ), 1 );
@@ -145,7 +145,7 @@ static Md2Model *parse_md2( PLFile *file )
 
 static Md2Model *model_md2_load( const char *path )
 {
-	PLFile *file = PlOpenFile( path, false );
+	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == nullptr )
 	{
 		WARN( "Failed to load MD2 \"%s\": %s\n", path, PlGetError() );

@@ -217,13 +217,13 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 SmdModel *model_smd_load( const char *path )
 {
-	PLFile *file = PlOpenFile( path, true );
+	QmFsFile *file = qm_fs_file_open( path, true );
 	if ( file == nullptr )
 	{
 		ERROR( "Failed to load SMD \"%s\"!\nPL: %s\n", path, PlGetError() );
 	}
 
-	const char *p = ( char * ) PlGetFileData( file );
+	const char *p = ( char * ) qm_fs_file_get_data( file );
 	if ( *p == '\0' )
 	{
 		ERROR( "SMD \"%s\" is empty!\n", path );
