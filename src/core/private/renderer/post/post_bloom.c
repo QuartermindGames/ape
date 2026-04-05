@@ -71,7 +71,7 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
-	PLGTexture *viewportTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+	QmGfxTexture *viewportTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 	assert( viewportTexture != nullptr );
 
 	// we use the texture here because supersampling madness...
@@ -88,14 +88,14 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 
 		PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomThreshold, false );
 		PlgSetShaderUniformValue( bloomFilterShader->internal, "intensity", &bloomIntensity, false );
-		PlgSetTexture( viewportTexture, 0 );
+		qm_gfx_texture_set( viewportTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 	}
 
 	// blur
 	{
-		PLGTexture *bloomFilterTexture = ape_render_target_get_texture_( bloomFilterTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+		QmGfxTexture *bloomFilterTexture = ape_render_target_get_texture_( bloomFilterTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( bloomFilterTexture != nullptr );
 
 		ape_render_target_bind_( bloomBlurTarget, PLG_FRAMEBUFFER_DRAW );
@@ -104,14 +104,14 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 		ape_shader_set_active_( bloomBlurShader );
 
 		PlgSetShaderUniformValue( bloomBlurShader->internal, "viewportSize", &QM_MATH_VECTOR2F( ( float ) bw, ( float ) bh ), false );
-		PlgSetTexture( bloomFilterTexture, 0 );
+		qm_gfx_texture_set( bloomFilterTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 	}
 
 	// final blend
 	{
-		PLGTexture *bloomBlurTexture = ape_render_target_get_texture_( bloomBlurTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+		QmGfxTexture *bloomBlurTexture = ape_render_target_get_texture_( bloomBlurTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( bloomBlurTexture != nullptr );
 
 		ape_setup_2d_viewport_( viewport->width, viewport->height );
@@ -128,11 +128,11 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 			PlgSetBlendMode( PLG_BLEND_ONE, PLG_BLEND_ONE );
 		}
 
-		PlgSetTexture( bloomBlurTexture, 0 );
+		qm_gfx_texture_set( bloomBlurTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
 
-		PlgSetTexture( nullptr, 0 );
+		qm_gfx_texture_set( nullptr, 0 );
 
 		PlgSetBlendMode( PLG_BLEND_DISABLE );
 	}

@@ -107,7 +107,7 @@ typedef struct ApeMaterialPass
 {
 	ApeShaderProgram *program;
 
-	PLGTextureFilter textureFilter;
+	QmGfxTextureFilter textureFilter;
 	QmMathVector2f   textureScroll;
 	QmMathVector2f   textureOffset;
 	QmMathVector2f   textureScale;

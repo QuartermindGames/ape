@@ -33,7 +33,7 @@ typedef struct ApeSpriteFrame
 {
 	unsigned int leftOffset;
 	unsigned int topOffset;
-	PLGTexture  *texture;
+	QmGfxTexture  *texture;
 } ApeSpriteFrame;
 
 typedef struct ApeRenderTarget ApeRenderTarget;
@@ -135,7 +135,7 @@ typedef struct ApeRendererPassState
 	ApeLightPointerArray lights;
 	unsigned int         numLights;
 
-	PLGTexture  *lightmapTexture;
+	QmGfxTexture  *lightmapTexture;
 	unsigned int lightmapIndex;
 } ApeRendererPassState;
 extern ApeRendererPassState ape_rendererState_;

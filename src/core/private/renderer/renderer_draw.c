@@ -11,7 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static void get_uv_coords_for_sub_rect( const PLQuad *subRect, PLGTexture *texture, float *tw, float *th, float *tx, float *ty )
+static void get_uv_coords_for_sub_rect( const PLQuad *subRect, QmGfxTexture *texture, float *tw, float *th, float *tx, float *ty )
 {
 	*tw = subRect->w / ( float ) texture->w;
 	*th = subRect->h / ( float ) texture->h;
@@ -19,7 +19,7 @@ static void get_uv_coords_for_sub_rect( const PLQuad *subRect, PLGTexture *textu
 	*ty = subRect->y / ( float ) texture->h;
 }
 
-void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, PLGTexture *texture, float x, float y, float w, float h )
+void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, QmGfxTexture *texture, float x, float y, float w, float h )
 {
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
@@ -145,7 +145,7 @@ void ape_draw_axis_pivot( QmMathVector3f position, QmMathVector3f rotation, floa
 	PlPopMatrix();
 }
 
-void ape_draw_digit( PLGTexture *numTextureTable[], float x, float y, int digit )
+void ape_draw_digit( QmGfxTexture *numTextureTable[], float x, float y, int digit )
 {
 	if ( digit < 0 )
 	{
@@ -159,7 +159,7 @@ void ape_draw_digit( PLGTexture *numTextureTable[], float x, float y, int digit 
 	PlgDrawTexturedRectangle( x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
 
-void ape_draw_number( PLGTexture *numTextureTable[], float x, float y, int number )
+void ape_draw_number( QmGfxTexture *numTextureTable[], float x, float y, int number )
 {
 	/* restrict it for sanity */
 	if ( number < 0 )
@@ -600,7 +600,7 @@ void ape_draw_debug_cylinder( const ComCollisionCylinder *cylinder, const QmMath
 		return;
 	}
 
-	resolution = PL_MIN( resolution, MAX_RESOLUTION - 1 );
+	resolution = QM_OS_MIN( resolution, MAX_RESOLUTION - 1 );
 
 	QmMathVector3f vertices[ MAX_RESOLUTION ] = {};
 	for ( unsigned int i = 0; i < resolution; ++i )
@@ -641,7 +641,7 @@ void ape_draw_debug_cone( QmMathVector3f origin, QmMathVector3f angles, const Qm
 		return;
 	}
 
-	resolution = PL_MIN( resolution, MAX_RESOLUTION - 1 );
+	resolution = QM_OS_MIN( resolution, MAX_RESOLUTION - 1 );
 
 	PLMatrix4 mx = PlRotateMatrix4( QM_MATH_DEG2RAD( angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
 	PLMatrix4 my = PlRotateMatrix4( QM_MATH_DEG2RAD( angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );

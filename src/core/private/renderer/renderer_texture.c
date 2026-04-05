@@ -14,7 +14,7 @@
 /////////////////////////////////////////////////////////////////
 // Old API crap
 
-PLGTexture *ape_texture_get_fallback( void )
+QmGfxTexture *ape_texture_get_fallback( void )
 {
 	return ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
 }
@@ -36,7 +36,7 @@ static void destroy_texture( void *userData )
 	qm_os_memory_free( texture->path );
 
 	PlDestroyImage( texture->image );
-	PlgDestroyTexture( texture->internal );
+	qm_os_memory_free( texture->internal );
 	qm_os_memory_free( texture );
 }
 
@@ -104,7 +104,7 @@ static void compute_average_colour( ApeTexture *texture )
 	texture->average.a = ( uint8_t ) ( out.a / hsize );
 }
 
-ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, const PLGTextureFilter filter )
+ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, const QmGfxTextureFilter filter )
 {
 	PLColourFormat cFormat;
 	PLImageFormat  iFormat;
@@ -158,7 +158,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 	plWriteImage( imageData, outName );
 #endif
 
-	PLGTexture *internalTexture = PlgCreateTexture();
+	QmGfxTexture *internalTexture = qm_gfx_texture_create();
 	if ( internalTexture == nullptr )
 	{
 		ape_console_error_( true, "Failed to create texture (%s): %s\n", id, PlGetError() );
@@ -167,7 +167,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 
 	internalTexture->filter = filter;
 
-	if ( !PlgUploadTextureImage( internalTexture, imageData ) )
+	if ( !qm_gfx_texture_upload( internalTexture, imageData ) )
 	{
 		ape_console_error_( true, "Failed to generate texture from image (%s): %s\n", id, PlGetError() );
 	}
@@ -293,7 +293,7 @@ void ape_initialize_textures_( void )
 	defaultTextures[ APE_TEXTURE_BLACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
-ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback )
+ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, bool useFallback )
 {
 	ApeTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
 	if ( texture != NULL )
@@ -318,7 +318,7 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 
 	// upload it
 
-	texture->internal = PlgCreateTexture();
+	texture->internal = qm_gfx_texture_create();
 	if ( texture->internal == nullptr )
 	{
 		ape_console_warning_( "Failed to allocate internal texture (%s): %s\n", path, PlGetError() );
@@ -328,7 +328,7 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 	//TODO: wat?
 	texture->internal->filter = texture->filterMode;
 
-	if ( !PlgUploadTextureImage( texture->internal, texture->image ) )
+	if ( !qm_gfx_texture_upload( texture->internal, texture->image ) )
 	{
 		ape_console_warning_( "Failed to upload texture (%s): %s\n", path, PlGetError() );
 		goto cleanup;
@@ -342,8 +342,8 @@ ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool 
 		texture->image = nullptr;
 	}
 
-	PlgSetTextureWrapMode( texture->internal, texture->wrapMode );
-	PlgSetTextureFilter( texture->internal, texture->filterMode );
+	qm_gfx_texture_set_wrap_mode( texture->internal, texture->wrapMode );
+	qm_gfx_texture_set_filter( texture->internal, texture->filterMode );
 
 	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, nullptr );
 	ape_memory_add_reference( &texture->reference );

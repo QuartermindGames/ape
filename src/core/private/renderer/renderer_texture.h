@@ -22,10 +22,10 @@ typedef struct ApeTexture
 	ApeMemoryReference reference;
 
 	PLImage    *image;   // ram copy, usually free'd after load but editor will retain
-	PLGTexture *internal;// vram copy
+	QmGfxTexture *internal;// vram copy
 
-	PLGTextureWrapMode wrapMode;
-	PLGTextureFilter   filterMode;
+	QmGfxTextureWrapMode wrapMode;
+	QmGfxTextureFilter   filterMode;
 	unsigned int       flags;
 
 	QmMathColour4ub average;
@@ -33,11 +33,11 @@ typedef struct ApeTexture
 	char *path;// for reloading
 } ApeTexture;
 
-PLGTexture *ape_texture_get_fallback( void );
+QmGfxTexture *ape_texture_get_fallback( void );
 
-ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, PLGTextureFilter filter );
+ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, QmGfxTextureFilter filter );
 
-ApeTexture *ape_texture_cache_( const char *path, PLGTextureFilter filter, bool useFallback );
+ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, bool useFallback );
 void        ape_texture_release_( ApeTexture *texture );
 
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture );

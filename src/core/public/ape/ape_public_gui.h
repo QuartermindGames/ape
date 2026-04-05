@@ -22,7 +22,7 @@ ApeGuiCanvas *ape_gui_canvas_create( int width, int height );
 void          ape_gui_canvas_destroy( ApeGuiCanvas *canvas );
 void          ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height );
 void          ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *height );
-PLGTexture   *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas );
+QmGfxTexture   *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas );
 
 /****************************************
  ****************************************/

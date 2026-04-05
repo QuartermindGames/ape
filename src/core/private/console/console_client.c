@@ -510,7 +510,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlgSetTexture( nullptr, 0 );
+	qm_gfx_texture_set( nullptr, 0 );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
 	PlPushMatrix();
@@ -560,7 +560,7 @@ void ape_console_draw_( const ApeViewport *viewport )
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 
-	PlgSetTexture( nullptr, 0 );
+	qm_gfx_texture_set( nullptr, 0 );
 
 	gui_font_display( font );
 

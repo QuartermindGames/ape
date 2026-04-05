@@ -587,7 +587,7 @@ static void pre_render_nodes( ApeEditorInstance *self, ApeCamera *camera, const 
 	{
 		if ( nodeIcons[ worldNode->type ] != NULL )
 		{
-			PLGTexture *texture = ape_material_get_texture_( nodeIcons[ worldNode->type ], 0, "diffuseMap" );
+			QmGfxTexture *texture = ape_material_get_texture_( nodeIcons[ worldNode->type ], 0, "diffuseMap" );
 			if ( texture == nullptr )
 			{
 				return;

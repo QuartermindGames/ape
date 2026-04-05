@@ -68,7 +68,7 @@ void ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *heigh
 	}
 }
 
-PLGTexture *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas )
+QmGfxTexture *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas )
 {
 	return ape_render_target_get_texture_( canvas->renderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 }

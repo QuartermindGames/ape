@@ -13,9 +13,9 @@ typedef struct ApeRenderTarget
 	char id[ 16 ];// 'rt_menu_0'
 
 	QmGfxFramebuffer *frameBuffer;
-	PLGTexture       *attachments[ APE_RENDER_TARGET_MAX_ATTACHMENT_TYPES ];
+	QmGfxTexture       *attachments[ APE_RENDER_TARGET_MAX_ATTACHMENT_TYPES ];
 	unsigned int      desiredAttachments;
-	PLGTextureFilter  attachmentFilter;
+	QmGfxTextureFilter  attachmentFilter;
 
 	ApeMemoryReference reference;
 } ApeRenderTarget;
@@ -31,7 +31,7 @@ static void destroy_texture_attachments( ApeRenderTarget *self )
 			continue;
 		}
 
-		PlgDestroyTexture( self->attachments[ i ] );
+		qm_os_memory_free( self->attachments[ i ] );
 		self->attachments[ i ] = nullptr;
 	}
 }
@@ -127,7 +127,7 @@ ApeRenderTarget *ape_render_target_get_by_key_( const char *key )
 	return PlLookupHashTableUserData( renderTargets, key, strlen( key ) );
 }
 
-ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponents, PLGTextureFilter textureAttachmentFilter, bool useMsaa )
+ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width, unsigned int height, unsigned int flags, unsigned int textureAttachmentComponents, QmGfxTextureFilter textureAttachmentFilter, bool useMsaa )
 {
 	unsigned int numSamples = useMsaa ? ape_config_.renderer.msaaSamples : 0;
 
@@ -217,7 +217,7 @@ void ape_render_target_get_size_( const ApeRenderTarget *renderTarget, unsigned 
 	*height = renderTarget->frameBuffer->height;
 }
 
-PLGTexture *ape_render_target_get_texture_( ApeRenderTarget *self, const ApeRenderTargetAttachmentType type )
+QmGfxTexture *ape_render_target_get_texture_( ApeRenderTarget *self, const ApeRenderTargetAttachmentType type )
 {
 	//TODO: if we requested a type that wasn't setup originally, should we set that up here?
 	return self->attachments[ type ];

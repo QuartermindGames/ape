@@ -50,7 +50,7 @@ void ape_video_draw( ApeVideo *video, const ApeViewport *viewport )
 	ape_shader_set_active_( program );
 
 	ApeTexture *frame = video->frames[ video->curFrame ];
-	PlgSetTexture( frame->internal, 0 );
+	qm_gfx_texture_set( frame->internal, 0 );
 
 	float ratio = QM_OS_MIN( ( float ) viewport->width / video->width,
 	                         ( float ) viewport->height / video->height );
@@ -61,7 +61,7 @@ void ape_video_draw( ApeVideo *video, const ApeViewport *viewport )
 	                        video->height * ratio,
 	                        &PL_COLOUR_WHITE, 0 );
 
-	PlgSetTexture( nullptr, 0 );
+	qm_gfx_texture_set( nullptr, 0 );
 }
 
 void ape_video_tick( ApeVideo *video, double delta )

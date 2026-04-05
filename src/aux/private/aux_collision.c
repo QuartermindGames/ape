@@ -210,11 +210,11 @@ float com_collision_cylinder_get_top( const ComCollisionCylinder *cylinder )
 bool com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinder, const QmMathVector3f *point )
 {
 	float top = com_collision_cylinder_get_top( cylinder );
-	if ( point->y < PL_MIN( cylinder->origin.y, top ) )
+	if ( point->y < QM_OS_MIN( cylinder->origin.y, top ) )
 	{
 		return false;
 	}
-	if ( point->y > PL_MAX( cylinder->origin.y, top ) )
+	if ( point->y > QM_OS_MAX( cylinder->origin.y, top ) )
 	{
 		return false;
 	}

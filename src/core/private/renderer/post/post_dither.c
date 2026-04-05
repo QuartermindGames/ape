@@ -50,7 +50,7 @@ static void draw_dither_effect( const ApeViewport *viewport, [[maybe_unused]] co
 	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
-	PLGTexture *viewportTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+	QmGfxTexture *viewportTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 	assert( viewportTexture != nullptr );
 
 	{
@@ -73,16 +73,16 @@ static void draw_dither_effect( const ApeViewport *viewport, [[maybe_unused]] co
 
 		ape_shader_set_active_( ditherFilterShader );
 
-		PlgSetTexture( viewportTexture, 0 );
+		qm_gfx_texture_set( viewportTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 
-		PlgSetTexture( nullptr, 0 );
+		qm_gfx_texture_set( nullptr, 0 );
 	}
 
 	// finalize
 	{
-		PLGTexture *ditherTexture = ape_render_target_get_texture_( ditherFilterTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+		QmGfxTexture *ditherTexture = ape_render_target_get_texture_( ditherFilterTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( ditherTexture != nullptr );
 
 		ape_setup_2d_viewport_( viewport->width, viewport->height );
@@ -90,11 +90,11 @@ static void draw_dither_effect( const ApeViewport *viewport, [[maybe_unused]] co
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 
-		PlgSetTexture( ditherTexture, 0 );
+		qm_gfx_texture_set( ditherTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
 
-		PlgSetTexture( nullptr, 0 );
+		qm_gfx_texture_set( nullptr, 0 );
 	}
 }
 

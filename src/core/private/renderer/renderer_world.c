@@ -892,7 +892,7 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
 
 	PLMatrix4 clipMatrix = PlTranslateMatrix4( visiblePortal->origin );
-	PlgSetClipPlane( &clipPlane, &clipMatrix, false );
+	qm_gfx_set_clip_plane( &clipPlane, &clipMatrix, false );
 
 	// now recurse into the next room
 
@@ -915,7 +915,7 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	ape_rendererState_.depth--;
 	ape_rendererState_.mirror = false;
 
-	PlgSetClipPlane( nullptr, nullptr, false );
+	qm_gfx_set_clip_plane( nullptr, nullptr, false );
 
 	// depth buffer pop
 

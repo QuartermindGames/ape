@@ -18,7 +18,7 @@
 
 typedef struct ApeGuiFont
 {
-	PLGTexture *texture;
+	QmGfxTexture *texture;
 
 	uint32_t      numGlyphs;
 	ComFontGlyph *glyphs;
@@ -94,7 +94,7 @@ ApeGuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 void ape_gui_font_destroy( ApeGuiFont *font )
 {
 	PlDestroyHashTable( font->glyphTable );
-	PlgDestroyTexture( font->texture );
+	qm_os_memory_free( font->texture );
 	PlgDestroyMesh( font->mesh );
 	qm_os_memory_free( font->glyphs );
 	qm_os_memory_free( font );
@@ -177,9 +177,9 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 		return nullptr;
 	}
 
-	font->texture         = PlgCreateTexture();
+	font->texture         = qm_gfx_texture_create();
 	font->texture->filter = PLG_TEXTURE_FILTER_LINEAR;
-	if ( !PlgUploadTextureImage( font->texture, bitmapImage ) )
+	if ( !qm_gfx_texture_upload( font->texture, bitmapImage ) )
 	{
 		ape_gui_font_destroy( font );
 		ape_console_warning_( "Failed to upload texture data for font!\n" );
@@ -427,7 +427,7 @@ void gui_font_display( ApeGuiFont *font )
 
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 
-	PlgSetTexture( font->texture, 0 );
+	qm_gfx_texture_set( font->texture, 0 );
 
 	PlgUploadMesh( font->mesh );
 	PlgDrawMesh( font->mesh );

@@ -585,7 +585,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						 * it needs to be able to pass a null material... probably revisit this later. */
 						// this now doubly sucks because we're assuming the diffuse map is representative of the "size" we care about,
 						// which isn't necessarily always going to be the case... *sigh*
-						PLGTexture *internal = texture->internal;
+						QmGfxTexture *internal = texture->internal;
 						if ( material != nullptr )
 						{
 							if ( material->width < internal->w )
@@ -638,9 +638,9 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 	}
 }
 
-static PLGTextureFilter get_texture_filter_by_name( const char *name )
+static QmGfxTextureFilter get_texture_filter_by_name( const char *name )
 {
-	PLGTextureFilter textureFilter;
+	QmGfxTextureFilter textureFilter;
 	if ( pl_strcasecmp( name, "mipmap_nearest" ) == 0 )
 	{
 		textureFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
@@ -931,22 +931,22 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 
 		case APE_MATERIAL_BUILTIN_FALLBACK:
 		{
-			PLGTexture *texture = ape_texture_get_fallback();
+			QmGfxTexture *texture = ape_texture_get_fallback();
 			assert( texture != nullptr );
-			PlgSetTexture( texture, *curUnit );
+			qm_gfx_texture_set( texture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
 			break;
 		}
 		case APE_MATERIAL_BUILTIN_LIGHTMAP:
 		{
-			PLGTexture *texture = ape_rendererState_.lightmapTexture;
+			QmGfxTexture *texture = ape_rendererState_.lightmapTexture;
 			if ( texture == nullptr )
 			{
 				texture = ape_get_default_texture_( APE_TEXTURE_WHITE )->internal;
 			}
 
-			PlgSetTexture( texture, *curUnit );
+			qm_gfx_texture_set( texture, *curUnit );
 			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
 			break;
@@ -1172,9 +1172,9 @@ unsigned int ape_material_get_flags_( const ApeMaterial *self )
 	return self->flags;
 }
 
-static PLGTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
+static QmGfxTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 {
-	PLGTexture *texture = nullptr;
+	QmGfxTexture *texture = nullptr;
 	if ( ( var->hint == APE_MATERIAL_VAR_HINT_DIFFUSE && materialSkipDiffuse ) ||
 	     ( var->hint == APE_MATERIAL_VAR_HINT_LIGHTMAP && materialSkipLightmap ) )
 	{
@@ -1311,7 +1311,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 			set_global_uniforms( curPass->program, curPass, nullptr );
 
-			PlgSetTexture( nullptr, 0 );
+			qm_gfx_texture_set( nullptr, 0 );
 		}
 		else
 		{
@@ -1343,13 +1343,13 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 				     curPass->variables[ j ].type == APE_MATERIAL_VAR_RENDERTARGET ||
 				     curPass->variables[ j ].type == APE_MATERIAL_VARIABLE_TYPE_DEPTHMAP )
 				{
-					PLGTexture *texture = ape_material_var_get_texture_( &curPass->variables[ j ] );
+					QmGfxTexture *texture = ape_material_var_get_texture_( &curPass->variables[ j ] );
 
-					PlgSetTexture( texture, curUnit );
+					qm_gfx_texture_set( texture, curUnit );
 
 					// setup the texture filtering mode
 
-					PLGTextureFilter textureFilter;
+					QmGfxTextureFilter textureFilter;
 					// allow us to override the desired texture filter
 					if ( *materialTextureFilter != '\0' )
 					{
@@ -1373,7 +1373,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 						}
 					}
 
-					PlgSetTextureFilter( texture, textureFilter );
+					qm_gfx_texture_set_filter( texture, textureFilter );
 
 					if ( !( texture->flags & PLG_TEXTURE_FLAG_NOMIPS ) )
 					{

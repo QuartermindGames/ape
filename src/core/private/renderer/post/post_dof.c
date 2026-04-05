@@ -74,8 +74,8 @@ static void draw_dof_effect( const ApeViewport *viewport, const ApeCamera *camer
 	ApeRenderTarget *postRenderTarget = ape_postfx_get_render_target_();
 	assert( postRenderTarget != nullptr );
 
-	PLGTexture *colourTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
-	PLGTexture *depthTexture  = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_DEPTH );
+	QmGfxTexture *colourTexture = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+	QmGfxTexture *depthTexture  = ape_render_target_get_texture_( postRenderTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_DEPTH );
 	assert( colourTexture != nullptr && depthTexture != nullptr );
 
 	{
@@ -100,12 +100,12 @@ static void draw_dof_effect( const ApeViewport *viewport, const ApeCamera *camer
 
 		ape_draw_textured_quad( dofMaterial, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 
-		PlgSetTexture( nullptr, 0 );
+		qm_gfx_texture_set( nullptr, 0 );
 	}
 
 	// finalize
 	{
-		PLGTexture *ditherTexture = ape_render_target_get_texture_( dofTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
+		QmGfxTexture *ditherTexture = ape_render_target_get_texture_( dofTarget, APE_RENDER_TARGET_ATTACHMENT_TYPE_COLOUR );
 		assert( ditherTexture != nullptr );
 
 		ape_setup_2d_viewport_( viewport->width, viewport->height );
@@ -113,11 +113,11 @@ static void draw_dof_effect( const ApeViewport *viewport, const ApeCamera *camer
 
 		ape_set_active_shader_by_default_( APE_SHADER_DEFAULT );
 
-		PlgSetTexture( ditherTexture, 0 );
+		qm_gfx_texture_set( ditherTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, viewport->x, viewport->y, viewport->width, viewport->height, &PL_COLOUR_WHITE, 0 );
 
-		PlgSetTexture( nullptr, 0 );
+		qm_gfx_texture_set( nullptr, 0 );
 	}
 }
 
