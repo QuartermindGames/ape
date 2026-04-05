@@ -269,7 +269,7 @@ AcmBranch *com_acm_push_vector4( AcmBranch *parent, const char *name, const QmMa
 
 AcmBranch *com_acm_push_colour4f( AcmBranch *parent, const char *name, const QmMathColour4f *colour, bool conditional )
 {
-	if ( conditional && PlColour4fCompare( colour, &QM_MATH_COLOUR4F( 0.0f, 0.0f, 0.0f, 0.0f ) ) )
+	if ( conditional && qm_math_colour4f_compare( *colour, ( QmMathColour4f ) {} ) )
 	{
 		return nullptr;
 	}

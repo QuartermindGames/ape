@@ -13,7 +13,7 @@ QmMathVector3f com_math_pitch_yaw_to_position( const float pitch, const float ya
 	PLMatrix4      m2;
 	m2         = PlTranslateMatrix4( position );
 	matrix     = PlMultiplyMatrix4( &m2, &matrix );
-	m2         = PlRotateMatrix4( PL_DEG2RAD( yaw ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
+	m2         = PlRotateMatrix4( QM_MATH_DEG2RAD( yaw ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
 	matrix     = PlMultiplyMatrix4( &m2, &matrix );
 	position.x = matrix.m[ 0 ];
 	position.z = matrix.m[ 8 ];

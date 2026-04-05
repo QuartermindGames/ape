@@ -139,9 +139,11 @@ endif ()
 
 # QMFW libraries
 add_subdirectory(src/kernel/src/qmos)
-set_target_properties(qm-os PROPERTIES FOLDER "Kernel")
+set_target_properties(qm-os PROPERTIES FOLDER "Foundation")
 add_subdirectory(src/kernel/src/qmmath)
-set_target_properties(qm-math PROPERTIES FOLDER "Kernel")
+set_target_properties(qm-math PROPERTIES FOLDER "Foundation")
+add_subdirectory(src/kernel/src/qmfs)
+set_target_properties(qm-fs PROPERTIES FOLDER "Foundation")
 
 add_subdirectory(src/kernel/plcore/)
 set_target_properties(plcore PROPERTIES FOLDER "Kernel")

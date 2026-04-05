@@ -280,7 +280,7 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 		PLGMesh *mesh        = worldNode->mesh;
 		mesh->numSubMeshes   = numSubMeshes[ 0 ];
 		mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-		mesh->subMeshCounts  = subMeshes[ 0 ];
+		mesh->subMeshes      = subMeshes[ 0 ];
 
 		ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
 
@@ -598,7 +598,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
 	mesh->numSubMeshes   = numSubMeshes[ 0 ];
 	mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-	mesh->subMeshCounts  = subMeshes[ 0 ];
+	mesh->subMeshes      = subMeshes[ 0 ];
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
 	assert( material != nullptr );
