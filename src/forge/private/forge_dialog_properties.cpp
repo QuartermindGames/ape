@@ -197,26 +197,6 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			}
 			break;
 		}
-		case APE_PROPERTY_TYPE_BITFLAG:
-		{
-			for ( unsigned int i = 0; i < editorProperty->bitFlagType.numBitFlags; ++i )
-			{
-				if ( strcmp( text, editorProperty->bitFlagType.bitFlags[ i ].name ) != 0 )
-				{
-					continue;
-				}
-
-				if ( strcmp( text, "True" ) == 0 )
-				{
-					*( ApeIntegerProperty * ) tableProperty->ptr |= editorProperty->bitFlagType.bitFlags[ i ].value;
-				}
-				else
-				{
-					*( ApeIntegerProperty * ) tableProperty->ptr &= ~editorProperty->bitFlagType.bitFlags[ i ].value;
-				}
-			}
-			break;
-		}
 		case APE_PROPERTY_TYPE_ENUM:
 		{
 			for ( unsigned int i = 0; i < editorProperty->enumType.numEnums; ++i )
@@ -248,6 +228,18 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 				*( ApeBooleanProperty * ) tableProperty->ptr = false;
 			}
 			break;
+		case APE_PROPERTY_TYPE_BITFLAG:
+		{
+			if ( strcmp( text, "True" ) == 0 )
+			{
+				*( ApeIntegerProperty * ) tableProperty->ptr |= editorProperty->bitFlagType.value;
+			}
+			else
+			{
+				*( ApeIntegerProperty * ) tableProperty->ptr &= ~editorProperty->bitFlagType.value;
+			}
+			break;
+		}
 	}
 
 	// need to set these again, so transform is updated (because of this dumb idiot)
@@ -327,16 +319,6 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeProperty
 			numSubRows += 3;
 			break;
 		}
-#if 0
-		case APE_PROPERTY_TYPE_BITFLAG:
-		{
-			for ( unsigned int i = 0; i < internalProperty->bitFlagType.numBitFlags; ++i, ++numSubRows )
-			{
-				table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) internalProperty ) );
-			}
-			break;
-		}
-#endif
 		case APE_PROPERTY_TYPE_ENUM:
 		{
 			FXString options;
@@ -374,9 +356,16 @@ void forge::PropertiesDialog::add_property( unsigned int *row, const ApeProperty
 			break;
 		}
 		case APE_PROPERTY_TYPE_PATH: break;
+		case APE_PROPERTY_TYPE_BITFLAG:
+		{
+			table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) internalProperty ) );
+			table->setItemText( *row, 1, *( ApeIntegerProperty * ) property.ptr & internalProperty->bitFlagType.value ? "True" : "False" );
+			break;
+		}
 		case APE_PROPERTY_TYPE_BOOLEAN:
 		{
 			table->setItem( *row, 1, new FXComboTableItem( "False\nTrue\n", nullptr, ( void * ) internalProperty ) );
+			table->setItemText( *row, 1, *( ApeBooleanProperty * ) property.ptr ? "True" : "False" );
 			break;
 		}
 	}

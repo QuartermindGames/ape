@@ -79,13 +79,6 @@ typedef struct ApePropertyEnum
 	unsigned int value;
 } ApePropertyEnum;
 
-typedef struct ApePropertyBitFlag
-{
-	const char  *name;
-	const char  *desc;
-	unsigned int value;
-} ApePropertyBitFlag;
-
 typedef struct ApeProperty
 {
 	const char     *name;
@@ -107,8 +100,7 @@ typedef struct ApeProperty
 		} stringType;
 		struct
 		{
-			ApePropertyBitFlag *bitFlags;
-			unsigned int        numBitFlags;
+			unsigned int value;
 		} bitFlagType;
 	};
 
@@ -137,10 +129,9 @@ typedef struct ApeProperty
 	        .enumType = { ENUMS,                                \
                          QM_OS_ARRAY_ELEMENTS( ENUMS ) },      \
 }
-#define APE_PROPERTY_BITFLAG( NAME, DESC, TYPE, VAR, FLAGS )                                                    \
-	{                                                                                                           \
-		APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, BITFLAG ), .bitFlagType = { FLAGS,                          \
-			                                                                    QM_OS_ARRAY_ELEMENTS( FLAGS ) } \
+#define APE_PROPERTY_BITFLAG( NAME, DESC, TYPE, VAR, VALUE )                                    \
+	{                                                                                           \
+		APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, BITFLAG ), .bitFlagType = {.value = VALUE } \
 	}
 
 /////////////////////////////////////////////////////////////////////////////////////

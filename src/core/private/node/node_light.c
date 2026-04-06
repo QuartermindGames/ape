@@ -268,20 +268,17 @@ static ApePropertyEnum lightTypesEnum[] = {
         {"Sun",  2},
 };
 
-static ApePropertyBitFlag lightPropertyFlags[] = {
-        {"Dynamic",         "Toggles dynamic state, otherwise uses baked lighting.", APE_LIGHT_FLAG_DYNAMIC        },
-        {"Shadows",         "Toggles shadows.",                                      APE_LIGHT_FLAG_SHADOWS        },
-        {"Runtime Shadows", "Toggles dynamic shadows.",                              APE_LIGHT_FLAG_RUNTIME_SHADOWS},
-        {"Enabled",         "Toggles the light on or off.",                          APE_LIGHT_FLAG_ENABLED        },
-        {"Flare",           "Toggles flare effect for light.",                       APE_LIGHT_FLAG_FLARE          },
-};
-
 static ApeProperty properties[] = {
         APE_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
         APE_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
         APE_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
         APE_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),
-        APE_PROPERTY_BITFLAG( "Flags", "Variables flags for the light.", ApeLight, flags, lightPropertyFlags ),
+
+        APE_PROPERTY_BITFLAG( "Dynamic", "Toggles dynamic state, otherwise uses baked lighting.", ApeLight, flags, APE_LIGHT_FLAG_DYNAMIC ),
+        APE_PROPERTY_BITFLAG( "Shadows", "Toggles shadows.", ApeLight, flags, APE_LIGHT_FLAG_SHADOWS ),
+        APE_PROPERTY_BITFLAG( "Runtime Shadows", "Toggles dynamic shadows.", ApeLight, flags, APE_LIGHT_FLAG_RUNTIME_SHADOWS ),
+        APE_PROPERTY_BITFLAG( "Enabled", "Toggles the light on or off.", ApeLight, flags, APE_LIGHT_FLAG_ENABLED ),
+        APE_PROPERTY_BITFLAG( "Flare", "Toggles flare effect for light.", ApeLight, flags, APE_LIGHT_FLAG_FLARE ),
 };
 
 const ApeWorldNodeClass ape_lightClass = {
