@@ -396,6 +396,8 @@ void ape_gui_draw_( ApeViewport *viewport )
 
 	ape_renderer_batch_display_();
 
+	ape_clear_flare_queue_();
+
 #if USE_GUI_CANVAS == 1
 
 	ape_gui_canvas_display( guiBaseCanvas );

@@ -62,7 +62,7 @@ void ape_register_flare_console_variables_( void )
 void ape_shutdown_flares_( void )
 {
 	ape_material_release( flareMaterial );
-	flareMaterial = NULL;
+	flareMaterial = nullptr;
 
 	PL_ZERO_( flares );
 }
@@ -119,10 +119,10 @@ static void draw_flare( const Flare *flare, float deltaX, float deltaY, float in
 
 		// sprite properties
 		const FlareElement *element  = &flareElements[ i ];
-		QmMathColour4f      colour   = { 1.0f, 1.0f, 1.0f, intensity };
-		QmMathVector3f      position = { x, y, 0.0f };
-		QmMathVector3f      origin   = { -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f };
-		QmMathVector3f      angles   = { 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / QM_MATH_PI : 0.0f };
+		QmMathColour4f      colour   = QM_MATH_COLOUR4F( flare->colour.r, flare->colour.g, flare->colour.b, intensity );
+		QmMathVector3f      position = QM_MATH_VECTOR3F( x, y, 0.0f );
+		QmMathVector3f      origin   = QM_MATH_VECTOR3F( -( element->w / 2.0f ), -( element->h / 2.0f ), 0.0f );
+		QmMathVector3f      angles   = QM_MATH_VECTOR3F( 0.0f, 0.0f, element->rotate ? ( deltaX + deltaY ) / QM_MATH_PI : 0.0f );
 
 		// area of the texture we want to use
 		PLQuad quad = { element->x, element->y, element->w, element->h };
@@ -158,12 +158,12 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float dx = flare->screenPos.x - cx;
 		float dy = flare->screenPos.y - cy;
 
-		float deltaX = ( dx / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
-		float deltaY = ( dy / ( float ) NUM_FLARE_ELEMENTS ) * 2.0f;
+		float deltaX = dx / ( float ) NUM_FLARE_ELEMENTS * 2.0f;
+		float deltaY = dy / ( float ) NUM_FLARE_ELEMENTS * 2.0f;
 
 		float maxDistance = qm_math_vector2f_length( QM_MATH_VECTOR2F( w, h ) ) / 4.0f;
 		float intensity   = QM_MATH_CLAMP( 0.0f, ( 1.0f - ( qm_math_vector2f_length( QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );
-		sumFlareIntensity += ( intensity - ( flare->distance / ( MAX_FLARE_DISTANCE / 2.0f ) ) );
+		sumFlareIntensity += intensity - flare->distance / ( MAX_FLARE_DISTANCE / 2.0f );
 
 		draw_flare( &flares[ i ], deltaX, deltaY, intensity );
 	}
