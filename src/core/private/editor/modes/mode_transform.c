@@ -14,6 +14,8 @@ void ape_editor_mode_transform_attach_to( const ApeEditorInstance *instance, Ape
 		return;
 	}
 
+	QmMathVector3f newParentPos = ape_world_node_get_position( parent );
+
 	ApeWorldNode *node;
 	QM_OS_LINKED_LIST_ITERATE( node, instance->selectedObjects, i )
 	{
@@ -22,6 +24,19 @@ void ape_editor_mode_transform_attach_to( const ApeEditorInstance *instance, Ape
 		{
 			continue;
 		}
+
+		// had a discussion whether the below should go in attach, but for now, leaving it out
+		// as there's an argument to be made that you might not want this behaviour outside of
+		// the editor...
+
+		ApeWorldNode  *oldParent    = ape_world_node_get_parent( node );
+		QmMathVector3f oldParentPos = ape_world_node_get_position( oldParent );
+		QmMathVector3f relativePos  = qm_math_vector3f_sub( oldParentPos, newParentPos );
+
+		QmMathVector3f localPos = ape_world_node_get_local_position( node );
+		QmMathVector3f newPos   = qm_math_vector3f_add( localPos, relativePos );
+
+		ape_world_node_set_position( node, &newPos );
 
 		ape_world_node_attach( node, parent );
 	}

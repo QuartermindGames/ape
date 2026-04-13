@@ -38,8 +38,12 @@ static bool setup_dof_effect()
 		dofEnabled = false;
 		return false;
 	}
-
 	if ( ( dofMaterial = ape_material_cache( "materials/engine/post/post_dof.mat.n", APE_CACHE_GROUP_GLOBAL, false ) ) == nullptr )
+	{
+		dofEnabled = false;
+		return false;
+	}
+	if ( ( dofTarget = ape_render_target_create_( "post_dof", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_NEAREST, 0 ) ) == nullptr )
 	{
 		dofEnabled = false;
 		return false;
@@ -48,12 +52,6 @@ static bool setup_dof_effect()
 	dofFocusPointSlot = qm_gfx_shader_program_get_uniform_slot( dofShader->internal, "focusPoint" );
 	dofFocusScaleSlot = qm_gfx_shader_program_get_uniform_slot( dofShader->internal, "focusScale" );
 	dofApertureSlot   = qm_gfx_shader_program_get_uniform_slot( dofShader->internal, "aperture" );
-
-	if ( ( dofTarget = ape_render_target_create_( "post_dof", 800, 600, PLG_BUFFER_COLOUR, PLG_BUFFER_COLOUR, PLG_TEXTURE_FILTER_NEAREST, 0 ) ) == nullptr )
-	{
-		dofEnabled = false;
-		return false;
-	}
 
 	return true;
 }
