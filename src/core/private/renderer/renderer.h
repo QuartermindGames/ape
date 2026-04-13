@@ -31,9 +31,9 @@ extern ApeRendererStats ape_rendererPerformance_;
 /* todo: introduce container around this */
 typedef struct ApeSpriteFrame
 {
-	unsigned int leftOffset;
-	unsigned int topOffset;
-	QmGfxTexture  *texture;
+	unsigned int  leftOffset;
+	unsigned int  topOffset;
+	QmGfxTexture *texture;
 } ApeSpriteFrame;
 
 typedef struct ApeRenderTarget ApeRenderTarget;
@@ -135,8 +135,8 @@ typedef struct ApeRendererPassState
 	ApeLightPointerArray lights;
 	unsigned int         numLights;
 
-	QmGfxTexture  *lightmapTexture;
-	unsigned int lightmapIndex;
+	QmGfxTexture *lightmapTexture;
+	unsigned int  lightmapIndex;
 } ApeRendererPassState;
 extern ApeRendererPassState ape_rendererState_;
 

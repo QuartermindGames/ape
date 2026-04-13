@@ -280,8 +280,11 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 					case APE_WORLD_NODE_TYPE_MODEL:
 					case APE_WORLD_NODE_TYPE_ENTITY:
 					case APE_WORLD_NODE_TYPE_CAMERA:
-						draw_selection_cube( &node->position, &node->selectColour, 8.0f, false );
+					{
+						QmMathVector3f pos = ape_world_node_get_position( node );
+						draw_selection_cube( &pos, &node->selectColour, 8.0f, false );
 						break;
+					}
 				}
 			}
 			else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE && node->type == APE_WORLD_NODE_TYPE_BRUSH )
@@ -396,9 +399,10 @@ static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, co
 	}
 }
 
-static void render_selected_wireframe( ApeWorldNode *node, const QmMathColour4ub *colour, bool selected )
+static void render_selected_wireframe( const ApeWorldNode *node, const QmMathColour4ub *colour, bool selected )
 {
-	draw_selection_cube( &node->position, colour, SELECTION_OBJECT_SIZE, true );
+	QmMathVector3f pos = ape_world_node_get_position( node );
+	draw_selection_cube( &pos, colour, SELECTION_OBJECT_SIZE, true );
 }
 
 static void render_selected_objects( ApeEditorInstance *self )
@@ -528,7 +532,7 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 
 QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst )
 {
-	ApeViewport    *selectionViewport = ape_editor_selection_get_viewport_();
+	ApeViewport      *selectionViewport = ape_editor_selection_get_viewport_();
 	QmGfxFramebuffer *frameBuffer       = ape_render_target_get_frame_buffer_( selectionViewport->renderTarget );
 	if ( frameBuffer == nullptr )
 	{

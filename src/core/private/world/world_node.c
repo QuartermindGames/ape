@@ -150,7 +150,9 @@ static ApeRoom *lookup_parent_room( ApeWorldNode *self )
 	if ( roomNode == nullptr )
 	{
 		char tmp[ 64 ];
-		qm_math_vector3f_print( self->position, tmp, sizeof( tmp ) );
+		qm_math_vector3f_print(
+		        ape_world_node_get_position( self ),
+		        tmp, sizeof( tmp ) );
 
 		ape_console_warning_( "Encountered a node (%s) without an associated room!\n", tmp );
 		return nullptr;
@@ -286,8 +288,9 @@ void ape_world_node_dettach( ApeWorldNode *self )
 
 	self->parent         = nullptr;
 	self->parentListNode = nullptr;
+	self->room           = nullptr;
 
-	self->room = nullptr;
+	update_transform( self );
 }
 
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
@@ -296,6 +299,12 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 
 	if ( self->parent == parent )
 	{
+		return;
+	}
+
+	if ( self == parent )
+	{
+		ape_console_warning_( "Attempted to attach a node to itself!\n" );
 		return;
 	}
 
@@ -330,6 +339,8 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 	{
 		self->classType->onAttachParent( self, parent );
 	}
+
+	update_transform( self );
 
 	ape_world_node_mark_dirty_( parent );
 }
@@ -378,7 +389,7 @@ void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *
 	ape_world_node_compute_bounds_( self );
 }
 
-ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type )
+ApeWorldNode *ape_world_node_get_parent_by_type( const ApeWorldNode *self, ApeWorldNodeType type )
 {
 	ApeWorldNode *parent = self->parent;
 	while ( parent != nullptr )

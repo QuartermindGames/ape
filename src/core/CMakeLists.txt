@@ -69,6 +69,8 @@ add_library(ape-core STATIC
         private/gui/gui_font.c
 
         # Editor
+        private/editor/modes/mode_polygon.c
+        private/editor/modes/mode_transform.c
         private/editor/editor.c
         private/editor/editor_grid.c
         private/editor/editor_light.c

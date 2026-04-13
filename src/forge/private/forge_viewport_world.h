@@ -34,6 +34,8 @@ namespace forge
 
 			ID_MOVE_NODE_TO_ROOM,
 
+			ID_NODE_ATTACH,
+
 			ID_MERGE,
 			ID_EXPORT,
 			ID_IMPORT,
@@ -61,6 +63,8 @@ namespace forge
 		long on_link_new_room( FXObject *, FXSelector, void * );
 		long on_face_unlink_portal( FXObject *, FXSelector, void * );
 		long on_face_link_portal( FXObject *, FXSelector, void * );
+
+		long on_node_attach( FXObject *, FXSelector, void * );
 
 		long on_move_node_to_room( FXObject *, FXSelector, void * );
 

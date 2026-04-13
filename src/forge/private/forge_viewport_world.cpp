@@ -95,8 +95,9 @@ worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_NEW_ROOM, forge::WorldViewport::on_link_new_room ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_UNLINK_PORTAL, forge::WorldViewport::on_face_unlink_portal ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_PORTAL, forge::WorldViewport::on_face_link_portal ),
-
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLAG_MIRROR, forge::WorldViewport::on_toggle_face_flag ),
+
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_NODE_ATTACH, forge::WorldViewport::on_node_attach ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_MOVE_NODE_TO_ROOM, forge::WorldViewport::on_move_node_to_room ),
 
@@ -149,7 +150,7 @@ long forge::WorldViewport::on_left_click( FXObject *object, FXSelector selector,
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_PLOT:
 		{
-			ape_editor_add_polygon_point( instance );
+			ape_editor_mode_polygon_add( instance );
 			return TRUE;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_VERTEX:
@@ -215,10 +216,10 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 					}
 				}
 
-				ape_editor_brush_from_polygon( instance,
-				                               mainWindow->get_active_material_path(),
-				                               brushType,
-				                               flipFaces );
+				ape_editor_mode_polygon_create( instance,
+				                                mainWindow->get_active_material_path(),
+				                                brushType,
+				                                flipFaces );
 				return TRUE;
 			}
 
@@ -372,6 +373,34 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 				moveToMenu->disable();
 			}
 
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Attach to... Menu
+
+			FXMenuPane    *attachToSubMenu = new FXMenuPane( this );
+			FXMenuCascade *attachToMenu    = new FXMenuCascade( popup, "Attach to...", forge_cachedIcons[ FORGE_ICON_TYPE_FACE_PORTAL ], attachToSubMenu );
+
+			if ( numSelectedNodes > 1 )
+			{
+				ApeWorldNode *node;
+				QM_OS_LINKED_LIST_ITERATE( node, instance->selectedObjects, i )
+				{
+					std::string label = node->classType->identifier;
+					if ( *node->name != '\0' )
+					{
+						label.append( " (" + std::string( node->name ) + ")" );
+					}
+
+					FXMenuCommand *command = new FXMenuCommand( attachToSubMenu, label.c_str(), nullptr, this, ID_NODE_ATTACH );
+					command->setUserData( node );
+				}
+			}
+			else
+			{
+				attachToMenu->disable();
+			}
+
+			/////////////////////////////////////////////////////////////////////////////////////
+
 			FXMenuCommand *mergeCommand = new FXMenuCommand( popup, "Merge Brushes", nullptr, this, ID_MERGE );
 			mergeCommand->disable();
 
@@ -386,8 +415,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 			}
 			else
 			{
-				unsigned int numBrushes = 0;
-
+				unsigned int  numBrushes = 0;
 				ApeWorldNode *node;
 				QM_OS_LINKED_LIST_ITERATE( node, instance->selectedObjects, i )
 				{
@@ -399,7 +427,7 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 					numBrushes++;
 				}
 
-				if ( numBrushes > 0 )
+				if ( numBrushes > 1 )
 				{
 					mergeCommand->enable();
 				}
@@ -490,7 +518,7 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 		{
 			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 			{
-				ape_editor_remove_polygon_point( instance );
+				ape_editor_mode_polygon_remove( instance );
 				return TRUE;
 			}
 			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
@@ -504,7 +532,7 @@ long forge::WorldViewport::on_key( FXObject *object, FXSelector selector, void *
 		{
 			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
 			{
-				ape_editor_clear_plot_points( instance );
+				ape_editor_mode_polygon_clear( instance );
 				return TRUE;
 			}
 
@@ -796,6 +824,31 @@ long forge::WorldViewport::on_face_link_portal( FXObject *object, FXSelector, vo
 		snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s", tag.c_str() );
 		face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
 	}
+
+	return true;
+}
+
+long forge::WorldViewport::on_node_attach( FXObject *object, FXSelector, void *user )
+{
+	FXMenuCommand *command = dynamic_cast< FXMenuCommand * >( object );
+	if ( command == nullptr )
+	{
+		return false;
+	}
+
+	ApeEditorInstance *instance = editor->get_internal();
+	if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
+		return false;
+	}
+
+	ApeWorldNode *parent = ( ApeWorldNode * ) command->getUserData();
+	if ( parent == nullptr )
+	{
+		return false;
+	}
+
+	ape_editor_mode_transform_attach_to( instance, parent );
 
 	return true;
 }

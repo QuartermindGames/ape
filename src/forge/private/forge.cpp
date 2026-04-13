@@ -464,15 +464,14 @@ int main( int argc, char **argv )
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != nullptr )
 	{
-		size_t const size       = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
-		char        *driverPath = QM_OS_MEMORY_NEW_( char, size );
-		snprintf( driverPath, size, "local://%s", exePath );
+		char *driverPath = qm_os_string_alloc( "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
 		qm_os_memory_free( driverPath );
 	}
 	else
 	{
-		PlgScanForDrivers( "." );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to get executable location (%s)!", PlGetError() );
+		return EXIT_FAILURE;
 	}
 
 	editorLogLevels[ EDITOR_LOG_PRINT ]   = PlAddLogLevel( "forge", PL_COLOUR_BLUE_VIOLET, true );
@@ -509,14 +508,7 @@ int main( int argc, char **argv )
 	auto *dummy = new forge::Viewport( forge::mainWindow, forge::get_shared_gl_visual(), nullptr, APE_CAMERA_MODE_PERSPECTIVE );
 	dummy->create();
 
-	PLPath tmp;
-	if ( PlGetExecutableDirectory( tmp, sizeof( tmp ) ) == nullptr )
-	{
-		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to get executable location (%s)!", PlGetError() );
-		return EXIT_FAILURE;
-	}
-
-	setup_paths( tmp );
+	setup_paths( exePath );
 
 	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
 	{
@@ -555,6 +547,20 @@ int main( int argc, char **argv )
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "No project selected, aborting!" );
 		return EXIT_FAILURE;
 	}
+
+#if !defined( _WIN32 )
+	// allow us to cook everything before launching, if desired
+	if ( PlHasCommandLineArgument( "/cook" ) )
+	{
+		char *cookPath = qm_os_string_alloc( "%s/cool %s", exePath, projectName );
+		if ( system( cookPath ) == -1 )
+		{
+			FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to execute cook command!" );
+		}
+
+		qm_os_memory_free( cookPath );
+	}
+#endif
 
 	if ( !ape_initialize( argc, argv, FORGE_CONFIG_FILENAME ) )
 	{

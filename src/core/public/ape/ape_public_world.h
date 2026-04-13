@@ -196,7 +196,7 @@ void           ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector
 
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs );
 
-ApeWorldNode *ape_world_node_get_parent_by_type( ApeWorldNode *self, ApeWorldNodeType type );
+ApeWorldNode *ape_world_node_get_parent_by_type( const ApeWorldNode *self, ApeWorldNodeType type );
 ApeWorldNode *ape_world_node_get_parent_by_name( const ApeWorldNode *self, const char *name );
 
 bool ape_world_node_is_descendant_of_node( const ApeWorldNode *self, const ApeWorldNode *lookup );

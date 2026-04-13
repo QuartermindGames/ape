@@ -284,7 +284,7 @@ typedef enum ApeEditorBrushType
  * @param flipFaces		Flip the faces of the brush on creation.
  * @return 				A pointer to the newly created `ApeBrush`, or `nullptr` if the brush could not be created.
  */
-ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type, bool flipFaces );
+ApeBrush *ape_editor_mode_polygon_create( ApeEditorInstance *self, const char *materialPath, ApeEditorBrushType type, bool flipFaces );
 
 /**
  * This function decreases the number of points in the polygon managed by the
@@ -293,7 +293,7 @@ ApeBrush *ape_editor_brush_from_polygon( ApeEditorInstance *self, const char *ma
  *
  * @param self A pointer to the `ApeEditorInstance` from which the last polygon point will be removed.
  */
-void ape_editor_remove_polygon_point( ApeEditorInstance *self );
+void ape_editor_mode_polygon_remove( ApeEditorInstance *self );
 
 /**
  * Plots a new point for a brush. Keep in mind this is merely triggering it to occur,
@@ -302,8 +302,23 @@ void ape_editor_remove_polygon_point( ApeEditorInstance *self );
  * @param self 	The editor state that the action is being performed within.
  * @return 			True if the point is at the same location as the origin.
  */
-bool ape_editor_add_polygon_point( ApeEditorInstance *self );
+bool ape_editor_mode_polygon_add( ApeEditorInstance *self );
 
-void ape_editor_clear_plot_points( ApeEditorInstance *instance );
+void ape_editor_mode_polygon_clear( ApeEditorInstance *instance );
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Transform Mode
+/////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Attaches all selected objects to the given node.
+ *
+ * @param instance	Editor instance.
+ * @param parent	Node to attach selected objects to.
+ */
+void ape_editor_mode_transform_attach_to( const ApeEditorInstance *instance, ApeWorldNode *parent );
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
 PL_EXTERN_C_END
