@@ -2,7 +2,7 @@
 // Purpose: Tests for Core/Ape API
 // Author:  Mark E. Sowden
 
-#include "kernel/tests/tests.h"
+#include "qmtest/public/qm_test.h"
 
 QM_TEST_FUNC( core_editor_light )
 {

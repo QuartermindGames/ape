@@ -227,7 +227,7 @@ static void draw_dial( const int16_t value, const float radius, const float thic
 
 	unsigned int seed = ( unsigned int ) precision;
 
-	float endAngle = ( float ) value / 100.0f * 2.0f * PL_PI;
+	float endAngle = ( float ) value / 100.0f * 2.0f * QM_MATH_PI;
 	for ( float angle = 0.0f; angle <= endAngle; angle += precision )
 	{
 		float x, y;

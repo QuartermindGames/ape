@@ -128,7 +128,7 @@ static bool execute_test( void )
 
 static void test_net_command( unsigned int argc, char **argv )
 {
-	PL_ZERO_( testData );
+	QM_OS_ZERO_( testData );
 
 	ape_console_print_( "%s", execute_test() ? "Test passed successfully!\n" : "Test failed!\n" );
 
@@ -167,8 +167,7 @@ void ape_shutdown_net_( void )
 
 ApeNetSocket *ape_net_open_socket_( const char *address, const unsigned short port, const bool isHost )
 {
-	struct addrinfo hints;
-	PL_ZERO_( hints );
+	struct addrinfo hints = {};
 
 	hints.ai_family   = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -182,7 +181,7 @@ ApeNetSocket *ape_net_open_socket_( const char *address, const unsigned short po
 	/* this sucks... getaddrinfo takes port as a string
 	 * so we need to convert it here */
 	char buf[ 8 ];
-	snprintf( buf, sizeof( buf ), PL_FMT_uint16, port );
+	snprintf( buf, sizeof( buf ), "%u", port );
 
 	struct addrinfo *result;
 	int              s = getaddrinfo( address, buf, &hints, &result );
@@ -404,8 +403,7 @@ ApeNetConnectionState ape_net_get_connection_status_( ApeNetSocket *netSocket )
 	FD_ZERO( &fdAccept );
 	FD_SET( netSocket->handle, &fdAccept );
 
-	struct timeval tv;
-	PL_ZERO_( tv );
+	struct timeval tv = {};
 
 	int s = select( netSocket->handle + 1, nullptr, &fdWrite, &fdAccept, &tv );
 	if ( s > 0 )

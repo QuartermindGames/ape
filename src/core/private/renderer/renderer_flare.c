@@ -64,7 +64,7 @@ void ape_shutdown_flares_( void )
 	ape_material_release( flareMaterial );
 	flareMaterial = nullptr;
 
-	PL_ZERO_( flares );
+	QM_OS_ZERO_( flares );
 }
 
 void ape_add_flare_to_queue( const ApeCamera *camera, const QmMathVector3f *worldPos, const QmMathColour4f *colour, float size, float intensity )

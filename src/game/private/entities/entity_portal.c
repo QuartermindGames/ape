@@ -117,7 +117,7 @@ static void spawn_portal( ApeEntity *self )
 	GamePortalEntity *portal = GAME_PORTAL_ENTITY( self );
 	assert( portal != nullptr );
 
-	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( self ), "portal", &pl_vecOrigin3, &pl_vecOrigin3 );
+	ApeBrush *brush = ape_brush_create( APE_WORLD_NODE( self ), "portal", &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
 	if ( brush == nullptr )
 	{
 		game_warning_( "Failed to attach brush for portal!\n" );

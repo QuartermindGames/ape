@@ -90,7 +90,7 @@ ApeEditorInstance *ape_editor_instance_create_( ApeEditorMode mode )
 
 ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditorMode mode )
 {
-	PL_ZERO( self, sizeof( ApeEditorInstance ) );
+	QM_OS_ZERO( self, sizeof( ApeEditorInstance ) );
 
 	self->mode         = mode;
 	self->geometryMode = APE_EDITOR_GEOMETRY_MODE_PLOT;

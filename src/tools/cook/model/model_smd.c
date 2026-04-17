@@ -1,9 +1,9 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include "plcore/pl_parse.h"
 #include <plcore/pl_filesystem.h>
 
 #include "qmos/public/qm_os_string.h"
+#include "qmparse/public/qm_parse.h"
 
 #include "../cook.h"
 
@@ -21,10 +21,10 @@ static SmdModel *parse_smd( const char *path, const char *p )
 	while ( *p != '\0' )
 	{
 		char token[ MAX_TOKEN ];
-		PlParseToken( &p, token, sizeof( token ) );
+		qm_parse_token( &p, token, sizeof( token ) );
 		if ( *token == '\0' || ( token[ 0 ] == '/' && token[ 1 ] == '/' ) )
 		{
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 			continue;
 		}
 
@@ -35,13 +35,13 @@ static SmdModel *parse_smd( const char *path, const char *p )
 				ERROR( "Expected \"version\" but found \"%s\"!\n", token );
 			}
 
-			int version = PlParseInteger( &p, nullptr );
+			int version = qm_parse_integer( &p, nullptr );
 			if ( version != SMD_VERSION )
 			{
 				ERROR( "Expected version %d, but found \"%d\"!\n", version, SMD_VERSION );
 			}
 
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 
 			isValidated = true;
 			continue;
@@ -50,10 +50,10 @@ static SmdModel *parse_smd( const char *path, const char *p )
 		// skip nodes for now
 		if ( strcmp( token, "nodes" ) == 0 )
 		{
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 			while ( *p != '\0' )
 			{
-				PlParseToken( &p, token, sizeof( token ) );
+				qm_parse_token( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
 				{
 					break;
@@ -66,30 +66,30 @@ static SmdModel *parse_smd( const char *path, const char *p )
 				SmdBone *bone = &model->bones[ index ];
 				model->numBones++;
 
-				PlParseEnclosedString( &p, bone->name, sizeof( bone->name ) );// bone name
+				qm_parse_enclosed( &p, bone->name, sizeof( bone->name ) );// bone name
 
-				const int parent = PlParseInteger( &p, nullptr );// parent index
+				const int parent = qm_parse_integer( &p, nullptr );// parent index
 				if ( parent >= 0 )
 				{
 					bone->parent = &model->bones[ parent ];
 				}
 
-				PlSkipLine( &p );
+				qm_parse_skip_line( &p );
 			}
 
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 			continue;
 		}
 
 		// skip skeleton too...
 		if ( strcmp( token, "skeleton" ) == 0 )
 		{
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 
 			int frame = 0;
 			while ( *p != '\0' )
 			{
-				PlParseToken( &p, token, sizeof( token ) );
+				qm_parse_token( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
 				{
 					break;
@@ -97,8 +97,8 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 				if ( strcmp( token, "time" ) == 0 )
 				{
-					frame = PlParseInteger( &p, nullptr );
-					PlSkipLine( &p );
+					frame = qm_parse_integer( &p, nullptr );
+					qm_parse_skip_line( &p );
 					continue;
 				}
 
@@ -108,33 +108,33 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 				//printf( "index: %d, frame: %d, ", index, frame );
 
-				bone->frames[ frame ].position.x = PlParseFloat( &p, nullptr );
-				bone->frames[ frame ].position.y = PlParseFloat( &p, nullptr );
-				bone->frames[ frame ].position.z = PlParseFloat( &p, nullptr );
+				bone->frames[ frame ].position.x = qm_parse_float( &p, nullptr );
+				bone->frames[ frame ].position.y = qm_parse_float( &p, nullptr );
+				bone->frames[ frame ].position.z = qm_parse_float( &p, nullptr );
 				//printf( "pos: %f %f %f, ", bone->frames[ frame ].position.x, bone->frames[ frame ].position.y, bone->frames[ frame ].position.z );
 
-				bone->frames[ frame ].rotation.x = PlParseFloat( &p, nullptr );
-				bone->frames[ frame ].rotation.y = PlParseFloat( &p, nullptr );
-				bone->frames[ frame ].rotation.z = PlParseFloat( &p, nullptr );
+				bone->frames[ frame ].rotation.x = qm_parse_float( &p, nullptr );
+				bone->frames[ frame ].rotation.y = qm_parse_float( &p, nullptr );
+				bone->frames[ frame ].rotation.z = qm_parse_float( &p, nullptr );
 				//printf( "rot: %f %f %f\n", bone->frames[ frame ].rotation.x, bone->frames[ frame ].rotation.y, bone->frames[ frame ].rotation.z );
 
-				PlSkipLine( &p );
+				qm_parse_skip_line( &p );
 			}
 
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 			continue;
 		}
 
 		if ( strcmp( token, "triangles" ) == 0 )
 		{
-			PlSkipLine( &p );
+			qm_parse_skip_line( &p );
 			while ( *p != '\0' )
 			{
 				/* first need to fetch the material name.
 				 * smd spec suggests the extension is ignored, so we'll do the same.
 				 */
 
-				PlParseToken( &p, token, sizeof( token ) );
+				qm_parse_token( &p, token, sizeof( token ) );
 				if ( strcmp( token, "end" ) == 0 )
 				{
 					break;
@@ -143,7 +143,7 @@ static SmdModel *parse_smd( const char *path, const char *p )
 				char material[ MAX_TOKEN ];
 				snprintf( material, sizeof( material ), "%s", token );
 
-				PlSkipLine( &p );
+				qm_parse_skip_line( &p );
 
 				// figure out what slot it falls into
 
@@ -176,30 +176,30 @@ static SmdModel *parse_smd( const char *path, const char *p )
 
 				for ( unsigned int i = 0; i < 3; ++i )
 				{
-					int boneIndex = PlParseInteger( &p, nullptr );// bone index
+					int boneIndex = qm_parse_integer( &p, nullptr );// bone index
 					//smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].numWeights = PlParseInteger( &p, nullptr );// num weights
 
 					QmMathVector3f position;
-					position.x = PlParseFloat( &p, nullptr );
-					position.y = PlParseFloat( &p, nullptr );
-					position.z = PlParseFloat( &p, nullptr );
+					position.x = qm_parse_float( &p, nullptr );
+					position.y = qm_parse_float( &p, nullptr );
+					position.z = qm_parse_float( &p, nullptr );
 
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].position = position;
 
 					QmMathVector3f normal;
-					normal.x = PlParseFloat( &p, nullptr );
-					normal.y = PlParseFloat( &p, nullptr );
-					normal.z = PlParseFloat( &p, nullptr );
+					normal.x = qm_parse_float( &p, nullptr );
+					normal.y = qm_parse_float( &p, nullptr );
+					normal.z = qm_parse_float( &p, nullptr );
 
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].normal = normal;
 
 					QmMathVector2f uv;
-					uv.x = PlParseFloat( &p, nullptr );
-					uv.y = PlParseFloat( &p, nullptr ) * -1;// inverse, because aaargh
+					uv.x = qm_parse_float( &p, nullptr );
+					uv.y = qm_parse_float( &p, nullptr ) * -1;// inverse, because aaargh
 
 					smdMesh->triangles[ smdMesh->numTriangles ].vertices[ i ].uv = uv;
 
-					PlSkipLine( &p );
+					qm_parse_skip_line( &p );
 				}
 
 				smdMesh->numTriangles++;
@@ -209,7 +209,7 @@ static SmdModel *parse_smd( const char *path, const char *p )
 		}
 
 		printf( "Unhandled token, \"%s\"! Skipping line\n", token );
-		PlSkipLine( &p );
+		qm_parse_skip_line( &p );
 	}
 
 	return model;
@@ -261,7 +261,7 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 	{
 		if ( smd->bones[ i ].parent != nullptr )
 		{
-			out->bones[ i ].parent = ( &smd->bones[ i ] - smd->bones[ i ].parent );
+			out->bones[ i ].parent = &smd->bones[ i ] - smd->bones[ i ].parent;
 		}
 		else
 		{
@@ -331,6 +331,15 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 
 static CookModel *load_smd( const char *path ) { return ( CookModel * ) model_smd_load( path ); }
 static CookModel *conv_smd( const CookModel *model, CookModel *out ) { return smd_to_ape( ( const SmdModel * ) model, out ); }
-static void       destroy_smd( CookModel *model ) { model_smd_destroy( ( SmdModel * ) model ); }
 
-const CookModelFormatInterface modelSmdInterface = { "smd", load_smd, conv_smd, destroy_smd };
+static void destroy_smd( CookModel *model )
+{
+	qm_os_memory_free( ( SmdModel * ) model );
+}
+
+const CookModelFormatInterface cook_modelSmdInterface = {
+        .extension       = "smd",
+        .loadFunction    = load_smd,
+        .convertFunction = conv_smd,
+        .deleteFunction  = destroy_smd,
+};

@@ -181,7 +181,7 @@ static void splash_draw_image( const ApeViewport *viewport, GameMenuSplashImage 
 	draw_rect( viewport->width / 2.0f - w / 2.0f, // x
 	           viewport->height / 2.0f - h / 2.0f,// y
 	           w, h,
-	           &QM_MATH_COLOUR4UB( 255, 255, 255, PlFloatToByte( fade ) ),
+	           &QM_MATH_COLOUR4UB( 255, 255, 255, QM_MATH_FTOB( fade ) ),
 	           image->p.material );
 }
 

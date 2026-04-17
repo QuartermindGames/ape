@@ -19,7 +19,7 @@ void game_server_initialize_()
 {
 	serverClientsLookup = PlCreateHashTable();
 
-	PL_ZERO_( serverClients );
+	QM_OS_ZERO_( serverClients );
 }
 
 bool game_server_client_validate_( [[maybe_unused]] ApeServerClient *clientHandle )

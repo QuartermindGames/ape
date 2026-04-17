@@ -107,7 +107,7 @@ static double lastTime;
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
-	PL_ZERO_( ape_config_ );
+	ape_config_ = ( ApeConfig ) {};
 
 	if ( config != nullptr && strcmp( config, "editor" ) == 0 )
 	{

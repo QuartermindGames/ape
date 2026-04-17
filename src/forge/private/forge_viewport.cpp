@@ -247,8 +247,8 @@ long Viewport::on_timer( FXObject *, FXSelector, void * )
 			int dy = originCursorPos[ 1 ] - my;
 
 			QmMathVector3f angles = ape_camera_get_angles( camera );
-			angles.y += ( ( float ) dx ) / ( this->width / 10.0f );
-			angles.x += ( ( float ) dy ) / ( this->height / 10.0f );
+			angles.y += ( float ) dx / ( this->width / 10.0f );
+			angles.x += ( float ) dy / ( this->height / 10.0f );
 
 			ape_camera_set_angles( camera, &angles );
 		}

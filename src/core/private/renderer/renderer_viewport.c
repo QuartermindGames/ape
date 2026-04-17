@@ -28,7 +28,7 @@ ApeViewport *ape_viewport_create( int x, int y, int width, int height, void *win
 {
 	if ( !isInitialized )
 	{
-		PL_ZERO( viewports, sizeof( ApeViewport * ) * MAX_VIEWPORTS );
+		QM_OS_ZERO( viewports, sizeof( ApeViewport * ) * MAX_VIEWPORTS );
 		isInitialized = true;
 	}
 

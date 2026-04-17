@@ -166,7 +166,7 @@ static void cleanup_unreferenced_resources( bool force )
 
 #if 0
 #	if defined( DEBUG_MEMORY )
-		PRINT_DEBUG( " %s (" PL_FMT_int32 ")\n",
+		PRINT_DEBUG( " %s (%d)\n",
 		             m->cache == NULL ? "unknown" : m->cache->description,
 		             m->numReferences );
 #	endif
@@ -225,7 +225,7 @@ unsigned int ape_memory_flush_unreferenced_resources( void )
 	while ( references > 0 )
 	{
 #if defined( DEBUG_MEMORY )
-		PRINT_DEBUG( " dangling references: " PL_FMT_uint32 "\n", references );
+		PRINT_DEBUG( " dangling references: %u\n", references );
 #endif
 
 		cleanup_unreferenced_resources( true );

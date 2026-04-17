@@ -191,6 +191,11 @@ QmMathVector3f ape_world_node_get_local_position( const ApeWorldNode *self );
 QmMathVector3f ape_world_node_get_position( const ApeWorldNode *self );
 void           ape_world_node_set_position( ApeWorldNode *self, const QmMathVector3f *position );
 
+/* X = pitch
+ * Y = yaw
+ * Z = roll
+ */
+
 QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self );
 void           ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles );
 

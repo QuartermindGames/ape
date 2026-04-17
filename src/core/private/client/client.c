@@ -262,7 +262,7 @@ void ape_initialize_client_( void )
 {
 	ape_console_print_( "Initializing client\n" );
 
-	PL_ZERO_( clientState );
+	QM_OS_ZERO_( clientState );
 	snprintf( clientState.name, sizeof( clientState.name ), "anonymous" );
 
 	ape_renderer_initialize_();

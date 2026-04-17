@@ -10,7 +10,7 @@ forge::AboutDialog::AboutDialog( FXWindow *parent )
 {
 	auto *infoFrame = new FXVerticalFrame( this, LAYOUT_CENTER_X | JUSTIFY_CENTER_X );
 
-	static constexpr char appVersion[]     = PL_TOSTRING( FORGE_VERSION_MAJOR ) "." PL_TOSTRING( FORGE_VERSION_MINOR ) "." PL_TOSTRING( FORGE_VERSION_PATCH );
+	static constexpr char appVersion[]     = QM_OS_TO_STRING( FORGE_VERSION_MAJOR ) "." QM_OS_TO_STRING( FORGE_VERSION_MINOR ) "." QM_OS_TO_STRING( FORGE_VERSION_PATCH );
 	static constexpr char appDescription[] = COM_COPYRIGHT "\nEditor environment, developed by Quartermind Games, for use with ApeTech.";
 
 	new FXLabel( infoFrame, FXString( FORGE_APP_TITLE ) + " (" + appVersion + ")\n" + appDescription,

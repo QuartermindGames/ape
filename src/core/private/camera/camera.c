@@ -730,7 +730,8 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 	{
 		PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
 		QmMathVector3f  pos               = ape_world_node_get_position( worldNode );
-		ape_draw_debug_axis( pos, worldNode->angles, 16.0f );
+		QmMathVector3f  ang               = ape_world_node_get_angles( worldNode );
+		ape_draw_debug_axis( pos, ang, 16.0f );
 		ape_draw_debug_aabb( &worldNode->bounds, PL_COLOUR_PURPLE );
 		ape_draw_debug_aabb( &transformedBounds, PL_COLOUR_ORANGE );
 	}

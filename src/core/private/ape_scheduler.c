@@ -106,5 +106,5 @@ void ape_scheduler_flush_( void )
 		qm_os_memory_free( task );
 	}
 
-	ape_console_print_( "Flushed " PL_FMT_uint32 " tasks\n", numTasks );
+	ape_console_print_( "Flushed %u tasks\n", numTasks );
 }

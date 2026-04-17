@@ -26,7 +26,7 @@ typedef struct SS1Mission
 	char title[ 128 ];
 	char description[ 256 ];
 
-	PLGTexture *icon;
+	QmGfxTexture *icon;
 
 	bool         hasTimeRange;
 	unsigned int availableTimeRange[ 2 ];// in total seconds relative to current day

@@ -37,7 +37,7 @@ bool ape_gui_initialize_fonts_();
  */
 bool ape_gui_initialize_( void )
 {
-	PL_ZERO_( ape_guiState_ );
+	ape_guiState_ = ( ApeGUIState ) {};
 
 	PlRegisterConsoleVariable( "gui.draw", "Enable/disable drawing of the GUI.", "true", PL_VAR_BOOL, &guiDraw, nullptr, false );
 	PlRegisterConsoleVariable( "gui.profiler", "Enable profiler.", "false", PL_VAR_BOOL, &guiProfilerOverlay, nullptr, false );
@@ -272,28 +272,28 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	// Draw stats
 	char buf[ 64 ];
 
-	snprintf( buf, sizeof( buf ), "FPS:              " PL_FMT_uint32 "\n", ape_viewport_get_framerate( viewport ) );
+	snprintf( buf, sizeof( buf ), "FPS:              %u\n", ape_viewport_get_framerate( viewport ) );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num rooms:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numRooms );
+	snprintf( buf, sizeof( buf ), "Num rooms:        %u\n", ape_rendererPerformance_.numRooms );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num detail rooms: " PL_FMT_uint32 "\n", ape_rendererPerformance_.numDetailRooms );
+	snprintf( buf, sizeof( buf ), "Num detail rooms: %u\n", ape_rendererPerformance_.numDetailRooms );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num portals:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numVisiblePortals );
+	snprintf( buf, sizeof( buf ), "Num portals:      %u\n", ape_rendererPerformance_.numVisiblePortals );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num faces:        " PL_FMT_uint32 "\n", ape_rendererPerformance_.numFacesDrawn );
+	snprintf( buf, sizeof( buf ), "Num faces:        %u\n", ape_rendererPerformance_.numFacesDrawn );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num lights:       " PL_FMT_uint32 "\n", ape_rendererPerformance_.numLights );
+	snprintf( buf, sizeof( buf ), "Num lights:       %u\n", ape_rendererPerformance_.numLights );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num triangles:    " PL_FMT_uint32 "\n", ape_rendererPerformance_.numTriangles );
+	snprintf( buf, sizeof( buf ), "Num triangles:    %u\n", ape_rendererPerformance_.numTriangles );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
-	snprintf( buf, sizeof( buf ), "Num batches:      " PL_FMT_uint32 "\n", ape_rendererPerformance_.numBatches );
+	snprintf( buf, sizeof( buf ), "Num batches:      %u\n", ape_rendererPerformance_.numBatches );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
 	snprintf( buf, sizeof( buf ), "---------------------\n" );
@@ -304,7 +304,7 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_GOLD, buf, strlen( buf ), false );
 
 	unsigned int numTasks = ape_scheduler_get_num_tasks_();
-	snprintf( buf, sizeof( buf ), "Num tasks:     " PL_FMT_uint32 "\n", numTasks );
+	snprintf( buf, sizeof( buf ), "Num tasks:     %u\n", numTasks );
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{

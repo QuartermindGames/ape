@@ -37,19 +37,19 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 	QmFsPackage *package = PlCreatePackageHandle( path, header.numFiles, NULL );
 	for ( unsigned int i = 0; i < header.numFiles; ++i )
 	{
-		PLPackageIndex *index = &package->table[ i ];
+		QmFsPackageFile *index = &package->files[ i ];
 
 		// read in the filename, it's a sized string...
 		uint8_t nameLength = PL_READUINT8( file, NULL );
-		PlReadFile( file, index->fileName, sizeof( char ), nameLength );
+		PlReadFile( file, index->name, sizeof( char ), nameLength );
 
-		index->fileName[ nameLength + 1 ] = '\0';
+		index->name[ nameLength + 1 ] = '\0';
 
 		// file length/size
-		index->fileSize = PL_READUINT32( file, false, NULL );
+		index->size = PL_READUINT32( file, false, NULL );
 		index->compressedSize = PL_READUINT32( file, false, NULL );
 
-		if ( index->fileSize != index->compressedSize )
+		if ( index->size != index->compressedSize )
 			index->compressionType = PL_COMPRESSION_DEFLATE;
 
 		index->offset = qm_fs_file_get_offset( file );
@@ -58,7 +58,7 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 		if ( !qm_fs_file_seek( file, ( PLFileOffset ) index->compressedSize, QM_FS_SEEK_CUR ) )
 		{
 			com_warning_( "Failed to seek to the next file within package: %s\n", PlGetError() );
-			package->table_size = ( i + 1 );
+			package->numFiles = ( i + 1 );
 			break;
 		}
 	}

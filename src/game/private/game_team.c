@@ -11,7 +11,7 @@ static unsigned int maxPlayersPerTeam;
 
 void game_team_init( unsigned int teamCount )
 {
-	PL_ZERO_( teams );
+	QM_OS_ZERO_( teams );
 
 	if ( teamCount > GAME_MAX_TEAMS )
 	{
@@ -71,6 +71,11 @@ GameTeam *game_team_get( unsigned int index )
 
 int game_team_assign( GamePlayer *player )
 {
+	if ( numActiveTeams == 0 )
+	{
+		return 0;
+	}
+
 	// search through for the team with the fewest for now
 	bool         isUniform = false;
 	unsigned int teamIndex = 0;

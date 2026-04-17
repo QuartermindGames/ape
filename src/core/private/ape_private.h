@@ -36,9 +36,9 @@
 #define VERSION_MINOR 6
 #define VERSION_PATCH 0
 
-#define ENGINE_VERSION_STR       \
-	PL_TOSTRING( VERSION_MAJOR ) \
-	"." PL_TOSTRING( VERSION_MINOR ) "." PL_TOSTRING( VERSION_PATCH )
+#define ENGINE_VERSION_STR           \
+	QM_OS_TO_STRING( VERSION_MAJOR ) \
+	"." QM_OS_TO_STRING( VERSION_MINOR ) "." QM_OS_TO_STRING( VERSION_PATCH )
 
 #define S_STRCAT( DST, SOURCE ) strncat( ( DST ), ( SOURCE ), sizeof( ( DST ) ) - strlen( ( DST ) ) - 1 )
 

@@ -30,7 +30,7 @@ static AcmBranch *serialize_movement( void *ptr, AcmBranch *root )
 static void *deserialize_movement( void *ptr, AcmBranch *root )
 {
 	GameMovementComponent *movement = ptr;
-	movement->velocity              = com_acm_get_vector3( root, "velocity", &pl_vecOrigin3 );
+	movement->velocity              = com_acm_get_vector3( root, "velocity", &QM_MATH_VECTOR3F_ZERO );
 	return movement;
 }
 

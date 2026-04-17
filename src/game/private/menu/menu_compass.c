@@ -45,8 +45,8 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 
 	for ( unsigned int i = 0; i < 360; i += 360 / ( 360 / 5 ) )
 	{
-		float xo = x + cosf( PL_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( w / 2.0f * scale );
-		float yo = y + sinf( PL_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( h / 2.0f * scale );
+		float xo = x + cosf( QM_MATH_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( w / 2.0f * scale );
+		float yo = y + sinf( QM_MATH_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( h / 2.0f * scale );
 
 		float vpos = ( yo - y ) / ( h / 2.0f );
 		if ( vpos >= 0.0f )
@@ -71,8 +71,8 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 	const char *c = CHARS;
 	for ( unsigned int i = 0; i < 360; i += 360 / 4, c++ )
 	{
-		float xo = x + cosf( PL_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( w / 2.0f * scale );
-		float yo = y + sinf( PL_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( h / 2.0f * scale );
+		float xo = x + cosf( QM_MATH_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( w / 2.0f * scale );
+		float yo = y + sinf( QM_MATH_DEG2RAD( ( float ) i + compassAngles.y ) ) * ( h / 2.0f * scale );
 
 		float vpos = ( yo - y ) / ( h / 2.0f );
 		if ( vpos >= 0.0f )

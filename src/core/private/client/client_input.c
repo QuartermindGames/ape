@@ -216,7 +216,7 @@ static void unregister_controller( unsigned int slot )
 		SDL_CloseGamepad( inputControllers[ slot ].sdlGameController );
 		inputControllers[ slot ].sdlGameController = nullptr;
 	}
-	PL_ZERO_( inputControllers[ slot ] );
+	QM_OS_ZERO_( inputControllers[ slot ] );
 
 	if ( numControllers > 0 )
 	{
@@ -444,7 +444,7 @@ unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 		return -1;
 	}
 
-	PL_ZERO_( inputControllers[ slot ] );
+	QM_OS_ZERO_( inputControllers[ slot ] );
 	inputControllers[ slot ].isActive = true;
 
 	numControllers++;

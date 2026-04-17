@@ -143,17 +143,15 @@ static void Audio_XAudio2_FreeSample( ApeAudioSample *audioSample )
 
 static void Audio_XAudio2_EmitSample( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch )
 {
-	XAUDIO2_BUFFER buffer;
-	PL_ZERO_( buffer );
-	buffer.AudioBytes = audioSample->bufferSize;
-	buffer.pAudioData = static_cast< BYTE * >( audioSample->buffer );
-	buffer.Flags      = XAUDIO2_END_OF_STREAM;
+	XAUDIO2_BUFFER buffer = {};
+	buffer.AudioBytes     = audioSample->bufferSize;
+	buffer.pAudioData     = static_cast< BYTE * >( audioSample->buffer );
+	buffer.Flags          = XAUDIO2_END_OF_STREAM;
 }
 
 static bool Audio_XAudio2_CreateSource( ApeAudioSource *source )
 {
-	WAVEFORMATEX waveFormat;
-	PL_ZERO_( waveFormat );
+	WAVEFORMATEX waveFormat = {};
 	//waveFormat.
 
 	IXAudio2SourceVoice *voice;
@@ -176,7 +174,6 @@ static void Audio_XAudio2_DestroySource( ApeAudioSource *source )
 extern "C" const ApeAudioDriverInterface *Audio_XAudio2_GetDriverInterface()
 {
 	static ApeAudioDriverInterface driverInterface;
-	PL_ZERO_( driverInterface );
 
 	driverInterface.initialize = Audio_XAudio2_Initialize;
 	driverInterface.shutdown   = Audio_XAudio2_Shutdown;

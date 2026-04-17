@@ -43,7 +43,7 @@ static void update_auto_complete_result( const char *input )
 	// just clear it if an empty result is given
 	if ( input == NULL || *input == '\0' )
 	{
-		PL_ZERO( autoComplete, sizeof( const char * ) * MAX_AUTOCOMPLETE_RESULTS );
+		QM_OS_ZERO( autoComplete, sizeof( const char * ) * MAX_AUTOCOMPLETE_RESULTS );
 		return;
 	}
 
@@ -100,7 +100,7 @@ static void update_notification_limit( PLConsoleVariable * )
 
 	size_t size          = sizeof( ConsoleNotification ) * consoleMaxNotifications;
 	consoleNotifications = qm_os_memory_realloc( consoleNotifications, size );
-	PL_ZERO( consoleNotifications, size );
+	QM_OS_ZERO( consoleNotifications, size );
 }
 
 void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour )

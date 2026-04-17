@@ -3,8 +3,9 @@
 // Author:  Mark E. Sowden
 
 #include "plcore/pl_linkedlist.h"
-#include "plcore/pl_parse.h"
 #include <plcore/pl_filesystem.h>
+
+#include "qmparse/public/qm_parse.h"
 
 #include "cook.h"
 
@@ -78,10 +79,28 @@ static void calculate_face_normal( IdBrushFace *face )
 	face->distance = qm_math_vector3f_dot_product( z, face->normal );
 }
 
+static QmMathVector3f parse_map_vector( const char **p )
+{
+	if ( **p == '(' )
+	{
+		( *p )++;
+	}
+
+	QmMathVector3f vec;
+	qm_parse_vectorfv( p, ( float * ) &vec, 3 );
+
+	if ( **p == ')' )
+	{
+		( *p )++;
+	}
+
+	return vec;
+}
+
 static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 {
 	const char *p = buffer;
-	PlSkipWhitespace( &p );
+	qm_parse_skip_whitespace( &p );
 	if ( *p == '/' && *( p + 1 ) == '/' )
 	{
 		return;
@@ -169,13 +188,13 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 		{
 			/* read in property */
 			IdProperty *property = QM_OS_MEMORY_CALLOC( 1, sizeof( IdProperty ) );
-			if ( !PlParseEnclosedString( &p, property->name, sizeof( property->name ) ) )
+			if ( !qm_parse_enclosed( &p, property->name, sizeof( property->name ) ) )
 			{
 				ERROR( "Failed to parse enclosed string on line %d!\n", lineNum );
 			}
 
-			PlSkipWhitespace( &p );
-			if ( !PlParseEnclosedString( &p, property->value, sizeof( property->value ) ) )
+			qm_parse_skip_whitespace( &p );
+			if ( !qm_parse_enclosed( &p, property->value, sizeof( property->value ) ) )
 			{
 				ERROR( "Failed to parse enclosed string on line %d!\n", lineNum );
 			}
@@ -200,22 +219,15 @@ static void parse_line( IdMap *map, const char *buffer, unsigned int lineNum )
 		case BLOCK_CONTEXT_BRUSH:
 		{
 			/* read in face */
-			bool         status;
 			IdBrushFace *face = QM_OS_MEMORY_CALLOC( 1, sizeof( IdBrushFace ) );
-			face->x           = PlParseVector( &p, &status );
-			//DPRINT( "%s ", PlPrintVector3( &face->x, PL_VAR_I32 ) );
-			face->y = PlParseVector( &p, &status );
-			//DPRINT( "%s ", PlPrintVector3( &face->y, PL_VAR_I32 ) );
-			face->z = PlParseVector( &p, &status );
-			//DPRINT( "%s ", PlPrintVector3( &face->z, PL_VAR_I32 ) );
-			if ( !status )
-			{
-				ERROR( "Failed to parse vector on line %d!\n", lineNum );
-			}
+
+			face->x = parse_map_vector( &p );
+			face->y = parse_map_vector( &p );
+			face->z = parse_map_vector( &p );
 
 			calculate_face_normal( face );
 
-			if ( !PlParseToken( &p, face->textureName, sizeof( face->textureName ) ) )
+			if ( !qm_parse_token( &p, face->textureName, sizeof( face->textureName ) ) )
 			{
 				ERROR( "Failed to fetch texture name on line %d!\n", lineNum );
 			}

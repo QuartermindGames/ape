@@ -118,7 +118,7 @@ static bool initialize_openal( void )
 		return false;
 	}
 
-	PL_ZERO( xalExtensions, sizeof( bool ) * XAL_MAX_EXTENSIONS );
+	QM_OS_ZERO( xalExtensions, sizeof( bool ) * XAL_MAX_EXTENSIONS );
 	XAL_CALL( status = alcIsExtensionPresent( xalDevice, "ALC_EXT_EFX" ) );
 	if ( status )
 	{

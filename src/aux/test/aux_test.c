@@ -2,7 +2,7 @@
 // Purpose: Tests for Aux API
 // Author:  Mark E. Sowden
 
-#include "kernel/tests/tests.h"
+#include "qmtest/public/qm_test.h"
 
 #include "qmos/public/qm_os_memory.h"
 #include "qmos/public/qm_os_random.h"

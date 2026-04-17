@@ -230,7 +230,7 @@ void com_project_unmount( void )
 {
 	free_project( &project );
 
-	PL_ZERO_( project );
+	project = ( ComProject ) {};
 }
 
 const char *com_project_get_local_path( void ) { return project.localPath; }

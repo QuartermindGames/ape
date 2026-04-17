@@ -182,7 +182,7 @@ int main( int argc, char **argv )
 	printf( "MATGEN - APE's material generation tool, for the lazy!\n"
 	        "------------------------------------------------------\n" );
 
-	PL_ZERO_( matGen );
+	QM_OS_ZERO_( matGen );
 
 	if ( !PlPathExists( "materials" ) && !PlPathExists( "textures" ) )
 	{

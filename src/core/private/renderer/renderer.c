@@ -176,7 +176,7 @@ void ape_draw_begin_( ApeViewport *viewport )
 
 	viewport->perf.oldTime = newTime;
 
-	PL_ZERO_( ape_rendererPerformance_ );
+	QM_OS_ZERO_( ape_rendererPerformance_ );
 
 	ape_viewport_make_active( viewport );
 
@@ -363,7 +363,7 @@ void ape_renderer_initialize_( void )
 {
 	ape_console_print_( "Initializing renderer\n" );
 
-	PL_ZERO_( ape_rendererState_ );
+	QM_OS_ZERO_( ape_rendererState_ );
 
 	ape_initialize_textures_();
 	ape_initialize_render_targets_();

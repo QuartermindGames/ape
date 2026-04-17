@@ -364,6 +364,11 @@ void ape_world_node_set_position( ApeWorldNode *self, const QmMathVector3f *posi
 	update_transform( self );
 }
 
+QmMathVector3f ape_world_node_get_local_angles( const ApeWorldNode *self )
+{
+	return self->angles;
+}
+
 QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );

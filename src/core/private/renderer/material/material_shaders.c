@@ -154,13 +154,13 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	 * the given shader. */
 
 	char fragmentDefinitions[ PLG_MAX_DEFINITIONS ][ PLG_MAX_DEFINITION_LENGTH ];
-	PL_ZERO( fragmentDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
+	QM_OS_ZERO( fragmentDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
 
 	char vertexDefinitions[ PLG_MAX_DEFINITIONS ][ PLG_MAX_DEFINITION_LENGTH ];
-	PL_ZERO( vertexDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
+	QM_OS_ZERO( vertexDefinitions, PLG_MAX_DEFINITION_LENGTH * PLG_MAX_DEFINITIONS );
 
 	unsigned int numDefinitions[ QM_GFX_MAX_SHADER_STAGE_TYPES ];
-	PL_ZERO( numDefinitions, sizeof( unsigned int ) * QM_GFX_MAX_SHADER_STAGE_TYPES );
+	QM_OS_ZERO( numDefinitions, sizeof( unsigned int ) * QM_GFX_MAX_SHADER_STAGE_TYPES );
 
 	AcmBranch *child = acm_get_child_by_name( root, "definitions" );
 	if ( child != NULL )
@@ -240,7 +240,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	if ( child != NULL )
 	{
 		// zero in-case we're reloading...
-		PL_ZERO_( program->defaultPass );
+		QM_OS_ZERO_( program->defaultPass );
 		/* need to assign this for variable validation */
 		program->defaultPass.program = program;
 
@@ -401,7 +401,7 @@ void ape_register_shader_console_variables_()
 	                           "false",
 #endif
 	                           PL_VAR_BOOL, &hotReload, nullptr, true );
-	PlRegisterConsoleVariable( "shaders.hotReloadDelay", "Delay before attempting to reload shaders.", PL_TOSTRING( HOT_RELOAD_TICKS_DEFAULT ), PL_VAR_I32, &incHotReloadTicks, nullptr, true );
+	PlRegisterConsoleVariable( "shaders.hotReloadDelay", "Delay before attempting to reload shaders.", QM_OS_TO_STRING( HOT_RELOAD_TICKS_DEFAULT ), PL_VAR_I32, &incHotReloadTicks, nullptr, true );
 
 	PlRegisterConsoleCommand( "reload_shaders", "Reload shader programs.", -1, reload_shader_program_command );
 }

@@ -66,7 +66,7 @@ int main( int argc, char **argv )
 		return EXIT_SUCCESS;
 	}
 
-	PL_ZERO_( cook_state );
+	QM_OS_ZERO_( cook_state );
 
 	aux_initialize( argc, argv );
 

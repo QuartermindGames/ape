@@ -379,7 +379,7 @@ void ape_audio_update_listener( const QmMathVector3f *position, const QmMathVect
  */
 void ape_audio_clear_listener( void )
 {
-	PL_ZERO_( audioListener );
+	QM_OS_ZERO_( audioListener );
 }
 
 QmMathVector3f ape_audio_get_listener_position( void )

@@ -246,8 +246,8 @@ void menu_pie_draw( GamePieMenu *menu, float x, float y )
 		}
 
 		// absolute screen coordinate of the pie option element
-		float xo = x + cosf( PL_DEG2RAD( ( float ) i + menu->angle ) ) * ( ( ( float ) menu->w / 2.0f ) * menu->scale );
-		float yo = y + sinf( PL_DEG2RAD( ( float ) i + menu->angle ) ) * ( ( ( float ) menu->h / 2.0f ) * menu->scale );
+		float xo = x + cosf( QM_MATH_DEG2RAD( ( float ) i + menu->angle ) ) * ( ( ( float ) menu->w / 2.0f ) * menu->scale );
+		float yo = y + sinf( QM_MATH_DEG2RAD( ( float ) i + menu->angle ) ) * ( ( ( float ) menu->h / 2.0f ) * menu->scale );
 
 		// determine the distance between the cursor and the pie option element
 		float xc = fabsf( cursorX - xo ) / ( float ) menu->w;

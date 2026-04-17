@@ -1,8 +1,10 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include <plcore/pl_filesystem.h>
-#include <plcore/pl_parse.h>
+
 #include <float.h>
+
+#include "qmparse/public/qm_parse.h"
 
 #include "../cook.h"
 #include "model.h"
@@ -33,12 +35,12 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 	{
 		if ( *c == '#' )
 		{
-			PlSkipLine( &c );
+			qm_parse_skip_line( &c );
 			continue;
 		}
 
 		char token[ 256 ];
-		PlParseToken( &c, token, sizeof( token ) );
+		qm_parse_token( &c, token, sizeof( token ) );
 		if ( strcmp( token, "newmtl" ) == 0 )
 		{
 			assert( obj->numMaterials < OBJ_MAX_MATERIALS );
@@ -48,7 +50,7 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 			}
 
 			material = &obj->materials[ obj->numMaterials++ ];
-			PlParseEnclosedString( &c, material->name, sizeof( material->name ) );
+			qm_parse_enclosed( &c, material->name, sizeof( material->name ) );
 		}
 		else if ( strcmp( token, "map_Kd" ) == 0 )
 		{
@@ -56,10 +58,10 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 			{
 				ERROR( "Invalid MTL file encountered!\n" );
 			}
-			PlParseEnclosedString( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
+			qm_parse_enclosed( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
 		}
 
-		PlSkipLine( &c );
+		qm_parse_skip_line( &c );
 	}
 }
 
@@ -120,7 +122,7 @@ ObjModel *model_obj_load( const char *path )
 		{
 			c += 2;
 			subObject = &obj->subObjects[ obj->numSubObjects++ ];
-			PlParseToken( &c, subObject->name, sizeof( subObject->name ) );
+			qm_parse_token( &c, subObject->name, sizeof( subObject->name ) );
 
 			if ( subObject->faces == NULL )
 			{
@@ -137,7 +139,7 @@ ObjModel *model_obj_load( const char *path )
 			vertex->position.y = strtof( end, &end );
 			vertex->position.z = strtof( end, &end );
 
-			if ( !PlIsEndOfLine( end ) )
+			if ( !qm_parse_is_end_of_line( end ) )
 			{
 				obj->storesColour = true;
 				vertex->colour.x  = strtof( end, &end );
@@ -206,7 +208,7 @@ ObjModel *model_obj_load( const char *path )
 			PlPushBackVectorArrayElement( subObject->faces, face );
 			for ( ; face->numEdges < OBJ_MAX_EDGES; face->numEdges++ )
 			{
-				if ( PlIsEndOfLine( c ) )
+				if ( qm_parse_is_end_of_line( c ) )
 				{
 					break;
 				}
@@ -246,7 +248,7 @@ ObjModel *model_obj_load( const char *path )
 			if ( numTriangles > 0 )
 			{
 				unsigned int indices[ OBJ_MAX_EDGES * 3 ];
-				PL_ZERO_( indices );
+				QM_OS_ZERO_( indices );
 				unsigned int *index = indices;
 				for ( unsigned int i = 1; i + 1 < face->numEdges; ++i )
 				{
@@ -260,7 +262,7 @@ ObjModel *model_obj_load( const char *path )
 				const ObjVertex **v = ( const ObjVertex ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
 
 				QmMathVector3f normals[ OBJ_MAX_EDGES ];
-				PL_ZERO_( normals );
+				QM_OS_ZERO_( normals );
 				for ( unsigned int i = 0, idx = 0; i < numTriangles; ++i, idx += 3 )
 				{
 					unsigned int x = indices[ idx ];
@@ -295,7 +297,7 @@ ObjModel *model_obj_load( const char *path )
 			c += 7;
 
 			char token[ 128 ];
-			PlParseEnclosedString( &c, token, sizeof( token ) );
+			qm_parse_enclosed( &c, token, sizeof( token ) );
 
 			PLPath libPath;
 			PlSetupPath( libPath, true, "%s", path );
@@ -310,11 +312,11 @@ ObjModel *model_obj_load( const char *path )
 			c += 7;
 			char token[ 128 ];
 #if 1
-			PlParseEnclosedString( &c, token, sizeof( token ) );
+			qm_parse_enclosed( &c, token, sizeof( token ) );
 #else
 			// well, the above would've been nice, but I hit a case where it's not enclosed despite having spaces...
 			// maybe reading the whole line will be okay????
-			PlParseLine( &c, token, sizeof( token ) );
+			qm_parse_line( &c, token, sizeof( token ) );
 #endif
 			for ( materialIndex = 0; materialIndex < obj->numMaterials; ++materialIndex )
 			{
@@ -328,7 +330,7 @@ ObjModel *model_obj_load( const char *path )
 		}
 		// Unhandled lines we just skip for now...
 
-		PlSkipLine( &c );
+		qm_parse_skip_line( &c );
 	}
 
 	qm_os_memory_free( txtBuf );
@@ -389,4 +391,4 @@ static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_ob
 static CookModel *conv_obj( const CookModel *model, CookModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
 static void       destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
 
-const CookModelFormatInterface modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };
+const CookModelFormatInterface cook_modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };
