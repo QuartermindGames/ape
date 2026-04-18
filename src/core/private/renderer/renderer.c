@@ -82,7 +82,7 @@ static void *process_capture_queue( void * )
 
 		pthread_mutex_unlock( &captureMutex );
 
-		PLImage *image = PlCreateImage( frame->buf, frame->w, frame->h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		QmImage *image = PlCreateImage( frame->buf, frame->w, frame->h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
 		if ( image != NULL )
 		{
 			PlFlipImageVertical( image );
@@ -90,7 +90,7 @@ static void *process_capture_queue( void * )
 
 			PLPath path;
 			PlSetupPath( path, true, "%s/captures/%u.%s", com_get_app_data_directory(), frameNum, useCaptureToQoi ? "qoi" : "jpg" );
-			PlWriteImage( image, path, captureQuality );
+			qm_image_write( image, path, captureQuality );
 
 			PlDestroyImage( image );
 		}
@@ -219,7 +219,7 @@ static void write_screenshot( void )
 			return;
 		}
 
-		PLImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
+		QmImage *image = PlCreateImage( buf, w, h, 0, PL_COLOURFORMAT_RGBA, PL_IMAGEFORMAT_RGBA8 );
 		if ( image != NULL )
 		{
 			PlFlipImageVertical( image );
@@ -236,7 +236,7 @@ static void write_screenshot( void )
 				PlSetupPath( path, true, "%s/%s (%u).png", com_get_app_data_directory(), filename, ++num );
 			}
 
-			PlWriteImage( image, path, 90 );
+			qm_image_write( image, path, 90 );
 			PlDestroyImage( image );
 		}
 		else

@@ -74,7 +74,7 @@ static void spawn_airship( ApeEntity *self )
 	airship->model = ape_model_node_create( APE_WORLD_NODE( self ), "airship_body", "models/airship.mdl.n" );
 	ape_world_node_set_position( APE_WORLD_NODE( self ), &QM_MATH_VECTOR3F( 0.0f, MIN_HEIGHT, 0.0f ) );
 
-	airship->audioSource  = ape_audio_source_create( &QM_MATH_VECTOR3F( 0.0f, MIN_HEIGHT, 0.0f ), &pl_vecOrigin3, APE_AUDIO_SOURCE_GROUP_GENERIC );
+	airship->audioSource  = ape_audio_source_create( &QM_MATH_VECTOR3F( 0.0f, MIN_HEIGHT, 0.0f ), &QM_MATH_VECTOR3F_ZERO, APE_AUDIO_SOURCE_GROUP_GENERIC );
 	airship->engineSample = ape_audio_sample_cache( "sounds/airship/engine.wav" );
 
 	airship->seed = qm_os_random_seed_initialize();

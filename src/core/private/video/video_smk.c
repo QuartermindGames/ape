@@ -75,8 +75,8 @@ ApeVideo *ape_video_smk_load_( const char *path )
 		snprintf( tmp, sizeof( tmp ), "frame_%u.png", i );
 
 #	if 0
-		PLImage *image = PlCreateImage( out, w, h, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_RGB8 );
-		PlWriteImage( image, tmp, 0 );
+		QmImage *image = PlCreateImage( out, w, h, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_RGB8 );
+		qm_image_write( image, tmp, 0 );
 		PlDestroyImage( image );
 #	endif
 

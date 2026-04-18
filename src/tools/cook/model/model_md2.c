@@ -78,7 +78,7 @@ typedef struct Md2Model
 static Md2Model *parse_md2( QmFsFile *file )
 {
 	Md2Header header = {};
-	if ( PlReadFile( file, &header, sizeof( header ), 1 ) != 1 )
+	if ( qm_file_read( file, &header, sizeof( header ), 1 ) != 1 )
 	{
 		WARN( "Failed to read in MD2 header: %s\n", PlGetError() );
 		return nullptr;
@@ -100,7 +100,7 @@ static Md2Model *parse_md2( QmFsFile *file )
      * per mesh - we'll need to load this later to convert the uv coords */
 	Md2Skin skin;
 	qm_fs_file_seek( file, header.offsetSkins, QM_FS_SEEK_SET );
-	if ( PlReadFile( file, skin, sizeof( Md2Skin ), 1 ) != 1 )
+	if ( qm_file_read( file, skin, sizeof( Md2Skin ), 1 ) != 1 )
 	{
 		WARN( "Failed to read in MD2 skin: %s\n", PlGetError() );
 		return nullptr;
@@ -109,24 +109,24 @@ static Md2Model *parse_md2( QmFsFile *file )
 	/* and now read in all the tex coordinates */
 	Md2TexCoord *texCoords = QM_OS_MEMORY_NEW_( Md2TexCoord, header.numST );
 	qm_fs_file_seek( file, header.offsetST, QM_FS_SEEK_SET );
-	PlReadFile( file, texCoords, sizeof( Md2TexCoord ), header.numST );
+	qm_file_read( file, texCoords, sizeof( Md2TexCoord ), header.numST );
 
 	/* triangles */
 	Md2Triangle *triangles = QM_OS_MEMORY_NEW_( Md2Triangle, header.numTriangles );
 	qm_fs_file_seek( file, header.offsetTriangles, QM_FS_SEEK_SET );
-	PlReadFile( file, triangles, sizeof( Md2Triangle ), header.numTriangles );
+	qm_file_read( file, triangles, sizeof( Md2Triangle ), header.numTriangles );
 
 	/* frames */
 	Md2Frame *frames = QM_OS_MEMORY_NEW_( Md2Frame, header.numFrames );
 	qm_fs_file_seek( file, header.offsetFrames, QM_FS_SEEK_SET );
 	for ( int32_t i = 0; i < header.numFrames; ++i )
 	{
-		PlReadFile( file, &frames[ i ].scale, sizeof( QmMathVector3f ), 1 );
-		PlReadFile( file, &frames[ i ].translate, sizeof( QmMathVector3f ), 1 );
-		PlReadFile( file, &frames[ i ].name, sizeof( char ), sizeof( frames[ i ].name ) );
+		qm_file_read( file, &frames[ i ].scale, sizeof( QmMathVector3f ), 1 );
+		qm_file_read( file, &frames[ i ].translate, sizeof( QmMathVector3f ), 1 );
+		qm_file_read( file, &frames[ i ].name, sizeof( char ), sizeof( frames[ i ].name ) );
 
 		frames[ i ].vertices = QM_OS_MEMORY_NEW_( Md2Vertex, header.numVertices );
-		PlReadFile( file, frames[ i ].vertices, sizeof( Md2Vertex ), header.numVertices );
+		qm_file_read( file, frames[ i ].vertices, sizeof( Md2Vertex ), header.numVertices );
 	}
 
 	Md2Model *model = QM_OS_MEMORY_NEW( Md2Model );

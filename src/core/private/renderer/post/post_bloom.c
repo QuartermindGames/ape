@@ -144,7 +144,7 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 const ApePostProcessEffect *ape_postfx_get_bloom_( void )
 {
 	static ApePostProcessEffect renderBloomPostProcess;
-	PL_ZERO_( renderBloomPostProcess );
+	QM_OS_ZERO_( renderBloomPostProcess );
 	renderBloomPostProcess.registerConsoleVariables = register_bloom_console_variables;
 	renderBloomPostProcess.setup                    = setup_bloom_effect;
 	renderBloomPostProcess.cleanup                  = cleanup_bloom_effect;

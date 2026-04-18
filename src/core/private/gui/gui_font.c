@@ -169,8 +169,8 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 	}
 
 	size_t   bitmapSize  = bitmapW * bitmapH;
-	PLImage *bitmapImage = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
-	if ( PlReadFile( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
+	QmImage *bitmapImage = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
+	if ( qm_file_read( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
 	{
 		ape_gui_font_destroy( font );
 		ape_console_warning_( "Failed to load entirity of bitmap image from font!\n" );

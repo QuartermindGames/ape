@@ -57,8 +57,8 @@ static void compute_average_colour( ApeTexture *texture )
 	// we're only going over parts of the image rather than the entire thing.
 	// this obviously isn't accurate but it's good enough for our needs.
 
-	unsigned int w     = PlGetImageWidth( texture->image );
-	unsigned int h     = PlGetImageHeight( texture->image );
+	unsigned int w     = qm_image_get_width( texture->image );
+	unsigned int h     = qm_image_get_height( texture->image );
 	unsigned int hw    = w / 2;
 	unsigned int hh    = h / 2;
 	unsigned int hsize = hw * hh;
@@ -146,7 +146,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 			break;
 	}
 
-	PLImage *imageData = PlCreateImage( data, w, h, 0, cFormat, iFormat );
+	QmImage *imageData = PlCreateImage( data, w, h, 0, cFormat, iFormat );
 	if ( imageData == nullptr )
 	{
 		ape_console_warning_( "Failed to generate image (%s) data: %s\n", id, PlGetError() );
@@ -309,7 +309,7 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 
 	fetch_texture_config( texture );
 
-	texture->image = PlLoadImage( path );
+	texture->image = qm_image_load( path );
 	if ( texture->image == nullptr )
 	{
 		ape_console_warning_( "Failed to load image (%s): %s\n", path, PlGetError() );

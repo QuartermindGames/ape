@@ -921,7 +921,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 			{
 				const ApeBrushFaceVertex *vertex = &face->vertices[ face->edgeLoopOrder[ k ] ];
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 
 				// this is a gross botch to allow us to do special shaded
 				// types via the editor... *sigh*

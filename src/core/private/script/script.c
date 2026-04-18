@@ -219,7 +219,7 @@ bool ape_script_manager_do_file( const char *path )
 	bool status = false;
 
 	char *buf = QM_OS_MEMORY_NEW_( char, size + 1 );
-	PlReadFile( file, buf, sizeof( char ), size );
+	qm_file_read( file, buf, sizeof( char ), size );
 	PlCloseFile( file );
 
 	if ( !luaL_dostring( scriptLuaState, buf ) )

@@ -2,8 +2,11 @@
 // Purpose: Discord social integration.
 // Author:  Mark E. Sowden
 
-#include "../../game_private.h"
-#include "../integrations.h"
+#include "qmos/public/qm_os_library.h"
+
+#include "game_private.h"
+
+#include "integrations/integrations.h"
 
 // Discord third-party SDK
 #include "discord_game_sdk.h"

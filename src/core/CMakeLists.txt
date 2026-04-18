@@ -1,32 +1,20 @@
 find_library(SMACKER_LIBRARY NAMES smacker)
 
-set(YIN_CORE_CLIENT
-        private/client/client.c
-        private/client/client_input.c
-        private/client/client_gui.c
+if (APE_OPTION_TOOLS)
+    set(APE_SOURCE_EDITOR
+            private/editor/modes/mode_polygon.c
+            private/editor/modes/mode_transform.c
+            private/editor/editor.c
+            private/editor/editor_grid.c
+            private/editor/editor_light.c
+            private/editor/editor_selection.c
+    )
 
-        private/renderer/material/material.c
-        private/renderer/material/material_animator.c
-        private/renderer/material/material_shaders.c
-
-        private/renderer/post/post.c
-        private/renderer/post/post_bloom.c
-        private/renderer/post/post_dither.c
-        private/renderer/post/post_dof.c
-        private/renderer/post/post_fxaa.c
-
-        private/renderer/renderer_batch.c
-        private/renderer/renderer_decal.c
-        private/renderer/renderer_flare.c
-        private/renderer/renderer_particle.c
-        private/renderer/renderer.c
-        private/renderer/renderer_draw.c
-        private/renderer/renderer_render_target.c
-        private/renderer/renderer_texture.c
-        private/renderer/renderer_viewport.c
-        private/renderer/renderer_world.c
-        private/renderer/renderer_sprite.c
-)
+    # This is sort of gross - just use the fallback per ISPC
+    add_library(ispc_texcomp OBJECT ../3rdparty/ispc_texcomp/ispc_fallback.cpp)
+    target_compile_definitions(ispc_texcomp PRIVATE ISPC_FALLBACK_MODE)
+    target_include_directories(ispc_texcomp PUBLIC ../3rdparty/ispc_texcomp)
+endif ()
 
 add_library(ape-core STATIC
         # Audio
@@ -58,7 +46,29 @@ add_library(ape-core STATIC
         private/world/world.c
         private/world/world_node.c
 
-        ${YIN_CORE_CLIENT}
+        private/client/client.c
+        private/client/client_input.c
+        private/client/client_gui.c
+
+        private/renderer/material/material.c
+        private/renderer/material/material_animator.c
+        private/renderer/material/material_shaders.c
+        private/renderer/post/post.c
+        private/renderer/post/post_bloom.c
+        private/renderer/post/post_dither.c
+        private/renderer/post/post_dof.c
+        private/renderer/post/post_fxaa.c
+        private/renderer/renderer_batch.c
+        private/renderer/renderer_decal.c
+        private/renderer/renderer_flare.c
+        private/renderer/renderer_particle.c
+        private/renderer/renderer.c
+        private/renderer/renderer_draw.c
+        private/renderer/renderer_render_target.c
+        private/renderer/renderer_texture.c
+        private/renderer/renderer_viewport.c
+        private/renderer/renderer_world.c
+        private/renderer/renderer_sprite.c
 
         # Script
         private/script/script.c
@@ -68,13 +78,7 @@ add_library(ape-core STATIC
         private/gui/gui_draw.c
         private/gui/gui_font.c
 
-        # Editor
-        private/editor/modes/mode_polygon.c
-        private/editor/modes/mode_transform.c
-        private/editor/editor.c
-        private/editor/editor_grid.c
-        private/editor/editor_light.c
-        private/editor/editor_selection.c
+        ${APE_SOURCE_EDITOR}
 
         # Memory
         private/memory/memory.c
@@ -100,11 +104,11 @@ add_dependencies(ape-core
         pl_gl_driver
 )
 
-if(SMACKER_LIBRARY)
+if (SMACKER_LIBRARY)
     message("Found libsmacker, smk support will be enabled!")
     target_compile_definitions(ape-core PRIVATE APE_SUPPORT_SMACKER)
     target_link_libraries(ape-core ${SMACKER_LIBRARY})
-endif()
+endif ()
 
 target_include_directories(ape-core PRIVATE
         private/

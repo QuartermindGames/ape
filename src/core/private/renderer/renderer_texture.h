@@ -21,7 +21,7 @@ typedef struct ApeTexture
 {
 	ApeMemoryReference reference;
 
-	PLImage    *image;   // ram copy, usually free'd after load but editor will retain
+	QmImage    *image;   // ram copy, usually free'd after load but editor will retain
 	QmGfxTexture *internal;// vram copy
 
 	QmGfxTextureWrapMode wrapMode;

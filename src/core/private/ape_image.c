@@ -22,14 +22,14 @@ static uint8_t GetNumChannels( uint8_t channelFlags )
 	return numChannels;
 }
 
-PLImage *Image_LoadPackedImage( QmFsFile *filePtr )
+QmImage *Image_LoadPackedImage( QmFsFile *filePtr )
 {
 	const char *path = qm_fs_file_get_path( filePtr );
 
 	/* read in the header */
 
 	char identifier[ 4 ];
-	if ( PlReadFile( filePtr, identifier, sizeof( char ), 4 ) != 4 )
+	if ( qm_file_read( filePtr, identifier, sizeof( char ), 4 ) != 4 )
 	{
 		ape_console_warning_( "Failed to read in identifier for \"%s\"!\nPL: %s\n", path, PlGetError() );
 		return nullptr;
@@ -65,7 +65,7 @@ PLImage *Image_LoadPackedImage( QmFsFile *filePtr )
 		colourFormat = PL_COLOURFORMAT_RGB;
 	}
 
-	PLImage *image = PlCreateImage( NULL, width, height, 0, colourFormat, imageFormat );
+	QmImage *image = PlCreateImage( NULL, width, height, 0, colourFormat, imageFormat );
 	if ( image == NULL )
 	{
 		ape_console_warning_( "Failed to create image handle!\nPL: %s\n", PlGetError() );
@@ -115,7 +115,7 @@ PLImage *Image_LoadPackedImage( QmFsFile *filePtr )
 				offsetSize = sizeof( uint32_t );
 
 			void *pixelOffsets = QM_OS_MEMORY_CALLOC( numBlockPixels, offsetSize );
-			if ( PlReadFile( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels )
+			if ( qm_file_read( filePtr, pixelOffsets, offsetSize, numBlockPixels ) != numBlockPixels )
 			{
 				ape_console_error_( true, "Failed to read pixel offsets in block %d, in \"%s\"!\nPL: %s\n", i, path, PlGetError() );
 			}

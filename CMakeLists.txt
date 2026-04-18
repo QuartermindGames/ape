@@ -18,9 +18,9 @@ elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_COMPILER_ID}" ST
 endif()
 message("Compiler detected as ${APE_COMPILER}")
 
-option(APE_BUILD_TOOLS "Build tools" ON)
-if (NOT APE_BUILD_TOOLS)
-    add_compile_definitions(-DAPE_NO_EDITOR)
+option(APE_OPTION_TOOLS "Build tools" ON)
+if (APE_OPTION_TOOLS)
+    add_compile_definitions(-DAPE_SUPPORT_EDITOR)
 endif ()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -140,6 +140,8 @@ endif ()
 # QMFW libraries
 add_subdirectory(src/kernel/src/qmos)
 set_target_properties(qm-os PROPERTIES FOLDER "Foundation")
+add_subdirectory(src/kernel/src/qmparse)
+set_target_properties(qm-parse PROPERTIES FOLDER "Foundation")
 add_subdirectory(src/kernel/src/qmmath)
 set_target_properties(qm-math PROPERTIES FOLDER "Foundation")
 add_subdirectory(src/kernel/src/qmfs)
@@ -175,7 +177,7 @@ add_subdirectory(src/core)
 add_subdirectory(src/acm)
 set_target_properties(acm PROPERTIES FOLDER "Kernel")
 
-if (APE_BUILD_TOOLS)
+if (APE_OPTION_TOOLS)
     add_subdirectory(src/forge)
     set_target_properties(Forge PROPERTIES FOLDER "Tools")
 

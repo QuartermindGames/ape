@@ -130,7 +130,7 @@ void forge::SurfaceInspector::set_current( ApeBrushFace *face )
 
 	previewPath->setText( materialPath );
 
-	PLImage *preview;
+	QmImage *preview;
 	if ( ( preview = ape_editor_get_material_preview( materialPath, 128, 128 ) ) != nullptr )
 	{
 		FXColor *pixelData = static_cast< FXColor * >( PlGetImageData( preview, 0, 0 ) );

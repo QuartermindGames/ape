@@ -36,7 +36,7 @@ bool forge::isCookAvailable = true;
 
 forge::Project *forge::editorProject = nullptr;
 
-static std::map< std::string, PLImage * > cachedImages;
+static std::map< std::string, QmImage * > cachedImages;
 
 FXColor forge::themeColours[ MAX_THEME_COLOURS ]{};
 
@@ -376,7 +376,7 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 	PLPath fullPath;
 	PlSetupPath( fullPath, true, "../../%s", path );
 
-	PLImage *image;
+	QmImage *image;
 	auto     i = cachedImages.find( fullPath );
 	if ( i != cachedImages.end() )
 	{
@@ -384,7 +384,7 @@ FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
 	}
 	else
 	{
-		image = PlLoadImage( fullPath );
+		image = qm_image_load( fullPath );
 		if ( image == nullptr )
 		{
 			forge_warning_( "Failed to load icon (%s): %s\n", fullPath, PlGetError() );

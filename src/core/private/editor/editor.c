@@ -936,9 +936,9 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 static PLHashTable *editorMaterialPreviews;
 
 static constexpr const char PREVIEW_FALLBACK_PATH[] = "materials/editor/no_preview.png";
-static PLImage             *previewFallback;
+static QmImage             *previewFallback;
 
-static PLImage *get_material_preview_image( const char *path )
+static QmImage *get_material_preview_image( const char *path )
 {
 	AcmBranch *root = com_acm_load_file( path, "material" );
 	if ( root == nullptr )
@@ -947,11 +947,11 @@ static PLImage *get_material_preview_image( const char *path )
 		return nullptr;
 	}
 
-	PLImage    *preview;
+	QmImage    *preview;
 	const char *previewPath = acm_get_string( root, "previewTexture", nullptr );
 	if ( previewPath != NULL )
 	{
-		preview = PlLoadImage( previewPath );
+		preview = qm_image_load( previewPath );
 	}
 	else
 	{
@@ -970,7 +970,7 @@ static PLImage *get_material_preview_image( const char *path )
 			return nullptr;
 		}
 
-		preview = PlLoadImage( buf );
+		preview = qm_image_load( buf );
 	}
 
 	return preview;
@@ -978,7 +978,7 @@ static PLImage *get_material_preview_image( const char *path )
 
 static void cleanup_preview( void *user )
 {
-	PLImage *image = user;
+	QmImage *image = user;
 	PlDestroyImage( image );
 }
 
@@ -991,12 +991,12 @@ void ape_editor_flush_material_previews()
 	previewFallback = nullptr;
 }
 
-PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height )
+QmImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height )
 {
 	// lazy init of fallback and previews list, bleh
 	if ( previewFallback == nullptr )
 	{
-		previewFallback = PlLoadImage( PREVIEW_FALLBACK_PATH );
+		previewFallback = qm_image_load( PREVIEW_FALLBACK_PATH );
 		if ( previewFallback == nullptr )
 		{
 			ape_console_error_( true, "Failed to load preview fallback (%s): %s\n", PREVIEW_FALLBACK_PATH, PlGetError() );
@@ -1021,7 +1021,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 	}
 	size_t hashNameLength = strlen( hashName );
 
-	PLImage *preview = PlLookupHashTableUserData( editorMaterialPreviews, hashName, hashNameLength );
+	QmImage *preview = PlLookupHashTableUserData( editorMaterialPreviews, hashName, hashNameLength );
 	if ( preview != nullptr )
 	{
 		return preview;
@@ -1038,7 +1038,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 		PlSetupPath( cachePath, true, "%s/cache/preview_%lu.qoi", appDataDir, PlGenerateHashFNV1( hashName, hashNameLength ) );
 		if ( qm_fs_check_file_exists( cachePath ) )
 		{
-			if ( ( preview = PlLoadImage( cachePath ) ) != nullptr )
+			if ( ( preview = qm_image_load( cachePath ) ) != nullptr )
 			{
 				PlInsertHashTableNode( editorMaterialPreviews, hashName, hashNameLength, preview );
 				return preview;
@@ -1077,7 +1077,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 			height = preview->height;
 		}
 
-		PLImage *newPreview = PlResizeImage( preview, width, height );
+		QmImage *newPreview = qm_image_resize( preview, width, height );
 		if ( newPreview != nullptr )
 		{
 			PlDestroyImage( preview );
@@ -1089,7 +1089,7 @@ PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 		}
 	}
 
-	if ( !PlWriteImage( preview, cachePath, 0 ) )
+	if ( !qm_image_write( preview, cachePath, 0 ) )
 	{
 		ape_console_warning_( "Failed to write image to cache (%s): %s\n", cachePath, PlGetError() );
 	}

@@ -97,7 +97,7 @@ static void destroy_brush( void *data, ApeWorldNode *parent )
 	}
 	qm_os_memory_free( self->faces );
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 	qm_os_memory_free( self->vertexSelectColours );
 #endif
 

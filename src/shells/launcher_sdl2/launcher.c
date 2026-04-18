@@ -200,7 +200,7 @@ void shell_get_window_size( int *width, int *height )
 	SDL_GetWindowSize( sdlWindow, width, height );
 }
 
-void ss_shell_set_window_icon( const PLImage *image )
+void ss_shell_set_window_icon( const QmImage *image )
 {
 	SDL_Surface *surface = SDL_CreateSurfaceFrom( ( int ) image->width, ( int ) image->height, SDL_PIXELFORMAT_RGBA8888, image->data[ 0 ], ( int ) image->width * 4 );
 	if ( surface == NULL )

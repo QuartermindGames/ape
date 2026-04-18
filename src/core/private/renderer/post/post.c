@@ -8,6 +8,7 @@
 
 typedef enum ApeRendererPostEffectType
 {
+	APE_RENDERER_POST_EFFECT_TYPE_FOG,
 	APE_RENDERER_POST_EFFECT_TYPE_DOF,
 	APE_RENDERER_POST_EFFECT_TYPE_FXAA,
 	APE_RENDERER_POST_EFFECT_TYPE_BLOOM,
@@ -24,6 +25,7 @@ static ApeRenderTarget *ppRenderTarget = nullptr;
 
 extern ApePostProcessEffect ape_postDitherEffect_;
 extern ApePostProcessEffect ape_postDofEffect_;
+extern ApePostProcessEffect ape_postFogEffect_;
 
 static void register_post_effects()
 {

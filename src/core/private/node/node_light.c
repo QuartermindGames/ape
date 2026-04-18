@@ -292,7 +292,7 @@ const ApeWorldNodeClass ape_lightClass = {
 
         .clone = clone_light,
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 
         .properties    = properties,
         .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),

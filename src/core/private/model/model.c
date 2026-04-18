@@ -485,7 +485,7 @@ const ApeWorldNodeClass ape_modelClass = {
         .deserialize = deserialize_model_node,
         .clone       = clone_model_node,
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 
         .editorIcon = "resources/new_model.gif",
 

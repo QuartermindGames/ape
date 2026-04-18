@@ -151,7 +151,7 @@ static bool setup_entity_class( ApeEntity *self, const char *className )
 		self->worldListNode = PlInsertLinkedListNode( world->entities, self );
 	}
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 	const char *editorSpritePath = classDefinition->editorSpritePath;
 	if ( editorSpritePath != nullptr )
 	{
@@ -537,7 +537,7 @@ const ApeWorldNodeClass ape_entityClass = {
         .serialize   = serialize_entity,
         .deserialize = deserialize_entity,
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 
         .editorIcon = "resources/new_entity.gif",
 

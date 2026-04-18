@@ -141,7 +141,7 @@ char *ape_fs_parse_string( QmFsFile *file, uint16_t *size )
 		return nullptr;
 
 	char  *buf = QM_OS_MEMORY_NEW_( char, ( *size ) + 1 );
-	size_t rb  = PlReadFile( file, buf, sizeof( char ), *size );
+	size_t rb  = qm_file_read( file, buf, sizeof( char ), *size );
 	assert( rb == *size );
 	return buf;
 }

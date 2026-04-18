@@ -12,7 +12,7 @@ ApeAudioSample *ape_audio_format_wav_load_( QmFsFile *file )
 
 	ApeAudioSample *sample = nullptr;
 
-	if ( PlReadFile( file, buf, sizeof( uint8_t ), size ) == size )
+	if ( qm_file_read( file, buf, sizeof( uint8_t ), size ) == size )
 	{
 		uint8_t      *dstBuf;
 		SDL_AudioSpec dstSpec;

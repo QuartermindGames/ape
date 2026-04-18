@@ -291,7 +291,7 @@ AcmBranch *com_acm_load_file( const char *path, const char *object )
 	if ( size > 0 )
 	{
 		uint8_t *buf = QM_OS_MEMORY_NEW_( uint8_t, size + 1 );
-		if ( PlReadFile( file, buf, sizeof( uint8_t ), size ) == size )
+		if ( qm_file_read( file, buf, sizeof( uint8_t ), size ) == size )
 		{
 			root = acm_load_from_memory( buf, size, object, path );
 		}

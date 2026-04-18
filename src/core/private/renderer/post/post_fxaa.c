@@ -48,7 +48,7 @@ static void draw_fxaa_effect( const ApeViewport *viewport, [[maybe_unused]] cons
 const ApePostProcessEffect *ape_postfx_get_fxaa_( void )
 {
 	static ApePostProcessEffect renderFXAAPostProcess;
-	PL_ZERO_( renderFXAAPostProcess );
+	QM_OS_ZERO_( renderFXAAPostProcess );
 	renderFXAAPostProcess.registerConsoleVariables = register_fxaa_console_variables;
 	renderFXAAPostProcess.setup                    = setup_fxaa_effect;
 	renderFXAAPostProcess.cleanup                  = cleanup_fxaa_effect;

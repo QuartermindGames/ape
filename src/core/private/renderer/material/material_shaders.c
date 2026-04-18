@@ -58,7 +58,7 @@ static QmGfxShaderStage *register_shader_stage( QmGfxShaderProgram *program, QmG
 
 	size_t length = qm_fs_file_get_size( filePtr );
 	char  *buffer = QM_OS_MEMORY_NEW_( char, length + 1 );
-	PlReadFile( filePtr, buffer, length, 1 );
+	qm_file_read( filePtr, buffer, length, 1 );
 
 	PlCloseFile( filePtr );
 

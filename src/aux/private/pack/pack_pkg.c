@@ -41,7 +41,7 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 
 		// read in the filename, it's a sized string...
 		uint8_t nameLength = PL_READUINT8( file, NULL );
-		PlReadFile( file, index->name, sizeof( char ), nameLength );
+		qm_file_read( file, index->name, sizeof( char ), nameLength );
 
 		index->name[ nameLength + 1 ] = '\0';
 

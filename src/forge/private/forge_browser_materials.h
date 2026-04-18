@@ -43,7 +43,7 @@ namespace forge
 		{
 			std::string path;
 			std::string name;
-			PLImage    *icon, *smallIcon;
+			QmImage    *icon, *smallIcon;
 
 			~MaterialPreview()
 			{
