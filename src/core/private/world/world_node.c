@@ -371,8 +371,15 @@ QmMathVector3f ape_world_node_get_local_angles( const ApeWorldNode *self )
 
 QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self )
 {
-	assert( ape_world_node_is_valid( self, self->type ) );
-	return self->angles;
+	QmMathVector3f angles = self->angles;
+	if ( self->parent != nullptr )
+	{
+		qm_math_vector3f_add( self->angles, ape_world_node_get_angles( self->parent ) );
+	}
+
+	com_math_normalize_angles( &angles, &angles );
+
+	return angles;
 }
 
 void ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles )

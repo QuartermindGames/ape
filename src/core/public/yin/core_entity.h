@@ -23,7 +23,7 @@ typedef struct ApeEntity
 	void                           *classData;                  // pointer to the unique data of the class
 	struct PLHashTable             *componentTable;             // list of components
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 
 	ApeMaterial *editorSprite;
 
@@ -70,7 +70,7 @@ typedef struct ApeEntityClassDefinition
 	const ApeProperty *properties;
 	unsigned int       numProperties;
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 
 	bool excludeInEditor;
 

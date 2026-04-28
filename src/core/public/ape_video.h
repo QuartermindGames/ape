@@ -23,7 +23,7 @@ ApeVideo *ape_video_load( const char *path );
 
 void ape_video_destroy( ApeVideo *video );
 
-void ape_video_draw( ApeVideo *video, const ApeViewport *viewport );
+void ape_video_draw( const ApeVideo *video, const ApeViewport *viewport );
 void ape_video_tick( ApeVideo *video, double delta );
 
 void ape_video_set_playback_state( ApeVideo *video, bool paused );

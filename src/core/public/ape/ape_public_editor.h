@@ -238,7 +238,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
  * @param height
  * @return 		Pointer to an image instance or null on fail.
  */
-PLImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height );
+QmImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint16_t height );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Grid

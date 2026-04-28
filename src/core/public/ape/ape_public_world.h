@@ -87,7 +87,7 @@ typedef struct ApeWorldNodeClass
 	const ApeProperty *properties;
 	unsigned int       numProperties;
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 	const char *editorIcon;
 
 	/**
@@ -138,14 +138,14 @@ typedef struct ApeWorldNode
 	ApeWorldNode            *parent;
 	struct PLLinkedListNode *parentListNode;// our slot under the parent
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 	QmMathColour4ub selectColour;
 #endif
 
 	unsigned int flags;
 
 	PLPath path;// where we were loaded from, if at all (note this isn't always valid)
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 	PLPath savePath;
 #endif
 
@@ -423,7 +423,7 @@ typedef struct ApeBrush
 	QmMathVector3f *vertices;
 	unsigned int    numVertices;
 
-#if !defined( APE_NO_EDITOR )
+#if defined( APE_SUPPORT_EDITOR )
 	QmMathColour4ub *vertexSelectColours;   // colours used for selection of vertices
 	unsigned int     numVertexSelectColours;// should match num vertices
 #endif

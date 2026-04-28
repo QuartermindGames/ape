@@ -12,6 +12,9 @@ typedef struct ApeVideo
 	unsigned int numFrames;
 	ApeTexture **frames;
 
+	ApeAudioSample *audioSample;
+	ApeAudioSource *audioSource;
+
 	float playtime;
 	float framerate;
 

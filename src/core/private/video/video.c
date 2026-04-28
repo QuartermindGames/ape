@@ -36,11 +36,20 @@ void ape_video_destroy( ApeVideo *video )
 		video->frames[ i ] = nullptr;
 	}
 
+	if ( video->audioSample != nullptr )
+	{
+		ape_audio_sample_release( video->audioSample );
+	}
+	if ( video->audioSource != nullptr )
+	{
+		ape_audio_source_destroy( video->audioSource );
+	}
+
 	qm_os_memory_free( video->frames );
 	qm_os_memory_free( video );
 }
 
-void ape_video_draw( ApeVideo *video, const ApeViewport *viewport )
+void ape_video_draw( const ApeVideo *video, const ApeViewport *viewport )
 {
 	//TODO: all of this is temporary, instead video playback should *probably* be piped through the material system
 	//		we could probably treat videos as a special texture type with multiple frames, just not sure how audio
@@ -78,6 +87,12 @@ void ape_video_tick( ApeVideo *video, double delta )
 	{
 		video->curFrame++;
 		video->playtime -= secondsPerFrame;
+	}
+
+	// sigh...
+	if ( video->playtime == 0.0f && video->curFrame == 0 && video->audioSource != nullptr && video->audioSample != nullptr )
+	{
+		ape_audio_source_emit( video->audioSource, video->audioSample );
 	}
 }
 
