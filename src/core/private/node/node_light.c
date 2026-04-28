@@ -66,12 +66,9 @@ static ApeWorldNode *clone_light( ApeWorldNode *src )
 
 QmMathVector3f ape_light_get_direction( const ApeLight *self )
 {
-	QmMathVector3f angles = ape_light_get_angles( self );
 	QmMathVector3f lightDirection;
-	PlAnglesAxes( angles, nullptr, nullptr, &lightDirection );
-	lightDirection = qm_math_vector3f_normalize( lightDirection );
-
-	return lightDirection;
+	PlAnglesAxes( ape_light_get_angles( self ), nullptr, nullptr, &lightDirection );
+	return qm_math_vector3f_normalize( lightDirection );
 }
 
 QmMathColour4f ape_light_get_colour( const ApeLight *self ) { return self->colour; }

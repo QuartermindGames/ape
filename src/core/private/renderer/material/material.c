@@ -973,8 +973,6 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 
 static void set_global_uniforms( const ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
 {
-	ApeWorld *world = game_get_current_world();
-
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ] >= 0 )
 	{
 		double numTicks = ( double ) ape_get_num_ticks();

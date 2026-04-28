@@ -165,12 +165,13 @@ static void update_local_transform( ApeWorldNode *self )
 {
 	PLMatrix4 transform = PlTranslateMatrix4( self->position );
 
-	PLMatrix4 rotate;
-	rotate    = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angles.x ), &QM_MATH_VECTOR3F( 1.0f, 0.0f, 0.0f ) );
-	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angles.y ), &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
-	transform = PlMultiplyMatrix4( &transform, &rotate );
-	rotate    = PlRotateMatrix4( QM_MATH_DEG2RAD( self->angles.z ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
+	QmMathQuaternion rotation = qm_math_quaternion_from_euler( QM_MATH_VECTOR3F(
+	        QM_MATH_DEG2RAD( self->angles.x ),
+	        QM_MATH_DEG2RAD( self->angles.y ),
+	        QM_MATH_DEG2RAD( self->angles.z ) ) );
+
+	PLMatrix4 rotate = PlRotateMatrix4ByQuaternion( &rotation );
+
 	transform = PlMultiplyMatrix4( &transform, &rotate );
 
 	transform = PlScaleMatrix4( transform, self->scale );
@@ -374,7 +375,7 @@ QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self )
 	QmMathVector3f angles = self->angles;
 	if ( self->parent != nullptr )
 	{
-		qm_math_vector3f_add( self->angles, ape_world_node_get_angles( self->parent ) );
+		angles = qm_math_vector3f_add( angles, ape_world_node_get_angles( self->parent ) );
 	}
 
 	com_math_normalize_angles( &angles, &angles );
@@ -564,8 +565,10 @@ PLMatrix4 ape_world_node_get_local_transform( const ApeWorldNode *self )
 
 QmMathVector3f ape_world_node_get_forward( const ApeWorldNode *self )
 {
+	QmMathVector3f angles = ape_world_node_get_angles( self );
+
 	QmMathVector3f forward;
-	PlAnglesAxes( self->angles, nullptr, nullptr, &forward );
+	PlAnglesAxes( angles, nullptr, nullptr, &forward );
 	return qm_math_vector3f_normalize( forward );
 }
 
