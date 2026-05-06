@@ -26,10 +26,10 @@ static PLConsoleVariable *tickFrequencyVar;
  * WINDOW MANAGEMENT
  ****************************************/
 
-static SDL_Window   *sdlWindow    = nullptr;
-static SDL_GLContext sdlGLContext = nullptr;
+static SDL_Window   *sdlWindow;
+static SDL_GLContext sdlGLContext;
 
-static ApeViewport *windowViewport = nullptr;
+static ApeViewport *windowViewport;
 
 static int drawW, drawH;
 
@@ -98,6 +98,11 @@ static SDL_Window *create_window( const char *title, int width, int height, bool
 	if ( fullscreen )
 	{
 		flags |= SDL_WINDOW_FULLSCREEN;
+	}
+
+	if ( !PlHasCommandLineArgument( "/nodpi" ) )
+	{
+		flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
 	}
 
 	switch ( mode )
@@ -222,30 +227,10 @@ ApeViewport *ss_shell_viewport_get_active( void )
  * INPUT MANAGEMENT
  ****************************************/
 
-static ApeInputState buttonStates[ APE_MAX_BUTTON_INPUTS ];
-ApeInputState        ss_shell_get_button_state( ApeInputButton inputButton )
-{
-	if ( inputButton >= APE_MAX_BUTTON_INPUTS )
-		return APE_INPUT_STATE_NONE;
-
-	return buttonStates[ inputButton ];
-}
-
-static ApeInputState keyStates[ APE_MAX_KEY_INPUTS ];
-ApeInputState        ss_shell_get_key_state( int key )
-{
-	if ( key >= APE_MAX_KEY_INPUTS )
-		return APE_INPUT_STATE_NONE;
-
-	return keyStates[ key ];
-}
-
 void shell_set_mouse_position( int x, int y )
 {
 	SDL_WarpMouseInWindow( sdlWindow, x, y );
 }
-
-static bool grabState = false;
 
 void ss_shell_grab_mouse( bool grab )
 {
@@ -496,7 +481,7 @@ static bool initialize_display( void )
 	return true;
 }
 
-int launcher_initialize( int argc, char **argv )
+int qm_os_main( const int argc, char **argv )
 {
 #if defined( _WIN32 ) && !defined( NDEBUG )
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -650,9 +635,7 @@ int launcher_initialize( int argc, char **argv )
 						break;
 					}
 
-					//SDL_GL_GetDrawableSize( sdlWindow, &drawW, &drawW );
-					// originally used the above but it kept returning bogus coords...
-					SDL_GetWindowSize( sdlWindow, &drawW, &drawH );
+					SDL_GetWindowSizeInPixels( sdlWindow, &drawW, &drawH );
 					ape_viewport_set_size( windowViewport, drawW, drawH );
 					break;
 				}
@@ -705,20 +688,4 @@ int launcher_initialize( int argc, char **argv )
 	return EXIT_SUCCESS;
 }
 
-#if defined( _WIN32 )
-
-#	include <windows.h>
-
-int APIENTRY WinMain( HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow )
-{
-	return launcher_initialize( __argc, __argv );
-}
-
-#else
-
-int main( int argc, char **argv )
-{
-	return launcher_initialize( argc, argv );
-}
-
-#endif
+QM_OS_SYSTEM_IMPLEMENT_MAIN()
