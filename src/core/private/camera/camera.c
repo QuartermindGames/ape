@@ -428,7 +428,7 @@ static AcmBranch *camera_serialize( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *camera_deserialize( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *camera_deserialize( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeCamera *camera      = ( ApeCamera * ) self;
 	camera->active         = acm_get_bool( root, "active", camera->active );

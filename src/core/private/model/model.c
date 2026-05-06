@@ -458,7 +458,7 @@ AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 	return root;
 }
 
-ApeWorldNode *deserialize_model_node( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+ApeWorldNode *deserialize_model_node( ApeWorldNode *self, AcmBranch *root )
 {
 	PLPath modelPath;
 	PlSetupPath( modelPath, true, "%s", acm_get_string( root, "path", "" ) );

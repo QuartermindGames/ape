@@ -62,13 +62,15 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 	qm_os_memory_free( self );
 }
 
+static bool spawn_entity( ApeWorldNode *self, void *user )
+{
+	ape_entity_spawn( ( ApeEntity * ) self );
+	return true;
+}
+
 void ape_world_spawn_entities( ApeWorld *self )
 {
-	ApeEntity *entity;
-	COM_ITERATE_LINKED_LIST( entity, self->entities, i )
-	{
-		ape_entity_spawn( entity );
-	}
+	ape_world_node_visit_children( APE_WORLD_NODE( self ), APE_WORLD_NODE_TYPE_ENTITY, true, spawn_entity, self );
 }
 
 void ape_world_tick_entities_( ApeWorld *self, double delta )
@@ -115,7 +117,7 @@ static void on_attach_child( void *self, ApeWorldNode *child )
 		return;
 	}
 
-	ape_console_verbose_( "Added \"%s\" to world lookup\n", path );
+	ape_console_verbose_( "Added room \"%s\" to world lookup\n", path );
 }
 
 static void on_dettach_child( void *self, ApeWorldNode *child )

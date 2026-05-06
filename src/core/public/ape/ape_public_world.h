@@ -70,7 +70,7 @@ typedef struct ApeWorldNodeClass
 	void *( *create )( ApeWorldNode *parent );
 	void ( *destroy )( void *self, ApeWorldNode *parent );
 	AcmBranch *( *serialize )( void *self, AcmBranch *root );
-	ApeWorldNode *( *deserialize )( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root );
+	ApeWorldNode *( *deserialize )( ApeWorldNode *self, AcmBranch *root );
 	ApeWorldNode *( *clone )( ApeWorldNode *srcNode );
 
 	void ( *onAttachChild )( void *self, ApeWorldNode *child ); // called just after a child is attached

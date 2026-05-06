@@ -149,12 +149,6 @@ static ApeRoom *lookup_parent_room( ApeWorldNode *self )
 	ApeWorldNode *roomNode = ape_world_node_get_parent_by_type( self, APE_WORLD_NODE_TYPE_ROOM );
 	if ( roomNode == nullptr )
 	{
-		char tmp[ 64 ];
-		qm_math_vector3f_print(
-		        ape_world_node_get_position( self ),
-		        tmp, sizeof( tmp ) );
-
-		ape_console_warning_( "Encountered a node (%s) without an associated room!\n", tmp );
 		return nullptr;
 	}
 
@@ -320,12 +314,9 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 		// sigh...this is very specific, so we can notify a brush (or anything else)
 		// that it's moved to a new room.
 		ApeRoom *room = lookup_parent_room( self );
-		if ( self->room != nullptr && room != nullptr && room != self->room )
+		if ( room != self->room && self->classType->onChangeRoom != nullptr )
 		{
-			if ( self->classType->onChangeRoom != nullptr )
-			{
-				self->classType->onChangeRoom( self, self->room, room );
-			}
+			self->classType->onChangeRoom( self, self->room, room );
 		}
 
 		self->room = room;
@@ -634,7 +625,7 @@ AcmBranch *ape_world_node_serialize( ApeWorldNode *self, AcmBranch *root )
 	return nodeBranch;
 }
 
-ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root, const char *path )
+static ApeWorldNode *ape_world_node_deserialize( AcmBranch *root, const char *path )
 {
 	ApeWorldNodeMagic magic = ACM_GET_INT( magic, root, "classMagic", 0 );
 	if ( magic == 0 )
@@ -665,7 +656,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 	}
 
 	assert( worldNodeClass->create != nullptr );
-	ApeWorldNode *self = worldNodeClass->create( parent );
+	ApeWorldNode *self = worldNodeClass->create( nullptr );
 	if ( self == nullptr )
 	{
 		ape_console_warning_( "Failed to create world node!\n" );
@@ -713,7 +704,7 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 
 	self->flags = acm_get_uint( root, "flags", 0 );
 
-	if ( worldNodeClass->deserialize( self, parent, classBranch ) == nullptr )
+	if ( worldNodeClass->deserialize( self, classBranch ) == nullptr )
 	{
 		ape_console_warning_( "Failed to deserialize world node!\n" );
 		return nullptr;
@@ -726,7 +717,12 @@ ApeWorldNode *ape_world_node_deserialize( ApeWorldNode *parent, AcmBranch *root,
 		AcmBranch *childBranch = acm_get_first_child( childrenBranch );
 		while ( childBranch != nullptr )
 		{
-			ape_world_node_deserialize( self, childBranch, nullptr );
+			ApeWorldNode *child = ape_world_node_deserialize( childBranch, nullptr );
+			if ( child != nullptr )
+			{
+				ape_world_node_attach( child, self );
+			}
+
 			childBranch = acm_get_next_child( childBranch );
 		}
 	}
@@ -809,8 +805,12 @@ ApeWorldNode *ape_world_node_load( ApeWorldNode *parent, const char *path )
 		return nullptr;
 	}
 
-	ApeWorldNode *worldNode = ape_world_node_deserialize( parent, branch, path );
-	if ( worldNode == nullptr )
+	ApeWorldNode *worldNode = ape_world_node_deserialize( branch, path );
+	if ( worldNode != nullptr )
+	{
+		ape_world_node_attach( worldNode, parent );
+	}
+	else
 	{
 		ape_console_warning_( "Failed to deserialize node (%s)!\n", path );
 	}

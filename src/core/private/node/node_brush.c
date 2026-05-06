@@ -1006,7 +1006,7 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *deserialize_brush( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeBrush *brush = ( ApeBrush * ) self;
 
@@ -1070,14 +1070,6 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, ApeWorldNode *parent
 			}
 
 			snprintf( brush->faces[ i ].tag, sizeof( brush->faces[ i ].tag ), "%s", acm_get_string( branch, "id", "" ) );
-			if ( *brush->faces[ i ].tag != '\0' )
-			{
-				ApeRoom *room = ape_brush_face_get_room( &brush->faces[ i ] );
-				if ( room != nullptr )
-				{
-					ape_room_add_tagged_surface( room, &brush->faces[ i ] );
-				}
-			}
 
 			// material
 			const char *str;
@@ -1128,7 +1120,11 @@ static void on_change_room( void *self, ApeRoom *currentRoom, ApeRoom *newRoom )
 			continue;
 		}
 
-		ape_room_remove_tagged_surface( currentRoom, face );
+		if ( currentRoom != nullptr )
+		{
+			ape_room_remove_tagged_surface( currentRoom, face );
+		}
+
 		ape_room_add_tagged_surface( newRoom, face );
 	}
 }

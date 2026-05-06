@@ -144,13 +144,6 @@ static bool setup_entity_class( ApeEntity *self, const char *className )
 		return false;
 	}
 
-	ApeWorldNode *rootNode = ape_world_node_get_root( APE_WORLD_NODE( self ) );
-	if ( rootNode != nullptr && rootNode->type == APE_WORLD_NODE_TYPE_ROOT )
-	{
-		ApeWorld *world     = ( ApeWorld * ) rootNode;
-		self->worldListNode = PlInsertLinkedListNode( world->entities, self );
-	}
-
 #if defined( APE_SUPPORT_EDITOR )
 	const char *editorSpritePath = classDefinition->editorSpritePath;
 	if ( editorSpritePath != nullptr )
@@ -213,6 +206,21 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 
 void ape_entity_spawn( ApeEntity *self )
 {
+	// push it onto the world entity list so we can quickly update it, etc.
+	if ( self->worldListNode == nullptr )
+	{
+		// we add it to the list first, just on the off-chance the spawn destroys it
+		//TODO: why is this not returning a world pointer? why is it still called get root?
+		ApeWorldNode *root = ape_world_node_get_root( APE_WORLD_NODE( self ) );
+		if ( root == nullptr )
+		{
+			ape_console_warning_( "Attempted to spawn entity without root!\n" );
+			return;
+		}
+
+		self->worldListNode = PlInsertLinkedListNode( ( ( ApeWorld * ) root )->entities, self );
+	}
+
 	assert( self->classDefinition != NULL );
 	if ( self->classDefinition->spawnFunction == NULL )
 	{
@@ -444,7 +452,7 @@ static AcmBranch *serialize_entity( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *deserialize_entity( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_entity( ApeWorldNode *self, AcmBranch *root )
 {
 	const char *className = acm_get_string( root, "className", nullptr );
 	if ( className == nullptr )

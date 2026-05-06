@@ -211,7 +211,7 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *deserialize_light( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *deserialize_light( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeLight *light = ( ApeLight * ) self;
 	light->type     = acm_get_uint( root, "type", light->type );

@@ -283,7 +283,7 @@ static AcmBranch *ape_room_serialize_( void *self, AcmBranch *root )
 	return root;
 }
 
-static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, ApeWorldNode *parent, AcmBranch *root )
+static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeRoom *room      = ( ApeRoom * ) self;
 	room->flags        = ACM_GET_INT( room->flags, root, "flags", room->flags );
