@@ -56,7 +56,6 @@ forge::MainWindow::MainWindow( FXApp *app )
 	new FXMenuCommand( menuPane, "Save Room As...\t\tSave the current world to the specified location.", forge_cachedIcons[ FORGE_ICON_TYPE_SAVE ], this, 0 );
 	new FXMenuSeparator( menuPane );
 	new FXMenuCommand( menuPane, "Import Room\t\tImport an existing room into the active world.", nullptr, this, 0 );
-	new FXMenuCommand( menuPane, "Export Room\t\tExport the currently active room.", nullptr, this, 0 );
 	new FXMenuSeparator( menuPane );
 
 	closeEditorCommand = new FXMenuCommand( menuPane, "Close Editor", forge_cachedIcons[ FORGE_ICON_TYPE_CLOSE ], this, ID_CLOSE_EDITOR );
