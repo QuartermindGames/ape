@@ -116,7 +116,7 @@ static void terrain_load_heightmap( GameTerrainEntity *terrain )
 		return;
 	}
 
-	PLImage *image = PlLoadImage( path );
+	QmImage *image = qm_image_load( path );
 	if ( image == nullptr )
 	{
 		game_warning_( "Failed to load heightmap (%s)\n", path );
@@ -167,8 +167,8 @@ static void terrain_load_heightmap( GameTerrainEntity *terrain )
 		}
 	}
 
-	unsigned int w = PlGetImageWidth( image );
-	unsigned int h = PlGetImageHeight( image );
+	unsigned int w = qm_image_get_width( image );
+	unsigned int h = qm_image_get_height( image );
 
 	PlDestroyImage( image );
 

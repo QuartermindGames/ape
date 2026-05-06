@@ -2,7 +2,7 @@
 
 #include "qmos/public/qm_os_random.h"
 
-#include "ss1_game.h"
+#include "nihlexa.h"
 
 const char *ss1_name_generator_generate( char *buffer, size_t size )
 {

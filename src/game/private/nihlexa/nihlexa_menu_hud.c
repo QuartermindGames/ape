@@ -2,14 +2,14 @@
 // Purpose: QM1 Hud Implementation
 // Author:  Mark E. Sowden
 
-#include "qm1_menu.h"
+#include "nihlexa_menu.h"
 
 static constexpr char HUD_HEALTH_BODY[] = "materials/hud/health_body.mat.n";
 static ApeMaterial   *hudHealthBodyMaterial;
 
 static float hudScale = 1.0f;
 
-void qm1_menu_hud_initialize_()
+void nih_menu_hud_initialize_()
 {
 	PlRegisterConsoleVariable( "qm1_menu_hud.scale",
 							   "Scale of the HUD.",
@@ -20,12 +20,12 @@ void qm1_menu_hud_initialize_()
 	hudHealthBodyMaterial = ape_material_cache( HUD_HEALTH_BODY, APE_CACHE_GROUP_GLOBAL, true );
 }
 
-void qm1_menu_hud_shutdown_()
+void nih_menu_hud_shutdown_()
 {
 	ape_material_release( hudHealthBodyMaterial );
 }
 
-void qm1_menu_hud_draw_( const ApeViewport *viewport )
+void nih_menu_hud_draw_( const ApeViewport *viewport )
 {
 	float hudHealthBodyW = 128.0f * hudScale;
 	float hudHealthBodyH = 256.0f * hudScale;

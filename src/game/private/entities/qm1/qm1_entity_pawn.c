@@ -2,7 +2,7 @@
 // Purpose: Pawns represent anything *living* in the world.
 // Author:  Mark E. Sowden
 
-#include "ss1/ss1_game.h"
+#include "nihlexa/nihlexa.h"
 
 #include "qm1_entity_pawn.h"
 

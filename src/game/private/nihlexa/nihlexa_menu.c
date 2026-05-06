@@ -9,7 +9,7 @@
 #include "menu/menu_pie.h"
 #include "menu/menu_compass.h"
 
-#include "ss1_game.h"
+#include "nihlexa.h"
 
 #include "aux/public/aux_project.h"
 
@@ -134,19 +134,19 @@ static GamePieMenu *interactPie;
 static ApeGuiFont *menuFont;
 static ApeGuiFont *menuTitleFont;
 
-void qm1_menu_hud_initialize_();
-void qm1_menu_hud_shutdown_();
-void qm1_menu_hud_draw_( const ApeViewport *viewport );
+void nih_menu_hud_initialize_();
+void nih_menu_hud_shutdown_();
+void nih_menu_hud_draw_( const ApeViewport *viewport );
 
-void ss1_menu_initialize_( void )
+void nih_menu_initialize_( void )
 {
-	qm1_menu_hud_initialize_();
+	nih_menu_hud_initialize_();
 
 	menuFont      = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
 	menuTitleFont = gui_font_load( menuTitleFontPath, gui_get_default_font( GUI_FONT_DEFAULT_LARGE ) );
 
 	// use the name from the project conf. for the title, so mods etc. can set their own thing
-	const char *title = acm_get_string( com_project_get_config(), "name", "QM1" );
+	const char *title = acm_get_string( com_project_get_config(), "name", NIH_GAME_TITLE );
 
 	game_menu_initialize();
 	game_menu_set_title( G_STR_( title ) );
@@ -178,7 +178,7 @@ void ss1_menu_initialize_( void )
 #if 0//TODO: this is what we want to ship with, but the background prompt is going to go
 
 	GameMenu *menu;
-	if ( ss1_gameState.isFirstLaunch )
+	if ( qm1_state_.isFirstLaunch )
 	{
 		menu = &backgroundPrompt;
 	}
@@ -196,19 +196,19 @@ void ss1_menu_initialize_( void )
 #endif
 }
 
-void ss1_menu_shutdown_()
+void nih_menu_shutdown_()
 {
-	qm1_menu_hud_shutdown_();
+	nih_menu_hud_shutdown_();
 
 	ape_gui_font_destroy( menuFont );
 }
 
-void ss1_menu_tick( const double delta )
+void nih_menu_tick( const double delta )
 {
 	game_menu_splash_tick_( delta );
 	menu_pie_tick( interactPie );
 
-	ApeCamera *camera = ss1_gameState.camera;
+	ApeCamera *camera = qm1_state_.camera;
 	if ( camera != nullptr )
 	{
 		game_menu_compass_tick_( camera, delta );
@@ -254,6 +254,13 @@ static void draw_hud( const ApeViewport *viewport )
 {
 	game_menu_compass_draw_( viewport );
 
+	//gui_font_set_slant( 16.0f );
+	//gui_font_set_shadow_offset( -4.0f, -4.0f );
+	//gui_font_draw_string( menuFont, viewport->width - 256, viewport->height - 256, nullptr, nullptr, 1.0f, &PL_COLOUR_GOLD, "999", 3, true );
+	//gui_font_set_slant( 0.0f );
+
+	gui_font_display( menuFont );
+
 #if 0
 
 	static const int       health           = 100;
@@ -279,23 +286,23 @@ static void draw_hud( const ApeViewport *viewport )
 #endif
 }
 
-void ss1_menu_draw( const ApeViewport *viewport )
+void nih_menu_draw( const ApeViewport *viewport )
 {
-	static constexpr float MENU_SCALE = 1.0f;
+	//if ( !game_menu_splash_is_complete_() )
+	//{
+	//	game_menu_splash_draw_( viewport );
+	//	return;
+	//}
+	//
+	//if ( game_menu_is_open() )
+	//{
+	//	game_menu_draw_( viewport );
+	//	return;
+	//}
 
-	if ( !game_menu_splash_is_complete_() )
-	{
-		game_menu_splash_draw_( viewport );
-		return;
-	}
+	draw_hud( viewport );
 
-	if ( game_menu_is_open() )
-	{
-		game_menu_draw_( viewport );
-		return;
-	}
-
-	qm1_menu_hud_draw_( viewport );
+	//qm1_menu_hud_draw_( viewport );
 
 	// draw our fancy little pie menu for interactions
 	menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );

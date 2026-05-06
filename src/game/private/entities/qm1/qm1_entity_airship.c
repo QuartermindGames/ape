@@ -4,7 +4,7 @@
 
 #include "qmos/public/qm_os_random.h"
 
-#include "ss1/ss1_game.h"
+#include "nihlexa/nihlexa.h"
 #include "core/public/ape/ape_public_model.h"//TODO: this include should be UP
 #include "components/component_health.h"
 

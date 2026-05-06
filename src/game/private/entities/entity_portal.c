@@ -4,14 +4,10 @@
 
 #include "../game_private.h"
 
-static constexpr unsigned int MAX_PORTALS = 2;
-
 static constexpr unsigned int NUM_VERTICES           = 4;
 static constexpr float        TALL                   = 64.0f;
 static constexpr float        WIDE                   = 16.0f;
 static constexpr float        GAME_PORTAL_OPEN_SPEED = 4.0f;
-
-static ApeEntity *portals[ MAX_PORTALS ];
 
 static constexpr QmMathVector3f OPEN_VPOS[ NUM_VERTICES ] = {
         QM_MATH_VECTOR3F( -WIDE, 0.0f, 0.0f ),
@@ -43,71 +39,33 @@ typedef struct GamePortalEntity
 
 	GamePortalState state;
 
-	unsigned int slot;
+	ApeFloatProperty tall;
+	ApeFloatProperty wide;
+
+	ApeStringProperty selfTag[ APE_BRUSH_FACE_MAX_TAG ];
+	ApeStringProperty targetTag[ APE_BRUSH_FACE_MAX_TAG ];
 } GamePortalEntity;
+
 #define GAME_PORTAL_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), "portal", GamePortalEntity )
 
 static ApeMaterial *portalMaterial;
 
-void game_entity_close_all_portals()
+static void *create_portal( [[maybe_unused]] ApeEntity *self, [[maybe_unused]] AcmBranch *properties )
 {
-	for ( unsigned int i = 0; i < MAX_PORTALS; ++i )
-	{
-		if ( portals[ i ] == nullptr )
-		{
-			continue;
-		}
-
-		GamePortalEntity *portal = GAME_PORTAL_ENTITY( portals[ i ] );
-		assert( portal != nullptr );
-
-		portal->state = GAME_PORTAL_STATE_CLOSING;
-	}
-}
-
-static void *create_portal( ApeEntity *self, AcmBranch *properties )
-{
-	unsigned int i;
-	for ( i = 0; i < MAX_PORTALS; ++i )
-	{
-		if ( portals[ i ] != nullptr )
-		{
-			continue;
-		}
-
-		portals[ i ] = self;
-		break;
-	}
-
-	if ( i >= MAX_PORTALS )
-	{
-		game_warning_( "Hit maximum entity portal limit (%u >= %u)!\n", i, MAX_PORTALS );
-		return nullptr;
-	}
-
 	if ( portalMaterial == nullptr )
 	{
 		portalMaterial = ape_material_cache( "materials/world/test/portal.mat.n", APE_CACHE_GROUP_WORLD, true );
 	}
 
 	GamePortalEntity *portal = QM_OS_MEMORY_NEW( GamePortalEntity );
-	portal->slot             = i;
+	portal->tall             = TALL;
+	portal->wide             = WIDE;
+
 	return portal;
 }
 
 static void destroy_portal( ApeEntity *self )
 {
-	for ( unsigned int i = 0; i < MAX_PORTALS; ++i )
-	{
-		if ( portals[ i ] != self )
-		{
-			continue;
-		}
-
-		portals[ i ] = nullptr;
-		break;
-	}
-
 	GamePortalEntity *portal = GAME_PORTAL_ENTITY( self );
 	qm_os_memory_free( portal );
 }
@@ -140,17 +98,14 @@ static void spawn_portal( ApeEntity *self )
 	brush->numFaces = 1;
 	brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
 
-	ApeEntity        *lastPortalEntity = ( portal->slot > 0 ) ? portals[ portal->slot - 1 ] : nullptr;
-	GamePortalEntity *lastPortal       = lastPortalEntity != nullptr ? GAME_PORTAL_ENTITY( lastPortalEntity ) : nullptr;
-
 	ApeBrushFace *face = &brush->faces[ 0 ];
 
 	ape_brush_face_setup( face );
 
-	face->parent       = brush;
-	face->numVertices  = brush->numVertices;
-	face->flags        = APE_BRUSH_FACE_FLAG_PORTAL;
-	face->material     = portalMaterial;
+	face->parent      = brush;
+	face->numVertices = brush->numVertices;
+	face->flags       = APE_BRUSH_FACE_FLAG_PORTAL;
+	face->material    = portalMaterial;
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
 	{
 		ApeBrushFaceVertex *vertex = &face->vertices[ i ];
@@ -162,15 +117,6 @@ static void spawn_portal( ApeEntity *self )
 
 	portal->surface = face;
 
-	if ( lastPortal != nullptr )
-	{
-		face->destination = lastPortal->surface;
-		if ( lastPortal->surface->destination == nullptr )
-		{
-			lastPortal->surface->destination = portal->surface;
-		}
-	}
-
 	ape_brush_face_compute_normal( face );
 	ape_brush_face_apply_material_coordinates( face, &QM_MATH_VECTOR2F( 1.0f, 1.0f ), &QM_MATH_VECTOR2F( 0.0f, 0.0f ), &QM_MATH_VECTOR3F( 0.0f, 0.0f, 0.0f ), false );
 
@@ -181,10 +127,13 @@ static void spawn_portal( ApeEntity *self )
 	portal->startAng = ape_world_node_get_angles( APE_WORLD_NODE( self ) );
 
 	portal->brush = brush;
+
+	ape_brush_face_set_tag( face, portal->selfTag );
 }
 
 static void tick_portal( ApeEntity *self, double delta )
 {
+#if 0
 	delta = game_get_delta_mod_( delta );
 
 	GamePortalEntity *portal = GAME_PORTAL_ENTITY( self );
@@ -266,7 +215,15 @@ static void tick_portal( ApeEntity *self, double delta )
 
 	ape_world_node_set_position( APE_WORLD_NODE( self ), &pos );
 	ape_world_node_set_angles( APE_WORLD_NODE( self ), &ang );
+#endif
 }
+
+static ApeProperty spawnProperties[] = {
+        APE_PROPERTY_BASIC( "Tall", "Height of the portal.", GamePortalEntity, tall, FLOAT ),
+        APE_PROPERTY_BASIC( "Wide", "Width of the portal.", GamePortalEntity, wide, FLOAT ),
+        APE_PROPERTY_STRING( "Tag", "What tag to use for the portal face, for lookup.", GamePortalEntity, selfTag ),
+        APE_PROPERTY_STRING( "Target Tag", "Destination of the portal.", GamePortalEntity, targetTag ),
+};
 
 ApeEntityClassDefinition game_portalEntityClass_ = {
         .name        = "portal",
@@ -276,4 +233,7 @@ ApeEntityClassDefinition game_portalEntityClass_ = {
         .destroyFunction = destroy_portal,
         .spawnFunction   = spawn_portal,
         .tickFunction    = tick_portal,
+
+        .properties    = spawnProperties,
+        .numProperties = QM_OS_ARRAY_ELEMENTS( spawnProperties ),
 };

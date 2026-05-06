@@ -2,7 +2,7 @@
 
 #pragma once
 
-#define SS1_PLAYER_CLASS_NAME "ss1_player"
+static constexpr char QM1_PLAYER_CLASS_NAME[] = "qm1_player";
 
 typedef enum SS1PlayerAudioChannel
 {
@@ -12,23 +12,16 @@ typedef enum SS1PlayerAudioChannel
 	SS1_PLAYER_MAX_AUDIO_CHANNELS
 } SS1PlayerAudioChannel;
 
-typedef struct SS1PlayerEntity
+typedef struct Qm1PlayerEntity
 {
-	GamePlayer   *player;
-	Qm1Character *character;
+	GamePlayer *player;
 
 	struct GameHealthComponent    *healthComponent;
 	struct GameMovementComponent  *movementComponent;
 	struct GameCollisionComponent *collisionComponent;
-	struct GameInventoryComponent *inventoryComponent;
+	struct GameCameraComponent    *cameraComponent;
 
 	struct ApeAudioSource *audioSources[ SS1_PLAYER_MAX_AUDIO_CHANNELS ];
-	struct ApeModelNode   *model;
+} Qm1PlayerEntity;
 
-	float          cameraDistance;// distance from the entity and camera
-	float          cameraSide;    // how far the camera should shift left or right
-	float          cameraHeight;  // height from origin of entity
-	QmMathVector3f cameraAngles;  // orbital rotation around the entity
-} SS1PlayerEntity;
-
-#define SS1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), SS1_PLAYER_CLASS_NAME, SS1PlayerEntity )
+#define QM1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), QM1_PLAYER_CLASS_NAME, Qm1PlayerEntity )

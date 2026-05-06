@@ -84,6 +84,7 @@ extern ApeEntityClassDefinition game_ropeEntityClass_;
 extern ApeEntityClassDefinition game_portalEntityClass_;
 extern ApeEntityClassDefinition game_terrainEntityClass_;
 
+extern ApeEntityComponentDefinition game_cameraComponent_;
 extern ApeEntityComponentDefinition game_collisionComponent_;
 extern ApeEntityComponentDefinition game_healthComponent_;
 extern ApeEntityComponentDefinition game_movementComponent_;
@@ -98,6 +99,7 @@ static void register_standard_entity_components()
 	ape_register_entity_class( &game_portalEntityClass_ );
 	ape_register_entity_class( &game_terrainEntityClass_ );
 
+	ape_register_entity_component( &game_cameraComponent_ );
 	ape_register_entity_component( &game_collisionComponent_ );
 	ape_register_entity_component( &game_healthComponent_ );
 	ape_register_entity_component( &game_movementComponent_ );
@@ -115,6 +117,10 @@ static void load_room_command( [[maybe_unused]] unsigned int argc, char **argv )
 		ape_world_node_destroy( APE_WORLD_NODE( world ) );
 		return;
 	}
+
+	// a world is being loaded via command, skip the splash screens and menu!
+	game_menu_set_active( nullptr );
+	game_menu_splash_cleanup_();
 
 	game_spawn_world( world, ( ApeRoom * ) roomNode );
 }
@@ -229,9 +235,6 @@ void game_spawn_world( ApeWorld *world, ApeRoom *room )
 	}
 
 	currentWorld = world;
-
-	// a world is being loaded, skip the splash screens!
-	game_menu_splash_cleanup_();
 
 	if ( ape_gameInterface->spawnWorld != nullptr )
 	{

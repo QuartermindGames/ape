@@ -11,6 +11,7 @@ set(GAME_SHARED_FILES
 
         private/ai/ai_brain.c
 
+        private/components/component_camera.c
         private/components/component_collision.c
         private/components/component_health.c
         private/components/component_inventory.c
@@ -75,14 +76,13 @@ endif ()
 set(SS1_SOURCES
         ${GAME_SHARED_FILES}
 
-        private/ss1/qm1_character.c
-        private/ss1/qm1_menu.c
-        private/ss1/qm1_menu_hud.c
-
-        private/ss1/ss1_actions.c
-        private/ss1/ss1_game.c
-        private/ss1/ss1_mission.c
-        private/ss1/ss1_name_generator.c
+        private/nihlexa/nihlexa.c
+        private/nihlexa/nihlexa_actions.c
+        private/nihlexa/nihlexa_menu.c
+        private/nihlexa/nihlexa_menu_hud.c
+        private/nihlexa/nihlexa_mission.c
+        private/nihlexa/nihlexa_name_generator.c
+        private/nihlexa/nihlexa_world.c
 )
 
 add_executable(SS1 WIN32 ${SS1_SOURCES} ../shells/launcher_sdl2/launcher.c)
@@ -96,6 +96,14 @@ target_link_libraries(SS1Forge Forge ${GAME_LINK_LIBS})
 target_compile_definitions(SS1Forge PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(SS1Forge PRIVATE private)
 set_target_properties(SS1Forge PROPERTIES FOLDER "Games")
+
+add_library(ape-game OBJECT
+        ${SS1_SOURCES}
+)
+target_compile_definitions(ape-game PRIVATE -DGAME_SS1 GAME_QM2)
+target_include_directories(ape-game PRIVATE private)
+target_link_libraries(ape-game ${GAME_LINK_LIBS})
+set_target_properties(ape-game PROPERTIES FOLDER "Engine")
 
 #############################################
 # Gateway

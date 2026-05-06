@@ -2,5 +2,5 @@
 // Purpose: Mission functionality
 // Author:  Mark E. Sowden
 
-#include "ss1_game.h"
-#include "ss1_mission.h"
+#include "nihlexa.h"
+#include "nihlexa_mission.h"
