@@ -468,15 +468,21 @@ ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self )
 		return self;
 	}
 
-	if ( self->flags & APE_BRUSH_FACE_FLAG_PORTAL )
+	if ( *self->destinationTag != '\0' && self->flags & APE_BRUSH_FACE_FLAG_PORTAL )
 	{
-		ApeWorld *world = ( ApeWorld * ) ape_world_node_get_root( APE_WORLD_NODE( self->parent ) );
-		if ( world == nullptr )
+		if ( strchr( self->destinationTag, ':' ) == nullptr )
 		{
-			return nullptr;
+			ApeRoom *room = ape_brush_face_get_room( self );
+			if ( room == nullptr )
+			{
+				return nullptr;
+			}
+
+			return ape_room_get_tagged_surface( room, self->destinationTag );
 		}
 
-		if ( *self->destinationTag == '\0' )
+		ApeWorld *world = ( ApeWorld * ) ape_world_node_get_root( APE_WORLD_NODE( self->parent ) );
+		if ( world == nullptr )
 		{
 			return nullptr;
 		}
@@ -1070,6 +1076,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 			}
 
 			snprintf( brush->faces[ i ].tag, sizeof( brush->faces[ i ].tag ), "%s", acm_get_string( branch, "id", "" ) );
+			snprintf( brush->faces[ i ].destinationTag, sizeof( brush->faces[ i ].destinationTag ), "%s", acm_get_string( branch, "destination", "" ) );
 
 			// material
 			const char *str;
