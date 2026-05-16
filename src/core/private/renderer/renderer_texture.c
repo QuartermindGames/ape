@@ -11,17 +11,6 @@
 
 #include "editor/editor.h"
 
-/////////////////////////////////////////////////////////////////
-// Old API crap
-
-QmGfxTexture *ape_texture_get_fallback( void )
-{
-	return ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
-}
-
-/////////////////////////////////////////////////////////////////
-// Private
-
 static PLHashTable *textureTable;
 static ApeTexture  *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
 
@@ -158,7 +147,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 	plWriteImage( imageData, outName );
 #endif
 
-	QmGfxTexture *internalTexture = qm_gfx_texture_create();
+	QmGfxTexture *internalTexture = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
 	if ( internalTexture == nullptr )
 	{
 		ape_console_error_( true, "Failed to create texture (%s): %s\n", id, PlGetError() );
@@ -318,7 +307,7 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 
 	// upload it
 
-	texture->internal = qm_gfx_texture_create();
+	texture->internal = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
 	if ( texture->internal == nullptr )
 	{
 		ape_console_warning_( "Failed to allocate internal texture (%s): %s\n", path, PlGetError() );
@@ -354,6 +343,83 @@ cleanup:
 	destroy_texture( texture );
 
 	return useFallback ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
+}
+
+ApeTexture *ape_texture_cache_cubemap_( char **paths, const QmGfxTextureFilter filter )
+{
+	ApeTexture *texture = QM_OS_MEMORY_NEW( ApeTexture );
+	if ( texture == nullptr )
+	{
+		return nullptr;
+	}
+
+	texture->internal = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_CUBEMAP );
+	if ( texture->internal == nullptr )
+	{
+		ape_console_warning_( "Failed to allocate internal texture: %s\n", PlGetError() );
+		goto cleanup;
+	}
+
+	qm_gfx_texture_set_filter( texture->internal, filter );
+	qm_gfx_texture_set_wrap_mode( texture->internal, PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE );
+
+	// need to make sure they're all consistent
+	unsigned int w = 0;
+	unsigned int h = 0;
+
+	// attempt to load all the faces in
+	QmImage *images[ QM_GFX_TEXTURE_MAX_CUBEMAP_FACES ] = {};
+	for ( unsigned int i = 0; i < QM_GFX_TEXTURE_MAX_CUBEMAP_FACES; ++i )
+	{
+		images[ i ] = qm_image_load( paths[ i ] );
+		if ( images[ i ] == nullptr )
+		{
+			ape_console_warning_( "Failed to load image for cubemap (%s): %s\n", paths[ i ], PlGetError() );
+			goto cleanup;
+		}
+
+		if ( w == 0 )
+		{
+			w = images[ i ]->width;
+		}
+		else if ( images[ i ]->width != w )
+		{
+			ape_console_warning_( "Incorrect cubemap slot width (%u) (%u != %u)!\n", i, images[ i ]->width, w );
+			goto cleanup;
+		}
+
+		if ( h == 0 )
+		{
+			h = images[ i ]->height;
+		}
+		else if ( images[ i ]->height != h )
+		{
+			ape_console_warning_( "Incorrect cubemap slot height (%u) (%u != %u)!\n", i, images[ i ]->height, h );
+			goto cleanup;
+		}
+
+		qm_gfx_texture_upload( texture->internal, images[ i ] );
+
+		PlDestroyImage( images[ i ] );
+		images[ i ] = nullptr;
+	}
+
+	return texture;
+
+cleanup:
+	for ( unsigned int i = 0; i < QM_GFX_TEXTURE_MAX_CUBEMAP_FACES; ++i )
+	{
+		if ( images[ i ] == nullptr )
+		{
+			continue;
+		}
+
+		PlDestroyImage( images[ i ] );
+	}
+
+	destroy_texture( texture );
+
+	return nullptr;
 }
 
 void ape_texture_release_( ApeTexture *texture )

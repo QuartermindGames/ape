@@ -50,6 +50,8 @@ typedef struct ApeMaterial
 
 static ApeMaterial *defaultMaterials[ APE_MAX_DEFAULT_MATERIALS ];
 
+static void material_var_free( ApeMaterialVariable *var );
+
 ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial )
 {
 	assert( defaultMaterial != APE_MAX_DEFAULT_MATERIALS );
@@ -313,12 +315,12 @@ static bool validate_material_variable( ApeMaterialVariable *variable, QmGfxShad
 			return ( uniformType == PLG_UNIFORM_DOUBLE );
 
 		case SS_ARL_MATERIAL_VAR_INT:
-			return ( uniformType == PLG_UNIFORM_INT );
+			return ( uniformType == QM_GFX_SHADER_UNIFORM_TYPE_INT );
 		case SS_ARL_MATERIAL_VAR_UINT:
 			return ( uniformType == PLG_UNIFORM_UINT );
 
 		case SS_ARL_MATERIAL_VAR_BOOL:
-			return ( uniformType == PLG_UNIFORM_BOOL );
+			return ( uniformType == QM_GFX_SHADER_UNIFORM_TYPE_BOOL );
 
 		case SS_ARL_MATERIAL_VAR_VEC2:
 			return ( uniformType == PLG_UNIFORM_VEC2 );
@@ -367,7 +369,8 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		/* validate that the property actually exists or is at least exposed by the shader.
 		 * in the long-term we'll be doing this against our own shader program object, but
 		 * for now, just do it directly against the shader itself */
-		const char *propertyName      = acm_branch_get_name( node );
+		const char *propertyName = acm_branch_get_name( node );
+
 		materialVariable->programSlot = qm_gfx_shader_program_get_uniform_slot( materialPass->program->internal, propertyName );
 		if ( materialVariable->programSlot == -1 )
 		{
@@ -438,7 +441,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				default:
 					break;
 
-				case PLG_UNIFORM_BOOL:
+				case QM_GFX_SHADER_UNIFORM_TYPE_BOOL:
 				{
 					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( bool, materialVariable->numElements );
 
@@ -528,7 +531,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					materialVariable->type = SS_ARL_MATERIAL_VAR_UINT;
 					break;
 				}
-				case PLG_UNIFORM_INT:
+				case QM_GFX_SHADER_UNIFORM_TYPE_INT:
 				{
 					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( int32_t, materialVariable->numElements );
 
@@ -563,10 +566,54 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					break;
 				}
 
+				case PLG_UNIFORM_SAMPLERCUBE:
+				{
+					if ( acm_get_num_of_children( node ) != QM_GFX_TEXTURE_MAX_CUBEMAP_FACES )
+					{
+						ape_console_warning_( "Invalid number of faces for cubemap!\n" );
+						break;
+					}
+
+					char *paths[ QM_GFX_TEXTURE_MAX_CUBEMAP_FACES ] = {};
+					if ( acm_branch_get_string_array( node, paths, QM_GFX_TEXTURE_MAX_CUBEMAP_FACES ) != ND_ERROR_SUCCESS )
+					{
+						ape_console_warning_( "Invalid cubemap variable setup!\n" );
+						break;
+					}
+
+					ApeTexture *texture = ape_texture_cache_cubemap_( paths, materialPass->textureFilter );
+					if ( texture != nullptr )
+					{
+						materialVariable->hint = APE_MATERIAL_VAR_HINT_DIFFUSE;
+
+						QmGfxTexture *internal = texture->internal;
+						if ( material != nullptr )
+						{
+							if ( material->width < internal->w )
+							{
+								material->width = internal->w;
+							}
+							if ( material->height < internal->h )
+							{
+								material->height = internal->h;
+							}
+						}
+
+						materialVariable->data.ptr = texture;
+						materialVariable->type     = APE_MATERIAL_VAR_TEXTURE;
+					}
+
+					for ( unsigned int i = 0; i < QM_GFX_TEXTURE_MAX_CUBEMAP_FACES; ++i )
+					{
+						ACM_DELETE( paths[ i ] );
+					}
+
+					break;
+				}
+
 				case PLG_UNIFORM_SAMPLER1D:
 				case PLG_UNIFORM_SAMPLER2D:
 				case PLG_UNIFORM_SAMPLER3D:
-				case PLG_UNIFORM_SAMPLERCUBE:
 				case PLG_UNIFORM_SAMPLER1DSHADOW:
 				case PLG_UNIFORM_SAMPLER2DSHADOW:
 				{
@@ -632,7 +679,24 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 			continue;
 		}
 
-		materialPass->numVariables++;
+		// check if we've already got that property already urgh
+		// good ol' linear search... :(
+		unsigned int i;
+		for ( i = 0; i < materialPass->numVariables; ++i )
+		{
+			if ( strcmp( propertyName, materialPass->variables[ i ].name ) == 0 )
+			{
+				material_var_free( &materialPass->variables[ i ] );
+				materialPass->variables[ i ] = *materialVariable;
+				*materialVariable            = ( ApeMaterialVariable ) {};
+				break;
+			}
+		}
+
+		if ( i >= materialPass->numVariables )
+		{
+			materialPass->numVariables++;
+		}
 
 		node = next;
 	}
@@ -674,7 +738,7 @@ static QmGfxTextureFilter get_texture_filter_by_name( const char *name )
 	return textureFilter;
 }
 
-void ape_parse_material_pass_( ApeMaterial *material, struct AcmBranch *root, ApeMaterialPass *materialPass )
+void ape_parse_material_pass_( ApeMaterial *material, AcmBranch *root, ApeMaterialPass *materialPass )
 {
 	/* fetch the blend mode we'll use for the pass */
 	AcmBranch *subNode;
@@ -814,22 +878,30 @@ static ApeMaterial *get_material( const char *path, ApeCacheGroup group )
 	return nullptr;
 }
 
+static void material_var_free( ApeMaterialVariable *var )
+{
+	switch ( var->type )
+	{
+		case APE_MATERIAL_VAR_BUILTIN:
+			//TODO!!!
+			break;
+		case APE_MATERIAL_VAR_TEXTURE:
+			ape_texture_release_( var->data.ptr );
+			break;
+		default:
+			qm_os_memory_free( var->data.ptr );
+			break;
+	}
+
+	// zero it
+	*var = ( ApeMaterialVariable ) {};
+}
+
 static void ape_material_pass_free_( ApeMaterialPass *pass )
 {
 	for ( unsigned int i = 0; i < pass->numVariables; ++i )
 	{
-		switch ( pass->variables[ i ].type )
-		{
-			case APE_MATERIAL_VAR_BUILTIN:
-				//TODO!!!
-				break;
-			case APE_MATERIAL_VAR_TEXTURE:
-				ape_texture_release_( pass->variables[ i ].data.ptr );
-				break;
-			default:
-				qm_os_memory_free( pass->variables[ i ].data.ptr );
-				break;
-		}
+		material_var_free( &pass->variables[ i ] );
 	}
 
 	if ( pass->animators != nullptr )
@@ -925,16 +997,16 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 		case APE_MATERIAL_BUILTIN_TIME:
 		{
 			unsigned int numTicks = ape_get_num_ticks();
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, &numTicks, false );
+			qm_gfx_shader_set_uniform_value_by_index( program, uniformSlot, &numTicks, false );
 			break;
 		}
 
 		case APE_MATERIAL_BUILTIN_FALLBACK:
 		{
-			QmGfxTexture *texture = ape_texture_get_fallback();
+			QmGfxTexture *texture = ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
 			assert( texture != nullptr );
 			qm_gfx_texture_set( texture, *curUnit );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
+			qm_gfx_shader_set_uniform_value_by_index( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
 			break;
 		}
@@ -947,7 +1019,7 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 			}
 
 			qm_gfx_texture_set( texture, *curUnit );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, curUnit, false );
+			qm_gfx_shader_set_uniform_value_by_index( program, uniformSlot, curUnit, false );
 			( *curUnit )++;
 			break;
 		}
@@ -956,7 +1028,7 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 		{
 			int w, h;
 			ape_get_2d_viewport_size_( &w, &h );
-			PlgSetShaderUniformValueByIndex( program, uniformSlot, &QM_MATH_VECTOR2F( ( float ) w, ( float ) h ), false );
+			qm_gfx_shader_set_uniform_value_by_index( program, uniformSlot, &QM_MATH_VECTOR2F( ( float ) w, ( float ) h ), false );
 			break;
 		}
 
@@ -976,7 +1048,7 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ] >= 0 )
 	{
 		double numTicks = ( double ) ape_get_num_ticks();
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ], &numTicks, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ], &numTicks, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_VIEW_SIZE ] >= 0 )
 	{
@@ -984,36 +1056,36 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		ape_get_2d_viewport_size_( &w, &h );
 
 		QmMathVector2f viewSize = qm_math_vector2f( ( float ) w, ( float ) h );
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_VIEW_SIZE ], &viewSize, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_VIEW_SIZE ], &viewSize, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ] >= 0 )
 	{
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &ape_rendererState_.fogColour, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_COLOUR ], &ape_rendererState_.fogColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ] >= 0 )
 	{
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &ape_rendererState_.fogNear, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_NEAR ], &ape_rendererState_.fogNear, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ] >= 0 )
 	{
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &ape_rendererState_.fogFar, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &ape_rendererState_.fogFar, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
 		QmMathColour4f lightColour = ( light != NULL ) ? light->colour : ( QmMathColour4f ) {};
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
 	{
 		QmMathVector3f lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( QmMathVector3f ) {};
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
 	{
 		float lightRadius = ( light != NULL ) ? light->radius : 0.0f;
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ] >= 0 )
 	{
@@ -1026,23 +1098,23 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		{
 			lightDirection = QM_MATH_VECTOR3F_ZERO;
 		}
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &lightDirection, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &lightDirection, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ] >= 0 )
 	{
 		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( QM_MATH_DEG2RAD( light->angle ) ) : 0.0f;
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ], &lightCutOff, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ], &lightCutOff, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
 	{
 		QmMathColour4f sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( QmMathColour4f ) {};
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
 	{
 		QmMathVector3f lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( QmMathVector3f ) {};
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ] >= 0 )
@@ -1057,7 +1129,7 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 			sunAmbience = ape_rendererState_.ambience;
 		}
 
-		PlgSetShaderUniformValueByIndex( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ], &sunAmbience, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ], &sunAmbience, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ] >= 0 )
@@ -1073,7 +1145,7 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		float scaleY = ( pass->textureScale.y != 0.0f ) ? 1.0f / pass->textureScale.y : 1.0f;
 		PlScaleMatrix( qm_math_vector3f( scaleX, scaleY, 1.0f ) );
 
-		PlgSetShaderUniformValueByIndex( program->internal,
+		qm_gfx_shader_set_uniform_value_by_index( program->internal,
 		                                 program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
 		                                 PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 
@@ -1083,7 +1155,7 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
 	{
-		PlgSetShaderUniformValueByIndex( program->internal,
+		qm_gfx_shader_set_uniform_value_by_index( program->internal,
 		                                 program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
 		                                 PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 	}
@@ -1225,7 +1297,7 @@ static QmGfxTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 
 	if ( texture == nullptr )
 	{
-		texture = ape_texture_get_fallback();
+		texture = ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
 		assert( texture != nullptr );
 	}
 
@@ -1375,15 +1447,15 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 
 					if ( !( texture->flags & PLG_TEXTURE_FLAG_NOMIPS ) )
 					{
-						PlgSetTextureAnisotropy( texture, materialTextureAnisotropy );
+						qm_gfx_texture_set_anisotropy( texture, materialTextureAnisotropy );
 					}
 
-					PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, &curUnit, false );
+					qm_gfx_shader_set_uniform_value_by_index( curPass->program->internal, curPass->variables[ j ].programSlot, &curUnit, false );
 					curUnit++;
 					continue;
 				}
 
-				PlgSetShaderUniformValueByIndex( curPass->program->internal, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.ptr, false );
+				qm_gfx_shader_set_uniform_value_by_index( curPass->program->internal, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.ptr, false );
 			}
 		}
 

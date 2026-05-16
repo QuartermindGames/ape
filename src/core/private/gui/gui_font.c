@@ -177,7 +177,14 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 		return nullptr;
 	}
 
-	font->texture         = qm_gfx_texture_create();
+	font->texture = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
+	if ( font->texture == nullptr )
+	{
+		ape_gui_font_destroy( font );
+		ape_console_warning_( "Failed to create texture for font: %s!\n", PlGetError() );
+		return nullptr;
+	}
+
 	font->texture->filter = PLG_TEXTURE_FILTER_LINEAR;
 	if ( !qm_gfx_texture_upload( font->texture, bitmapImage ) )
 	{
