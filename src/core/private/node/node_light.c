@@ -164,10 +164,12 @@ bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
 		return false;
 	}
 
+#ifndef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
 	if ( self->type != APE_LIGHT_TYPE_SUN && !com_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &face->bounds, nullptr ) )
 	{
 		return false;
 	}
+#endif
 
 	QmMathVector3f dir;
 	if ( self->type == APE_LIGHT_TYPE_SUN || self->type == APE_LIGHT_TYPE_SPOT )

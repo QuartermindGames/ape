@@ -608,6 +608,8 @@ bool ape_room_create_projected_decal( ApeRoom *self, ApeMaterial *material, cons
 
 typedef struct ApeMaterial ApeMaterial;
 
+//#define APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
+
 typedef enum ApeLightShadowType
 {
 	APE_LIGHT_SHADOW_TYPE_NONE,

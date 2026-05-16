@@ -476,10 +476,16 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			else// assumed omni
 			{
 				float d = qm_math_vector3f_distance( lightPos, luxelPos );
-				float r = QM_MATH_CLAMP( 0.0f, 1.0f - d * d / ( light->radius * light->radius ), 1.0f );
+#ifdef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
+				float r = light->radius * 10.0f / ( d * d );
 				float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
-
+				c = qm_math_vector3f_scale_float( qm_math_vector3f( lightColour.r, lightColour.g, lightColour.b ), l );
+#else
+				float r = QM_MATH_CLAMP( 0.0f, 1.0f - d / light->radius, 1.0f );
+				float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
 				c = qm_math_vector3f_scale_float( qm_math_vector3f( lightColour.r, lightColour.g, lightColour.b ), l * lightColour.a );
+#endif
+
 				c = qm_math_vector3f_scale_float( c, r );
 			}
 
