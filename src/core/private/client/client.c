@@ -66,6 +66,13 @@ static void process_server_message()
 		}
 
 		clientState.state = CLIENT_SERVER_STATE_ACCEPTED;
+
+		const ApeGameInterfaceImport *game = ape_game_get_interface();
+		if ( game != nullptr && game->clientConnected != nullptr )
+		{
+			game->clientConnected();
+		}
+
 		return;
 	}
 

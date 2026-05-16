@@ -8,12 +8,16 @@
 #include "ape/ape_public_game.h"
 #include "server.h"
 
+#include "core_console.h"
+
 #define SERVER_CLIENT_TIMEOUT 1024
 
 static ApeNetSocket *hostSocket;
 
 static char serverName[ PL_VAR_VALUE_LENGTH ];
 static char serverPass[ PL_VAR_VALUE_LENGTH ];
+
+static bool showServerHeartbeat;
 
 typedef struct ApeServerClient
 {
@@ -32,8 +36,9 @@ static QmOsLinkedList *connectedClients;
 
 void ape_server_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, serverName, nullptr, true );
-	PlRegisterConsoleVariable( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, nullptr, true );
+	ape_console_var_register( "server.name", "Name to use for the server.", "unnamed", PL_VAR_STRING, serverName, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "server.pass", "Password to access server functions.", "", PL_VAR_STRING, serverPass, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "server.heartbeat", "Show server heartbeat.", "false", PL_VAR_BOOL, &showServerHeartbeat, nullptr, 0 );
 }
 
 bool ape_server_start( const char *address, const uint16_t port )
@@ -138,14 +143,15 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 
 	client->state = APE_SERVER_CLIENT_STATE_ACCEPTED;
 
-	assert( game->serverClientConnected != nullptr );
-	game->serverClientConnected( client );
-
+	// notify the client they've validated
 	ape_net_send_( client->netSocket, &( ApeProtocolMessageHeader ) {
 	                                          .length = sizeof( ApeProtocolMessageHeader ),
 	                                          .type   = APE_PROTOCOL_MESSAGE_TYPE_VALIDATED,
 	                                  },
 	               sizeof( ApeProtocolMessageHeader ) );
+
+	assert( game->serverClientConnected != nullptr );
+	game->serverClientConnected( client );
 }
 
 static void process_client_message( ApeServerClient *client, const void *buf )
@@ -182,11 +188,18 @@ static void process_client_message( ApeServerClient *client, const void *buf )
 			ape_console_warning_( "Unhandled server message (%u)!\n", messageHeader->type );
 			break;
 		case APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE:
-			//ape_console_print_( "SV: Received heartbeat response\n" );
+			if ( showServerHeartbeat )
+			{
+				ape_console_print_( "SV: Received heartbeat response\n" );
+			}
 			break;
 		case APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_REQUEST:
 		{
-			//ape_console_print_( "SV: Received heartbeat request\n" );
+			if ( showServerHeartbeat )
+			{
+				ape_console_print_( "SV: Received heartbeat request\n" );
+			}
+
 			static constexpr ApeProtocolMessageHeader header = { .length = sizeof( ApeProtocolMessageHeader ), .type = APE_PROTOCOL_MESSAGE_TYPE_HEARTBEAT_RESPONSE };
 			if ( !ape_net_send_( client->netSocket, &header, sizeof( ApeProtocolMessageHeader ) ) )
 			{

@@ -30,14 +30,14 @@ typedef struct ApeGameInterfaceImport
 	void ( *onDestroyRoom )( ApeRoom *room );
 
 	// client
-	void ( *clientConnect )();
+	void ( *clientConnected )();// called on successful validation
 	void ( *clientDisconnect )();
 	void ( *clientProcessMessage )( const void *buf, size_t bufSize );
 	void ( *clientTick )( double delta );
 
 	// server
 	bool ( *serverClientValidate )( ApeServerClient *clientHandle );
-	void ( *serverClientConnected )( ApeServerClient *clientHandle );
+	void ( *serverClientConnected )( ApeServerClient *clientHandle );// called on successful validation
 	void ( *serverClientDisconnected )( ApeServerClient *clientHandle );
 	void ( *serverProcessMessage )( ApeServerClient *clientHandle, const void *buf, size_t bufSize );
 	void ( *serverTick )( double delta );
