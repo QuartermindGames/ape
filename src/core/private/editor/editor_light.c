@@ -363,7 +363,7 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			ApeMaterial *material = face->material;
 			if ( ape_material_can_receive_shadows( material ) && light->flags & APE_LIGHT_FLAG_SHADOWS )
 			{
-#if 1// penumbra - this should really just produce some sort of explicit sphere (but jittering works quite well anyway)
+#if 0// penumbra - this should really just produce some sort of explicit sphere (but jittering works quite well anyway)
 
 				float                         shadowFactor       = 0.0f;
 				static constexpr unsigned int NUM_SHADOW_SAMPLES = 32;
