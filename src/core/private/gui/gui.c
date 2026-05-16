@@ -9,6 +9,7 @@
 #include "renderer/material/material.h"
 #include "renderer/post/post.h"
 #include "yin/core_game.h"
+#include "core_console.h"
 
 //TODO: eventually this should be used, rather than what we're doing
 #define USE_GUI_CANVAS 0
@@ -39,10 +40,10 @@ bool ape_gui_initialize_( void )
 {
 	ape_guiState_ = ( ApeGUIState ) {};
 
-	PlRegisterConsoleVariable( "gui.draw", "Enable/disable drawing of the GUI.", "true", PL_VAR_BOOL, &guiDraw, nullptr, false );
-	PlRegisterConsoleVariable( "gui.profiler", "Enable profiler.", "false", PL_VAR_BOOL, &guiProfilerOverlay, nullptr, false );
-	PlRegisterConsoleVariable( "gui.profilerWidth", "Set the width of the on-screen profiler.", "512", PL_VAR_F32, &profilerWidth, nullptr, true );
-	PlRegisterConsoleVariable( "gui.profilerHeight", "Set the width of the on-screen profiler.", "256", PL_VAR_F32, &profilerHeight, nullptr, true );
+	ape_console_var_register( "gui.draw", "Enable/disable drawing of the GUI.", "true", PL_VAR_BOOL, &guiDraw, nullptr, 0 );
+	ape_console_var_register( "gui.profiler", "Enable profiler.", "false", PL_VAR_BOOL, &guiProfilerOverlay, nullptr, 0 );
+	ape_console_var_register( "gui.profilerWidth", "Set the width of the on-screen profiler.", "512", PL_VAR_F32, &profilerWidth, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "gui.profilerHeight", "Set the width of the on-screen profiler.", "256", PL_VAR_F32, &profilerHeight, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
 #if USE_GUI_CANVAS == 1
 
