@@ -95,6 +95,7 @@ worldViewportMap[] = {
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_NEW_ROOM, forge::WorldViewport::on_link_new_room ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_UNLINK_PORTAL, forge::WorldViewport::on_face_unlink_portal ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_PORTAL, forge::WorldViewport::on_face_link_portal ),
+        FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_LINK_OTHER, forge::WorldViewport::on_face_link_other ),
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_FACE_FLAG_MIRROR, forge::WorldViewport::on_toggle_face_flag ),
 
         FXMAPFUNC( SEL_COMMAND, forge::WorldViewport::ID_NODE_ATTACH, forge::WorldViewport::on_node_attach ),
@@ -316,6 +317,8 @@ long forge::WorldViewport::on_right_click( FXObject *object, FXSelector selector
 							new FXMenuCommand( linkMenu, FXString( path ) + ":" + taggedSurfaces[ i ]->tag, nullptr, this, ID_FACE_LINK_PORTAL );
 						}
 					}
+
+					new FXMenuCommand( linkMenu, "Other...", nullptr, this, ID_FACE_LINK_OTHER );
 
 					qm_os_memory_free( taggedSurfaces );
 				}
@@ -823,6 +826,35 @@ long forge::WorldViewport::on_face_link_portal( FXObject *object, FXSelector, vo
 	{
 		snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s", tag.c_str() );
 		face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
+	}
+
+	return true;
+}
+
+long forge::WorldViewport::on_face_link_other( FXObject *, FXSelector, void * )
+{
+	FXInputDialog inputdialog( this, tr( "Set Target Tag" ), "Target Tag:", nullptr, INPUTDIALOG_STRING, 0, 0, 0, 0 );
+	inputdialog.setNumColumns( 60 );
+	if ( inputdialog.execute() )
+	{
+		FXString tagName = inputdialog.getText();
+		if ( tagName.empty() )
+		{
+			return true;
+		}
+
+		ApeEditorInstance *instance = editor->get_internal();
+		if ( instance->geometryMode != APE_EDITOR_GEOMETRY_MODE_FACE )
+		{
+			return false;
+		}
+
+		ApeBrushFace *face;
+		QM_OS_LINKED_LIST_ITERATE( face, instance->selectedObjects, i )
+		{
+			snprintf( face->destinationTag, sizeof( face->destinationTag ), "%s", tagName.text() );
+			face->flags |= APE_BRUSH_FACE_FLAG_PORTAL;
+		}
 	}
 
 	return true;

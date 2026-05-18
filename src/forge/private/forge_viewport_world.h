@@ -28,8 +28,10 @@ namespace forge
 			ID_FACE_FLIP,
 			ID_FACE_SHADE_SMOOTH,
 			ID_FACE_SHADE_FLAT,
+
 			ID_FACE_LINK_NEW_ROOM,
 			ID_FACE_LINK_PORTAL,
+			ID_FACE_LINK_OTHER,
 			ID_FACE_UNLINK_PORTAL,
 
 			ID_MOVE_NODE_TO_ROOM,
@@ -63,6 +65,7 @@ namespace forge
 		long on_link_new_room( FXObject *, FXSelector, void * );
 		long on_face_unlink_portal( FXObject *, FXSelector, void * );
 		long on_face_link_portal( FXObject *, FXSelector, void * );
+		long on_face_link_other( FXObject *, FXSelector, void * );
 
 		long on_node_attach( FXObject *, FXSelector, void * );
 
