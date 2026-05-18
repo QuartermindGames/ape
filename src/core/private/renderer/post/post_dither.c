@@ -17,7 +17,7 @@ static ApeRenderTarget  *ditherFilterTarget;
 
 static void register_dither_console_variables()
 {
-	ape_console_var_register( "post_dither", "Enable/disable dithering effect.", "true", PL_VAR_BOOL, &ditherEnabled, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "post_dither", "Enable/disable dithering effect.", "false", PL_VAR_BOOL, &ditherEnabled, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 	ape_console_var_register( "post_dither.downscale", "Draw the dithering effect into a smaller resolution buffer.", "false", PL_VAR_BOOL, &ditherDownscale, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
