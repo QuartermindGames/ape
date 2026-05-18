@@ -12,10 +12,10 @@ static float hudScale = 1.0f;
 void nih_menu_hud_initialize_()
 {
 	PlRegisterConsoleVariable( "qm1_menu_hud.scale",
-							   "Scale of the HUD.",
-							   "1.0",
-							   PL_VAR_F32, &hudScale,
-							   nullptr, true );
+	                           "Scale of the HUD.",
+	                           "1.0",
+	                           PL_VAR_F32, &hudScale,
+	                           nullptr, true );
 
 	hudHealthBodyMaterial = ape_material_cache( HUD_HEALTH_BODY, APE_CACHE_GROUP_GLOBAL, true );
 }
@@ -27,8 +27,11 @@ void nih_menu_hud_shutdown_()
 
 void nih_menu_hud_draw_( const ApeViewport *viewport )
 {
-	float hudHealthBodyW = 128.0f * hudScale;
-	float hudHealthBodyH = 256.0f * hudScale;
+	static constexpr float BASE_WIDTH  = 128.0f;
+	static constexpr float BASE_HEIGHT = 256.0f;
+
+	float hudHealthBodyW = BASE_WIDTH * ( hudScale * shell_get_display_scale() );
+	float hudHealthBodyH = BASE_HEIGHT * ( hudScale * shell_get_display_scale() );
 
 	ape_draw_textured_quad( hudHealthBodyMaterial, 16.0f, viewport->height - hudHealthBodyH - 16.0f, hudHealthBodyW, hudHealthBodyH, &QM_MATH_COLOUR4UB( 0, 255, 0, 255 ), 0.0f );
 }

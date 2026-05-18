@@ -66,10 +66,12 @@ static GameMenu confirmQuitMenu = {
 };
 
 static GameMenuOption startMenuOptions[] = {
-        {"art_geom_00\n",    nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/art/art_geom_00.rom.n" }},
-        {"test_collision\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_collision" }        },
-        {"test_portal\n",    nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_portal" }           },
-        {"test_smoothing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_smoothing" }        },
+        {"TL1\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/tl1/tl1_root.rom.n" }},
+        GAME_MENU_OPTION_SEPERATOR(),
+        {"test_materials\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/test/test_materials.rom.n" }},
+        {"test_collision\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_collision" }            },
+        {"test_portals\n",   nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/test_portals.rom.n" }       },
+        {"test_smoothing\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_smoothing" }            },
 };
 static GameMenu startMenu = {
         "Start Server\n",
@@ -118,17 +120,6 @@ static GameMenu mainMenu = {
         QM_OS_ARRAY_ELEMENTS( mainMenuOptions ),
 };
 
-static GameMenuOption backgroundMenuOptions[] = {
-        {"Yes\n", &mainMenu, nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
-        {"No\n",  &mainMenu, nullptr, GAME_MENU_OPTION_TYPE_BUTTON},
-};
-static GameMenu backgroundPrompt = {
-        .heading    = "Enable 3D menu background?\n",
-        .options    = backgroundMenuOptions,
-        .numOptions = QM_OS_ARRAY_ELEMENTS( backgroundMenuOptions ),
-        .flags      = GAME_MENU_FLAG_PROMPT | GAME_MENU_FLAG_BACKGROUND,
-};
-
 static GamePieMenu *interactPie;
 
 static ApeGuiFont *menuFont;
@@ -137,6 +128,43 @@ static ApeGuiFont *menuTitleFont;
 void nih_menu_hud_initialize_();
 void nih_menu_hud_shutdown_();
 void nih_menu_hud_draw_( const ApeViewport *viewport );
+
+/**
+ * Lame name generator thing. This was originally under its own
+ * source file but it makes more sense to keep it here where,
+ * in-theory, it should eventually get used for creating a default
+ * name.
+ */
+static const char *generate_name( char *buffer, size_t size )
+{
+	static const char *segments[] = {
+	        "aa", "al", "el", "la",
+	        "fa", "mo", "re", "ka",
+	        "ca", "ma", "fe", "me",
+	        "ra", "ke", "ce", "ee",
+	        "he", "fo", "ru", "ku",
+	        "cu", "eu", "hu", "fu" };
+
+	unsigned int seed    = qm_os_random_seed_initialize();
+	unsigned int maxSize = qm_os_random_int( &seed ) % size - 1;
+	if ( maxSize < 4 )
+	{
+		maxSize = 4;
+	}
+
+	char *p = buffer;
+	for ( size_t i = 0; i < maxSize; i += 2 )
+	{
+		unsigned int s = qm_os_random_int( &seed ) % QM_OS_MAX_ARRAY_INDEX( segments );
+		*p++           = segments[ s ][ 0 ];
+		*p++           = segments[ s ][ 1 ];
+	}
+
+	// Ensure the first character is uppercase and null termination.
+	buffer[ 0 ]       = ( char ) toupper( buffer[ 0 ] );
+	buffer[ maxSize ] = '\0';
+	return buffer;
+}
 
 void nih_menu_initialize_( void )
 {
@@ -178,9 +206,9 @@ void nih_menu_initialize_( void )
 #if 0//TODO: this is what we want to ship with, but the background prompt is going to go
 
 	GameMenu *menu;
-	if ( qm1_state_.isFirstLaunch )
+	if ( nih_serverState_.isFirstLaunch )
 	{
-		menu = &backgroundPrompt;
+		menu = &optionsMenu;
 	}
 	else
 	{
@@ -207,12 +235,6 @@ void nih_menu_tick( const double delta )
 {
 	game_menu_splash_tick_( delta );
 	menu_pie_tick( interactPie );
-
-	ApeCamera *camera = qm1_state_.camera;
-	if ( camera != nullptr )
-	{
-		game_menu_compass_tick_( camera, delta );
-	}
 }
 
 static void draw_dial( const int16_t value, const float radius, const float thickness, const float centerX, const float centerY, const float precision, const QmMathColour4ub *colour )
@@ -288,21 +310,19 @@ static void draw_hud( const ApeViewport *viewport )
 
 void nih_menu_draw( const ApeViewport *viewport )
 {
-	//if ( !game_menu_splash_is_complete_() )
-	//{
-	//	game_menu_splash_draw_( viewport );
-	//	return;
-	//}
-	//
-	//if ( game_menu_is_open() )
-	//{
-	//	game_menu_draw_( viewport );
-	//	return;
-	//}
+	if ( !game_menu_splash_is_complete_() )
+	{
+		game_menu_splash_draw_( viewport );
+		return;
+	}
 
-	draw_hud( viewport );
+	if ( game_menu_is_open() )
+	{
+		game_menu_draw_( viewport );
+		return;
+	}
 
-	//qm1_menu_hud_draw_( viewport );
+	nih_menu_hud_draw_( viewport );
 
 	// draw our fancy little pie menu for interactions
 	menu_pie_draw( interactPie, ( float ) viewport->width / 2, ( float ) viewport->height / 2 );
