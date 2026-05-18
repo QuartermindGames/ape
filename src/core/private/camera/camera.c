@@ -649,6 +649,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 				ApeBrushFace *destinationFace = ape_brush_face_get_portal_destination( &brush->faces[ i ] );
 				if ( destinationFace == nullptr )
 				{
+					numVisibleFaces++;
 					continue;
 				}
 

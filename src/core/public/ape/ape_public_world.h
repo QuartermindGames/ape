@@ -550,20 +550,21 @@ const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *
 ////////////////////////////////////////////////////////////////////
 // Collisions
 
-typedef struct ComCollisionCapsule ComCollisionCapsule;
+typedef struct ComCollisionCylinder ComCollisionCylinder;
 
 typedef enum ApeCollisionType
 {
-	APE_COLLISION_TYPE_NONE    = 0,
-	APE_COLLISION_TYPE_AABB    = 1,
-	APE_COLLISION_TYPE_SPHERE  = 2,
-	APE_COLLISION_TYPE_CAPSULE = 3,
-	APE_COLLISION_TYPE_PLANE   = 4,
+	APE_COLLISION_TYPE_NONE     = 0,
+	APE_COLLISION_TYPE_AABB     = 1,
+	APE_COLLISION_TYPE_SPHERE   = 2,
+	APE_COLLISION_TYPE_PLANE    = 3,
+	APE_COLLISION_TYPE_CYLINDER = 4,
 } ApeCollisionType;
 
 typedef enum ApeCollisionGroup
 {
 	QM_OS_BIT_FLAG( APE_COLLISION_GROUP_BRUSHES, 0U ),
+	QM_OS_BIT_FLAG( APE_COLLISION_GROUP_ENTITIES, 1U ),
 
 	// games can provide custom flags after this...
 	APE_COLLISION_GROUP_END = APE_COLLISION_GROUP_BRUSHES,
@@ -574,12 +575,15 @@ typedef struct ApeCollisionCollider
 	ApeCollisionType type;
 	union
 	{
-		void                *ptr;
-		PLCollisionAABB     *aabb;
-		PLCollisionSphere   *sphere;
-		ComCollisionCapsule *capsule;
-		PLCollisionPlane    *plane;
+		void                 *ptr;
+		PLCollisionAABB      *aabb;
+		PLCollisionSphere    *sphere;
+		PLCollisionPlane     *plane;
+		ComCollisionCylinder *cylinder;
 	};
+
+	ApeWorldNode **ignores;
+	unsigned int   numIgnores;
 
 	unsigned int ignoreGroups;
 } ApeCollisionCollider;

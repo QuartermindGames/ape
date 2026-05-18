@@ -781,7 +781,7 @@ unsigned int ape_world_node_visit_children( ApeWorldNode *self, ApeWorldNodeType
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, self->children, i )
 	{
-		if ( child->type == type )
+		if ( type == APE_WORLD_NODE_TYPE_EMPTY || child->type == type )
 		{
 			callback( child, user );
 			numVisited++;

@@ -6,6 +6,37 @@
 
 #include "game_private.h"
 
+void game_test_cylinder_aabb_collision_( const QmMathVector3f *pos )
+{
+	ComCollisionCylinder cylinder = {};
+	cylinder.height               = 64.0f;
+	cylinder.origin               = qm_math_vector3f( 16.0f, 16.0f, 32.0f );
+	cylinder.radius               = 16.0f;
+
+	PLCollisionAABB bounds = {};
+	bounds.maxs            = QM_MATH_VECTOR3F( 16.0f, 16.0f, 16.0f );
+	bounds.mins            = QM_MATH_VECTOR3F( -16.0f, -16.0f, -16.0f );
+	bounds.origin          = *pos;
+
+	bounds.origin.y -= 16.0f;
+
+	QmMathVector3f result;
+
+	QmMathColour4ub colour;
+	if ( aux_collision_cylinder_intersect_aabb( &cylinder, &bounds, &result ) )
+	{
+		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
+		ape_draw_debug_arrow( cylinder.origin, result, colour, 2.0f );
+	}
+	else
+	{
+		colour = QM_MATH_COLOUR4UB( 255, 0, 0, 255 );
+	}
+
+	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
+	ape_draw_debug_aabb( &bounds, colour );
+}
+
 void game_test_cylinder_point_collision_( const QmMathVector3f *pos )
 {
 	ComCollisionCylinder cylinder = {};
@@ -14,7 +45,7 @@ void game_test_cylinder_point_collision_( const QmMathVector3f *pos )
 	cylinder.radius               = 16.0f;
 
 	QmMathColour4ub colour;
-	if ( com_collision_cylinder_intersect_point( &cylinder, pos ) )
+	if ( aux_collision_cylinder_intersect_point( &cylinder, pos ) )
 	{
 		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
 	}
@@ -24,6 +55,32 @@ void game_test_cylinder_point_collision_( const QmMathVector3f *pos )
 	}
 
 	ape_draw_debug_cylinder( &cylinder, &colour, 16 );
+}
+
+void game_test_cylinder_cylinder_collision_( const QmMathVector3f *pos )
+{
+	ComCollisionCylinder me = {};
+	me.height               = 64.0f;
+	me.origin               = *pos;
+	me.radius               = 16.0f;
+
+	ComCollisionCylinder them = {};
+	them.height               = 64.0f;
+	them.origin               = qm_math_vector3f( 16.0f, 16.0f, 32.0f );
+	them.radius               = 16.0f;
+
+	QmMathColour4ub colour;
+	if ( aux_collision_cylinder_intersect_cylinder( &me, &them ) )
+	{
+		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
+	}
+	else
+	{
+		colour = QM_MATH_COLOUR4UB( 255, 0, 0, 255 );
+	}
+
+	ape_draw_debug_cylinder( &me, &colour, 16 );
+	ape_draw_debug_cylinder( &them, &PL_COLOUR_AQUA, 16 );
 }
 
 void game_test_cylinder_polygon_collision_( const QmMathVector3f *pos )
@@ -45,7 +102,7 @@ void game_test_cylinder_polygon_collision_( const QmMathVector3f *pos )
 	static constexpr unsigned int numVertices = QM_OS_ARRAY_ELEMENTS( vertices );
 
 	QmMathColour4ub colour;
-	if ( com_collision_cylinder_intersect_polygon( &cylinder, vertices, numVertices, &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) ) )
+	if ( aux_collision_cylinder_intersect_polygon( &cylinder, &QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ), vertices, numVertices ) )
 	{
 		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
 	}

@@ -425,13 +425,13 @@ static ApeCollisionIntersection *intersect( const ApeCollisionCollider *a, const
 				default:
 					return nullptr;
 				case APE_COLLISION_TYPE_AABB:
-					if ( !com_collision_aabb_intersect_aabb( a->aabb, b->aabb, &result->intersection ) )
+					if ( !aux_collision_aabb_intersect_aabb( a->aabb, b->aabb, &result->intersection ) )
 					{
 						return nullptr;
 					}
 					break;
 				case APE_COLLISION_TYPE_SPHERE:
-					if ( !com_collision_sphere_intersect_aabb( b->sphere, a->aabb, &result->intersection ) )
+					if ( !aux_collision_sphere_intersect_aabb( b->sphere, a->aabb, &result->intersection ) )
 					{
 						return nullptr;
 					}
@@ -444,7 +444,7 @@ static ApeCollisionIntersection *intersect( const ApeCollisionCollider *a, const
 				default:
 					return nullptr;
 				case APE_COLLISION_TYPE_AABB:
-					if ( !com_collision_sphere_intersect_aabb( a->sphere, b->aabb, &result->intersection ) )
+					if ( !aux_collision_sphere_intersect_aabb( a->sphere, b->aabb, &result->intersection ) )
 					{
 						return nullptr;
 					}
@@ -462,99 +462,131 @@ static ApeCollisionIntersection *intersect( const ApeCollisionCollider *a, const
 	return result;
 }
 
-static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeCollisionCollider *collider, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
+static bool collider_is_ignoring( const ApeWorldNode **ignores, const unsigned int numIgnores, const ApeWorldNode *node )
 {
-	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
+	for ( unsigned int i = 0; i < numIgnores; ++i )
 	{
-		QmMathVector3f intersection;
-		switch ( collider->type )
+		if ( ignores[ i ] != node )
 		{
-			default:
-				break;
-			case APE_COLLISION_TYPE_AABB:
-				if ( !com_collision_aabb_intersect_aabb( collider->aabb, &node->bounds, &intersection ) )
-				{
-					return false;
-				}
-				break;
-			case APE_COLLISION_TYPE_SPHERE:
-				if ( !com_collision_sphere_intersect_aabb( collider->sphere, &node->bounds, &intersection ) )
-				{
-					return false;
-				}
-				break;
+			continue;
 		}
 
-		switch ( node->type )
+		return true;
+	}
+
+	return false;
+}
+
+static bool intersect_children( ApeRoom *self, ApeWorldNode *node, const ApeCollisionCollider *collider, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
+{
+	if ( node->type == APE_WORLD_NODE_TYPE_ROOM || collider_is_ignoring( ( const ApeWorldNode ** ) collider->ignores, collider->numIgnores, node ) )
+	{
+		goto SKIP;
+	}
+
+	QmMathVector3f intersection;
+	switch ( collider->type )
+	{
+		default:
+			break;
+		case APE_COLLISION_TYPE_AABB:
 		{
-			default:
-				break;
-			case APE_WORLD_NODE_TYPE_BRUSH:
+			if ( !aux_collision_aabb_intersect_aabb( collider->aabb, &node->bounds, &intersection ) )
 			{
-				ApeBrush *brush = ( ApeBrush * ) node;
-				for ( unsigned int i = 0; i < brush->numFaces; ++i )
+				return false;
+			}
+			break;
+		}
+		case APE_COLLISION_TYPE_SPHERE:
+		{
+			if ( !aux_collision_sphere_intersect_aabb( collider->sphere, &node->bounds, &intersection ) )
+			{
+				return false;
+			}
+			break;
+		}
+		case APE_COLLISION_TYPE_CYLINDER:
+		{
+			if ( !aux_collision_cylinder_intersect_aabb( collider->cylinder, &node->bounds, &intersection ) )
+			{
+				return false;
+			}
+			break;
+		}
+	}
+
+	switch ( node->type )
+	{
+		default:
+			break;
+		case APE_WORLD_NODE_TYPE_BRUSH:
+		{
+			ApeBrush *brush = ( ApeBrush * ) node;
+			for ( unsigned int i = 0; i < brush->numFaces; ++i )
+			{
+				ApeBrushFace *face = &brush->faces[ i ];
+				if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
 				{
-					ApeBrushFace *face = &brush->faces[ i ];
-					if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+					continue;
+				}
+
+				QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+				for ( unsigned int j = 0; j < face->numVertices; ++j )
+				{
+					vertices[ j ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
+				}
+
+				ApeCollisionIntersection *hit = &hits[ *numHits ];
+
+				QmMathVector3f normal = qm_math_vector3f_normalize( face->normal );
+				if ( collider->type == APE_COLLISION_TYPE_SPHERE )
+				{
+					if ( !aux_collision_sphere_intersect_polygon( collider->sphere, &normal, vertices, face->numVertices, &intersection ) )
 					{
 						continue;
 					}
 
-					QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
-					for ( unsigned int j = 0; j < face->numVertices; ++j )
-					{
-						vertices[ j ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
-					}
-
-					ApeCollisionIntersection *hit = &hits[ *numHits ];
-
-					QmMathVector3f normal = qm_math_vector3f_normalize( face->normal );
-					if ( collider->type == APE_COLLISION_TYPE_CAPSULE )
-					{
-						if ( !com_collision_capsule_intersect_polygon( collider->capsule, &normal, vertices, face->numVertices, &intersection ) )
-						{
-							continue;
-						}
-
-						hit->origin = collider->capsule->origin;
-					}
-					else if ( collider->type == APE_COLLISION_TYPE_SPHERE )
-					{
-						if ( !com_collision_sphere_intersect_polygon( collider->sphere, &normal, vertices, face->numVertices, &intersection ) )
-						{
-							continue;
-						}
-
-						hit->distance = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, collider->sphere->origin ) );
-						hit->depth    = collider->sphere->radius - hit->distance;
-						hit->origin   = collider->sphere->origin;
-					}
-					else if ( collider->type == APE_COLLISION_TYPE_AABB )
-					{
-						if ( !com_collision_aabb_intersect_polygon( collider->aabb, &normal, vertices, face->numVertices, &intersection ) )
-						{
-							continue;
-						}
-
-						hit->origin = collider->aabb->origin;
-					}
-
-					hit->node         = APE_WORLD_NODE( brush );
-					hit->face         = face;
-					hit->intersection = intersection;
-					( *numHits )++;
+					hit->distance = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, collider->sphere->origin ) );
+					hit->depth    = collider->sphere->radius - hit->distance;
+					hit->origin   = collider->sphere->origin;
 				}
-				break;
-			}
-		}
+				else if ( collider->type == APE_COLLISION_TYPE_CYLINDER )
+				{
+					if ( !aux_collision_cylinder_intersect_polygon( collider->cylinder, &normal, vertices, face->numVertices ) )
+					{
+						continue;
+					}
 
-		if ( *numHits >= *maxHits )
-		{
-			*maxHits = *maxHits + RAY_HIT_INC;
-			hits     = qm_os_memory_realloc( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
+					//TODO: distance & depth!
+					hit->origin = collider->cylinder->origin;
+				}
+				else if ( collider->type == APE_COLLISION_TYPE_AABB )
+				{
+					if ( !com_collision_aabb_intersect_polygon( collider->aabb, &normal, vertices, face->numVertices, &intersection ) )
+					{
+						continue;
+					}
+
+					//TODO: distance & depth!
+					hit->origin = collider->aabb->origin;
+				}
+
+				hit->node         = APE_WORLD_NODE( brush );
+				hit->face         = face;
+				hit->intersection = intersection;
+				( *numHits )++;
+			}
+			break;
 		}
 	}
 
+	if ( *numHits >= *maxHits )
+	{
+		*maxHits = *maxHits + RAY_HIT_INC;
+		hits     = qm_os_memory_realloc( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
+	}
+
+SKIP:
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
@@ -570,6 +602,7 @@ ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionC
 	*numHits                       = 0;
 	ApeCollisionIntersection *hits = QM_OS_MEMORY_NEW_( ApeCollisionIntersection, maxHits );
 
+	//TODO: should use visit_children method for nodes, would simplify the logic here
 	if ( !intersect_children( self, &self->base, collider, hits, numHits, &maxHits ) || numHits == 0 )
 	{
 		qm_os_memory_free( hits );

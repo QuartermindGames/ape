@@ -10,10 +10,6 @@
 
 PL_EXTERN_C
 
-typedef unsigned long int  ulong;
-typedef unsigned short int ushort;
-typedef unsigned int       uint;
-
 #define APE_DEFAULT_TICK_RATE ( 1000 / 60 )// ms
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config );

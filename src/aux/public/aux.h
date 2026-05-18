@@ -224,13 +224,6 @@ QmMathVector3f com_math_pitch_yaw_to_position( float pitch, float yaw );
 
 typedef struct ComMathRectI32 ComMathRectI32;
 
-typedef struct ComCollisionCapsule
-{
-	float          radius;
-	QmMathVector3f origin;
-	QmMathVector3f end;
-} ComCollisionCapsule;
-
 typedef struct ComCollisionCylinder
 {
 	float          radius;
@@ -238,18 +231,18 @@ typedef struct ComCollisionCylinder
 	QmMathVector3f origin;
 } ComCollisionCylinder;
 
-bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, QmMathVector3f *result );
+bool aux_collision_aabb_intersect_aabb( const PLCollisionAABB *self, const PLCollisionAABB *other, QmMathVector3f *result );
 bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
 
 bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, const PLCollisionSphere *sphere2, QmMathVector3f *result );
-bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, QmMathVector3f *result );
-bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
+bool aux_collision_sphere_intersect_aabb( const PLCollisionSphere *self, const PLCollisionAABB *other, QmMathVector3f *result );
+bool aux_collision_sphere_intersect_polygon( const PLCollisionSphere *self, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
 
-float com_collision_cylinder_get_top( const ComCollisionCylinder *cylinder );
-bool  com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinder, const QmMathVector3f *point );
-bool  com_collision_cylinder_intersect_polygon( const ComCollisionCylinder *cylinder, const QmMathVector3f *vertices, unsigned int numVertices, const QmMathVector3f *normal );
-
-bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
+float aux_collision_cylinder_get_top( const ComCollisionCylinder *self );
+bool  aux_collision_cylinder_intersect_cylinder( const ComCollisionCylinder *self, const ComCollisionCylinder *other );
+bool  aux_collision_cylinder_intersect_aabb( const ComCollisionCylinder *self, const PLCollisionAABB *other, QmMathVector3f *result );
+bool  aux_collision_cylinder_intersect_point( const ComCollisionCylinder *self, const QmMathVector3f *point );
+bool  aux_collision_cylinder_intersect_polygon( const ComCollisionCylinder *self, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices );
 
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, QmMathVector3f *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, QmMathVector3f *result );

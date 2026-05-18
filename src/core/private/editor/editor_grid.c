@@ -39,7 +39,7 @@ QmMathVector2f *ape_grid_get_cursor_position( ApeEditorGrid *self, QmMathVector2
 
 static QmMathVector2f transform_world_to_grid( ApeEditorGrid *self, const QmMathVector3f *pos )
 {
-	PLMatrix4      transform = PlInverseMatrix4( self->transform );
+	PLMatrix4      transform = PlInverseMatrix4( &self->transform );
 	QmMathVector3f localPos  = PlTransformVector3( pos, &transform );
 	return qm_math_vector2f( localPos.x, localPos.z );
 }

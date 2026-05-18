@@ -38,24 +38,24 @@ static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *ver
 	return qm_math_vector2f( minY, maxY );
 }
 
-bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollisionAABB *b, QmMathVector3f *result )
+bool aux_collision_aabb_intersect_aabb( const PLCollisionAABB *self, const PLCollisionAABB *other, QmMathVector3f *result )
 {
-	QmMathVector3f maxA = qm_math_vector3f_add( a->maxs, a->origin );
-	QmMathVector3f minA = qm_math_vector3f_add( a->mins, a->origin );
-	QmMathVector3f maxB = qm_math_vector3f_add( b->maxs, b->origin );
-	QmMathVector3f minB = qm_math_vector3f_add( b->mins, b->origin );
+	QmMathVector3f maxA = qm_math_vector3f_add( self->maxs, self->origin );
+	QmMathVector3f minA = qm_math_vector3f_add( self->mins, self->origin );
+	QmMathVector3f maxB = qm_math_vector3f_add( other->maxs, other->origin );
+	QmMathVector3f minB = qm_math_vector3f_add( other->mins, other->origin );
 
 	bool hit = ( minA.x <= maxB.x && maxA.x >= minB.x ) &&
 	           ( minA.y <= maxB.y && maxA.y >= minB.y ) &&
 	           ( minA.z <= maxB.z && maxA.z >= minB.z );
 	if ( hit && result != nullptr )
 	{
-		QmMathVector3f min = qm_math_vector3f( fmaxf( a->mins.x, b->mins.x ),
-		                                       fmaxf( a->mins.y, b->mins.y ),
-		                                       fmaxf( a->mins.z, b->mins.z ) );
-		QmMathVector3f max = qm_math_vector3f( fminf( a->maxs.x, b->maxs.x ),
-		                                       fminf( a->maxs.y, b->maxs.y ),
-		                                       fminf( a->maxs.z, b->maxs.z ) );
+		QmMathVector3f min = qm_math_vector3f( fmaxf( self->mins.x, other->mins.x ),
+		                                       fmaxf( self->mins.y, other->mins.y ),
+		                                       fmaxf( self->mins.z, other->mins.z ) );
+		QmMathVector3f max = qm_math_vector3f( fminf( self->maxs.x, other->maxs.x ),
+		                                       fminf( self->maxs.y, other->maxs.y ),
+		                                       fminf( self->maxs.z, other->maxs.z ) );
 
 		*result = qm_math_vector3f_scale_float( qm_math_vector3f_add( min, max ), 0.5f );
 	}
@@ -63,19 +63,19 @@ bool com_collision_aabb_intersect_aabb( const PLCollisionAABB *a, const PLCollis
 	return hit;
 }
 
-bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const PLCollisionAABB *aabb, QmMathVector3f *result )
+bool aux_collision_sphere_intersect_aabb( const PLCollisionSphere *self, const PLCollisionAABB *other, QmMathVector3f *result )
 {
-	QmMathVector3f aabbMin = qm_math_vector3f_add( aabb->mins, aabb->origin );
-	QmMathVector3f aabbMax = qm_math_vector3f_add( aabb->maxs, aabb->origin );
+	QmMathVector3f aabbMin = qm_math_vector3f_add( other->mins, other->origin );
+	QmMathVector3f aabbMax = qm_math_vector3f_add( other->maxs, other->origin );
 
 	QmMathVector3f closestPoint;
-	closestPoint.x = fmaxf( aabbMin.x, fminf( sphere->origin.x, aabbMax.x ) );
-	closestPoint.y = fmaxf( aabbMin.y, fminf( sphere->origin.y, aabbMax.y ) );
-	closestPoint.z = fmaxf( aabbMin.z, fminf( sphere->origin.z, aabbMax.z ) );
+	closestPoint.x = fmaxf( aabbMin.x, fminf( self->origin.x, aabbMax.x ) );
+	closestPoint.y = fmaxf( aabbMin.y, fminf( self->origin.y, aabbMax.y ) );
+	closestPoint.z = fmaxf( aabbMin.z, fminf( self->origin.z, aabbMax.z ) );
 
-	QmMathVector3f diff       = qm_math_vector3f_sub( closestPoint, sphere->origin );
+	QmMathVector3f diff       = qm_math_vector3f_sub( closestPoint, self->origin );
 	float          distanceSq = qm_math_vector3f_dot_product( diff, diff );
-	bool           hit        = distanceSq <= ( sphere->radius * sphere->radius );
+	bool           hit        = distanceSq <= ( self->radius * self->radius );
 	if ( hit && result != nullptr )
 	{
 		*result = closestPoint;
@@ -84,7 +84,7 @@ bool com_collision_sphere_intersect_aabb( const PLCollisionSphere *sphere, const
 	return hit;
 }
 
-bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result )
+bool aux_collision_sphere_intersect_polygon( const PLCollisionSphere *self, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result )
 {
 	static constexpr unsigned int MAX_EDGES = 16;
 	assert( numVertices < MAX_EDGES );
@@ -96,7 +96,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 	// Plane equation: Ax + By + Cz + D = 0
 	float D = -qm_math_vector3f_dot_product( *normal, vertices[ 0 ] );
 
-	float distanceToPlane = qm_math_vector3f_dot_product( *normal, sphere->origin ) + D;
+	float distanceToPlane = qm_math_vector3f_dot_product( *normal, self->origin ) + D;
 
 	// only test against the front of the plane, not the back
 	// todo: make this optional
@@ -105,12 +105,12 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 		return false;
 	}
 
-	if ( fabsf( distanceToPlane ) > sphere->radius )
+	if ( fabsf( distanceToPlane ) > self->radius )
 	{
 		return false;
 	}
 
-	QmMathVector3f projectedPoint = qm_math_vector3f_sub( sphere->origin, qm_math_vector3f_scale_float( *normal, distanceToPlane ) );
+	QmMathVector3f projectedPoint = qm_math_vector3f_sub( self->origin, qm_math_vector3f_scale_float( *normal, distanceToPlane ) );
 
 	QmMathVector3f tangent, bitangent;
 	qm_math_plane_basis_vectors( &( QmMathPlane ) { .normal = *normal }, &tangent, &bitangent );
@@ -145,7 +145,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 		return true;
 	}
 
-	float          minDistanceSq = sphere->radius * sphere->radius;
+	float          minDistanceSq = self->radius * self->radius;
 	QmMathVector3f closestPoint  = projectedPoint;
 
 	bool hit = false;
@@ -166,7 +166,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 		t       = fmaxf( 0.0f, fminf( 1.0f, t ) );
 
 		QmMathVector3f closestOnEdge = qm_math_vector3f_add( v0, qm_math_vector3f_scale_float( edge, t ) );
-		QmMathVector3f diff          = qm_math_vector3f_sub( closestOnEdge, sphere->origin );
+		QmMathVector3f diff          = qm_math_vector3f_sub( closestOnEdge, self->origin );
 		float          distanceSq    = qm_math_vector3f_dot_product( diff, diff );
 
 		if ( distanceSq < minDistanceSq )
@@ -176,7 +176,7 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 			hit           = true;
 		}
 
-		QmMathVector3f vertexDiff       = qm_math_vector3f_sub( v0, sphere->origin );
+		QmMathVector3f vertexDiff       = qm_math_vector3f_sub( v0, self->origin );
 		float          vertexDistanceSq = qm_math_vector3f_dot_product( vertexDiff, vertexDiff );
 		if ( vertexDistanceSq < minDistanceSq )
 		{
@@ -202,26 +202,68 @@ bool com_collision_sphere_intersect_polygon( const PLCollisionSphere *sphere, co
 // Cylinder
 /////////////////////////////////////////////////////////////////////////////////////
 
-float com_collision_cylinder_get_top( const ComCollisionCylinder *cylinder )
+float aux_collision_cylinder_get_top( const ComCollisionCylinder *self )
 {
-	return cylinder->origin.y + cylinder->height;
+	return self->origin.y + self->height;
 }
 
-bool com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinder, const QmMathVector3f *point )
+bool aux_collision_cylinder_intersect_cylinder( const ComCollisionCylinder *self, const ComCollisionCylinder *other )
 {
-	float top = com_collision_cylinder_get_top( cylinder );
-	if ( point->y < QM_OS_MIN( cylinder->origin.y, top ) )
-	{
-		return false;
-	}
-	if ( point->y > QM_OS_MAX( cylinder->origin.y, top ) )
+	if ( other->origin.y > aux_collision_cylinder_get_top( self ) || self->origin.y > aux_collision_cylinder_get_top( other ) )
 	{
 		return false;
 	}
 
-	QmMathVector2f x = qm_math_vector2f( cylinder->origin.x, cylinder->origin.z );
+	// the nice thing about a cylinder is we just now need to check the radius against the other radius,
+	// and not worry about that silly 3D nonsense (oh we do, god we do... just not here thankfully)
+
+	QmMathVector2f selfPos  = QM_MATH_VECTOR2F( self->origin.x, self->origin.z );
+	QmMathVector2f otherPos = QM_MATH_VECTOR2F( other->origin.x, other->origin.z );
+
+	float distance = qm_math_vector2f_distance( selfPos, otherPos );
+	return distance <= self->radius + other->radius;
+}
+
+bool aux_collision_cylinder_intersect_aabb( const ComCollisionCylinder *self, const PLCollisionAABB *other, QmMathVector3f *result )
+{
+	QmMathVector3f aabbMin = qm_math_vector3f_add( other->mins, other->origin );
+	QmMathVector3f aabbMax = qm_math_vector3f_add( other->maxs, other->origin );
+
+	if ( aux_collision_cylinder_get_top( self ) < aabbMin.y || self->origin.y > aabbMax.y )
+	{
+		return false;
+	}
+
+	// okay, and now all we basically gotta do is intersect a circle with a square in 2D
+
+	QmMathVector2f selfPos = QM_MATH_VECTOR2F( self->origin.x, self->origin.z );
+
+	QmMathVector2f closestPoint;
+	closestPoint.x = fmaxf( aabbMin.x, fminf( self->origin.x, aabbMax.x ) );
+	closestPoint.y = fmaxf( aabbMin.z, fminf( self->origin.z, aabbMax.z ) );
+
+	float distance = qm_math_vector2f_distance( selfPos, closestPoint );
+
+	bool hit = distance <= self->radius;
+	if ( hit && result != nullptr )
+	{
+		*result = QM_MATH_VECTOR3F( closestPoint.x, other->origin.y, closestPoint.y );
+	}
+
+	return hit;
+}
+
+bool aux_collision_cylinder_intersect_point( const ComCollisionCylinder *self, const QmMathVector3f *point )
+{
+	float top = aux_collision_cylinder_get_top( self );
+	if ( point->y < QM_OS_MIN( self->origin.y, top ) || point->y > QM_OS_MAX( self->origin.y, top ) )
+	{
+		return false;
+	}
+
+	QmMathVector2f x = qm_math_vector2f( self->origin.x, self->origin.z );
 	QmMathVector2f y = qm_math_vector2f( point->x, point->z );
-	if ( qm_math_vector2f_distance( x, y ) <= cylinder->radius )
+	if ( qm_math_vector2f_distance( x, y ) <= self->radius )
 	{
 		return true;
 	}
@@ -229,7 +271,7 @@ bool com_collision_cylinder_intersect_point( const ComCollisionCylinder *cylinde
 	return false;
 }
 
-bool com_collision_cylinder_intersect_polygon( const ComCollisionCylinder *cylinder, const QmMathVector3f *vertices, unsigned int numVertices, const QmMathVector3f *normal )
+bool aux_collision_cylinder_intersect_polygon( const ComCollisionCylinder *self, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices )
 {
 	if ( numVertices < 3 )
 	{
@@ -240,165 +282,12 @@ bool com_collision_cylinder_intersect_polygon( const ComCollisionCylinder *cylin
 	QmMathVector2f vbounds = compute_polygon_vertical_bounds( vertices, numVertices );
 
 	// check if the cylinder is higher or lower than the plane
-	float top = com_collision_cylinder_get_top( cylinder );
-	if ( top < vbounds.x || cylinder->origin.y > vbounds.y )
+	if ( aux_collision_cylinder_get_top( self ) < vbounds.x || self->origin.y > vbounds.y )
 	{
 		return false;
 	}
 
 	return true;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Capsule
-/////////////////////////////////////////////////////////////////////////////////////
-
-bool com_collision_capsule_intersect_polygon( const ComCollisionCapsule *capsule, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result )
-{
-	static constexpr unsigned int MAX_EDGES = 16;
-	assert( numVertices < MAX_EDGES );
-	if ( numVertices < 3 )
-	{
-		return false;
-	}
-
-	float D = -qm_math_vector3f_dot_product( *normal, vertices[ 0 ] );
-
-	QmMathVector3f a = capsule->origin;
-	QmMathVector3f b = capsule->end;
-
-	float da = qm_math_vector3f_dot_product( *normal, a ) + D;
-	float db = qm_math_vector3f_dot_product( *normal, b ) + D;
-
-	QmMathVector3f closestPoint;
-	float          distanceToPlane;
-
-	float denom = db - da;
-	if ( fabsf( denom ) < QM_MATH_EPSILON )
-	{
-		if ( fabsf( da ) < fabsf( db ) )
-		{
-			closestPoint    = a;
-			distanceToPlane = da;
-		}
-		else
-		{
-			closestPoint    = b;
-			distanceToPlane = db;
-		}
-	}
-	else
-	{
-		float t = -da / denom;
-		if ( t < 0.0f )
-		{
-			closestPoint    = a;
-			distanceToPlane = da;
-		}
-		else if ( t > 1.0f )
-		{
-			closestPoint    = b;
-			distanceToPlane = db;
-		}
-		else
-		{
-			QmMathVector3f segment = qm_math_vector3f_sub( b, a );
-			closestPoint           = qm_math_vector3f_add( a, qm_math_vector3f_scale_float( segment, t ) );
-			distanceToPlane        = da + t * denom;
-		}
-	}
-
-	if ( fabsf( distanceToPlane ) > capsule->radius )
-	{
-		return false;
-	}
-
-	QmMathVector3f projectedPoint = qm_math_vector3f_sub( closestPoint, qm_math_vector3f_scale_float( *normal, distanceToPlane ) );
-
-	QmMathVector3f tangent, bitangent;
-	qm_math_plane_basis_vectors( &( QmMathPlane ) { .normal = *normal }, &tangent, &bitangent );
-
-	QmMathVector2f poly2D[ MAX_EDGES ];
-	for ( unsigned int i = 0; i < numVertices; ++i )
-	{
-		QmMathVector3f delta = qm_math_vector3f_sub( vertices[ i ], projectedPoint );
-		poly2D[ i ].x        = qm_math_vector3f_dot_product( delta, tangent );
-		poly2D[ i ].y        = qm_math_vector3f_dot_product( delta, bitangent );
-	}
-	bool inside = false;
-	for ( int i = 0, j = numVertices - 1; i < numVertices; j = i++ )
-	{
-		static constexpr QmMathVector2f point2D = {};
-
-		QmMathVector2f vi = poly2D[ i ];
-		QmMathVector2f vj = poly2D[ j ];
-		if ( ( ( vi.y > point2D.y ) != ( vj.y > point2D.y ) ) &&
-		     ( point2D.x < ( vj.x - vi.x ) * ( point2D.y - vi.y ) / ( vj.y - vi.y ) + vi.x ) )
-		{
-			inside = !inside;
-		}
-	}
-
-	if ( inside )
-	{
-		if ( result != nullptr )
-		{
-			*result = projectedPoint;
-		}
-		return true;
-	}
-
-	float          minDistanceSq = capsule->radius * capsule->radius;
-	QmMathVector3f returnHit     = projectedPoint;
-
-	bool hit = false;
-	for ( int i = 0; i < numVertices; i++ )
-	{
-		QmMathVector3f v0 = vertices[ i ];
-		QmMathVector3f v1 = vertices[ ( i + 1 ) % numVertices ];
-
-		QmMathVector3f edge         = qm_math_vector3f_sub( v1, v0 );
-		QmMathVector3f toPoint      = qm_math_vector3f_sub( projectedPoint, v0 );
-		float          edgeLengthSq = qm_math_vector3f_dot_product( edge, edge );
-		if ( edgeLengthSq < QM_MATH_EPSILON )
-		{
-			continue;
-		}
-
-		float t = qm_math_vector3f_dot_product( toPoint, edge ) / edgeLengthSq;
-		t       = fmaxf( 0.0f, fminf( 1.0f, t ) );
-
-		QmMathVector3f closestOnEdge = qm_math_vector3f_add( v0, qm_math_vector3f_scale_float( edge, t ) );
-		QmMathVector3f diff          = qm_math_vector3f_sub( closestOnEdge, closestPoint );
-		float          distanceSq    = qm_math_vector3f_dot_product( diff, diff );
-
-		if ( distanceSq < minDistanceSq )
-		{
-			minDistanceSq = distanceSq;
-			returnHit     = closestOnEdge;
-			hit           = true;
-		}
-
-		QmMathVector3f vertexDiff       = qm_math_vector3f_sub( v0, closestPoint );
-		float          vertexDistanceSq = qm_math_vector3f_dot_product( vertexDiff, vertexDiff );
-		if ( vertexDistanceSq < minDistanceSq )
-		{
-			minDistanceSq = vertexDistanceSq;
-			returnHit     = v0;
-			hit           = true;
-		}
-	}
-
-	if ( hit )
-	{
-		if ( result != nullptr )
-		{
-			*result = returnHit;
-		}
-		return true;
-	}
-
-	return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
