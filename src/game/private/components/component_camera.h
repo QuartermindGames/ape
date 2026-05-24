@@ -30,5 +30,7 @@ typedef struct GameCameraComponent
 static constexpr char GAME_CAMERA_COMPONENT_NAME[] = "camera";
 
 void game_component_camera_handle_input_( GameCameraComponent *component, double delta );
-void game_component_camera_tick_( const GameCameraComponent *component, ApeCamera *camera, double delta );
+void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, double delta );
+
+void game_component_camera_set_state_( GameCameraComponent *component, GameCameraState state );
 void game_component_camera_cycle_state_( GameCameraComponent *component );

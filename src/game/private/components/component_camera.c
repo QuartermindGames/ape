@@ -5,7 +5,7 @@
 #include "game_private.h"
 #include "component_camera.h"
 
-static constexpr float CAMERA_DEFAULT_HEIGHT   = 45.0f;
+static constexpr float CAMERA_DEFAULT_HEIGHT   = 64.0f;
 static constexpr float CAMERA_DEFAULT_DISTANCE = 50.0f;
 static constexpr float CAMERA_DEFAULT_SIDE     = 10.0f;
 
@@ -36,6 +36,7 @@ static void free_camera_tick( const GameCameraComponent *component, ApeCamera *c
 	pos                      = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, leftStick.y * 100.0f * delta ) );
 	pos                      = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, leftStick.x * 100.0f * delta ) );
 
+#if 0
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( camera ) );
 	if ( room != nullptr )
 	{
@@ -74,25 +75,19 @@ static void free_camera_tick( const GameCameraComponent *component, ApeCamera *c
 			qm_os_memory_free( hits );
 		}
 	}
+#endif
 
 	ape_camera_set_position( camera, &pos );
 	ape_camera_set_angles( camera, &ang );
 }
 
-static void third_person_tick( const GameCameraComponent *component, ApeCamera *camera, const double delta )
+static void third_person_tick( const GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, const double delta )
 {
-	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( camera ) );
-	if ( parent == nullptr )
-	{
-		return;
-	}
-
 	QmMathVector3f cpos = ape_camera_get_position( camera );
 	QmMathVector3f cang = ape_camera_get_angles( camera );
 
 	// entity camera position + view height
-	QmMathVector3f epos = ape_world_node_get_position( parent );
-	epos.y              = epos.y + component->height;
+	trackPos.y = trackPos.y + component->height;
 	// entity camera angles
 	QmMathVector3f eang = component->angles;
 
@@ -100,7 +95,7 @@ static void third_person_tick( const GameCameraComponent *component, ApeCamera *
 	PlAnglesAxes( eang, &left, nullptr, &forward );
 
 	// push entity position out and to either side
-	QmMathVector3f npos = epos;
+	QmMathVector3f npos = trackPos;
 	npos                = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( forward, component->distance ) );
 	npos                = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( left, component->side ) );
 
@@ -113,8 +108,8 @@ static void third_person_tick( const GameCameraComponent *component, ApeCamera *
 	if ( room != nullptr )
 	{
 		PLCollisionRay ray = {};
-		ray.origin         = epos;
-		ray.direction      = qm_math_vector3f_sub( npos, epos );
+		ray.origin         = trackPos;
+		ray.direction      = qm_math_vector3f_sub( npos, trackPos );
 
 		ApeCollisionIntersection result = {};
 		if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= component->distance )
@@ -127,20 +122,13 @@ static void third_person_tick( const GameCameraComponent *component, ApeCamera *
 	ape_camera_set_angles( camera, &cang );
 }
 
-static void first_person_tick( const GameCameraComponent *component, ApeCamera *camera, const double delta )
+static void first_person_tick( const GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, const double delta )
 {
-	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( camera ) );
-	if ( parent == nullptr )
-	{
-		return;
-	}
-
 	QmMathVector3f cpos = ape_camera_get_position( camera );
 	QmMathVector3f cang = ape_camera_get_angles( camera );
 
 	// entity camera position + view height
-	QmMathVector3f epos = ape_world_node_get_position( parent );
-	epos.y              = epos.y + component->height;
+	trackPos.y = trackPos.y + component->height;
 
 	// entity camera angles
 	QmMathVector3f eang = component->angles;
@@ -149,7 +137,7 @@ static void first_person_tick( const GameCameraComponent *component, ApeCamera *
 	PlAnglesAxes( eang, &left, nullptr, &forward );
 
 	// now interpolate the position and angles for the camera to the new position
-	cpos = PlLinearInterpolateV3f( cpos, epos, 7.0f * delta );
+	cpos = PlLinearInterpolateV3f( cpos, trackPos, 7.0f * delta );
 	com_math_interpolate_angles( &cang, &eang, 16.0f * delta, &cang );
 
 	ape_camera_set_position( camera, &cpos );
@@ -213,14 +201,9 @@ void game_component_camera_handle_input_( GameCameraComponent *component, double
 	com_math_normalize_angles( &component->angles, &component->angles );
 }
 
-void game_component_camera_tick_( const GameCameraComponent *component, ApeCamera *camera, const double delta )
+void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, const QmMathVector3f trackPos, const double delta )
 {
-	// wha?
-	//if ( component->state == component->oldState )
-	//{
-	//	// probably not transitioning between states...
-	//	return;
-	//}
+	game_component_camera_handle_input_( component, delta );
 
 	if ( component->state == GAME_CAMERA_STATE_FREE )
 	{
@@ -230,12 +213,23 @@ void game_component_camera_tick_( const GameCameraComponent *component, ApeCamer
 
 	if ( component->state == GAME_CAMERA_STATE_THIRD_PERSON )
 	{
-		third_person_tick( component, camera, delta );
+		third_person_tick( component, camera, trackPos, delta );
 	}
 	else
 	{
-		first_person_tick( component, camera, delta );
+		first_person_tick( component, camera, trackPos, delta );
 	}
+}
+
+void game_component_camera_set_state_( GameCameraComponent *component, GameCameraState state )
+{
+	if ( component->state == state )
+	{
+		return;
+	}
+
+	component->oldState = component->state;
+	component->state    = state;
 }
 
 void game_component_camera_cycle_state_( GameCameraComponent *component )

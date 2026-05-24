@@ -90,6 +90,7 @@ typedef struct GamePlayer
 	GameServerClient *serverClient;// internal server-side client reference
 	unsigned int      team;        // the team the player is associated with
 
+	ApeCamera *camera;// their eyes
 	ApeEntity *entity;// target entity the player is controlling
 } GamePlayer;
 
