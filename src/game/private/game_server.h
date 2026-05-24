@@ -22,15 +22,17 @@ typedef struct GameServerClient
 } GameServerClient;
 
 bool game_server_client_validate_( ApeServerClient *clientHandle );
-void game_server_client_connected_( ApeServerClient *clientHandle );
+
+GameServerClient *game_server_client_connected_( ApeServerClient *clientHandle );
+
 void game_server_client_disconnected_( ApeServerClient *clientHandle );
 void game_server_process_message_( ApeServerClient *clientHandle, const void *buf, size_t bufSize );
 bool game_server_send_message_( ApeServerClient *clientHandle, GameNetMessageType type, const void *buf, size_t bufSize );
 void game_server_tick_( double delta );
 
-GameServerClient *game_server_get_host_client_();
-GamePlayer       *game_server_get_host_player_();
-ApeEntity        *game_server_get_host_entity_();
+GameServerClient *game_server_get_local_client_();
+GamePlayer       *game_server_get_local_player_();
+ApeEntity        *game_server_get_local_entity_();
 GameServerClient *game_server_get_client_( unsigned int slot );
 
 unsigned int game_server_get_num_clients_();

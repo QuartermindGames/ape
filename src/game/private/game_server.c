@@ -7,8 +7,6 @@
 
 static PLHashTable *serverClientsLookup;//GameServerClient
 
-//TODO: both serverClients and players would probably be better off as a linked list
-
 static GameServerClient serverClients[ GAME_MAX_CLIENTS ];
 static unsigned int     numServerClients;
 
@@ -74,7 +72,7 @@ static void assign_client_to_player( GameServerClient *client )
 	// but that's now left up to the game-specific logic to figure out instead
 }
 
-void game_server_client_connected_( ApeServerClient *clientHandle )
+GameServerClient *game_server_client_connected_( ApeServerClient *clientHandle )
 {
 	GameServerClient *serverClient = &serverClients[ numServerClients ];
 	serverClient->slot             = numServerClients;
@@ -82,9 +80,13 @@ void game_server_client_connected_( ApeServerClient *clientHandle )
 	PlInsertHashTableNode( serverClientsLookup, clientHandle, sizeof( ApeServerClient * ), serverClient );
 	numServerClients++;
 
+	//TODO: send initial state message
+
 	serverClient->state = GAME_SERVER_CLIENT_STATE_SPECTATING;
 
 	assign_client_to_player( serverClient );
+
+	return serverClient;
 }
 
 void game_server_client_disconnected_( ApeServerClient *clientHandle )
@@ -143,7 +145,7 @@ void game_server_tick_( double delta )
 	}
 }
 
-GameServerClient *game_server_get_host_client_()
+GameServerClient *game_server_get_local_client_()
 {
 	if ( ape_is_dedicated() )
 	{
@@ -155,9 +157,9 @@ GameServerClient *game_server_get_host_client_()
 	return game_server_get_client_( 0 );
 }
 
-GamePlayer *game_server_get_host_player_()
+GamePlayer *game_server_get_local_player_()
 {
-	GameServerClient *client = game_server_get_host_client_();
+	GameServerClient *client = game_server_get_local_client_();
 	if ( client == nullptr )
 	{
 		return nullptr;
@@ -166,9 +168,9 @@ GamePlayer *game_server_get_host_player_()
 	return client->playerSlot;
 }
 
-ApeEntity *game_server_get_host_entity_()
+ApeEntity *game_server_get_local_entity_()
 {
-	GamePlayer *player = game_server_get_host_player_();
+	GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr )
 	{
 		return nullptr;

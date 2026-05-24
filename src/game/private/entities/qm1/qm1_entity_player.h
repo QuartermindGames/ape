@@ -2,7 +2,7 @@
 
 #pragma once
 
-static constexpr char QM1_PLAYER_CLASS_NAME[] = "qm1_player";
+static constexpr char NIH_PLAYER_CLASS_NAME[] = "qm1_player";
 
 typedef enum SS1PlayerAudioChannel
 {
@@ -24,4 +24,4 @@ typedef struct Qm1PlayerEntity
 	struct ApeAudioSource *audioSources[ SS1_PLAYER_MAX_AUDIO_CHANNELS ];
 } Qm1PlayerEntity;
 
-#define QM1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), QM1_PLAYER_CLASS_NAME, Qm1PlayerEntity )
+#define QM1_PLAYER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), NIH_PLAYER_CLASS_NAME, Qm1PlayerEntity )

@@ -19,6 +19,9 @@
 
 #include "game_entity.h"
 
+static constexpr float NIH_PLAYER_BASE_HEIGHT = 72.0f;
+static constexpr float NIH_PLAYER_BASE_RADIUS = 16.0f;
+
 static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 {
 	return QM_OS_MEMORY_NEW( Qm1PlayerEntity );
@@ -38,10 +41,11 @@ static void spawn_player_entity( ApeEntity *self )
 	// setup collision component
 	player->collisionComponent = ape_entity_add_component( self, "collision" );
 	assert( player->collisionComponent != nullptr );
-	player->collisionComponent->groups                 = GAME_COLLISION_GROUP_PLAYER;
-	player->collisionComponent->type                   = APE_COLLISION_TYPE_SPHERE;//APE_COLLISION_TYPE_AABB;
-	player->collisionComponent->collider.sphere.radius = 4.0f;
-	player->collisionComponent->collider.sphere.origin = qm_math_vector3f( 0.0f, player->collisionComponent->collider.sphere.radius, 0.0f );
+	player->collisionComponent->groups                   = GAME_COLLISION_GROUP_PLAYER;
+	player->collisionComponent->type                     = APE_COLLISION_TYPE_CYLINDER;
+	player->collisionComponent->collider.cylinder.height = NIH_PLAYER_BASE_HEIGHT;
+	player->collisionComponent->collider.cylinder.radius = NIH_PLAYER_BASE_RADIUS;
+	player->collisionComponent->collider.cylinder.origin = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 
 	player->cameraComponent = ape_entity_add_component( self, "camera" );
 	assert( player->cameraComponent != nullptr );
@@ -59,17 +63,20 @@ static void spawn_player_entity( ApeEntity *self )
 
 static void tick_player_entity( ApeEntity *self, double delta )
 {
-	return;
-	delta = game_get_delta_mod_( delta );
-
 	Qm1PlayerEntity *playerEntity = QM1_PLAYER_ENTITY( self );
 	assert( playerEntity != nullptr );
+
+	GameCollisionComponent *collisionComponent = playerEntity->collisionComponent;
+	ape_draw_debug_cylinder( &collisionComponent->collider.cylinder, &QM_MATH_COLOUR4UB_RGB( 1.0f, 1.0f, 1.0f ), 16 );
+
+	return;
+	delta = game_get_delta_mod_( delta );
 
 	game_component_movement_tick_( playerEntity->movementComponent, playerEntity->collisionComponent, self, delta );
 }
 
 ApeEntityClassDefinition ss1_playerEntityClass = {
-        .name        = QM1_PLAYER_CLASS_NAME,
+        .name        = NIH_PLAYER_CLASS_NAME,
         .description = "Player entity. This shouldn't be placed directly!",
 
         .createFunction = create_player_entity,

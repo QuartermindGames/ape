@@ -15,11 +15,20 @@
 #include "entities/entity_player_spawn.h"
 #include "entities/qm1/qm1_entity_player.h"
 
-NihGameState qm1_state_;
+NihServerState nih_serverState_;
 
-#define SS1_CONFIG "game_ss1"
+void nih_actions_register_();
 
-void ss1_actions_register_();
+NihGameMode nih_get_game_mode()
+{
+	PL_GET_CVAR( "game.mode", gameMode );
+	if ( gameMode->i_value < 0 || gameMode->i_value >= NIH_GAME_MODE_MAX )
+	{
+		return NIH_GAME_MODE_SP;
+	}
+
+	return gameMode->i_value;
+}
 
 static void damage_player_command( [[maybe_unused]] const unsigned int argc, char **argv )
 {
@@ -38,7 +47,8 @@ static void damage_player_command( [[maybe_unused]] const unsigned int argc, cha
 
 static void print_camera_pos_command( unsigned int argc, char **argv )
 {
-	if ( qm1_state_.camera == nullptr )
+	GamePlayer *player = game_server_get_local_player_();
+	if ( player == nullptr || player->camera == nullptr )
 	{
 		game_print_( "No valid camera.\n" );
 		return;
@@ -46,21 +56,23 @@ static void print_camera_pos_command( unsigned int argc, char **argv )
 
 	char tmp[ 64 ];
 
-	QmMathVector3f cameraPos = ape_camera_get_position( qm1_state_.camera );
+	QmMathVector3f cameraPos = ape_camera_get_position( player->camera );
 	game_print_( "Camera Pos: %s\n", qm_math_vector3f_print( cameraPos, tmp, sizeof( tmp ) ) );
-	QmMathVector3f cameraAngles = ape_camera_get_angles( qm1_state_.camera );
+	QmMathVector3f cameraAngles = ape_camera_get_angles( player->camera );
 	game_print_( "Camera Ang: %s\n", qm_math_vector3f_print( cameraAngles, tmp, sizeof( tmp ) ) );
 }
 
 static void camera_save_pos_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
 {
-	if ( qm1_state_.camera == nullptr )
+	GamePlayer *player = game_server_get_local_player_();
+	if ( player == nullptr || player->camera == nullptr )
 	{
+		game_print_( "No valid camera.\n" );
 		return;
 	}
 
-	QmMathVector3f pos = ape_camera_get_position( qm1_state_.camera );
-	QmMathVector3f ang = ape_camera_get_angles( qm1_state_.camera );
+	QmMathVector3f pos = ape_camera_get_position( player->camera );
+	QmMathVector3f ang = ape_camera_get_angles( player->camera );
 
 	char *path = qm_os_string_alloc( "%s/camera.dat", com_get_app_data_directory() );
 	FILE *file = fopen( path, "w" );
@@ -81,8 +93,10 @@ static void camera_save_pos_command( [[maybe_unused]] unsigned int argc, [[maybe
 
 static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
 {
-	if ( qm1_state_.camera == nullptr )
+	GamePlayer *player = game_server_get_local_player_();
+	if ( player == nullptr || player->camera == nullptr )
 	{
+		game_print_( "No valid camera.\n" );
 		return;
 	}
 
@@ -97,8 +111,8 @@ static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[ma
 		        &pos.x, &pos.y, &pos.z,
 		        &ang.x, &ang.y, &ang.z );
 
-		ape_camera_set_position( qm1_state_.camera, &pos );
-		ape_camera_set_angles( qm1_state_.camera, &ang );
+		ape_camera_set_position( player->camera, &pos );
+		ape_camera_set_angles( player->camera, &ang );
 	}
 	else
 	{
@@ -110,52 +124,48 @@ static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[ma
 
 static void register_entities()
 {
-	extern ApeEntityClassDefinition ss1_airshipEntityClass;
-	ape_register_entity_class( &ss1_airshipEntityClass );
-
 	extern ApeEntityClassDefinition ss1_pawnEntityClass;
-	ape_register_entity_class( &ss1_pawnEntityClass );
-
 	extern ApeEntityClassDefinition ss1_playerEntityClass;
+
+	ape_register_entity_class( &ss1_pawnEntityClass );
 	ape_register_entity_class( &ss1_playerEntityClass );
 }
 
-static bool ss1_initialize()
+static bool nih_initialize()
 {
 	if ( !game_initialize_() )
 	{
 		return false;
 	}
 
-	QM_OS_ZERO_( qm1_state_ );
+	nih_serverState_ = ( NihServerState ) {};
 
-	ss1_actions_register_();
+	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
+	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
+	game_integrations_discord_update_activity_( G_STR_( "Idling" ), nullptr, "qm1-logo", "Temp" );
+
+	nih_actions_register_();
 
 	register_entities();
 
-	PlRegisterConsoleCommand( "qm1_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
-	PlRegisterConsoleCommand( "qm1_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
-	PlRegisterConsoleCommand( "qm1_camera_save_pos", "Save the current camera position.", 0, camera_save_pos_command );
-	PlRegisterConsoleCommand( "qm1_camera_restore_pos", "Restore the camera position.", 0, camera_restore_pos_command );
+	PlRegisterConsoleCommand( "nih_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
+	PlRegisterConsoleCommand( "nih_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
+	PlRegisterConsoleCommand( "nih_camera_save_pos", "Save the current camera position.", 0, camera_save_pos_command );
+	PlRegisterConsoleCommand( "nih_camera_restore_pos", "Restore the camera position.", 0, camera_restore_pos_command );
 
-	qm1_state_.config        = com_get_config( SS1_CONFIG );
-	qm1_state_.isFirstLaunch = acm_get_bool( qm1_state_.config, "isFirstLaunch", true );
+	nih_serverState_.config        = com_get_config( NIH_GAME_CONFIG );
+	nih_serverState_.isFirstLaunch = acm_get_bool( nih_serverState_.config, "isFirstLaunch", true );
 
 	nih_menu_initialize_();
-
-	if ( !qm1_world_setup_() )
-	{
-		return false;
-	}
 
 	return true;
 }
 
 static void serialize_config()
 {
-	acm_set_variable( qm1_state_.config, "isFirstLaunch", qm1_state_.isFirstLaunch ? "true" : "false", ACM_PROPERTY_TYPE_BOOL, true );
+	acm_set_variable( nih_serverState_.config, "isFirstLaunch", nih_serverState_.isFirstLaunch ? "true" : "false", ACM_PROPERTY_TYPE_BOOL, true );
 
-	com_write_config( qm1_state_.config, SS1_CONFIG );
+	com_write_config( nih_serverState_.config, NIH_GAME_CONFIG );
 }
 
 static void ss1_shutdown()
@@ -164,36 +174,15 @@ static void ss1_shutdown()
 
 	serialize_config();
 
-	if ( qm1_state_.camera != nullptr )
+	if ( nih_serverState_.world != nullptr )
 	{
-		ape_world_node_destroy( ( ApeWorldNode * ) qm1_state_.camera );
-		qm1_state_.camera = nullptr;
-	}
-
-	if ( qm1_state_.world != nullptr )
-	{
-		ape_world_node_destroy( ( ApeWorldNode * ) qm1_state_.world );
-		qm1_state_.world = nullptr;
+		ape_world_node_destroy( ( ApeWorldNode * ) nih_serverState_.world );
+		nih_serverState_.world = nullptr;
 	}
 
 	nih_menu_shutdown_();
 
 	game_shutdown_();
-}
-
-static void handle_input( double delta )
-{
-	ApeEntity *entity = game_server_get_host_entity_();
-	if ( entity == nullptr )
-	{
-		return;
-	}
-
-	GameCameraComponent *cameraComponent = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
-	if ( cameraComponent != nullptr )
-	{
-		game_component_camera_handle_input_( cameraComponent, delta );
-	}
 }
 
 static void world_tick( const double delta )
@@ -206,20 +195,12 @@ static void world_tick( const double delta )
 
 	ape_audio_clear_listener();
 
-	ApeCamera *camera = qm1_state_.camera;
-	if ( camera != nullptr )
+	GamePlayer *player = game_server_get_local_player_();
+	if ( player != nullptr && player->camera != nullptr )
 	{
-		QmMathVector3f cpos = ape_camera_get_position( camera );
-		QmMathVector3f cang = ape_camera_get_angles( camera );
-
-		qm1_state_.oldCameraPosition = cpos;
-
-		// this is utterly dumb, but we'll use this to determine a vague "velocity"
-		QmMathVector3f cdiff = qm_math_vector3f_sub( cpos, qm1_state_.oldCameraPosition );
-
-		ape_camera_set_angles( camera, &cang );
-
-		ape_audio_update_listener( &cpos, &cang, &cdiff );
+		QmMathVector3f cpos = ape_camera_get_position( player->camera );
+		QmMathVector3f cang = ape_camera_get_angles( player->camera );
+		ape_audio_update_listener( &cpos, &cang, nullptr );
 	}
 }
 
@@ -230,47 +211,10 @@ static void ss1_tick( double delta )
 	game_server_tick_( delta );
 
 	world_tick( delta );
-
-#if 0
-	if ( qm1_state_.camera != nullptr )
-	{
-		QmMathVector3f cameraPos = ape_camera_get_position( qm1_state_.camera );
-		game_test_cylinder_point_collision_( &cameraPos );
-		game_test_cylinder_polygon_collision_( &cameraPos );
-	}
-#endif
-}
-
-static void ss1_draw( const ApeViewport *viewport )
-{
-	ape_camera_make_active( qm1_state_.camera );
-
-	if ( qm1_state_.camera == nullptr )
-	{
-		return;
-	}
-
-	ape_camera_draw_perspective( qm1_state_.camera, viewport );
-}
-
-static void ss1_draw_menu( const ApeViewport *viewport )
-{
-	nih_menu_draw( viewport );
 }
 
 static void on_destroy_room( ApeRoom *room )
 {
-	if ( qm1_state_.camera == nullptr )
-	{
-		return;
-	}
-
-	ApeWorldNode *worldNode = ape_world_node_get_parent( APE_WORLD_NODE( qm1_state_.camera ) );
-	if ( worldNode == APE_WORLD_NODE( room ) )
-	{
-		// save the camera from being destroyed!
-		ape_world_node_dettach( APE_WORLD_NODE( qm1_state_.camera ) );
-	}
 }
 
 static bool server_client_validate( ApeServerClient *clientHandle )
@@ -278,9 +222,83 @@ static bool server_client_validate( ApeServerClient *clientHandle )
 	return game_server_client_validate_( clientHandle );
 }
 
+static void spawn_player( GamePlayer *player )
+{
+	QmOsLinkedList *playerSpawns = game_player_spawn_get_spawn_points();
+	if ( playerSpawns == nullptr )
+	{
+		game_warning_( "Unable to spawn player, no spawn points!\n" );
+		return;
+	}
+
+	ApeEntity *entity = nullptr;
+
+	NihGameMode mode = nih_get_game_mode();
+	if ( mode == NIH_GAME_MODE_SP )
+	{
+		QmOsLinkedListNode *node = qm_os_linked_list_get_front( playerSpawns );
+		assert( node != nullptr );
+
+		entity = qm_os_linked_list_node_get_data( node );
+		assert( entity != nullptr );
+	}
+	else
+	{
+		// pick a randomised spot
+		QM_OS_LINKED_LIST_ITERATE( entity, playerSpawns, i )
+		{
+			GamePlayerSpawnEntity *spawnEntity = PLAYER_SPAWN_ENTITY( entity );
+			if ( spawnEntity->team != player->team )
+			{
+				continue;
+			}
+
+			//TODO: check if it's occupied or not...
+
+			break;
+		}
+	}
+
+	if ( entity == nullptr )
+	{
+		game_warning_( "Failed to find player spawn!\n" );
+		return;
+	}
+
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
+	if ( room == nullptr )
+	{
+		game_warning_( "Encountered a player spawn without a room!\n" );
+		return;
+	}
+
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+
+	player->entity = ape_entity_create( APE_WORLD_NODE( room ), NIH_PLAYER_CLASS_NAME, "local_player", nullptr, &pos, &ang );
+	if ( player->entity == nullptr )
+	{
+		game_warning_( "Failed to spawn in player!\n" );
+		return;
+	}
+
+	ape_entity_spawn( player->entity );
+}
+
 static void server_client_connected( ApeServerClient *clientHandle )
 {
-	game_server_client_connected_( clientHandle );
+	// now attempt to spawn the player into the room
+	GameServerClient *gameClient = game_server_client_connected_( clientHandle );
+	if ( gameClient == nullptr )
+	{
+		game_print_( "Received invalid client handle after connect!\n" );
+		return;
+	}
+
+	if ( gameClient->playerSlot != nullptr )
+	{
+		spawn_player( gameClient->playerSlot );
+	}
 }
 
 static void server_client_disconnected( ApeServerClient *clientHandle )
@@ -293,37 +311,29 @@ static void server_process_message( ApeServerClient *clientHandle, const void *b
 	game_server_process_message_( clientHandle, buf, bufSize );
 }
 
-static void client_connect()
-{
-}
-
 static void client_process_message( const void *buf, size_t bufSize )
 {
 	game_client_process_message_( buf, bufSize );
 }
 
-static void client_tick( double delta )
-{
-	nih_menu_tick( delta );
-
-	handle_input( delta );
-
-	game_integrations_discord_tick_();
-}
+void nih_client_connected_();
+void nih_client_tick_( double delta );
+void nih_client_draw_( const ApeViewport *viewport );
+void nih_client_draw_ui_( const ApeViewport *viewport );
 
 const ApeGameInterfaceImport *ape_game_get_interface( void )
 {
 	static ApeGameInterfaceImport gameMode = {
 	        .version         = APE_GAME_INTERFACE_VERSION,
 	        .protocolVersion = NIH_GAME_PROTOCOL_VERSION,
-	        .identifier      = "ss1",
+	        .identifier      = "nih",
 
-	        .initialize = ss1_initialize,
+	        .initialize = nih_initialize,
 	        .shutdown   = ss1_shutdown,
-	        .draw       = ss1_draw,
-	        .drawUI     = ss1_draw_menu,
+	        .draw       = nih_client_draw_,
+	        .drawUI     = nih_client_draw_ui_,
 
-	        .spawnWorld = qm1_world_spawn_,
+	        .spawnWorld = nih_world_spawn_,
 
 	        .onDestroyRoom = on_destroy_room,
 
@@ -333,9 +343,9 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .serverProcessMessage     = server_process_message,
 	        .serverTick               = ss1_tick,
 
-	        .clientConnect        = client_connect,
+	        .clientConnected      = nih_client_connected_,
 	        .clientProcessMessage = client_process_message,
-	        .clientTick           = client_tick,
+	        .clientTick           = nih_client_tick_,
 	};
 
 	return &gameMode;

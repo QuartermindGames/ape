@@ -403,7 +403,7 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 
 	terrain_apply_detail( self, terrain );
 
-#if 1
+#if 0
 	//TODO: implement a more optimised method for this, as it's *very* slow
 	QmOsLinkedList *faces = qm_os_linked_list_create();
 	for ( unsigned int i = 0; i < terrain->numBrushes; ++i )

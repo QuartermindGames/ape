@@ -12,15 +12,15 @@
 
 #include <acm/acm.h>
 
-#include "../../aux/public/aux_math.h"
+#include "aux/public/aux_math.h"
 
-#include "yin/core.h"
-#include "yin/core_entity.h"
-#include "yin/core_input.h"
-#include "yin/core_game.h"
-
-#include "ape/ape_public_gui.h"
-#include "ape/ape_public_client.h"
+#include "core/public/yin/core.h"
+#include "core/public/yin/core_entity.h"
+#include "core/public/yin/core_input.h"
+#include "core/public/yin/core_game.h"
+#include "core/public/core_console.h"
+#include "core/public/ape/ape_public_gui.h"
+#include "core/public/ape/ape_public_client.h"
 
 #include "game/game_public.h"
 
@@ -75,6 +75,7 @@ typedef enum GameNetMessageType : uint16_t
 {
 	GAME_NET_MESSAGE_SAY,     // message from a client
 	GAME_NET_MESSAGE_ANNOUNCE,// an announcement broadcasted from the server
+	GAME_NET_MESSAGE_INIT,
 } GameNetMessageType;
 
 #define GAME_NET_MAX_SAY_MESSAGE UINT8_MAX
@@ -99,7 +100,9 @@ const char *game_player_get_name_( const GamePlayer *self );
 /////////////////////////////////////////////////////////////////
 // Test Methods
 
+void game_test_cylinder_aabb_collision_( const QmMathVector3f *pos );
 void game_test_cylinder_point_collision_( const QmMathVector3f *pos );
+void game_test_cylinder_cylinder_collision_( const QmMathVector3f *pos );
 void game_test_cylinder_polygon_collision_( const QmMathVector3f *pos );
 
 bool game_test_fire_decal_( ApeRoom *room, const QmMathVector3f *pos, const QmMathVector3f *dir );

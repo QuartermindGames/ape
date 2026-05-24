@@ -1,6 +1,7 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include "game_private.h"
+
 #include "integrations/integrations.h"
 
 #include "menu/menu.h"
@@ -77,27 +78,27 @@ void game_error_( const char *message, ... )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-extern ApeEntityClassDefinition game_pathEntityClass_;
-extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
-extern ApeEntityClassDefinition game_triggerEntityClass_;
-extern ApeEntityClassDefinition game_ropeEntityClass_;
-extern ApeEntityClassDefinition game_portalEntityClass_;
-extern ApeEntityClassDefinition game_terrainEntityClass_;
-
-extern ApeEntityComponentDefinition game_cameraComponent_;
-extern ApeEntityComponentDefinition game_collisionComponent_;
-extern ApeEntityComponentDefinition game_healthComponent_;
-extern ApeEntityComponentDefinition game_movementComponent_;
-extern ApeEntityComponentDefinition game_inventoryComponent_;
-
 static void register_standard_entity_components()
 {
+	extern ApeEntityClassDefinition game_pathEntityClass_;
+	extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
+	extern ApeEntityClassDefinition game_triggerEntityClass_;
+	extern ApeEntityClassDefinition game_ropeEntityClass_;
+	extern ApeEntityClassDefinition game_portalEntityClass_;
+	extern ApeEntityClassDefinition game_terrainEntityClass_;
+
 	ape_register_entity_class( &game_pathEntityClass_ );
 	ape_register_entity_class( &game_playerSpawnEntityClass_ );
 	ape_register_entity_class( &game_triggerEntityClass_ );
 	ape_register_entity_class( &game_ropeEntityClass_ );
 	ape_register_entity_class( &game_portalEntityClass_ );
 	ape_register_entity_class( &game_terrainEntityClass_ );
+
+	extern ApeEntityComponentDefinition game_cameraComponent_;
+	extern ApeEntityComponentDefinition game_collisionComponent_;
+	extern ApeEntityComponentDefinition game_healthComponent_;
+	extern ApeEntityComponentDefinition game_movementComponent_;
+	extern ApeEntityComponentDefinition game_inventoryComponent_;
 
 	ape_register_entity_component( &game_cameraComponent_ );
 	ape_register_entity_component( &game_collisionComponent_ );
@@ -178,7 +179,11 @@ bool game_initialize_( void )
 {
 	gameConfig = com_get_config( "game_shared" );
 
-	PlRegisterConsoleVariable( "game.timeModifier", "Time modifier, useful for emulating slow-motion.", "1.0", PL_VAR_F32, &gameTimeModifier, nullptr, false );
+	ape_console_var_register( "game.timeModifier", "Time modifier, useful for emulating slow-motion.", "1.0", PL_VAR_F32, &gameTimeModifier, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );
+	ape_console_var_register( "game.mode",
+	                          "Set the specific game mode for the server. Shouldn't be changed after the server is already spawned!",
+	                          "0", PL_VAR_I32,
+	                          nullptr, nullptr, 0 );
 
 	PlRegisterConsoleCommand( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
 	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
@@ -201,10 +206,6 @@ bool game_initialize_( void )
 	game_client_initialize_();
 
 	register_standard_entity_components();
-
-	static constexpr int64_t DISCORD_CLIENT_ID = 822170320169074719;
-	game_integrations_discord_initialize_( DISCORD_CLIENT_ID );
-	game_integrations_discord_update_activity_( G_STR_( "Idling" ), nullptr, "qm1-logo", "Temp" );
 
 	return true;
 }

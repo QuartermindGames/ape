@@ -7,6 +7,8 @@
 
 #include "menu.h"
 
+#include "qmos/public/qm_os_random.h"
+
 static GameMenu    *defaultMenu;
 static GameMenu    *currentMenu;
 static unsigned int currentMenuOption;
@@ -120,8 +122,49 @@ static void handle_menu_action( ApeInputState state, const char *id )
 	}
 }
 
+static constexpr char    MENU_BACKGROUND_SCRIPT_PATH[] = "scripts/menu_backgrounds.acm";
+static constexpr uint8_t MENU_BACKGROUND_MAX           = 8;
+
+static uint8_t numMenuBackgrounds;
+static char   *menuBackgrounds[ MENU_BACKGROUND_MAX ];
+
+void game_menu_load_background()
+{
+	unsigned int seed      = qm_os_random_seed_initialize();
+	uint8_t      randomMap = qm_os_random_int( &seed ) % numMenuBackgrounds;
+	const char  *path      = menuBackgrounds[ randomMap ];
+}
+
+void game_menu_unload_background()
+{
+}
+
 void game_menu_initialize()
 {
+	// load in our backgrounds list, for fancy 3d source-like background stoof
+	AcmBranch *root = com_acm_load_file( MENU_BACKGROUND_SCRIPT_PATH, "menuBackgrounds" );
+	if ( root != nullptr )
+	{
+		ACM_ITERATE_BRANCH( root, i )
+		{
+			if ( numMenuBackgrounds >= MENU_BACKGROUND_MAX - 1 )
+			{
+				game_print_( "More backgrounds than supported! Maximum is 8.\n" );
+				break;
+			}
+
+			menuBackgrounds[ numMenuBackgrounds ] = qm_os_string_alloc( "%s", acm_branch_get_value( i, nullptr ) );
+			if ( menuBackgrounds[ numMenuBackgrounds ] == nullptr )
+			{
+				break;
+			}
+
+			numMenuBackgrounds++;
+		}
+
+		acm_branch_destroy( root );
+	}
+
 	menuFont      = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
 	menuTitleFont = gui_get_default_font( GUI_FONT_DEFAULT_LARGE );
 
@@ -131,11 +174,15 @@ void game_menu_initialize()
 	ape_client_input_register_action( "menu_right", &( ApeInputButton ) { INPUT_RIGHT }, 1, &( ApeInputKey ) { APE_INPUT_KEY_RIGHT }, 1, handle_menu_action );
 	ape_client_input_register_action( "menu_select", &( ApeInputButton ) { INPUT_A }, 1, &( ApeInputKey ) { KEY_ENTER }, 1, handle_menu_action );
 	ape_client_input_register_action( "menu_back", &( ApeInputButton ) { INPUT_B }, 1, &( ApeInputKey ) { APE_INPUT_KEY_LEFT }, 1, handle_menu_action );
-	ape_client_input_register_action( "menu_toggle", &( ApeInputButton ) { INPUT_START }, 1, &( ApeInputKey ) { APE_INPUT_KEY_ESCAPE }, 0, handle_menu_action );
+	ape_client_input_register_action( "menu_toggle", &( ApeInputButton ) { INPUT_START }, 1, &( ApeInputKey ) { APE_INPUT_KEY_ESCAPE }, 1, handle_menu_action );
 }
 
 void game_menu_shutdown()
 {
+	for ( uint8_t i = 0; i < numMenuBackgrounds; ++i )
+	{
+		qm_os_memory_free( menuBackgrounds[ i ] );
+	}
 }
 
 void game_menu_setup( GameMenu *self )

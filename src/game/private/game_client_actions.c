@@ -24,7 +24,7 @@ static void move_action( ApeInputState state, const char *id )
 		return;
 	}
 
-	ApeEntity *entity = game_server_get_host_entity_();
+	ApeEntity *entity = game_server_get_local_entity_();
 	if ( entity == nullptr )
 	{
 		return;

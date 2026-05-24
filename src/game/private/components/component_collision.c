@@ -25,11 +25,11 @@ static void *deserialize_collision( void *ptr, AcmBranch *root )
 }
 
 static ApePropertyEnum typesEnum[] = {
-        {"None",    APE_COLLISION_TYPE_NONE   },
-        {"AABB",    APE_COLLISION_TYPE_AABB   },
-        {"Sphere",  APE_COLLISION_TYPE_SPHERE },
-        {"Capsule", APE_COLLISION_TYPE_CAPSULE},
-        {"Plane",   APE_COLLISION_TYPE_PLANE  },
+        {"None",     APE_COLLISION_TYPE_NONE    },
+        {"AABB",     APE_COLLISION_TYPE_AABB    },
+        {"Sphere",   APE_COLLISION_TYPE_SPHERE  },
+        {"Cylinder", APE_COLLISION_TYPE_CYLINDER},
+        {"Plane",    APE_COLLISION_TYPE_PLANE   },
 };
 
 static ApeProperty properties[] = {

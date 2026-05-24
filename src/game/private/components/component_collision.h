@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "aux/public/aux.h"
+
 typedef enum GameCollisionGroup : uint8_t
 {
 #define GAME_COLLISION_GROUP( NAME, VALUE ) QM_OS_BIT_FLAG( GAME_COLLISION_GROUP_##NAME, ( APE_COLLISION_GROUP_END + VALUE ) )
@@ -19,8 +21,8 @@ typedef struct GameCollisionComponent
 
 	union
 	{
-		PLCollisionSphere   sphere;
-		PLCollisionAABB     aabb;
-		ComCollisionCapsule capsule;
+		PLCollisionSphere    sphere;
+		PLCollisionAABB      aabb;
+		ComCollisionCylinder cylinder;
 	} collider;
 } GameCollisionComponent;
