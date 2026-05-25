@@ -923,7 +923,7 @@ void ape_brush_smooth_faces( const QmOsLinkedList *faces )
 
 				for ( unsigned int l = 0; l < adjacentFace->numVertices; ++l )
 				{
-					if ( com_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ],
+					if ( aux_math_vector_check_epsilon( &brush->vertices[ face->vertices[ j ].posIndex ],
 					                                    &adjacentBrush->vertices[ adjacentFace->vertices[ l ].posIndex ] ) )
 					{
 						adjacentFaces[ numAdjacentFaces++ ] = adjacentFace;

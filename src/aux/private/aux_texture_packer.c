@@ -14,7 +14,7 @@
 typedef struct AuxTexturePackerNode
 {
 	struct AuxTexturePackerNode *child[ 2 ];
-	ComMathRectI32               rect;
+	AuxMathRectI32               rect;
 	void                        *data;
 } AuxTexturePackerNode;
 
@@ -50,7 +50,7 @@ AuxTexturePackerNode *aux_texture_packer_node_create_root( const unsigned int w,
 	return root;
 }
 
-ComMathRectI32 aux_texture_packer_node_get_rect( const AuxTexturePackerNode *self )
+AuxMathRectI32 aux_texture_packer_node_get_rect( const AuxTexturePackerNode *self )
 {
 	return self->rect;
 }

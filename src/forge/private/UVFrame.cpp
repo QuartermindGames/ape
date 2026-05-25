@@ -173,7 +173,7 @@ long forge::UVFrame::on_left_click( FXObject *, FXSelector, void *ptr )
 		point.x = i->x * background_->getWidth();
 		point.y = i->y * background_->getHeight();
 
-		ComMathRectI32 rect;
+		AuxMathRectI32 rect;
 		rect.x = point.x - POINT_SIZE / 2;
 		rect.y = point.y - POINT_SIZE / 2;
 		rect.w = POINT_SIZE;

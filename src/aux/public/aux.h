@@ -222,7 +222,7 @@ QmMathVector3f com_math_pitch_yaw_to_position( float pitch, float yaw );
 // TODO: move these into common/common_collision.h
 /////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ComMathRectI32 ComMathRectI32;
+typedef struct AuxMathRectI32 AuxMathRectI32;
 
 typedef struct ComCollisionCylinder
 {
@@ -248,7 +248,7 @@ bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollis
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, QmMathVector3f *result );
 bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
 
-bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const ComMathRectI32 *rect );
+bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const AuxMathRectI32 *rect );
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

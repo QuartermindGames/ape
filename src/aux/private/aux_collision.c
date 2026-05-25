@@ -527,7 +527,7 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 // 2D Collision
 /////////////////////////////////////////////////////////////////////////////////////
 
-bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const ComMathRectI32 *rect )
+bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const AuxMathRectI32 *rect )
 {
 	if ( point->x <= rect->x )
 	{

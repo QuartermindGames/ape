@@ -100,13 +100,13 @@ static void toggle_camera( ApeInputState state, [[maybe_unused]] const char *id 
 
 static void spawn_portal_action( ApeInputState state, const char *id )
 {
-	GamePlayer *player = game_server_get_local_player_();
-	if ( player == nullptr || player->camera == nullptr )
+	if ( !( state & APE_INPUT_STATE_PRESSED ) )
 	{
 		return;
 	}
 
-	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	GamePlayer *player = game_server_get_local_player_();
+	if ( player == nullptr || player->camera == nullptr )
 	{
 		return;
 	}
@@ -132,15 +132,28 @@ static void spawn_portal_action( ApeInputState state, const char *id )
 	}
 }
 
+#if 0
 static void camera_input( ApeInputState state, const char *id )
 {
+	if ( state & APE_INPUT_STATE_RELEASED )
+	{
+		return;
+	}
+
 	GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr || player->camera == nullptr )
 	{
 		return;
 	}
 
-	if ( state & APE_INPUT_STATE_RELEASED )
+	ApeEntity *entity = game_server_get_local_entity_();
+	if ( entity == nullptr )
+	{
+		return;
+	}
+
+	GameCameraComponent *component = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
+	if ( component == nullptr || component->state != GAME_CAMERA_STATE_FREE )
 	{
 		return;
 	}
@@ -151,19 +164,19 @@ static void camera_input( ApeInputState state, const char *id )
 	float forwardMove = 0.0f;
 	float sideMove    = 0.0f;
 
-	if ( strcmp( "qm1_camera_rotate_left", id ) == 0 )
+	if ( strcmp( "nih_camera_rotate_left", id ) == 0 )
 	{
 		ang.y += 0.5f;
 	}
-	else if ( strcmp( "qm1_camera_rotate_right", id ) == 0 )
+	else if ( strcmp( "nih_camera_rotate_right", id ) == 0 )
 	{
 		ang.y -= 0.5f;
 	}
-	else if ( strcmp( "qm1_camera_rotate_up", id ) == 0 )
+	else if ( strcmp( "nih_camera_rotate_up", id ) == 0 )
 	{
 		ang.x += 0.5f;
 	}
-	else if ( strcmp( "qm1_camera_rotate_down", id ) == 0 )
+	else if ( strcmp( "nih_camera_rotate_down", id ) == 0 )
 	{
 		ang.x -= 0.5f;
 	}
@@ -192,19 +205,11 @@ static void camera_input( ApeInputState state, const char *id )
 	ape_camera_set_angles( player->camera, &ang );
 	ape_camera_set_position( player->camera, &pos );
 }
+#endif
 
 void nih_actions_register_()
 {
-	ape_client_input_register_action( "qm1_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
-	ape_client_input_register_action( "qm1_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal );
-	ape_client_input_register_action( "qm1_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
-
-	ape_client_input_register_action( "qm1_camera_rotate_left", nullptr, 0, ( ApeInputKey[] ) { APE_INPUT_KEY_LEFT }, 1, camera_input );
-	ape_client_input_register_action( "qm1_camera_rotate_right", nullptr, 0, ( ApeInputKey[] ) { APE_INPUT_KEY_RIGHT }, 1, camera_input );
-	ape_client_input_register_action( "qm1_camera_rotate_up", nullptr, 0, ( ApeInputKey[] ) { APE_INPUT_KEY_UP }, 1, camera_input );
-	ape_client_input_register_action( "qm1_camera_rotate_down", nullptr, 0, ( ApeInputKey[] ) { APE_INPUT_KEY_DOWN }, 1, camera_input );
-	ape_client_input_register_action( "nih_camera_move_forward", nullptr, 0, ( ApeInputKey[] ) { 'w' }, 1, camera_input );
-	ape_client_input_register_action( "nih_camera_move_back", nullptr, 0, ( ApeInputKey[] ) { 's' }, 1, camera_input );
-	ape_client_input_register_action( "nih_camera_move_left", nullptr, 0, ( ApeInputKey[] ) { 'a' }, 1, camera_input );
-	ape_client_input_register_action( "nih_camera_move_right", nullptr, 0, ( ApeInputKey[] ) { 'd' }, 1, camera_input );
+	ape_client_input_register_action( "nih_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
+	ape_client_input_register_action( "nih_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal );
+	ape_client_input_register_action( "nih_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
 }

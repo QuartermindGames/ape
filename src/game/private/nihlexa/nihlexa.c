@@ -5,6 +5,8 @@
 #include "nihlexa.h"
 #include "nihlexa_menu.h"
 
+#include "game_entity.h"
+
 #include "integrations/integrations.h"
 #include "physics/physics.h"
 #include "game_team.h"
@@ -283,6 +285,8 @@ static void spawn_player( GamePlayer *player )
 	}
 
 	ape_entity_spawn( player->entity );
+
+	game_entity_place_on_ground( player->entity );
 }
 
 static void server_client_connected( ApeServerClient *clientHandle )

@@ -93,7 +93,7 @@ QM_TEST_FUNC( texture_packer )
 		AuxTexturePackerNode *child = aux_texture_packer_node_insert( root, images[ i ].x, images[ i ].y );
 		QM_TEST_ASSERT( child != nullptr );
 
-		ComMathRectI32 rect = aux_texture_packer_node_get_rect( child );
+		AuxMathRectI32 rect = aux_texture_packer_node_get_rect( child );
 		QM_TEST_ASSERT( rect.w == images[ i ].x && rect.h == images[ i ].y );
 
 #ifdef USE_CAIRO

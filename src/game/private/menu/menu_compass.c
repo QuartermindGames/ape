@@ -103,5 +103,5 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 void game_menu_compass_tick_( const ApeCamera *camera, const double delta )
 {
 	QmMathVector3f angles = ape_camera_get_angles( camera );
-	com_math_interpolate_angles( &compassAngles, &angles, 10.0f * delta, &compassAngles );
+	aux_math_interpolate_angles( &compassAngles, &angles, 10.0f * delta, &compassAngles );
 }

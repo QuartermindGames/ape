@@ -79,8 +79,6 @@ typedef struct ApeEntityClassDefinition
 #endif
 } ApeEntityClassDefinition;
 
-typedef const ApeEntityClassDefinition *( *SS_Acl_EntityClassRegisterFunction )( void );
-
 void                             ape_register_entity_class( const ApeEntityClassDefinition *definition );
 const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses );
 const ApeEntityClassDefinition  *ape_get_entity_class_table( const char *className );
@@ -90,6 +88,13 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 void ape_entity_spawn( ApeEntity *self );
 void ape_entity_tick( ApeEntity *self, double delta );
 void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags );
+
+/**
+ * Return the gravity impacting the entity.
+ * This is derived from the current room it's in.
+ * If there's no room, it returns false. Otherwise true on success and out is updated.
+ */
+bool ape_entity_get_gravity( ApeEntity *self, QmMathVector3f *gravityDst );
 
 ////////////////////////////////////////////////////////////////////
 // Components

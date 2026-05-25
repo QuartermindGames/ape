@@ -262,7 +262,7 @@ static bool setup_face_lightmap( ApeRoom *room, ApeBrushFace *face )
 
 	// now update the uv so its correct relative to where it's going to be on the sheet
 
-	ComMathRectI32 rect = aux_texture_packer_node_get_rect( node );
+	AuxMathRectI32 rect = aux_texture_packer_node_get_rect( node );
 
 	face->lightmapArea.x = ( float ) rect.x / room->lightmapEdgeLength;
 	face->lightmapArea.y = ( float ) rect.y / room->lightmapEdgeLength;

@@ -26,3 +26,5 @@ typedef struct GameCollisionComponent
 		ComCollisionCylinder cylinder;
 	} collider;
 } GameCollisionComponent;
+
+void game_component_collision_debug_collider( const GameCollisionComponent *collision );

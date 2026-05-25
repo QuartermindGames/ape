@@ -252,6 +252,18 @@ void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags )
 	self->classDefinition->drawFunction( self, light, flags );
 }
 
+bool ape_entity_get_gravity( ApeEntity *self, QmMathVector3f *gravityDst )
+{
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
+	if ( room == nullptr )
+	{
+		return false;
+	}
+
+	*gravityDst = ape_room_get_gravity( room );
+	return true;
+}
+
 void ape_register_entity_component( const ApeEntityComponentDefinition *definition )
 {
 	if ( entityComponentDefinitions == NULL )

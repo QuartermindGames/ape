@@ -50,3 +50,21 @@ ApeEntityComponentDefinition game_collisionComponent_ = {
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Public API
+
+void game_component_collision_debug_collider( const GameCollisionComponent *collision )
+{
+	switch ( collision->type )
+	{
+		case APE_COLLISION_TYPE_AABB:
+			ape_draw_debug_aabb( &collision->collider.aabb, PL_COLOUR_BLUE );
+			break;
+		case APE_COLLISION_TYPE_CYLINDER:
+			ape_draw_debug_cylinder( &collision->collider.cylinder, &PL_COLOUR_BLUE, 16 );
+			break;
+		case APE_COLLISION_TYPE_SPHERE:
+			ape_draw_debug_sphere( collision->collider.sphere.origin,PL_COLOUR_BLUE,collision->collider.sphere.radius );
+			break;
+		default:
+			break;
+	}
+}

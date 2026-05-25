@@ -68,35 +68,24 @@ static void ground_check( GameMovementComponent *self, GameCollisionComponent *c
 
 void game_component_movement_tick_( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta )
 {
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+#if 0
+	game_debug_( "dir: %f %f %f (%p)\n", AUX_VEC3_ARGS( self->direction ), self );
+	game_debug_( "vel: %f %f %f\n", AUX_VEC3_ARGS( self->velocity ) );
 
-	//game_debug_( "dir: %s (%p)\n", PlPrintVector3( &self->direction, PL_VAR_F32 ), self );
-	//game_debug_( "vel: %s\n", PlPrintVector3( &self->velocity, PL_VAR_F32 ) );
+	game_component_collision_debug_collider( collision );
+#endif
 
 	// check if there's a direction we're trying to move
 	self->direction     = qm_math_vector3f_normalize( self->direction );
-	QmMathVector3f accl = qm_math_vector3f_scale_float( qm_math_vector3f( self->direction.x, 0.0f, self->direction.z ), 16.0f );
+	QmMathVector3f accl = qm_math_vector3f_scale_float( qm_math_vector3f( self->direction.x, 0.0f, self->direction.z ), self->maxWalkSpeed );
 	self->velocity      = qm_math_vector3f_add( self->velocity, qm_math_vector3f_scale_float( accl, delta ) );
 
-	// apply gravity (TODO: this should be hooked up with a var!)
-	if ( !self->isGrounded )
-	{
-		self->velocity.y += -16.0f * delta;
-		self->direction.y = 0.0f;
-	}
-	else
-	{
-		self->velocity.y += self->direction.y * 1024.0f * delta;
-	}
-
 	QmMathVector3f disp = qm_math_vector3f_scale_float( self->velocity, delta );
+	QmMathVector3f pos  = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 	pos                 = qm_math_vector3f_add( pos, disp );
 
 	if ( collision != nullptr )
 	{
-		static constexpr float SPHERE_SIZE = 4.0f;
-		//ape_draw_debug_sphere( pos, QM_MATH_COLOUR4UB( 255, 255, 0, 255 ), SPHERE_SIZE );
-
 		ground_check( self, collision, entity );
 
 		ApeCollisionCollider collider = {};
@@ -132,6 +121,25 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 				qm_os_memory_free( hits );
 			}
 		}
+	}
+
+	// apply gravity (TODO: this should be hooked up with a var!)
+	if ( !self->isGrounded )
+	{
+		QmMathVector3f gravity = {};
+		ape_entity_get_gravity( entity, &gravity );
+
+		self->velocity    = qm_math_vector3f_add( self->velocity, qm_math_vector3f_scale_float( gravity, delta ) );
+		self->direction.y = 0.0f;
+	}
+	else
+	{
+		if ( self->capabilities & GAME_MOVEMENT_CAPABILITY_JUMP )
+		{
+			self->velocity.y += self->direction.y * 1024.0f * delta;
+		}
+
+		// apply friction
 	}
 
 	ape_world_node_set_position( APE_WORLD_NODE( entity ), &pos );

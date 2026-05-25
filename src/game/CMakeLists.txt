@@ -1,7 +1,6 @@
 set(GAME_SHARED_FILES
         private/game.c
         private/game_client.c
-        private/game_client_actions.c
         private/game_entity.c
         private/game_language.c
         private/game_menu.c
@@ -10,6 +9,8 @@ set(GAME_SHARED_FILES
         private/game_test.c
 
         private/ai/ai_brain.c
+
+        private/client/client_actions.c
 
         private/components/component_camera.c
         private/components/component_collision.c

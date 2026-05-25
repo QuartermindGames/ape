@@ -17,6 +17,7 @@ void game_entity_place_on_ground( ApeEntity *self )
 	}
 
 	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	pos.y += 8.0f;
 
 	ApeCollisionIntersection result = {};
 	if ( !game_physics_get_ground( room, &pos, &result ) )

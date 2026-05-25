@@ -10,20 +10,10 @@ static constexpr float CAMERA_DEFAULT_DISTANCE = 50.0f;
 static constexpr float CAMERA_DEFAULT_SIDE     = 10.0f;
 
 //TODO: this shouldn't be here...
-static void free_camera_tick( const GameCameraComponent *component, ApeCamera *camera, const double delta )
+static void free_camera_tick( ApeCamera *camera, const double delta )
 {
 	QmMathVector3f ang = ape_camera_get_angles( camera );
 	QmMathVector3f pos = ape_camera_get_position( camera );
-
-	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
-	{
-		int mx, my;
-		ape_client_input_get_mouse_delta( &mx, &my );
-		ang.y += ( float ) mx;
-		ang.x += ( float ) my;
-		ang.x = QM_MATH_CLAMP( -90.0f, ang.x, 90.0f );
-	}
 
 	QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
 	ang.x -= rightStick.y * 100.0f * delta;
@@ -101,7 +91,7 @@ static void third_person_tick( const GameCameraComponent *component, ApeCamera *
 
 	// now interpolate the position and angles for the camera to the new position
 	cpos = PlLinearInterpolateV3f( cpos, npos, 7.0f * delta );
-	com_math_interpolate_angles( &cang, &eang, 7.0f * delta, &cang );
+	aux_math_interpolate_angles( &cang, &eang, 7.0f * delta, &cang );
 
 	// if the camera is hitting anything, move it
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( camera ) );
@@ -138,7 +128,7 @@ static void first_person_tick( const GameCameraComponent *component, ApeCamera *
 
 	// now interpolate the position and angles for the camera to the new position
 	cpos = PlLinearInterpolateV3f( cpos, trackPos, 7.0f * delta );
-	com_math_interpolate_angles( &cang, &eang, 16.0f * delta, &cang );
+	aux_math_interpolate_angles( &cang, &eang, 16.0f * delta, &cang );
 
 	ape_camera_set_position( camera, &cpos );
 	ape_camera_set_angles( camera, &cang );
@@ -182,23 +172,35 @@ static void *component_camera_deserialize( void *ptr, AcmBranch *root )
 
 void game_component_camera_handle_input_( GameCameraComponent *component, double delta )
 {
-	QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
-
-	// update the pitch
-	component->angles.x -= rightStick.y * 100.0f * delta;
-	if ( component->angles.x > 90.0f )
+	PL_GET_CVAR( "input/mlook", mouseLook );
+	if ( mouseLook != NULL && mouseLook->b_value )
 	{
-		component->angles.x = 90.0f;
+		int mx, my;
+		ape_client_input_get_mouse_delta( &mx, &my );
+		component->angles.y += ( float ) mx;
+		component->angles.x += ( float ) my;
+		component->angles.x = QM_MATH_CLAMP( -90.0f, component->angles.x, 90.0f );
 	}
-	else if ( component->angles.x < -90.0f )
+	else
 	{
-		component->angles.x = -90.0f;
+		QmMathVector2f rightStick = ape_client_input_get_controller_axis_state( 0, 1 );
+
+		// update the pitch
+		component->angles.x -= rightStick.y * 100.0f * delta;
+		if ( component->angles.x > 90.0f )
+		{
+			component->angles.x = 90.0f;
+		}
+		else if ( component->angles.x < -90.0f )
+		{
+			component->angles.x = -90.0f;
+		}
+
+		// and the yaw
+		component->angles.y -= rightStick.x * 150.0f * delta;
 	}
 
-	// and the yaw
-	component->angles.y -= rightStick.x * 150.0f * delta;
-
-	com_math_normalize_angles( &component->angles, &component->angles );
+	aux_math_normalize_angles( &component->angles, &component->angles );
 }
 
 void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, const QmMathVector3f trackPos, const double delta )
@@ -207,7 +209,7 @@ void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *cam
 
 	if ( component->state == GAME_CAMERA_STATE_FREE )
 	{
-		free_camera_tick( component, camera, delta );
+		free_camera_tick( camera, delta );
 		return;
 	}
 

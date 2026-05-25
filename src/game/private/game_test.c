@@ -131,5 +131,5 @@ bool game_test_fire_decal_( ApeRoom *room, const QmMathVector3f *pos, const QmMa
 	float        angle = qm_os_random_uniform_float( &seed, 360.0f );
 	float        scale = 1.0f + qm_os_random_float( &seed, 2.0f );
 
-	return ape_room_create_projected_decal( room, material, pos, dir, angle, scale );
+	return ape_room_trace_decal( room, material, pos, dir, angle, scale );
 }
