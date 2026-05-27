@@ -245,7 +245,7 @@ static void al_tick( void )
 			XAL_CALL( alSourcei( source->user, AL_BUFFER, 0 ) );
 			if ( source->sample != nullptr )
 			{
-				ape_audio_sample_release( source->sample );
+				ape_audio_sample_release_reference( source->sample );
 				source->sample = nullptr;
 			}
 
@@ -312,7 +312,7 @@ static void al_emit_sample( ApeAudioSample *sample, const QmMathVector3f *positi
 	XAL_CALL( alSource3f( source->user, AL_POSITION, position->x, position->y, position->z ) );
 	XAL_CALL( alSourcePlay( source->user ) );
 
-	ape_memory_add_reference( &sample->reference );
+	ape_memory_reference_add( &sample->reference );
 
 	source->sample = sample;
 	qm_os_linked_list_push_back( activeSources, source );
@@ -331,7 +331,7 @@ static void al_destroy_source( ApeAudioSource *source )
 		XAL_CALL( alSourceStop( source->user ) );
 		XAL_CALL( alSourceUnqueueBuffers( source->user, 1, ( ALuint * ) &source->sample->user ) );
 		XAL_CALL( alSourcei( source->user, AL_BUFFER, 0 ) );
-		ape_audio_sample_release( source->sample );
+		ape_audio_sample_release_reference( source->sample );
 	}
 
 	XAL_CALL( alDeleteSources( 1, ( ALuint * ) &source->user ) );

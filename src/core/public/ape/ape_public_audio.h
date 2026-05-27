@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "core/public/core_memory.h"
+
 PL_EXTERN_C
 
 /**
@@ -120,10 +122,11 @@ typedef enum ApeAudioSampleFormat
 	APE_AUDIO_SAMPLE_FORMAT_STEREO16,
 } ApeAudioSampleFormat;
 
+APE_MEMORY_IMPLEMENT_INTERFACE_DECL( ape_audio_sample, ApeAudioSample )
+
 ApeAudioSample *ape_audio_sample_cache( const char *path );
 ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigned int bufferSize, ApeAudioSampleFormat format, unsigned int channels, unsigned int sampleRate );
 void            ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch );
-void            ape_audio_sample_release( ApeAudioSample *audioSample );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Source

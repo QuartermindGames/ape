@@ -51,7 +51,7 @@ forge::editor_model::editor_model( FXTabBook *owner, const FXString &modelName, 
 
 forge::editor_model::~editor_model()
 {
-	ape_model_release( model );
+	ape_model_release_reference( model );
 
 	ape_world_node_destroy( &world->base );
 }

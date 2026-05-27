@@ -409,7 +409,7 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 {
 	if ( self->material != nullptr )
 	{
-		ape_material_release( self->material );
+		ape_material_release_reference( self->material );
 	}
 
 	self->material = material;

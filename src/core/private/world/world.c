@@ -50,7 +50,7 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 				continue;
 			}
 
-			ape_material_release( material );
+			ape_material_release_reference( material );
 		}
 		PlDestroyVectorArray( self->materials );
 		self->materials = nullptr;

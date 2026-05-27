@@ -20,7 +20,7 @@ void ape_material_animator_free_( ApeMaterialAnimator *self )
 			ApeMaterialAnimatorTexture *texture = &self->texture;
 			for ( unsigned int i = 0; i < self->numFrames; ++i )
 			{
-				ape_texture_release_( texture->frames[ i ] );
+				ape_texture_release_reference( texture->frames[ i ] );
 			}
 
 			qm_os_memory_free( texture->frames );

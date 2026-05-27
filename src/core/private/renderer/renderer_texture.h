@@ -33,12 +33,12 @@ typedef struct ApeTexture
 	char *path;// for reloading
 } ApeTexture;
 
+APE_MEMORY_IMPLEMENT_INTERFACE_DECL( ape_texture, ApeTexture )
+
 ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, unsigned int h, const QmImagePixelFormatDescriptor *format, QmGfxTextureFilter filter );
 
 ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, bool useFallback );
 ApeTexture *ape_texture_cache_cubemap_( char **paths, QmGfxTextureFilter filter );
-
-void ape_texture_release_( ApeTexture *texture );
 
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture );
 

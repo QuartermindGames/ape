@@ -32,13 +32,13 @@ void ape_video_destroy( ApeVideo *video )
 {
 	for ( unsigned int i = 0; i < video->numFrames; ++i )
 	{
-		ape_texture_release_( video->frames[ i ] );
+		ape_texture_release_reference( video->frames[ i ] );
 		video->frames[ i ] = nullptr;
 	}
 
 	if ( video->audioSample != nullptr )
 	{
-		ape_audio_sample_release( video->audioSample );
+		ape_audio_sample_release_reference( video->audioSample );
 	}
 	if ( video->audioSource != nullptr )
 	{

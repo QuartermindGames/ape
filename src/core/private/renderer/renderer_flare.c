@@ -61,7 +61,7 @@ void ape_register_flare_console_variables_( void )
 
 void ape_shutdown_flares_( void )
 {
-	ape_material_release( flareMaterial );
+	ape_material_release_reference( flareMaterial );
 	flareMaterial = nullptr;
 
 	QM_OS_ZERO_( flares );

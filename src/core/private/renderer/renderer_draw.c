@@ -459,7 +459,7 @@ void ape_draw_destroy_debug_mesh_()
 	PlgDestroyMesh( debugDrawMesh );
 	debugDrawMesh = nullptr;
 
-	ape_material_release( debugDrawMaterial );
+	ape_material_release_reference( debugDrawMaterial );
 	debugDrawMaterial = nullptr;
 }
 

@@ -138,6 +138,13 @@ void ape_initialize_materials_( void )
 
 void ape_shutdown_materials_( void )
 {
+	// release defaults
+	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
+	{
+		ape_material_release_reference( defaultMaterials[ i ] );
+		defaultMaterials[ i ] = nullptr;
+	}
+
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	ape_memory_flush_unreferenced_resources();
 
@@ -886,7 +893,7 @@ static void material_var_free( ApeMaterialVariable *var )
 			//TODO!!!
 			break;
 		case APE_MATERIAL_VAR_TEXTURE:
-			ape_texture_release_( var->data.ptr );
+			ape_texture_release_reference( var->data.ptr );
 			break;
 		default:
 			qm_os_memory_free( var->data.ptr );
@@ -1146,8 +1153,8 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		PlScaleMatrix( qm_math_vector3f( scaleX, scaleY, 1.0f ) );
 
 		qm_gfx_shader_set_uniform_value_by_index( program->internal,
-		                                 program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
-		                                 PlGetMatrix( PL_TEXTURE_MATRIX ), false );
+		                                          program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
+		                                          PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 
 		PlPopMatrix();
 
@@ -1156,8 +1163,8 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
 	{
 		qm_gfx_shader_set_uniform_value_by_index( program->internal,
-		                                 program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
-		                                 PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+		                                          program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
+		                                          PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 	}
 }
 
@@ -1167,7 +1174,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	ApeMaterial *material = get_material( path, group );
 	if ( material != NULL )
 	{
-		ape_memory_add_reference( &material->mem );
+		ape_memory_reference_add( &material->mem );
 		return material;
 	}
 
@@ -1191,31 +1198,12 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
 	ape_memory_setup_reference( material->path, APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
-	ape_memory_add_reference( &material->mem );
+	ape_memory_reference_add( &material->mem );
 
 	return material;
 }
 
-void ape_material_release( ApeMaterial *material )
-{
-	if ( material == NULL )
-	{
-		return;
-	}
-
-	// don't flush default materials...
-	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
-	{
-		if ( material != defaultMaterials[ i ] )
-		{
-			continue;
-		}
-
-		return;
-	}
-
-	ape_memory_release( &material->mem );
-}
+APE_MEMORY_IMPLEMENT_INTERFACE( ape_material, ApeMaterial, mem )
 
 int8_t ape_material_get_surface_type( const ApeMaterial *material )
 {

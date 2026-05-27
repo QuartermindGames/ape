@@ -14,6 +14,8 @@
 static PLHashTable *textureTable;
 static ApeTexture  *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
 
+APE_MEMORY_IMPLEMENT_INTERFACE( ape_texture, ApeTexture, reference )
+
 static void destroy_texture( void *userData )
 {
 	ApeTexture *texture = userData;
@@ -287,7 +289,7 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 	ApeTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
 	if ( texture != NULL )
 	{
-		ape_memory_add_reference( &texture->reference );
+		ape_memory_reference_add( &texture->reference );
 		return texture;
 	}
 
@@ -335,7 +337,7 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 	qm_gfx_texture_set_filter( texture->internal, texture->filterMode );
 
 	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, nullptr );
-	ape_memory_add_reference( &texture->reference );
+	ape_memory_reference_add( &texture->reference );
 
 	return texture;
 
@@ -420,11 +422,6 @@ cleanup:
 	destroy_texture( texture );
 
 	return nullptr;
-}
-
-void ape_texture_release_( ApeTexture *texture )
-{
-	ape_memory_release( &texture->reference );
 }
 
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture )

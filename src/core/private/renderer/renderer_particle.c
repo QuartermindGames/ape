@@ -13,7 +13,7 @@ static void DestroyEmitterTemplateCallback( void *userData )
 	ApeParticleEmitter *emitter = userData;
 	assert( emitter != NULL );
 
-	ape_material_release( emitter->material );
+	ape_material_release_reference( emitter->material );
 
 	PlgDestroyMesh( emitter->mesh );
 
@@ -73,7 +73,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	emitter->endColourVar   = com_acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
 	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, DestroyEmitterTemplateCallback, emitter );
-	ape_memory_add_reference( &emitter->mem );
+	ape_memory_reference_add( &emitter->mem );
 }
 
 ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
@@ -125,7 +125,7 @@ void ss_arl_particle_emitter_destroy( ApeParticleEmitter *emitter )
 	}
 
 	if ( emitter->material != NULL )
-		ape_material_release( emitter->material );
+		ape_material_release_reference( emitter->material );
 
 	PlDestroyLinkedList( emitter->particles );
 	qm_os_memory_free( emitter );

@@ -11,6 +11,8 @@
 
 static bool modelShowSkeleton;
 
+APE_MEMORY_IMPLEMENT_INTERFACE( ape_model, ApeModel, reference )
+
 void ape_model_register_console_variables_()
 {
 	PlRegisterConsoleVariable( "model.showSkeleton", "Toggle display of a model skeleton.", "false", PL_VAR_BOOL, &modelShowSkeleton, nullptr, false );
@@ -23,7 +25,7 @@ static void model_cleanup_callback_( void *userData )
 
 	for ( unsigned int i = 0; i < model->numMaterials; ++i )
 	{
-		ape_material_release( model->meshes[ i ].material );
+		ape_material_release_reference( model->meshes[ i ].material );
 	}
 
 	PlDestroyLinkedList( model->sceneNodes );
@@ -221,7 +223,7 @@ ApeModel *ape_model_load( const char *path )
 	ApeModel *model = ape_memory_get_from_pool_( path, APE_CACHE_POOL_MODELS );
 	if ( model != NULL )
 	{
-		ape_memory_add_reference( &model->reference );
+		ape_memory_reference_add( &model->reference );
 		return model;
 	}
 
@@ -236,7 +238,7 @@ ApeModel *ape_model_load( const char *path )
 	if ( deserialize_model( model, root ) != nullptr )
 	{
 		ape_memory_setup_reference( path, APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
-		ape_memory_add_reference( &model->reference );
+		ape_memory_reference_add( &model->reference );
 	}
 	else
 	{
@@ -249,11 +251,6 @@ ApeModel *ape_model_load( const char *path )
 	acm_branch_destroy( root );
 
 	return model;
-}
-
-void ape_model_release( ApeModel *model )
-{
-	ape_memory_release( &model->reference );
 }
 
 static QmMathVector3f get_transformed_bone_position( const ApeModel *model, const ApeFormatBone *bone, const PLMatrix4 *transform )
@@ -426,7 +423,7 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 
 	PlDestroyLinkedListNode( self->modelSceneNode );
 
-	ape_model_release( self->model );
+	ape_model_release_reference( self->model );
 
 	qm_os_memory_free( self );
 }

@@ -5,6 +5,8 @@
 #include <plgraphics/plg.h>
 #include <plgraphics/plg_mesh.h>
 
+#include "core/public/core_memory.h"
+
 // TODO: retire this...
 typedef enum ApeCacheGroup
 {
@@ -17,6 +19,8 @@ typedef enum ApeCacheGroup
 
 PL_EXTERN_C
 
+typedef struct QmOsSharedPtr QmOsSharedPtr;
+
 typedef struct ComCollisionCylinder ComCollisionCylinder;
 
 typedef struct ApeCamera       ApeCamera;
@@ -27,6 +31,7 @@ typedef struct ApeTexture      ApeTexture;
 typedef struct ApeMaterial     ApeMaterial;
 typedef struct ApeRoom         ApeRoom;
 typedef struct ApeWorld        ApeWorld;
+typedef struct ApeBrushFace    ApeBrushFace;
 
 typedef struct ApeGuiFont ApeGuiFont;
 
@@ -143,6 +148,8 @@ typedef enum ApeDefaultMaterial
 	APE_MAX_DEFAULT_MATERIALS
 } ApeDefaultMaterial;
 
+APE_MEMORY_IMPLEMENT_INTERFACE_DECL( ape_material, ApeMaterial )
+
 ApeMaterial *ape_material_get_default( ApeDefaultMaterial defaultMaterial );
 
 /**
@@ -156,11 +163,6 @@ const char *ape_material_get_path( const ApeMaterial *material );
  * reference will need to be released once finished with.
  */
 ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback );
-
-/**
- * Releases a reference to the material, allowing it to clean up.
- */
-void ape_material_release( ApeMaterial *material );
 
 /**
  * Returns the surface type for the material.

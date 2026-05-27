@@ -63,6 +63,8 @@ static struct
 	QmMathVector3f velocity;
 } audioListener;
 
+APE_MEMORY_IMPLEMENT_INTERFACE( ape_audio_sample, ApeAudioSample, reference )
+
 static void play_audio_command( unsigned int argc, char **argv )
 {
 	const char     *path   = ( argc > 1 ) ? argv[ 1 ] : "sounds/testing/ping.wav";
@@ -73,7 +75,7 @@ static void play_audio_command( unsigned int argc, char **argv )
 	}
 
 	ape_audio_sample_emit( sample, nullptr, 100, 1.0 );
-	ape_audio_sample_release( sample );
+	ape_audio_sample_release_reference( sample );
 }
 
 static void pause_audio_command( unsigned int argc, char **argv )
@@ -97,7 +99,7 @@ static void test_3d_command( unsigned int, char ** )
 	};
 
 	ape_audio_sample_emit( sample, &position, 100, qm_os_random_float( &seed, 2.0f ) );
-	ape_audio_sample_release( sample );
+	ape_audio_sample_release_reference( sample );
 }
 
 void ape_audio_initialize_( void )
@@ -144,11 +146,6 @@ static void destroy_sample( void *user )
 	qm_os_memory_free( sample );
 }
 
-void ape_audio_sample_release( ApeAudioSample *audioSample )
-{
-	ape_memory_release( &audioSample->reference );
-}
-
 ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file );
 ApeAudioSample *ape_audio_format_wav_load_( QmFsFile *file );
 ApeAudioSample *ape_audio_sample_cache( const char *path )
@@ -156,7 +153,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	ApeAudioSample *sample = ape_memory_get_from_pool_( path, APE_CACHE_POOL_SAMPLES );
 	if ( sample != nullptr )
 	{
-		ape_memory_add_reference( &sample->reference );
+		ape_memory_reference_add( &sample->reference );
 		return sample;
 	}
 
@@ -206,7 +203,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	//ape_memory_manager_add_to_pool_( path, APE_CACHE_POOL_SAMPLES, sample );
 
 	ape_memory_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
-	ape_memory_add_reference( &sample->reference );
+	ape_memory_reference_add( &sample->reference );
 
 	ape_console_verbose_( "Cached sound, \"%s\"\n", path );
 
@@ -235,7 +232,7 @@ ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigne
 	}
 
 	ape_memory_setup_reference( "sound_proc", APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
-	ape_memory_add_reference( &sample->reference );
+	ape_memory_reference_add( &sample->reference );
 
 	return sample;
 }

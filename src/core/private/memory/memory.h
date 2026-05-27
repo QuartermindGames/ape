@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "core/public/core_memory.h"
+
 void ape_memory_initialize_( void );
 void ape_memory_shutdown_( void );
 
@@ -58,8 +60,6 @@ typedef struct ApeMemoryReference
 
 ApeMemoryReference *ape_memory_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData );
 
-void         ape_memory_add_reference( ApeMemoryReference *m );
-void         ape_memory_release( ApeMemoryReference *m );
 int          ape_memory_get_num_references( const ApeMemoryReference *m );
 unsigned int ape_memory_flush_unreferenced_resources( void );
 

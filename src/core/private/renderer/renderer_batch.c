@@ -30,7 +30,7 @@ static void destroy_batch( ApeRendererDrawBatch *batch )
 #if 0// nah, don't do this... the original caller should be responsible
 	if ( batch->material != nullptr )
 	{
-		ape_material_release( batch->material );
+		ape_material_release_reference( batch->material );
 	}
 #endif
 

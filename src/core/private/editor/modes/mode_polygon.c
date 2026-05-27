@@ -170,7 +170,7 @@ ApeBrush *ape_editor_mode_polygon_create( ApeEditorInstance *self, const char *m
 	if ( !ape_brush_build_from_polygon_( brush, vertices, self->numPolygonPoints, dir, self->grid.size, flipFaces ? -signedArea : signedArea, material, type ) )
 	{
 		ape_console_warning_( "Failed to create brush from polygon!\n" );
-		ape_material_release( material );
+		ape_material_release_reference( material );
 		ape_world_node_destroy( APE_WORLD_NODE( brush ) );
 		brush = nullptr;
 	}

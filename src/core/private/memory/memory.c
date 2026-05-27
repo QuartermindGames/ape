@@ -257,7 +257,7 @@ ApeMemoryReference *ape_memory_setup_reference( const char *id, uint8_t pool, Ap
 	return m;
 }
 
-void ape_memory_add_reference( ApeMemoryReference *m )
+void ape_memory_reference_add( ApeMemoryReference *m )
 {
 	m->numReferences++;
 	m->timeToLive = ( ape_get_num_ticks() + 1024 );
@@ -269,7 +269,7 @@ void ape_memory_add_reference( ApeMemoryReference *m )
 #endif
 }
 
-void ape_memory_release( ApeMemoryReference *m )
+void ape_memory_reference_release( ApeMemoryReference *m )
 {
 	//assert( m->numReferences > 0 );
 

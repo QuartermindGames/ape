@@ -194,7 +194,7 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 
 	if ( self->editorSprite != nullptr )
 	{
-		ape_material_release( self->editorSprite );
+		ape_material_release_reference( self->editorSprite );
 	}
 
 	PlDestroyHashTable( self->componentTable );

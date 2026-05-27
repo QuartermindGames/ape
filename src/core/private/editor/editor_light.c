@@ -70,7 +70,7 @@ ApeLightmap *ape_lightmap_create_( unsigned int edgeLength )
 
 void ape_lightmap_destroy_( ApeLightmap *self )
 {
-	ape_texture_release_( self->texture );
+	ape_texture_release_reference( self->texture );
 	ape_memory_flush_unreferenced_resources();
 
 	qm_os_memory_free( self->pixels );
@@ -82,7 +82,7 @@ void ape_lightmap_upload_( ApeLightmap *self, unsigned int edgeLength )
 {
 	if ( self->texture != nullptr )
 	{
-		ape_texture_release_( self->texture );
+		ape_texture_release_reference( self->texture );
 		ape_memory_flush_unreferenced_resources();
 	}
 
@@ -736,5 +736,5 @@ void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instan
 		ape_world_node_visit_children( APE_WORLD_NODE( room ), APE_WORLD_NODE_TYPE_BRUSH, true, display_brush_uv, &edgeLength );
 	}
 
-	ape_material_release( debugLightmapMaterial );
+	ape_material_release_reference( debugLightmapMaterial );
 }

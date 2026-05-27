@@ -139,7 +139,7 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 		{
 			ape_console_verbose_( "Placeholder render target \"%s\" was already generated, returning existing\n", key );
 
-			ape_memory_add_reference( &renderTarget->reference );
+			ape_memory_reference_add( &renderTarget->reference );
 			return renderTarget;
 		}
 
@@ -156,7 +156,7 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 		ape_console_verbose_( "Render target already exists, updating size\n" );
 
 		ape_render_target_set_size_( renderTarget, width, height );
-		ape_memory_add_reference( &renderTarget->reference );
+		ape_memory_reference_add( &renderTarget->reference );
 		return renderTarget;
 	}
 
@@ -188,7 +188,7 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
 
 	ape_memory_setup_reference( renderTarget->id, APE_CACHE_POOL_TEXTURES, &renderTarget->reference, destroy_render_target, renderTarget );
-	ape_memory_add_reference( &renderTarget->reference );
+	ape_memory_reference_add( &renderTarget->reference );
 
 	PlInsertHashTableNode( renderTargets, key, strlen( key ), renderTarget );
 
@@ -197,7 +197,7 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 
 void ape_render_target_release_( ApeRenderTarget *renderTarget )
 {
-	ape_memory_release( &renderTarget->reference );
+	ape_memory_reference_release( &renderTarget->reference );
 }
 
 void ape_render_target_set_size_( ApeRenderTarget *self, unsigned int width, unsigned int height )

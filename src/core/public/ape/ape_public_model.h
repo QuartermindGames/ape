@@ -17,6 +17,8 @@ typedef struct ApeModelAnimationState
 	unsigned int oldFrame;
 } ApeModelAnimationState;
 
+APE_MEMORY_IMPLEMENT_INTERFACE_DECL( ape_model, ApeModel )
+
 /**
  * Load the specified model from disk.
  * Adds a new reference to the returned model.
@@ -25,13 +27,6 @@ typedef struct ApeModelAnimationState
  * @return 		Pointer to instance of model, or null on fail.
  */
 ApeModel *ape_model_load( const char *path );
-
-/**
- * Release the reference to the model.
- *
- * @param model Pointer to instance of model.
- */
-void ape_model_release( ApeModel *model );
 
 /**
  * Draw the model.

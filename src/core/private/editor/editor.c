@@ -52,7 +52,7 @@ static void release_node_icons( void )
 			continue;
 		}
 
-		ape_material_release( nodeIcons[ i ] );
+		ape_material_release_reference( nodeIcons[ i ] );
 		nodeIcons[ i ] = nullptr;
 	}
 }

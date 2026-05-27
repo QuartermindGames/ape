@@ -36,7 +36,7 @@ void ape_shutdown_gui_( void )
 {
 	ape_gui_shutdown_();
 
-	ape_material_release( baseGuiMat );
+	ape_material_release_reference( baseGuiMat );
 }
 
 void ape_setup_2d_viewport_( int w, int h )
