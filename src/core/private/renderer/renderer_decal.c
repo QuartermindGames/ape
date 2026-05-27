@@ -6,12 +6,23 @@
 #include "qmmath/public/qm_math_plane.h"
 
 #include "ape_private.h"
+#include "core_console.h"
 #include "renderer.h"
 
-//TODO: there should be a static list and a dynamic list here...
+/**
+ * TODO:
+ *		- Cast decal on multiple faces
+ *		- Batch decals
+ *		- Use texture arrays
+ *		- World should manage decal manager, not rooms...
+ */
 
-static constexpr unsigned int MAX_DECALS      = 4096;
-static constexpr unsigned int MAX_DECAL_VERTS = 16;
+static constexpr unsigned int MAX_STATIC_DECALS = 1024;
+static constexpr unsigned int MAX_TEMP_DECALS   = 1024;
+static constexpr unsigned int MAX_DECALS        = MAX_STATIC_DECALS + MAX_TEMP_DECALS;
+static constexpr unsigned int MAX_DECAL_VERTS   = 16;
+
+static constexpr unsigned int INFINITE_LIFE = ( unsigned int ) -1;
 
 static bool  showDebugDecals;
 static float fadeThreshold;
@@ -20,6 +31,8 @@ static int   decalMaxLife;
 
 typedef struct ApeDecal
 {
+	ApeDecalManager *manager;
+
 	unsigned int life;
 
 	float angle;
@@ -32,21 +45,19 @@ typedef struct ApeDecal
 	QmMathVector3f vertices[ MAX_DECAL_VERTS ];
 	unsigned int   numVertices;
 
-	PLCollisionAABB bounds;
-
 	ApeMaterial *material;
 
 	QmOsSharedPtr *facePtr;
 	QmOsSharedPtr *ptr;
-
-	QmOsLinkedListNode *node;
 } ApeDecal;
 
 typedef struct ApeDecalManager
 {
-	QmOsLinkedList *decalList;
-	ApeDecal        decals[ MAX_DECALS ];
-	unsigned int    iteratorPos;
+	ApeDecal     decals[ MAX_DECALS ];
+	unsigned int tempPos, staticPos;
+
+	unsigned int numTempDecals;
+	unsigned int numStaticDecals;
 } ApeDecalManager;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -59,12 +70,6 @@ static void cleanup_decal( ApeDecal *self )
 	{
 		ape_material_release( self->material );
 		self->material = nullptr;
-	}
-
-	if ( self->node != nullptr )
-	{
-		qm_os_memory_free( self->node );
-		self->node = nullptr;
 	}
 
 	if ( self->facePtr != nullptr )
@@ -81,6 +86,18 @@ static void cleanup_decal( ApeDecal *self )
 		qm_os_shared_ptr_release( self->ptr );
 		self->ptr = nullptr;
 	}
+
+	assert( self->manager != nullptr );
+	if ( self->life == INFINITE_LIFE )
+	{
+		assert( self->manager->numStaticDecals > 0 );
+		self->manager->numStaticDecals--;
+	}
+	else
+	{
+		assert( self->manager->numTempDecals > 0 );
+		self->manager->numTempDecals--;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -90,28 +107,15 @@ static void cleanup_decal( ApeDecal *self )
 
 void ape_decal_manager_register_console_()
 {
-	PlRegisterConsoleVariable( "decal.showDebug", "Show debug spheres representing active decals.", "false", PL_VAR_BOOL, &showDebugDecals, nullptr, false );
-	PlRegisterConsoleVariable( "decal.fadeThreshold", "", "0.2", PL_VAR_F32, &fadeThreshold, nullptr, true );
-	PlRegisterConsoleVariable( "decal.offset", "Sets the offset from the wall.", "0.01", PL_VAR_F32, &decalOffset, nullptr, true );
-	PlRegisterConsoleVariable( "decal.maxLife", "Sets the maximum lifetime of a decal.", "500", PL_VAR_I32, &decalMaxLife, nullptr, true );
+	ape_console_var_register( "decal.showDebug", "Show debug spheres representing active decals.", "false", PL_VAR_BOOL, &showDebugDecals, nullptr, 0 );
+	ape_console_var_register( "decal.fadeThreshold", "", "0.2", PL_VAR_F32, &fadeThreshold, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "decal.offset", "Sets the offset from the wall.", "0.01", PL_VAR_F32, &decalOffset, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "decal.maxLife", "Sets the maximum lifetime of a decal.", "500", PL_VAR_I32, &decalMaxLife, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
 ApeDecalManager *ape_decal_manager_create_()
 {
-	ApeDecalManager *manager = QM_OS_MEMORY_NEW( ApeDecalManager );
-
-	manager->decalList = qm_os_linked_list_create();
-	if ( manager->decalList == nullptr )
-	{
-		ape_console_warning_( "Failed to create decals list: %s\n", PlGetError() );
-
-		qm_os_memory_free( manager );
-		manager = nullptr;
-
-		return nullptr;
-	}
-
-	return manager;
+	return QM_OS_MEMORY_NEW( ApeDecalManager );
 }
 
 void ape_decal_manager_destroy_( ApeDecalManager *self )
@@ -155,17 +159,20 @@ void ape_decal_manager_clear_( ApeDecalManager *self )
 	{
 		cleanup_decal( &self->decals[ i ] );
 	}
-
-	qm_os_memory_free( self->decalList );
 }
 
 void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ApeDecal *decal;
-	QM_OS_LINKED_LIST_ITERATE( decal, self->decalList, i )
+	for ( unsigned int i = 0; i < MAX_DECALS; ++i )
 	{
+		ApeDecal *decal = &self->decals[ i ];
+		if ( decal->ptr == nullptr )
+		{
+			continue;
+		}
+
 		// check the decal is still attached to something
 		ApeBrushFace *face = qm_os_shared_ptr_get( decal->facePtr );
 		if ( face == nullptr )
@@ -174,7 +181,7 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 			continue;
 		}
 
-		if ( decal->life >= decalMaxLife )
+		if ( decal->life != INFINITE_LIFE && decal->life >= decalMaxLife )
 		{
 			cleanup_decal( decal );
 			continue;
@@ -255,26 +262,55 @@ static bool decal_build_rect( ApeDecal *self )
 	return true;
 }
 
-QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale )
+QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale, bool isStatic )
 {
 	assert( face != nullptr );
 
-	unsigned int numDecals = qm_os_linked_list_get_size( self->decalList );
-	if ( numDecals >= MAX_DECALS )
+	// I don't really know why in retrospect I decided to do this,
+	// but we're using the same pool for both static and temp decals...
+	unsigned int  maxDecals, basePos;
+	unsigned int *iterator;
+	if ( isStatic )
 	{
-		ape_console_warning_( "Failed to create decal, hit decal limit (%u >= %u)!\n", numDecals, MAX_DECALS );
-		return nullptr;
-	}
-
-	for ( unsigned int i = 0; i < MAX_DECALS; ++i, ++self->iteratorPos )
-	{
-		if ( self->iteratorPos >= MAX_DECALS )
+		if ( self->numStaticDecals >= MAX_STATIC_DECALS )
 		{
-			self->iteratorPos = 0;
+			ape_console_warning_( "Hit maximum static decal limit (%u >= %u)!\n", self->numStaticDecals, MAX_STATIC_DECALS );
+			return nullptr;
 		}
 
-		ApeDecal *decal = &self->decals[ self->iteratorPos ];
-		if ( decal->node != nullptr )
+		maxDecals = MAX_STATIC_DECALS;
+		iterator  = &self->staticPos;
+		basePos   = 0;
+	}
+	else
+	{
+		if ( self->numTempDecals >= MAX_TEMP_DECALS )
+		{
+			ape_console_warning_( "Hit maximum temp decal limit (%u >= %u)!\n", self->numTempDecals, MAX_TEMP_DECALS );
+			return nullptr;
+		}
+
+		maxDecals = MAX_TEMP_DECALS;
+		iterator  = &self->tempPos;
+		basePos   = MAX_STATIC_DECALS;
+	}
+
+	unsigned int startPos = *iterator;
+	for ( unsigned int i = 0; i < maxDecals; ++i, ++*iterator )
+	{
+		// check if we've wrapped around
+		if ( i > 0 && *iterator == startPos )
+		{
+			break;
+		}
+
+		if ( *iterator >= maxDecals )
+		{
+			*iterator = 0;
+		}
+
+		ApeDecal *decal = &self->decals[ basePos + *iterator ];
+		if ( decal->ptr != nullptr )
 		{
 			continue;
 		}
@@ -306,7 +342,18 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 			return nullptr;
 		}
 
-		decal->node = qm_os_linked_list_push_back( self->decalList, decal );
+		if ( isStatic )
+		{
+			decal->life = INFINITE_LIFE;
+
+			self->numStaticDecals++;
+		}
+		else
+		{
+			self->numTempDecals++;
+		}
+
+		decal->manager = self;
 
 		// because decals can be destroyed at runtime,
 		// we'll need to use a shared ptr here...
@@ -318,11 +365,19 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 	return nullptr;
 }
 
-QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale )
+QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale, bool isStatic )
 {
-	unsigned int numDecals = qm_os_linked_list_get_size( self->decalList );
-	if ( numDecals >= MAX_DECALS )
+	// we do the check a bit earlier here just to avoid the ray if we can,
+	// this method should probably just be retired and we should leave the
+	// caller to deal with the ray...
+	if ( isStatic && self->numStaticDecals >= MAX_STATIC_DECALS )
 	{
+		ape_console_warning_( "Hit maximum static decal limit (%u >= %u)!\n", self->numStaticDecals, MAX_STATIC_DECALS );
+		return nullptr;
+	}
+	if ( !isStatic && self->numTempDecals >= MAX_TEMP_DECALS )
+	{
+		ape_console_warning_( "Hit maximum temp decal limit (%u >= %u)!\n", self->numTempDecals, MAX_TEMP_DECALS );
 		return nullptr;
 	}
 
@@ -361,7 +416,7 @@ QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self,
 				continue;
 			}
 
-			ptr = ape_decal_manager_create_decal_( self, hits[ i ].face, material, &result.intersection, angle, scale );
+			ptr = ape_decal_manager_create_decal_( self, hits[ i ].face, material, &result.intersection, angle, scale,TODO );
 			if ( ptr == nullptr )
 			{
 				return nullptr;
@@ -377,7 +432,7 @@ QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self,
 	// alright then, just make a single decal at the point of intersection...
 #endif
 
-	QmOsSharedPtr *ptr = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection, angle, scale );
+	QmOsSharedPtr *ptr = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection, angle, scale, isStatic );
 	if ( ptr == nullptr )
 	{
 		return nullptr;
@@ -390,19 +445,33 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ApeDecal *decal;
-	QM_OS_LINKED_LIST_ITERATE( decal, self->decalList, i )
+	for ( unsigned int i = 0; i < MAX_DECALS; ++i )
 	{
+		const ApeDecal *decal = &self->decals[ i ];
+		if ( decal->ptr == nullptr )
+		{
+			continue;
+		}
+
 		//TODO: optimise - batch - for now we'll just draw them like this for quickly getting them working
 
-		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
-
-		float lifetime = ( float ) decal->life / ( float ) decalMaxLife;
-		float fade     = 1.0f;
-		if ( lifetime > fadeThreshold )
+		float fade = 1.0f;
+		if ( decal->life != INFINITE_LIFE )
 		{
-			fade = 1.0f - ( lifetime - fadeThreshold ) / ( 1.0f - fadeThreshold );
+			float lifetime = ( float ) decal->life / ( float ) decalMaxLife;
+			if ( lifetime > fadeThreshold )
+			{
+				fade = 1.0f - ( lifetime - fadeThreshold ) / ( 1.0f - fadeThreshold );
+			}
+
+			// skip it if it's completely transparent
+			if ( fade <= 0.0f )
+			{
+				continue;
+			}
 		}
+
+		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
 
 		float textureScale = 1.0f / decal->scale;
 		for ( unsigned int j = 0; j < decal->numVertices; ++j )

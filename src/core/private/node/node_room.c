@@ -635,12 +635,12 @@ QmMathVector3f ape_room_get_gravity( const ApeRoom *self )
 
 bool ape_room_trace_decal( ApeRoom *self, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale )
 {
-	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir, angle, scale ) != nullptr;
+	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir, angle, scale, false ) != nullptr;
 }
 
-bool ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, const QmMathVector3f pos, const float angle, const float scale )
+QmOsSharedPtr *ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, const QmMathVector3f pos, const float angle, const float scale )
 {
-	return ape_decal_manager_create_decal_( self->decalManager, face, material, &pos, angle, scale );
+	return ape_decal_manager_create_decal_( self->decalManager, face, material, &pos, angle, scale, false );
 }
 
 static ApePropertyEnum reverbPresetsEnum[] = {

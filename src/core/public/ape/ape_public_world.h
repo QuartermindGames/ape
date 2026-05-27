@@ -11,6 +11,7 @@
 PL_EXTERN_C
 
 typedef struct QmOsLinkedList QmOsLinkedList;
+typedef struct QmOsSharedPtr  QmOsSharedPtr;
 
 typedef struct AcmBranch AcmBranch;
 
@@ -632,7 +633,7 @@ bool ape_room_trace_decal( ApeRoom *self, ApeMaterial *material, const QmMathVec
  * @param scale		Scale of the decal.
  * @return			True if the decal was created, false otherwise.
  */
-bool ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, QmMathVector3f pos, float angle, float scale );
+QmOsSharedPtr *ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, QmMathVector3f pos, float angle, float scale );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting
