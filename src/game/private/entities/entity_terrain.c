@@ -325,7 +325,7 @@ static void terrain_load_material( GameTerrainEntity *terrain )
 		{
 			// alright, not a match, release the current
 			// one so we can setup a new one!
-			ape_material_release( terrain->material );
+			ape_material_release_reference( terrain->material );
 			terrain->material = nullptr;
 		}
 	}

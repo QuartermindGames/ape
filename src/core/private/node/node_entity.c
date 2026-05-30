@@ -227,7 +227,11 @@ void ape_entity_spawn( ApeEntity *self )
 		return;
 	}
 
+	self->state = APE_ENTITY_STATE_SPAWNING;
+
 	self->classDefinition->spawnFunction( self );
+
+	self->state = APE_ENTITY_STATE_SPAWNED;
 }
 
 void ape_entity_tick( ApeEntity *self, double delta )
@@ -250,6 +254,11 @@ void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags )
 	}
 
 	self->classDefinition->drawFunction( self, light, flags );
+}
+
+ApeEntityState ape_entity_get_state( const ApeEntity *self )
+{
+	return self->state;
 }
 
 bool ape_entity_get_gravity( ApeEntity *self, QmMathVector3f *gravityDst )

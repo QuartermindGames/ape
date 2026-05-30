@@ -15,6 +15,7 @@
  *		- Batch decals
  *		- Use texture arrays
  *		- World should manage decal manager, not rooms...
+ *		- Track active decals (without using a gross linked list as before)
  */
 
 static constexpr unsigned int MAX_STATIC_DECALS = 1024;
@@ -64,11 +65,11 @@ typedef struct ApeDecalManager
 // Decal
 /////////////////////////////////////////////////////////////////////////////////////
 
-static void cleanup_decal( ApeDecal *self )
+void ape_decal_free( ApeDecal *self )
 {
 	if ( self->material != nullptr )
 	{
-		ape_material_release( self->material );
+		ape_material_release_reference( self->material );
 		self->material = nullptr;
 	}
 
@@ -109,7 +110,7 @@ void ape_decal_manager_register_console_()
 {
 	ape_console_var_register( "decal.showDebug", "Show debug spheres representing active decals.", "false", PL_VAR_BOOL, &showDebugDecals, nullptr, 0 );
 	ape_console_var_register( "decal.fadeThreshold", "", "0.2", PL_VAR_F32, &fadeThreshold, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
-	ape_console_var_register( "decal.offset", "Sets the offset from the wall.", "0.01", PL_VAR_F32, &decalOffset, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "decal.offset", "Sets the offset from the wall.", "0.03", PL_VAR_F32, &decalOffset, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 	ape_console_var_register( "decal.maxLife", "Sets the maximum lifetime of a decal.", "500", PL_VAR_I32, &decalMaxLife, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
@@ -157,7 +158,7 @@ void ape_decal_manager_clear_( ApeDecalManager *self )
 {
 	for ( unsigned int i = 0; i < MAX_DECALS; ++i )
 	{
-		cleanup_decal( &self->decals[ i ] );
+		ape_decal_free( &self->decals[ i ] );
 	}
 }
 
@@ -177,13 +178,7 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 		ApeBrushFace *face = qm_os_shared_ptr_get( decal->facePtr );
 		if ( face == nullptr )
 		{
-			cleanup_decal( decal );
-			continue;
-		}
-
-		if ( decal->life != INFINITE_LIFE && decal->life >= decalMaxLife )
-		{
-			cleanup_decal( decal );
+			ape_decal_free( decal );
 			continue;
 		}
 
@@ -192,7 +187,16 @@ void ape_decal_manager_tick_( ApeDecalManager *self, double delta )
 			ape_draw_debug_sphere( decal->position, PL_COLOUR_WHITE, decal->scale );
 		}
 
-		decal->life++;
+		if ( decal->life != INFINITE_LIFE )
+		{
+			if ( decal->life >= decalMaxLife )
+			{
+				ape_decal_free( decal );
+				continue;
+			}
+
+			decal->life++;
+		}
 	}
 
 	COM_PROFILE_FUNCTION_END();
@@ -262,9 +266,9 @@ static bool decal_build_rect( ApeDecal *self )
 	return true;
 }
 
-QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale, bool isStatic )
+QmOsSharedPtr *ape_decal_manager_create_decal( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale, bool isStatic )
 {
-	assert( face != nullptr );
+	assert( face != nullptr && material != nullptr );
 
 	// I don't really know why in retrospect I decided to do this,
 	// but we're using the same pool for both static and temp decals...
@@ -333,8 +337,8 @@ QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushF
 		decal->angle    = angle;
 		decal->scale    = scale;
 
-		//TODO: add reference
 		decal->material = material;
+		ape_material_add_reference( decal->material );
 
 		if ( !decal_build_rect( decal ) )
 		{
@@ -416,7 +420,7 @@ QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self,
 				continue;
 			}
 
-			ptr = ape_decal_manager_create_decal_( self, hits[ i ].face, material, &result.intersection, angle, scale,TODO );
+			ptr = ape_decal_manager_create_decal( self, hits[ i ].face, material, &result.intersection, angle, scale,TODO );
 			if ( ptr == nullptr )
 			{
 				return nullptr;
@@ -432,7 +436,7 @@ QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self,
 	// alright then, just make a single decal at the point of intersection...
 #endif
 
-	QmOsSharedPtr *ptr = ape_decal_manager_create_decal_( self, result.face, material, &result.intersection, angle, scale, isStatic );
+	QmOsSharedPtr *ptr = ape_decal_manager_create_decal( self, result.face, material, &result.intersection, angle, scale, isStatic );
 	if ( ptr == nullptr )
 	{
 		return nullptr;

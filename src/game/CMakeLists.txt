@@ -22,6 +22,7 @@ set(GAME_SHARED_FILES
         private/entities/qm1/qm1_entity_player.c
 
         private/entities/entity_ambience_manager.c
+        private/entities/entity_decal.c
         private/entities/entity_path.c
         private/entities/entity_player_spawn.c
         private/entities/entity_portal.c

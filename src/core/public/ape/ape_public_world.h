@@ -609,31 +609,23 @@ QmMathVector3f ape_room_get_gravity( const ApeRoom *self );
 ////////////////////////////////////////////////////////////////////
 // Decals
 
+typedef struct ApeDecalManager ApeDecalManager;
+
 /**
  * Attempts to trace a decal in the direction specified.
- *
- * @param self		Room instance.
- * @param material	Material to use for decal.
- * @param pos		Position we're tracing from.
- * @param dir		Direction we're tracing in.
- * @param angle		Angle of the decal.
- * @param scale		Scale of the decal.
- * @return			True if decal was created, false otherwise.
  */
 bool ape_room_trace_decal( ApeRoom *self, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale );
 
 /**
  * Attempts to create a decal at the given position, for the given face.
- *
- * @param self		Room instance.
- * @param material	Material to use for decal.
- * @param face		Face we're attaching the decal to.
- * @param pos		Position of the decal.
- * @param angle		Angle of the decal.
- * @param scale		Scale of the decal.
- * @return			True if the decal was created, false otherwise.
  */
-QmOsSharedPtr *ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, QmMathVector3f pos, float angle, float scale );
+QmOsSharedPtr *ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, QmMathVector3f pos, float angle, float scale, bool isStatic );
+
+/**
+ * Fetch the decal manager from the given room.
+ * Mind this will *eventually* get deprecated, as the manager is moved into the world!
+ */
+ApeDecalManager *ape_room_get_decal_manager( const ApeRoom *self );
 
 ////////////////////////////////////////////////////////////////////
 // Lighting

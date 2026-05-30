@@ -22,7 +22,7 @@ void nih_menu_hud_initialize_()
 
 void nih_menu_hud_shutdown_()
 {
-	ape_material_release( hudHealthBodyMaterial );
+	ape_material_release_reference( hudHealthBodyMaterial );
 }
 
 void nih_menu_hud_draw_( const ApeViewport *viewport )

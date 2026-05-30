@@ -19,7 +19,7 @@ void game_hud_compass_initialize_( ApeGuiFont *font )
 
 void game_menu_compass_shutdown_()
 {
-	ape_material_release( compassBackground );
+	ape_material_release_reference( compassBackground );
 }
 
 void game_menu_compass_draw_( const ApeViewport *viewport )

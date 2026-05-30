@@ -13,6 +13,12 @@ typedef struct ApeEntityComponentDefinition ApeEntityComponentDefinition;
 
 #define APE_ENTITY_MAX_NAME 32
 
+typedef enum ApeEntityState : uint8_t
+{
+	APE_ENTITY_STATE_SPAWNING,
+	APE_ENTITY_STATE_SPAWNED,
+} ApeEntityState;
+
 typedef struct ApeEntity
 {
 	// This should always come first!
@@ -22,6 +28,8 @@ typedef struct ApeEntity
 	const ApeEntityClassDefinition *classDefinition;            // class that the actor is derived from
 	void                           *classData;                  // pointer to the unique data of the class
 	struct PLHashTable             *componentTable;             // list of components
+
+	ApeEntityState state;
 
 #if defined( APE_SUPPORT_EDITOR )
 
@@ -38,9 +46,13 @@ typedef struct ApeEntityComponent
 	void                               *data;
 } ApeEntityComponent;
 
-//TODO: the validation shouldn't be done by a string compare damn it...
-#define APE_ENT_CLASS( SELF, CLASSNAME, TYPE ) ( strcmp( ( SELF )->classDefinition->name, ( CLASSNAME ) ) == 0 ) ? ( ( TYPE * ) ( ( SELF )->classData ) ) : nullptr
-#define APE_ENT_COMPONENT( SELF, TYPE )        ( ( TYPE * ) ( ( SELF )->data ) )
+#if !defined( NDEBUG )
+#	define APE_ENT_CLASS( SELF, CLASSNAME, TYPE ) ( strcmp( ( SELF )->classDefinition->name, ( CLASSNAME ) ) == 0 ) ? ( ( TYPE * ) ( ( SELF )->classData ) ) : nullptr
+#else
+#	define APE_ENT_CLASS( SELF, CLASSNAME, TYPE ) ( ( TYPE * ) ( ( SELF )->classData ) )
+#endif
+
+#define APE_ENT_COMPONENT( SELF, TYPE ) ( ( TYPE * ) ( ( SELF )->data ) )
 
 typedef struct ApeEntityClassDefinition
 {
@@ -88,6 +100,8 @@ ApeEntity *ape_entity_create( ApeWorldNode *parent, const char *className, const
 void ape_entity_spawn( ApeEntity *self );
 void ape_entity_tick( ApeEntity *self, double delta );
 void ape_entity_draw( ApeEntity *self, ApeLight *light, int flags );
+
+ApeEntityState ape_entity_get_state( const ApeEntity *self );
 
 /**
  * Return the gravity impacting the entity.

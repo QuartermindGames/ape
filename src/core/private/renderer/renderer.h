@@ -186,7 +186,6 @@ void ape_decal_manager_serialize_( ApeDecalManager *self, AcmBranch *root );
 void ape_decal_manager_clear_( ApeDecalManager *self );
 void ape_decal_manager_tick_( ApeDecalManager *self, double delta );
 
-struct QmOsSharedPtr *ape_decal_manager_create_decal_( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale, bool isStatic );
 struct QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self, ApeRoom *room, ApeMaterial *material, const QmMathVector3f *pos, const QmMathVector3f *dir, float angle, float scale, bool isStatic );
 
 void ape_decal_manager_draw_( const ApeDecalManager *self );

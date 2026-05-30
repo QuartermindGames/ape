@@ -7,9 +7,9 @@
 
 FXDEFMAP( forge::PropertiesDialog )
 propertiesMap[] = {
-        FXMAPFUNC( SEL_CHANGED, forge::PropertiesDialog::ID_TABLE, forge::PropertiesDialog::on_table ),
+        //FXMAPFUNC( SEL_CHANGED, forge::PropertiesDialog::ID_TABLE, forge::PropertiesDialog::on_table ),
         FXMAPFUNC( SEL_REPLACED, forge::PropertiesDialog::ID_TABLE, forge::PropertiesDialog::on_table ),
-        FXMAPFUNC( SEL_INSERTED, forge::PropertiesDialog::ID_TABLE, forge::PropertiesDialog::on_table ),
+        //FXMAPFUNC( SEL_INSERTED, forge::PropertiesDialog::ID_TABLE, forge::PropertiesDialog::on_table ),
 };
 
 FXIMPLEMENT( forge::PropertiesDialog, FXDialogBox, propertiesMap, ARRAYNUMBER( propertiesMap ) )
@@ -215,9 +215,11 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 			break;
 		case APE_PROPERTY_TYPE_STRING:
 		case APE_PROPERTY_TYPE_PATH:
+		{
 			//TODO: path should work differently, eventually... probably when we migrate to gtk
 			snprintf( ( char * ) tableProperty->ptr, editorProperty->stringType.maxSize, "%s", text );
 			break;
+		}
 		case APE_PROPERTY_TYPE_BOOLEAN:
 			if ( strcmp( text, "True" ) == 0 )
 			{
@@ -246,7 +248,7 @@ long forge::PropertiesDialog::on_table( FXObject *, FXSelector, void *ptr )
 	ape_world_node_set_position( node, &node->position );
 	ape_world_node_set_angles( node, &node->angles );
 
-	if ( node->type == APE_WORLD_NODE_TYPE_ENTITY && tableProperty->scope == TablePropertyScope::ENTITY )
+	if ( node->type == APE_WORLD_NODE_TYPE_ENTITY /*&& tableProperty->scope == TablePropertyScope::ENTITY*/ )
 	{
 		// let the entity know we've updated something of theirs
 		ApeEntity *entity = ( ApeEntity * ) node;

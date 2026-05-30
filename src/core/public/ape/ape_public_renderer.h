@@ -186,6 +186,14 @@ ApeShaderProgram *ape_material_pass_get_shader_program( const ApeMaterialPass *s
 typedef struct ApeDecal        ApeDecal;
 typedef struct ApeDecalManager ApeDecalManager;
 
+/**
+ * Frees up the specified decal its associated decal manager.
+ * Decals are not allocated in memory, hence the difference in terminology here.
+ */
+void ape_decal_free( ApeDecal *self );
+
+QmOsSharedPtr *ape_decal_manager_create_decal( ApeDecalManager *self, ApeBrushFace *face, ApeMaterial *material, const QmMathVector3f *pos, float angle, float scale, bool isStatic );
+
 ////////////////////////////////////////////////////////////////////
 
 /**********************************************************/

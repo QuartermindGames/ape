@@ -324,7 +324,7 @@ void menu_pie_destroy_option( GamePieMenuOption *option )
 
 	if ( option->icon != NULL )
 	{
-		ape_material_release( option->icon );
+		ape_material_release_reference( option->icon );
 	}
 
 	qm_os_memory_free( option );

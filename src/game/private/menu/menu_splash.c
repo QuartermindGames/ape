@@ -20,12 +20,12 @@ void game_menu_splash_cleanup_()
 		{
 			if ( splash->image.p.material != nullptr )
 			{
-				ape_material_release( splash->image.p.material );
+				ape_material_release_reference( splash->image.p.material );
 				splash->image.p.material = nullptr;
 			}
 			if ( splash->image.p.sample != nullptr )
 			{
-				ape_audio_sample_release( splash->image.p.sample );
+				ape_audio_sample_release_reference( splash->image.p.sample );
 				splash->image.p.sample = nullptr;
 			}
 		}

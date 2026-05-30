@@ -638,9 +638,14 @@ bool ape_room_trace_decal( ApeRoom *self, ApeMaterial *material, const QmMathVec
 	return ape_decal_manager_create_projected_decal_( self->decalManager, self, material, pos, dir, angle, scale, false ) != nullptr;
 }
 
-QmOsSharedPtr *ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, const QmMathVector3f pos, const float angle, const float scale )
+QmOsSharedPtr *ape_room_create_decal( const ApeRoom *self, ApeMaterial *material, ApeBrushFace *face, const QmMathVector3f pos, const float angle, const float scale, bool isStatic )
 {
-	return ape_decal_manager_create_decal_( self->decalManager, face, material, &pos, angle, scale, false );
+	return ape_decal_manager_create_decal( self->decalManager, face, material, &pos, angle, scale, isStatic );
+}
+
+ApeDecalManager *ape_room_get_decal_manager( const ApeRoom *self )
+{
+	return self->decalManager;
 }
 
 static ApePropertyEnum reverbPresetsEnum[] = {

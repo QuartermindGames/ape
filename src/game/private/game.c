@@ -30,7 +30,7 @@ void game_print_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( globalGameLog, buf );
+	ape_console_log_push_message( globalGameLog, buf );
 }
 
 #if !defined( NDEBUG )
@@ -42,7 +42,7 @@ void game_debug_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( globalGameDebugLog, buf );
+	ape_console_log_push_message( globalGameDebugLog, buf );
 }
 #endif
 
@@ -54,7 +54,7 @@ void game_warning_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( globalGameWarningLog, buf );
+	ape_console_log_push_message( globalGameWarningLog, buf );
 }
 
 #if !defined( NDEBUG )
@@ -69,7 +69,7 @@ void game_error_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( globalGameErrorLog, buf );
+	ape_console_log_push_message( globalGameErrorLog, buf );
 
 #if !defined( NDEBUG )
 	raise( SIGINT );
@@ -78,28 +78,35 @@ void game_error_( const char *message, ... )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+// I keep moving the below declarations in and out of the proceeding function...
+// if I do that one more time I'll snap my own fingers off - leave them here!!
+
+extern ApeEntityClassDefinition game_pathEntityClass_;
+extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
+extern ApeEntityClassDefinition game_triggerEntityClass_;
+extern ApeEntityClassDefinition game_ropeEntityClass_;
+extern ApeEntityClassDefinition game_portalEntityClass_;
+extern ApeEntityClassDefinition game_terrainEntityClass_;
+extern ApeEntityClassDefinition game_decalEntityClass_;
+
+extern ApeEntityComponentDefinition game_cameraComponent_;
+extern ApeEntityComponentDefinition game_collisionComponent_;
+extern ApeEntityComponentDefinition game_healthComponent_;
+extern ApeEntityComponentDefinition game_movementComponent_;
+extern ApeEntityComponentDefinition game_inventoryComponent_;
+
 static void register_standard_entity_components()
 {
-	extern ApeEntityClassDefinition game_pathEntityClass_;
-	extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
-	extern ApeEntityClassDefinition game_triggerEntityClass_;
-	extern ApeEntityClassDefinition game_ropeEntityClass_;
-	extern ApeEntityClassDefinition game_portalEntityClass_;
-	extern ApeEntityClassDefinition game_terrainEntityClass_;
-
+	// classes
 	ape_register_entity_class( &game_pathEntityClass_ );
 	ape_register_entity_class( &game_playerSpawnEntityClass_ );
 	ape_register_entity_class( &game_triggerEntityClass_ );
 	ape_register_entity_class( &game_ropeEntityClass_ );
 	ape_register_entity_class( &game_portalEntityClass_ );
 	ape_register_entity_class( &game_terrainEntityClass_ );
+	ape_register_entity_class( &game_decalEntityClass_ );
 
-	extern ApeEntityComponentDefinition game_cameraComponent_;
-	extern ApeEntityComponentDefinition game_collisionComponent_;
-	extern ApeEntityComponentDefinition game_healthComponent_;
-	extern ApeEntityComponentDefinition game_movementComponent_;
-	extern ApeEntityComponentDefinition game_inventoryComponent_;
-
+	// components
 	ape_register_entity_component( &game_cameraComponent_ );
 	ape_register_entity_component( &game_collisionComponent_ );
 	ape_register_entity_component( &game_healthComponent_ );
@@ -189,15 +196,15 @@ bool game_initialize_( void )
 	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
 	PlRegisterConsoleCommand( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
 
-	globalGameLog        = PlAddLogLevel( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
-	globalGameWarningLog = PlAddLogLevel( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
-	globalGameErrorLog   = PlAddLogLevel( "game.error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
+	globalGameLog        = ape_console_log_register_input( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
+	globalGameWarningLog = ape_console_log_register_input( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
+	globalGameErrorLog   = ape_console_log_register_input( "game.error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
 
-	globalGameDebugLog = PlAddLogLevel( "game.debug", PL_COLOUR_WHITE_SMOKE,
+	globalGameDebugLog = ape_console_log_register_input( "game.debug", PL_COLOUR_WHITE_SMOKE,
 #if !defined( NDEBUG )
-	                                    true
+	                                                     true
 #else
-	                                    false
+	                                                     false
 #endif
 	);
 
