@@ -527,8 +527,7 @@ ApeEntityClassDefinition game_terrainEntityClass_ = {
 
         .onUpdateProperty = terrain_on_update_property,
 
-        .properties    = properties,
-        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
-
+        .properties       = properties,
+        .numProperties    = QM_OS_ARRAY_ELEMENTS( properties ),
         .editorSpritePath = "materials/editor/icons/icon_terrain.mat.n",
 };

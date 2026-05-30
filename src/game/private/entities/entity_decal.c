@@ -197,6 +197,7 @@ ApeEntityClassDefinition game_decalEntityClass_ = {
         .onUpdateProperty = decal_entity_on_update_property,
         .onDrawEditor     = decal_entity_on_draw_editor,
 
-        .properties    = properties,
-        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
+        .properties       = properties,
+        .numProperties    = QM_OS_ARRAY_ELEMENTS( properties ),
+        .editorSpritePath = "materials/editor/icons/icon_decal.mat.n",
 };
