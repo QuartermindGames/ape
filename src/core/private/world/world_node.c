@@ -954,12 +954,12 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 					}
 					else
 					{
-						colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
+						colour = QM_MATH_COLOUR4F_TO_4UB( vertex->colour );
 					}
 				}
 				else
 				{
-					colour = QM_MATH_COLOUR4UB( 255, 255, 255, 255 );
+					colour = QM_MATH_COLOUR4F_TO_4UB( vertex->colour );
 				}
 
 #else
