@@ -658,7 +658,7 @@ void ape_console_register_cl_variables_( void )
 {
 	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, nullptr, true );
 
-	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "0", PL_VAR_BOOL, NULL, input_mlook_command, true );
+	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "1", PL_VAR_BOOL, NULL, input_mlook_command, true );
 
 	PlRegisterConsoleVariable( "debug/profilerFrequency",
 	                           "Set frequency at which profile graph updates.",

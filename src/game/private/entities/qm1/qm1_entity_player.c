@@ -25,9 +25,9 @@ static constexpr float NIH_PLAYER_BASE_RADIUS = 16.0f;
 static constexpr int16_t NIH_PLAYER_BASE_HEALTH = 100;
 static constexpr int16_t NIH_PLAYER_MAX_HEALTH  = 200;
 
-static constexpr float NIH_PLAYER_WALK_SPEED = 16.0f;
-static constexpr float NIH_PLAYER_RUN_SPEED  = 32.0f;
-static constexpr float NIH_PLAYER_JUMP_SPEED = 1024.0f;
+static constexpr float NIH_PLAYER_WALK_SPEED = 45.0f;
+static constexpr float NIH_PLAYER_RUN_SPEED  = 75.0f;
+static constexpr float NIH_PLAYER_JUMP_SPEED = 100.0f;
 
 static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 {
@@ -62,7 +62,7 @@ static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
 
 	// reset camera to direction entity is facing
 	QmMathVector3f forward          = ape_world_node_get_forward( APE_WORLD_NODE( self ) );
-	player->cameraComponent->angles = qm_math_vector3f( 0.0f, QM_MATH_RAD2DEG( atan2f( forward.x, forward.z ) ) + 180.0f, 0.0f );
+	player->cameraComponent->angles = qm_math_vector3f( 0.0f, QM_MATH_RAD2DEG( atan2f( forward.x, forward.z ) ), 0.0f );
 
 	return player;
 }
@@ -86,6 +86,10 @@ static void tick_player_entity( ApeEntity *self, double delta )
 	Qm1PlayerEntity *playerEntity = QM1_PLAYER_ENTITY( self );
 	assert( playerEntity != nullptr );
 
+	GameCameraComponent *cameraComponent = playerEntity->cameraComponent;
+
+	QmMathVector3f ang = QM_MATH_VECTOR3F( 0.0f, cameraComponent->angles.y, 0.0f );
+	ape_world_node_set_angles( APE_WORLD_NODE( self ), &ang );
 
 	//GameCollisionComponent *collisionComponent = playerEntity->collisionComponent;
 	//ape_draw_debug_cylinder( &collisionComponent->collider.cylinder, &QM_MATH_COLOUR4UB_RGB( 1.0f, 1.0f, 1.0f ), 16 );

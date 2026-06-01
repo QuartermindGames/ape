@@ -4,7 +4,9 @@ Hi there, thanks for your interest in ApeTech!
 These documents will hopefully give you some guidance on how you can use the engine.
 
 - [Entity](entity.md)
-- [Forge Documentation](forge/forge.md)
+- [Forge](forge/forge.md)
+- [Programming](programming/programming_index.md)
+  - For programming-related topics.
 - [Materials](materials.md)
 - [Networking](networking.md)
 - [World](world.md)

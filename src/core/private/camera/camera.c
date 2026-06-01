@@ -247,7 +247,7 @@ void ape_camera_setup( ApeCamera *camera )
 
 		QmMathVector3f angles = ape_camera_get_angles( camera );
 		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.x ), 1.0f, 0.0f, 0.0f );
-		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.y ), 0.0f, 1.0f, 0.0f );
+		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.y + 180.0f ), 0.0f, 1.0f, 0.0f );
 		PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.z ), 0.0f, 0.0f, 1.0f );
 
 		QmMathVector3f position = ape_camera_get_position( camera );
@@ -681,12 +681,44 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 					}
 					else
 					{
+#if 1
 						//TODO: handle the non mirror case
 
 						ApeBrush *destinationBrush     = destinationFace->parent;
-						PLMatrix4 destinationTransform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+						PLMatrix4 destinationTransform = ape_world_node_get_transform( APE_WORLD_NODE( destinationBrush ) );
 
-						visiblePortal->nextRoom->viewMatrix = visibleRoom->viewMatrix;
+						PLCollisionAABB destinationBounds = destinationFace->bounds;
+						destinationBounds.origin          = PlGetMatrix4Translation( &destinationTransform );
+
+						ape_draw_debug_axis( destinationBounds.origin, QM_MATH_VECTOR3F_ZERO, 4.0f );
+
+						PlMatrixMode( PL_VIEW_MATRIX );
+						PlPushMatrix();
+						//PlLoadIdentityMatrix();
+						PlLoadMatrix( &destinationTransform );
+
+						//PlMultiMatrix( &destinationTransform );
+
+						//QmMathVector3f angles = visiblePortal->normal;
+						//PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.x ), 1.0f, 0.0f, 0.0f );
+						//PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.y ), 0.0f, 1.0f, 0.0f );
+						//PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.z ), 0.0f, 0.0f, 1.0f );
+						//
+
+						QmMathVector3f position = destinationBounds.origin;
+						qm_math_vector3f_sub( cameraPosition, position );
+						PlTranslateMatrix( QM_MATH_VECTOR3F( position.x, position.y, position.z ) );
+
+						//PlInverseMatrix();
+
+						//ape_console_print_( "%f %f %f\n", position.x, position.y, position.z );
+
+						const PLMatrix4 portalMatrix = *PlGetMatrix( PL_VIEW_MATRIX );
+
+						PlPopMatrix();
+
+						visiblePortal->nextRoom->viewMatrix = PlMultiplyMatrix4( &visiblePortal->nextRoom->viewMatrix, &portalMatrix );
+#endif
 					}
 
 					visiblePortal->nextRoom->room = ape_brush_face_get_room( destinationFace );

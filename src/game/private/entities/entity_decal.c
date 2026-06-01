@@ -97,6 +97,9 @@ static QmOsSharedPtr *decal_entity_trace_decal( ApeEntity *self )
 	GameDecalEntity *decalEntity = GAME_DECAL_ENTITY( self );
 	assert( decalEntity != nullptr );
 
+	//TODO: we don't *really* need to trace a decal for this every time...
+	//		instead rework this eventually to just trace a sphere
+
 	PLCollisionRay ray = {};
 	ray.origin         = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 	ray.direction      = decal_entity_get_projection_dir( self );

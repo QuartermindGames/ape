@@ -11,11 +11,26 @@ typedef enum GameMovementCapability : uint16_t
 	QM_OS_BIT_FLAG( GAME_MOVEMENT_CAPABILITY_JUMP, 2U ),       // jumping
 } GameMovementCapability;
 
+typedef enum GameMovementDirection : uint8_t
+{
+	GAME_MOVEMENT_DIRECTION_FB,// forward, backward
+	GAME_MOVEMENT_DIRECTION_LR,// left, right
+	GAME_MOVEMENT_DIRECTION_UD,// up, down
+
+	GAME_MOVEMENT_MAX_DIRECTIONS
+} GameMovementDirection;
+
 typedef struct GameMovementComponent
 {
 	GameMovementCapability capabilities;
 
-	QmMathVector3f direction;
+	// direction is input intent...
+	// x+ forward, x- backward
+	// y+ jump, y- swim down
+	// z+ left, z- right
+	// (something like this, I'm sleepy)
+	int8_t directions[ GAME_MOVEMENT_MAX_DIRECTIONS ];
+	bool   shiftModifier;
 
 	float forwardVelocity;
 	float strafeVelocity;
@@ -25,6 +40,7 @@ typedef struct GameMovementComponent
 	QmMathVector3f contactNormal;
 
 	float maxRunSpeed, maxWalkSpeed;
+	float acceleration;
 	float jumpSpeed;
 
 	bool          isGrounded;

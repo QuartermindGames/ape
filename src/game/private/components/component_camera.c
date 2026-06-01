@@ -123,12 +123,14 @@ static void first_person_tick( const GameCameraComponent *component, ApeCamera *
 	// entity camera angles
 	QmMathVector3f eang = component->angles;
 
-	QmMathVector3f forward, left;
-	PlAnglesAxes( eang, &left, nullptr, &forward );
-
 	// now interpolate the position and angles for the camera to the new position
+#if 0
 	cpos = PlLinearInterpolateV3f( cpos, trackPos, 7.0f * delta );
 	aux_math_interpolate_angles( &cang, &eang, 16.0f * delta, &cang );
+#else
+	cpos = trackPos;
+	aux_math_interpolate_angles( &cang, &eang, 16.0f * delta, &cang );
+#endif
 
 	ape_camera_set_position( camera, &cpos );
 	ape_camera_set_angles( camera, &cang );

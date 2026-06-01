@@ -2,16 +2,22 @@
 // Purpose: Handler for general entity movement.
 // Author:  Mark E. Sowden
 
-#include "../game_private.h"
+#include "game_private.h"
 
 #include "component_movement.h"
-
 #include "component_collision.h"
-#include "../physics/physics.h"
+
+#include "physics/physics.h"
+
+static constexpr float GAME_MOVEMENT_DEFAULT_ACCELERATION = 1.0f;
+static constexpr float GAME_MOVEMENT_DEFAULT_FRICTION     = 16.0f;
 
 static void *create_movement()
 {
-	return QM_OS_MEMORY_NEW( GameMovementComponent );
+	GameMovementComponent *movement = QM_OS_MEMORY_NEW( GameMovementComponent );
+	movement->acceleration          = GAME_MOVEMENT_DEFAULT_ACCELERATION;
+
+	return movement;
 }
 
 static void destroy_movement( void *data )
@@ -68,13 +74,73 @@ static void ground_check( GameMovementComponent *self, GameCollisionComponent *c
 
 void game_component_movement_tick_( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta )
 {
-#if 0
-	game_debug_( "dir: %f %f %f (%p)\n", AUX_VEC3_ARGS( self->direction ), self );
-	game_debug_( "vel: %f %f %f\n", AUX_VEC3_ARGS( self->velocity ) );
+	// fetch the entity angles, clear the pitch
+	QmMathVector3f angles = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+	angles.x              = 0.0f;
 
-	game_component_collision_debug_collider( collision );
+	// now fetch the forward and left axes
+	QmMathVector3f forward, left;
+	PlAnglesAxes( angles, &left, nullptr, &forward );
+
+	float maxVelocity  = self->shiftModifier ? self->maxRunSpeed : self->maxWalkSpeed;
+	float acceleration = self->shiftModifier ? self->acceleration * self->maxRunSpeed : self->acceleration * self->maxWalkSpeed;
+
+	self->forwardVelocity += acceleration * self->directions[ GAME_MOVEMENT_DIRECTION_FB ] * delta;
+	self->strafeVelocity += acceleration * self->directions[ GAME_MOVEMENT_DIRECTION_LR ] * delta;
+
+	// clamp the velocities
+	self->forwardVelocity = QM_MATH_CLAMP( -maxVelocity, self->forwardVelocity, maxVelocity );
+	self->strafeVelocity  = QM_MATH_CLAMP( -maxVelocity, self->strafeVelocity, maxVelocity );
+
+#if 1
+	game_debug_( "for: %f (%f)\n", self->forwardVelocity, acceleration );
+	game_debug_( "str: %f\n", self->strafeVelocity );
+	game_debug_( "vel: %f %f %f\n", AUX_VEC3_ARGS( self->velocity ) );
 #endif
 
+	QmMathVector3f moveVelocity = qm_math_vector3f_add( self->velocity,
+	                                                    qm_math_vector3f_add(
+	                                                            qm_math_vector3f_scale_float( forward, self->forwardVelocity ),
+	                                                            qm_math_vector3f_scale_float( left, self->strafeVelocity ) ) );
+	moveVelocity                = qm_math_vector3f_clamp( moveVelocity, -maxVelocity, maxVelocity );
+
+	self->velocity = qm_math_vector3f_add( self->velocity, moveVelocity );
+
+	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	pos                = qm_math_vector3f_add( pos, self->velocity );
+
+	//TODO: test collisions
+
+	// now update the entity position
+	ape_world_node_set_position( APE_WORLD_NODE( entity ), &pos );
+
+	// apply some friction to the velocity here
+	if ( qm_math_vector3f_length( self->velocity ) > 0.01f )
+	{
+		self->velocity = qm_math_vector3f_scale_float( self->velocity, GAME_MOVEMENT_DEFAULT_FRICTION * delta );
+
+		// urgh what why am I doing this...
+		self->forwardVelocity = self->forwardVelocity * GAME_MOVEMENT_DEFAULT_FRICTION * delta;
+		self->strafeVelocity  = self->strafeVelocity * GAME_MOVEMENT_DEFAULT_FRICTION * delta;
+	}
+	else
+	{
+		// zero it out if it's below 0.0
+		self->velocity = ( QmMathVector3f ) {};
+
+		// urgh what why am I doing this...
+		self->forwardVelocity = self->forwardVelocity * GAME_MOVEMENT_DEFAULT_FRICTION * delta;
+		self->strafeVelocity  = self->strafeVelocity * GAME_MOVEMENT_DEFAULT_FRICTION * delta;
+	}
+
+	self->shiftModifier = false;
+
+	// clear the desired input directions, as we've dealt with them now
+	QM_OS_ZERO_( self->directions );
+
+	///////////////////////////////////// old shit below!
+
+#if 0
 	// check if there's a direction we're trying to move
 	self->direction     = qm_math_vector3f_normalize( self->direction );
 	QmMathVector3f accl = qm_math_vector3f_scale_float( qm_math_vector3f( self->direction.x, 0.0f, self->direction.z ), self->maxWalkSpeed );
@@ -143,8 +209,7 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 	}
 
 	ape_world_node_set_position( APE_WORLD_NODE( entity ), &pos );
-
-	self->direction = ( QmMathVector3f ) {};
+#endif
 }
 
 ApeEntityComponentDefinition game_movementComponent_ = {
