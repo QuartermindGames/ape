@@ -224,6 +224,7 @@ int main( int argc, char **argv )
 	PlScanDirectory( matGen.dir, "tga", GenerateMaterial, recursive, NULL );
 	PlScanDirectory( matGen.dir, "gif", GenerateMaterial, recursive, NULL );
 	PlScanDirectory( matGen.dir, "bmp", GenerateMaterial, recursive, NULL );
+	PlScanDirectory( matGen.dir, "jpg", GenerateMaterial, recursive, NULL );
 
 	printf( "Done! %u materials generated\n", numMaterialsGenerated );
 
