@@ -110,18 +110,17 @@ typedef struct ApeProperty
 } ApeProperty;
 
 #if !defined( NDEBUG )
-#	define APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP, .typeName = APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR )
+#	define APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) NAME, #VAR, DESC, offsetof( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP, .typeName = APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR )
 #else
-#	define APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) NAME, #VAR, DESC, PL_OFFSETOF( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP
+#	define APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) NAME, #VAR, DESC, offsetof( TYPE, VAR ), APE_PROPERTY_TYPE_##PROP
 #endif
 
 #define APE_PROPERTY_BASIC( NAME, DESC, TYPE, VAR, PROP ) \
 	{ APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, PROP ) }
-#define APE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                  \
-	{                                                                 \
-	        APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, STRING ),     \
-	        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) },  \
-	        APE_PROPERTY_GET_TYPENAME( ( ( TYPE * ) nullptr )->VAR ), \
+#define APE_PROPERTY_STRING( NAME, DESC, TYPE, VAR )                 \
+	{                                                                \
+	        APE_PROPERTY_HEADER( NAME, DESC, TYPE, VAR, STRING ),    \
+	        .stringType = { sizeof( ( ( TYPE * ) nullptr )->VAR ) }, \
 	}
 #define APE_PROPERTY_ENUM( NAME, DESC, TYPE, VAR, ENUMS )       \
 	{                                                           \

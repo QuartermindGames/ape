@@ -269,24 +269,21 @@ long Viewport::on_zoom( FXObject *, FXSelector, void *ptr )
 
 	if ( viewMode_ != APE_CAMERA_MODE_PERSPECTIVE && viewMode_ != APE_CAMERA_MODE_ISOMETRIC )
 	{
-		internalViewport_->zoom += ( dir / 120.0f );
+		internalViewport_->zoom += dir / 120.0f;
 	}
 	else
 	{
-		QmMathVector3f pos = ape_camera_get_position( camera );
-		QmMathVector3f ang = ape_camera_get_angles( camera );
-
-		QmMathVector3f forward;
-		PlAnglesAxes( ang, nullptr, nullptr, &forward );
+		QmMathVector3f pos     = ape_camera_get_position( camera );
+		QmMathVector3f forward = ape_camera_get_forward( camera );
 
 		dir /= 50.0f;
 		if ( dir )
 		{
-			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, dir ) );
+			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( forward, dir ) );
 		}
 		else
 		{
-			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( forward, dir ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, dir ) );
 		}
 
 		ape_camera_set_position( camera, &pos );
@@ -389,7 +386,7 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 	auto *event = ( FXEvent * ) ptr;
 	if ( mainWindow->is_game_running() )
 	{
-		ape_input_handle_keyboard_event( translate_key( event->code ), ( FXSELTYPE( selector ) == SEL_KEYPRESS ) );
+		ape_input_handle_keyboard_event( translate_key( event->code ), FXSELTYPE( selector ) == SEL_KEYPRESS );
 		return TRUE;
 	}
 
@@ -465,40 +462,36 @@ long Viewport::on_key( FXObject *, FXSelector selector, void *ptr )
 
 		case 'w':
 		{
-			QmMathVector3f forward;
-			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( forward, speed ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( ape_camera_get_forward( camera ), -speed ) );
 			break;
 		}
 		case 's':
 		{
-			QmMathVector3f forward;
-			PlAnglesAxes( ang, nullptr, nullptr, &forward );
-			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( forward, speed ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( ape_camera_get_forward( camera ), speed ) );
 			break;
 		}
 		case 'a':
 		{
 			QmMathVector3f left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( left, speed ) );
+			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, speed ) );
 			break;
 		}
 		case 'd':
 		{
 			QmMathVector3f left;
 			PlAnglesAxes( ang, &left, nullptr, nullptr );
-			pos = qm_math_vector3f_add( pos, qm_math_vector3f_scale_float( left, speed ) );
+			pos = qm_math_vector3f_sub( pos, qm_math_vector3f_scale_float( left, speed ) );
 			break;
 		}
 		case 'q':
 		{
-			pos.y += 0.5f;
+			pos.y += speed;
 			break;
 		}
 		case 'e':
 		{
-			pos.y -= 0.5f;
+			pos.y -= speed;
 			break;
 		}
 	}
