@@ -71,7 +71,7 @@ void ape_camera_set_focus_point( ApeCamera *self, float focusPoint );
 void ape_camera_set_focus_scale( ApeCamera *self, float focusScale );
 void ape_camera_set_aperture( ApeCamera *self, float aperture );
 
-bool ape_camera_test_box( const ApeCamera *camera, const PLCollisionAABB *bounds );
+bool ape_camera_test_aabb( const ApeCamera *camera, const PLCollisionAABB *bounds );
 bool ape_camera_test_sphere( const ApeCamera *camera, const PLCollisionSphere *sphere );
 bool ape_camera_test_point( const ApeCamera *camera, QmMathVector3f point );
 

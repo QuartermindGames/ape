@@ -97,4 +97,5 @@ typedef struct ApeCamera
 	ApeCameraVisibleSet pvs;
 } ApeCamera;
 
+bool ape_camera_pvs_test_brush_face_( const ApeCamera *self, const ApeBrushFace *face );
 void ape_camera_build_pvs_( ApeCamera *self, const ApeViewport *viewport );

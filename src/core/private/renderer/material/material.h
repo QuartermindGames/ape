@@ -34,6 +34,7 @@ typedef enum ApeMaterialFlag
 	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_RECEIVE_SHADOWS, 2U ),
 	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_BLENDED, 3U ),
 	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_LIGHTMAP, 4U ),// material supports a lightmap
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_NO_CULL, 5U ),
 } ApeMaterialFlag;
 
 #define APE_MATERIAL_VAR_NAME_LENGTH 64
@@ -108,9 +109,9 @@ typedef struct ApeMaterialPass
 	ApeShaderProgram *program;
 
 	QmGfxTextureFilter textureFilter;
-	QmMathVector2f   textureScroll;
-	QmMathVector2f   textureOffset;
-	QmMathVector2f   textureScale;
+	QmMathVector2f     textureScroll;
+	QmMathVector2f     textureOffset;
+	QmMathVector2f     textureScale;
 
 	unsigned int         numAnimators;
 	ApeMaterialAnimator *animators;
@@ -292,7 +293,9 @@ ApeTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 
 bool ape_material_can_cast_shadows( const ApeMaterial *self );
 bool ape_material_can_receive_shadows( const ApeMaterial *self );
+
 bool ape_material_is_blended( const ApeMaterial *self );
+bool ape_material_is_cull_enabled_( const ApeMaterial *self );
 
 unsigned int ape_material_get_flags_( const ApeMaterial *self );
 

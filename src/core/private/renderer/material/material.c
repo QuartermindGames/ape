@@ -778,6 +778,10 @@ void ape_parse_material_pass_( ApeMaterial *material, AcmBranch *root, ApeMateri
 
 	materialPass->depthMask = acm_get_bool( root, "depthMask", materialPass->depthMask );
 	materialPass->cullMode  = ACM_GET_UINT( materialPass->cullMode, root, "cullMode", materialPass->cullMode );
+	if ( material != nullptr && materialPass->cullMode != 1 )
+	{
+		material->flags |= APE_MATERIAL_FLAG_NO_CULL;
+	}
 
 	if ( ( tmp = acm_get_string( root, "textureFilterMode", nullptr ) ) != NULL )
 	{
@@ -1223,6 +1227,11 @@ bool ape_material_can_receive_shadows( const ApeMaterial *self )
 bool ape_material_is_blended( const ApeMaterial *self )
 {
 	return self->flags & APE_MATERIAL_FLAG_BLENDED;
+}
+
+bool ape_material_is_cull_enabled_( const ApeMaterial *self )
+{
+	return !( self->flags & APE_MATERIAL_FLAG_NO_CULL );
 }
 
 unsigned int ape_material_get_flags_( const ApeMaterial *self )

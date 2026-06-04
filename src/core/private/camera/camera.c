@@ -8,6 +8,7 @@
 #include "camera.h"
 
 #include "renderer/renderer.h"
+#include "renderer/material/material.h"
 #include "renderer/post/post.h"
 #include "world/world.h"
 
@@ -329,7 +330,7 @@ void ape_camera_set_aperture( ApeCamera *self, const float aperture )
 /**
  * Checks that the given bounding box is within the view space.
  */
-bool ape_camera_test_box( const ApeCamera *camera, const PLCollisionAABB *bounds )
+bool ape_camera_test_aabb( const ApeCamera *camera, const PLCollisionAABB *bounds )
 {
 	QmMathVector3f mins = qm_math_vector3f_add( bounds->mins, bounds->origin );
 	QmMathVector3f maxs = qm_math_vector3f_add( bounds->maxs, bounds->origin );
@@ -581,10 +582,59 @@ static void setup_reflection_matrix( const QmMathVector3f *normal, const QmMathV
 	reflectionMatrix->mm[ 3 ][ 3 ] = 1.0f;
 }
 
+bool ape_camera_pvs_test_brush_face_( const ApeCamera *self, const ApeBrushFace *face )
+{
+	if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+	{
+		return false;
+	}
+
+	ApeBrush *brush = face->parent;
+
+	// sigh... transform the bounds to where they should be for the given face
+	PLMatrix4       transform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+	PLCollisionAABB bounds    = face->bounds;
+	bounds.origin             = PlGetMatrix4Translation( &transform );
+
+	// check that the bounds are in view
+	if ( !ape_camera_test_aabb( self, &bounds ) )
+	{
+		return false;
+	}
+
+	ApeMaterial *material = face->material;
+	if ( material == nullptr || ape_material_is_cull_enabled_( material ) )
+	{
+		// ensure it's facing the camera
+		QmMathVector3f faceOrigin     = qm_math_vector3f_add( bounds.absOrigin, bounds.origin );
+		QmMathVector3f cameraPosition = ape_camera_get_position( self );
+		QmMathVector3f view           = qm_math_vector3f_normalize( qm_math_vector3f_sub( cameraPosition, faceOrigin ) );
+		if ( qm_math_vector3f_dot_product( face->normal, view ) < 0.0f )
+		{
+			return false;
+		}
+	}
+
+#if 0//TODO: revisit this but do it correctly
+	ApeRoom *room = visibleRoom->room;
+	if ( room->fogFar != 0.f )
+	{
+		QmMathVector3f cameraPos = ape_camera_get_position( camera );
+		float          distance  = qm_math_vector3f_distance( cameraPos, face->bounds.absOrigin );
+		if ( distance > room->fogFar * 2.0f )
+		{
+			continue;
+		}
+	}
+#endif
+
+	return true;
+}
+
 static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBrush *brush, ApeCameraVisibleRoom *visibleRoom )
 {
 	PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( brush ) );
-	if ( !ape_camera_test_box( self, &bounds ) )
+	if ( !ape_camera_test_aabb( self, &bounds ) )
 	{
 		return false;
 	}
@@ -592,30 +642,15 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 	unsigned int numVisibleFaces = 0;
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
-		if ( brush->faces[ i ].flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+		if ( !ape_camera_pvs_test_brush_face_( self, &brush->faces[ i ] ) )
 		{
 			continue;
 		}
 
-		// sigh... transform the bounds to where they should be for the given face
-		PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
-		bounds              = brush->faces[ i ].bounds;
-		bounds.origin       = PlGetMatrix4Translation( &transform );
-
-		// check that the bounds are in view
-		if ( !ape_camera_test_box( self, &bounds ) )
-		{
-			continue;
-		}
-
-		// ensure it's facing the camera
-		QmMathVector3f faceOrigin     = qm_math_vector3f_add( bounds.absOrigin, bounds.origin );
-		QmMathVector3f cameraPosition = ape_camera_get_position( self );
-		QmMathVector3f view           = qm_math_vector3f_normalize( qm_math_vector3f_sub( cameraPosition, faceOrigin ) );
-		if ( qm_math_vector3f_dot_product( brush->faces[ i ].normal, view ) < 0.0f )
-		{
-			continue;
-		}
+		PLMatrix4 transform       = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+		bounds                    = brush->faces[ i ].bounds;
+		bounds.origin             = PlGetMatrix4Translation( &transform );
+		QmMathVector3f faceOrigin = qm_math_vector3f_add( bounds.absOrigin, bounds.origin );
 
 		if ( ape_brush_face_is_portal( &brush->faces[ i ] ) )
 		{
@@ -705,6 +740,8 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 						//PlRotateMatrix3f( QM_MATH_DEG2RAD( -angles.z ), 0.0f, 0.0f, 1.0f );
 						//
 
+						QmMathVector3f cameraPosition = ape_camera_get_position( self );
+
 						QmMathVector3f position = destinationBounds.origin;
 						qm_math_vector3f_sub( cameraPosition, position );
 						PlTranslateMatrix( QM_MATH_VECTOR3F( position.x, position.y, position.z ) );
@@ -759,7 +796,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport, ApeWorldNode *worldNode, ApeCameraVisibleRoom *visibleRoom )
 {
 	// show the node volumes, but mind this is only active for the *top* room!
-	if ( ape_config_.world.showNodeVolumes && ( &self->pvs.rooms[ 0 ] == visibleRoom ) )
+	if ( ape_config_.world.showNodeVolumes && &self->pvs.rooms[ 0 ] == visibleRoom )
 	{
 		PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
 		QmMathVector3f  pos               = ape_world_node_get_position( worldNode );
@@ -799,7 +836,7 @@ static void pvs_navigate_node_tree( ApeCamera *self, const ApeViewport *viewport
 			else
 			{
 				PLCollisionAABB transformedBounds = ape_world_node_get_transformed_local_bounds( worldNode );
-				isVisible                         = ape_camera_test_box( self, &transformedBounds );
+				isVisible                         = ape_camera_test_aabb( self, &transformedBounds );
 			}
 
 			if ( isVisible )

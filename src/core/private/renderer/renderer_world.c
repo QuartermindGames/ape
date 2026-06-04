@@ -10,12 +10,20 @@
 #include "editor/editor.h"
 #include "world/world.h"
 
-//TODO: eventually we should do away with this
-#define MAX_MATERIALS_PER_PASS 256
-#define MAX_SUB_MESHES         8192
-static int subMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
-static int firstSubMeshes[ MAX_MATERIALS_PER_PASS ][ MAX_SUB_MESHES ];
-static int numSubMeshes[ MAX_MATERIALS_PER_PASS ];
+//TODO: eventually we should do away with this!!!
+static constexpr unsigned int MAX_MATERIALS_PER_PASS = 256;
+static constexpr unsigned int MAX_SUB_MESHES         = 8192;
+
+//TODO: eventually we should do away with this!!!
+typedef struct DisplayList
+{
+	ApeMaterial *material;
+	int          subMeshes[ MAX_SUB_MESHES ];
+	int          firstSubMeshes[ MAX_SUB_MESHES ];
+	int          numSubMeshes;
+} DisplayList;
+static DisplayList  displayLists[ MAX_MATERIALS_PER_PASS ];
+static unsigned int numDisplayLists;
 
 static bool showHiddenFaces;
 
@@ -118,8 +126,8 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 
 		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
 		{
-			assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
-			if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
+			assert( displayLists[ 0 ].numSubMeshes < MAX_SUB_MESHES );
+			if ( displayLists[ 0 ].numSubMeshes >= MAX_SUB_MESHES )
 			{
 				ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
 				break;
@@ -133,11 +141,11 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 				{
 					if ( ( ApeBrushFace * ) p == face )
 					{
-						if ( ape_camera_test_box( instance->camera, &face->bounds ) )
+						if ( ape_camera_test_aabb( instance->camera, &face->bounds ) )
 						{
-							subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
-							firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
-							numSubMeshes[ 0 ]++;
+							displayLists[ 0 ].subMeshes[ displayLists[ 0 ].numSubMeshes ]      = face->numVertices;
+							displayLists[ 0 ].firstSubMeshes[ displayLists[ 0 ].numSubMeshes ] = *offset;
+							displayLists[ 0 ].numSubMeshes++;
 
 							ape_rendererPerformance_.numFacesDrawn++;
 						}
@@ -156,7 +164,7 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 	}
 }
 
-static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material, ApeLight *light, ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
+static void build_brush_display_list( ApeWorldNode *node, ApeLight *light, ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
 {
 	if ( node->flags == APE_WORLD_NODE_FLAG_HIDDEN || node->type != APE_WORLD_NODE_TYPE_BRUSH )
 	{
@@ -168,14 +176,30 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 	const ApeBrush *brush = ( ApeBrush * ) node;
 	for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
 	{
-		assert( numSubMeshes[ 0 ] < MAX_SUB_MESHES );
-		if ( numSubMeshes[ 0 ] >= MAX_SUB_MESHES )
+		ApeBrushFace *face = &brush->faces[ i ];
+
+		// horrible linear lookup to figure out which display list to shove this into
+		DisplayList *list = nullptr;
+		for ( unsigned int j = 0; j < numDisplayLists; ++j )
+		{
+			if ( displayLists[ j ].material == face->material )
+			{
+				list = &displayLists[ j ];
+				break;
+			}
+		}
+
+		if ( list == nullptr )
+		{
+			continue;
+		}
+
+		assert( list->numSubMeshes < MAX_SUB_MESHES );
+		if ( list->numSubMeshes >= MAX_SUB_MESHES )
 		{
 			ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
 			break;
 		}
-
-		ApeBrushFace *face = &brush->faces[ i ];
 
 		if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SHADED && stage & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS && face->lightmapIndex != ape_rendererState_.lightmapIndex )
 		{
@@ -189,11 +213,6 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 		}
 
 		if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && !showHiddenFaces )
-		{
-			continue;
-		}
-
-		if ( ( !( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN ) && material != face->material ) || ( ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN && material != ape_material_get_default( APE_MATERIAL_DEFAULT_HIDDEN ) ) ) )
 		{
 			continue;
 		}
@@ -220,22 +239,11 @@ static void build_brush_display_list( ApeWorldNode *node, ApeMaterial *material,
 #endif
 		}
 
-		ApeRoom *room = visibleRoom->room;
-		if ( room->fogFar != 0.f )
+		if ( ape_camera_pvs_test_brush_face_( camera, face ) )
 		{
-			QmMathVector3f cameraPos = ape_camera_get_position( camera );
-			float          distance  = qm_math_vector3f_distance( cameraPos, face->bounds.absOrigin );
-			if ( distance > room->fogFar * 2.0f )
-			{
-				continue;
-			}
-		}
-
-		if ( ape_camera_test_box( camera, &face->bounds ) )
-		{
-			subMeshes[ 0 ][ numSubMeshes[ 0 ] ]      = face->numVertices;
-			firstSubMeshes[ 0 ][ numSubMeshes[ 0 ] ] = *offset;
-			numSubMeshes[ 0 ]++;
+			list->subMeshes[ list->numSubMeshes ]      = face->numVertices;
+			list->firstSubMeshes[ list->numSubMeshes ] = *offset;
+			list->numSubMeshes++;
 
 			ape_rendererPerformance_.numFacesDrawn++;
 		}
@@ -252,39 +260,46 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 	PLLinkedList *materialList = ape_material_get_group_( APE_CACHE_GROUP_WORLD );
 	assert( materialList != nullptr );
 
+	numDisplayLists = 0;
+
+	// setup the display lists
 	ApeMaterial *material;
 	COM_ITERATE_LINKED_LIST( material, materialList, i )
 	{
-		assert( material != nullptr );
-
 		// blended materials get drawn later
 		if ( ( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT && !ape_material_is_blended( material ) ) || ( flags & APE_RENDERER_PASS_FLAG_OPAQUE && ape_material_is_blended( material ) ) )
 		{
 			continue;
 		}
 
-		unsigned int offset = 0;
-		build_brush_display_list( worldNode, material, light, camera, visibleRoom, &offset, flags );
+		displayLists[ numDisplayLists ].material = material;
+		numDisplayLists++;
+	}
 
-		ApeWorldNode *child;
-		COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
-		{
-			build_brush_display_list( child, material, light, camera, visibleRoom, &offset, flags );
-		}
+	unsigned int offset = 0;
+	build_brush_display_list( worldNode, light, camera, visibleRoom, &offset, flags );
 
-		if ( numSubMeshes[ 0 ] == 0 )
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, worldNode->children, i )
+	{
+		build_brush_display_list( child, light, camera, visibleRoom, &offset, flags );
+	}
+
+	for ( unsigned int i = 0; i < numDisplayLists; ++i )
+	{
+		if ( displayLists[ i ].numSubMeshes == 0 )
 		{
 			continue;
 		}
 
 		PLGMesh *mesh        = worldNode->mesh;
-		mesh->numSubMeshes   = numSubMeshes[ 0 ];
-		mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-		mesh->subMeshes      = subMeshes[ 0 ];
+		mesh->numSubMeshes   = displayLists[ i ].numSubMeshes;
+		mesh->firstSubMeshes = displayLists[ i ].firstSubMeshes;
+		mesh->subMeshes      = displayLists[ i ].subMeshes;
 
-		ape_material_draw( material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
+		ape_material_draw( displayLists[ i ].material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
 
-		mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
+		mesh->numSubMeshes = displayLists[ i ].numSubMeshes = 0;
 	}
 
 	COM_PROFILE_FUNCTION_END();
@@ -590,21 +605,21 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	unsigned int offset = 0;
 	build_selection_display_list( &room->base, instance, &offset );
 
-	if ( numSubMeshes[ 0 ] == 0 )
+	if ( displayLists[ 0 ].numSubMeshes == 0 )
 	{
 		return;
 	}
 
 	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
-	mesh->numSubMeshes   = numSubMeshes[ 0 ];
-	mesh->firstSubMeshes = firstSubMeshes[ 0 ];
-	mesh->subMeshes      = subMeshes[ 0 ];
+	mesh->numSubMeshes   = displayLists[ 0 ].numSubMeshes;
+	mesh->firstSubMeshes = displayLists[ 0 ].firstSubMeshes;
+	mesh->subMeshes      = displayLists[ 0 ].subMeshes;
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
 	assert( material != nullptr );
 	ape_material_draw( material, mesh, nullptr );
 
-	mesh->numSubMeshes = numSubMeshes[ 0 ] = 0;
+	mesh->numSubMeshes = displayLists[ 0 ].numSubMeshes = 0;
 }
 
 static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom )

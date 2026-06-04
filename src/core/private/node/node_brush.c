@@ -24,21 +24,6 @@ static void clear_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
 	}
 }
 
-static void add_tagged_surfaces( const ApeBrush *self, ApeRoom *room )
-{
-	// add all of the faces from the lookup!
-	for ( unsigned int i = 0; i < self->numFaces; ++i )
-	{
-		ApeBrushFace *face = &self->faces[ i ];
-		if ( *face->tag == '\0' )
-		{
-			continue;
-		}
-
-		ape_room_add_tagged_surface( room, face );
-	}
-}
-
 static void *create_brush( ApeWorldNode *parent )
 {
 	ApeBrush *brush = QM_OS_MEMORY_NEW( ApeBrush );
@@ -129,17 +114,15 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 	{
 		ape_brush_face_setup( &dstBrush->faces[ j ] );
 
-		//TODO: materials are an annoying pain in the ass because of how we're handling references... this should be fixed...
-		const char  *materialPath     = ape_material_get_path( srcBrush->faces[ j ].material );
-		ApeMaterial *material         = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
-		dstBrush->faces[ j ].material = material;
+		dstBrush->faces[ j ].material = srcBrush->faces[ j ].material;
+		ape_material_add_reference( dstBrush->faces[ j ].material );
 
 		dstBrush->faces[ j ].materialScale  = srcBrush->faces[ j ].materialScale;
 		dstBrush->faces[ j ].materialOffset = srcBrush->faces[ j ].materialOffset;
 		dstBrush->faces[ j ].materialAngle  = srcBrush->faces[ j ].materialAngle;
 
+		dstBrush->faces[ j ].lightmapIndex        = APE_BRUSH_FACE_LIGHTMAP_INVALID;
 		dstBrush->faces[ j ].lightmapArea         = srcBrush->faces[ j ].lightmapArea;
-		dstBrush->faces[ j ].lightmapIndex        = srcBrush->faces[ j ].lightmapIndex;
 		dstBrush->faces[ j ].lightmapLuxelDensity = srcBrush->faces[ j ].lightmapLuxelDensity;
 
 		dstBrush->faces[ j ].normal = srcBrush->faces[ j ].normal;
@@ -153,6 +136,7 @@ static ApeWorldNode *clone_brush( ApeWorldNode *src )
 			dstBrush->faces[ j ].vertices[ k ].posIndex      = srcBrush->faces[ j ].vertices[ k ].posIndex;
 			dstBrush->faces[ j ].vertices[ k ].textureCoords = srcBrush->faces[ j ].vertices[ k ].textureCoords;
 			dstBrush->faces[ j ].vertices[ k ].normal        = srcBrush->faces[ j ].vertices[ k ].normal;
+			dstBrush->faces[ j ].vertices[ k ].colour        = srcBrush->faces[ j ].vertices[ k ].colour;
 			dstBrush->faces[ j ].edgeLoopOrder[ k ]          = srcBrush->faces[ j ].edgeLoopOrder[ k ];
 		}
 
@@ -453,7 +437,7 @@ bool ape_brush_face_is_portal( const ApeBrushFace *self )
 		return true;
 	}
 
-	return self->flags & APE_BRUSH_FACE_FLAG_MIRROR || ape_material_get_flags_( self->material ) & APE_MATERIAL_FLAG_MIRROR;
+	return ape_brush_face_is_mirror( self );
 }
 
 bool ape_brush_face_is_mirror( const ApeBrushFace *self )
