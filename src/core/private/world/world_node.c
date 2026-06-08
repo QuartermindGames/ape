@@ -187,10 +187,13 @@ static void update_world_transform( ApeWorldNode *self )
 
 	self->worldTransform = transform;
 
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, self->children, i )
+	if ( self->children != nullptr )
 	{
-		update_world_transform( child );
+		ApeWorldNode *child;
+		COM_ITERATE_LINKED_LIST( child, self->children, i )
+		{
+			update_world_transform( child );
+		}
 	}
 }
 

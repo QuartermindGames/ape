@@ -92,7 +92,7 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 	self->forwardVelocity = QM_MATH_CLAMP( -maxVelocity, self->forwardVelocity, maxVelocity );
 	self->strafeVelocity  = QM_MATH_CLAMP( -maxVelocity, self->strafeVelocity, maxVelocity );
 
-#if 1
+#if 0
 	game_debug_( "for: %f (%f)\n", self->forwardVelocity, acceleration );
 	game_debug_( "str: %f\n", self->strafeVelocity );
 	game_debug_( "vel: %f %f %f\n", AUX_VEC3_ARGS( self->velocity ) );

@@ -35,6 +35,7 @@ typedef enum ApeMaterialFlag
 	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_BLENDED, 3U ),
 	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_LIGHTMAP, 4U ),// material supports a lightmap
 	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_NO_CULL, 5U ),
+	QM_OS_BIT_FLAG( APE_MATERIAL_FLAG_EMISSIVE, 6U ),// indicates the material emits light
 } ApeMaterialFlag;
 
 #define APE_MATERIAL_VAR_NAME_LENGTH 64
@@ -296,6 +297,9 @@ bool ape_material_can_receive_shadows( const ApeMaterial *self );
 
 bool ape_material_is_blended( const ApeMaterial *self );
 bool ape_material_is_cull_enabled_( const ApeMaterial *self );
+
+bool           ape_material_is_emissive_( const ApeMaterial *self );
+QmMathColour4f ape_material_get_emission_( const ApeMaterial *self );
 
 unsigned int ape_material_get_flags_( const ApeMaterial *self );
 

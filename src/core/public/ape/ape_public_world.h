@@ -400,6 +400,9 @@ void ape_brush_face_fit_material( ApeBrushFace *self );
 void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material );
 void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const QmMathVector2f *scale, const QmMathVector2f *offset, const QmMathVector3f *rotation, bool computeLocal );
 
+bool           ape_brush_face_is_emissive( const ApeBrushFace *self );
+QmMathColour4f ape_brush_face_get_emission( const ApeBrushFace *self );
+
 bool          ape_brush_face_is_portal( const ApeBrushFace *self );
 bool          ape_brush_face_is_mirror( const ApeBrushFace *self );
 ApeBrushFace *ape_brush_face_get_portal_destination( ApeBrushFace *self );
@@ -414,12 +417,19 @@ void ape_brush_face_compute_bounds( ApeBrushFace *face );
 ////////////////////////////////////////////////////////////////////
 // Brush
 
+typedef enum ApeBrushLightingType : uint8_t
+{
+	APE_BRUSH_LIGHTING_TYPE_LIGHTMAP,
+	APE_BRUSH_LIGHTING_TYPE_VERTEX,
+} ApeBrushLightingType;
+
 typedef struct ApeBrush
 {
 	// This should always come first!
 	ApeWorldNode base;
 
-	ApeBrushType type;
+	ApeBrushType         type;
+	ApeBrushLightingType lightingType;
 
 	QmMathVector3f *vertices;
 	unsigned int    numVertices;

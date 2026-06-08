@@ -295,7 +295,8 @@ static ApeBrush *create_terrain_chunk( ApeEntity *self, GameTerrainEntity *terra
 		return nullptr;
 	}
 
-	brush->type = APE_WORLD_BRUSH_TYPE_SOLID;
+	brush->type         = APE_WORLD_BRUSH_TYPE_SOLID;
+	brush->lightingType = APE_BRUSH_LIGHTING_TYPE_VERTEX;
 
 	// ensure brush isn't saved
 	APE_WORLD_NODE( brush )->flags |= APE_WORLD_NODE_FLAG_DISCARD;
@@ -403,7 +404,7 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 
 	terrain_apply_detail( self, terrain );
 
-#if 0
+#if 1
 	//TODO: implement a more optimised method for this, as it's *very* slow
 	QmOsLinkedList *faces = qm_os_linked_list_create();
 	for ( unsigned int i = 0; i < terrain->numBrushes; ++i )

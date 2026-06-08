@@ -35,11 +35,13 @@ typedef struct ApeMaterial
 {
 	char              path[ PL_SYSTEM_MAX_PATH ];
 	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
-	unsigned int      numPasses;
+	uint8_t           numPasses;
 	PLLinkedListNode *node;
 
-	unsigned int width;
-	unsigned int height;
+	uint16_t width;
+	uint16_t height;
+
+	QmMathColour4f lightEmission;
 
 	int8_t surfaceType;
 
@@ -864,6 +866,12 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 		material->flags |= APE_MATERIAL_FLAG_MIRROR;
 	}
 
+	material->lightEmission = com_acm_get_colour_f32( root, "light", &QM_MATH_COLOUR4F_ZERO );
+	if ( !qm_math_colour4f_compare( material->lightEmission, QM_MATH_COLOUR4F_ZERO ) )
+	{
+		material->flags |= APE_MATERIAL_FLAG_EMISSIVE;
+	}
+
 	if ( material->numPasses == 0 )
 	{
 		ape_console_warning_( "No passes specified for material!\n" );
@@ -1232,6 +1240,16 @@ bool ape_material_is_blended( const ApeMaterial *self )
 bool ape_material_is_cull_enabled_( const ApeMaterial *self )
 {
 	return !( self->flags & APE_MATERIAL_FLAG_NO_CULL );
+}
+
+bool ape_material_is_emissive_( const ApeMaterial *self )
+{
+	return self->flags & APE_MATERIAL_FLAG_EMISSIVE;
+}
+
+QmMathColour4f ape_material_get_emission_( const ApeMaterial *self )
+{
+	return self->lightEmission;
 }
 
 unsigned int ape_material_get_flags_( const ApeMaterial *self )

@@ -430,6 +430,19 @@ void ape_brush_face_apply_material_coordinates( ApeBrushFace *self, const QmMath
 	}
 }
 
+bool ape_brush_face_is_emissive( const ApeBrushFace *self )
+{
+	return ape_material_is_emissive_( self->material );
+}
+
+QmMathColour4f ape_brush_face_get_emission( const ApeBrushFace *self )
+{
+	return ape_material_get_emission_( self->material );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+
 bool ape_brush_face_is_portal( const ApeBrushFace *self )
 {
 	if ( self->flags & APE_BRUSH_FACE_FLAG_PORTAL )
@@ -952,6 +965,7 @@ static AcmBranch *serialize_brush( void *self, AcmBranch *root )
 {
 	ApeBrush *brush = self;
 	acm_push_ui32( root, "type", brush->type );
+	acm_push_ui8( root, "lightingType", brush->lightingType );
 	acm_push_array_f32( root, "vertices", ( float * ) brush->vertices, brush->numVertices * 3 );
 
 	AcmBranch *facesBranch = acm_push_array_object( root, "faces" );
@@ -1000,7 +1014,8 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeBrush *brush = ( ApeBrush * ) self;
 
-	brush->type = ACM_GET_INT( brush->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
+	brush->type         = ACM_GET_INT( brush->type, root, "type", APE_WORLD_BRUSH_TYPE_SOLID );
+	brush->lightingType = ACM_GET_UINT( brush->lightingType, root, "lightingType", APE_BRUSH_LIGHTING_TYPE_LIGHTMAP );
 
 	AcmBranch *branch;
 	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
@@ -1042,7 +1057,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 					brush->faces[ i ].vertices[ j ].textureCoords  = com_acm_get_vector2( vertexBranch, "uv", &QM_MATH_VECTOR2F_ZERO );
 					brush->faces[ i ].vertices[ j ].lightmapCoords = com_acm_get_vector2( vertexBranch, "lightmap", &QM_MATH_VECTOR2F_ZERO );
 					brush->faces[ i ].vertices[ j ].normal         = com_acm_get_vector3( vertexBranch, "normal", &( QmMathVector3f ) {} );
-					brush->faces[ i ].vertices[ j ].colour         = com_acm_get_colour_f32( vertexBranch, "colour", &( QmMathColour4f ) { .a = 1.0f } );
+					brush->faces[ i ].vertices[ j ].colour         = com_acm_get_colour_f32( vertexBranch, "colour", &QM_MATH_COLOUR4F_RGB( 1.0f, 1.0f, 1.0f ) );
 				}
 
 				int16_t edgeLoop[ APE_BRUSH_MAX_FACE_VERTICES ];
@@ -1125,8 +1140,14 @@ static ApePropertyEnum brushTypeEnums[] = {
         {"Air",   1},
 };
 
+static ApePropertyEnum brushLightingTypeEnums[] = {
+        {"Lightmap", 0},
+        {"Vertex",   1},
+};
+
 static const ApeProperty properties[] = {
         APE_PROPERTY_ENUM( "Type", "Type of brush, which can either be solid or air.", ApeBrush, type, brushTypeEnums ),
+        APE_PROPERTY_ENUM( "Lighting", "Type of lighting the brush accepts.", ApeBrush, lightingType, brushLightingTypeEnums ),
 };
 
 const ApeWorldNodeClass ape_brushClass = {
