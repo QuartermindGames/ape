@@ -209,19 +209,21 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 	acm_push_f32( root, "angle", light->angle );
 	acm_push_ui32( root, "flags", light->flags );
 	acm_push_i32( root, "state", light->state );
+	acm_push_i32( root, "flareDeclType", light->flareDeclType );
 
 	return root;
 }
 
 static ApeWorldNode *deserialize_light( ApeWorldNode *self, AcmBranch *root )
 {
-	ApeLight *light = ( ApeLight * ) self;
-	light->type     = acm_get_uint( root, "type", light->type );
-	light->colour   = com_acm_get_colour_f32( root, "colour", &light->colour );
-	light->radius   = acm_get_f32( root, "radius", light->radius );
-	light->angle    = acm_get_f32( root, "angle", light->angle );
-	light->flags    = acm_get_uint( root, "flags", light->flags );
-	light->state    = acm_get_int( root, "state", light->state );
+	ApeLight *light      = ( ApeLight * ) self;
+	light->type          = acm_get_uint( root, "type", light->type );
+	light->colour        = com_acm_get_colour_f32( root, "colour", &light->colour );
+	light->radius        = acm_get_f32( root, "radius", light->radius );
+	light->angle         = acm_get_f32( root, "angle", light->angle );
+	light->flags         = acm_get_uint( root, "flags", light->flags );
+	light->state         = acm_get_int( root, "state", light->state );
+	light->flareDeclType = acm_get_int( root, "flareDeclType", light->flareDeclType );
 
 	return self;
 }
@@ -277,7 +279,9 @@ static ApeProperty properties[] = {
         APE_PROPERTY_BITFLAG( "Shadows", "Toggles shadows.", ApeLight, flags, APE_LIGHT_FLAG_SHADOWS ),
         APE_PROPERTY_BITFLAG( "Runtime Shadows", "Toggles dynamic shadows.", ApeLight, flags, APE_LIGHT_FLAG_RUNTIME_SHADOWS ),
         APE_PROPERTY_BITFLAG( "Enabled", "Toggles the light on or off.", ApeLight, flags, APE_LIGHT_FLAG_ENABLED ),
+
         APE_PROPERTY_BITFLAG( "Flare", "Toggles flare effect for light.", ApeLight, flags, APE_LIGHT_FLAG_FLARE ),
+        APE_PROPERTY_BASIC( "Flare Type", "Specify the flare type to use, if enabled.", ApeLight, flareDeclType, INTEGER ),
 };
 
 const ApeWorldNodeClass ape_lightClass = {

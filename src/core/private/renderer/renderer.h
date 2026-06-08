@@ -75,12 +75,14 @@ typedef struct ApeLight
 
 	ApeLightType type;
 
-	QmMathColour4f colour;
-	float          radius;// per omni + spotlight
-	float          angle; // per spotlight
+	ApeColour4fProperty colour;
+	ApeFloatProperty    radius;// per omni + spotlight
+	ApeFloatProperty    angle; // per spotlight
 
-	unsigned int flags;
-	int          state;
+	ApeEnumProperty    flags;
+	ApeIntegerProperty flareDeclType;
+
+	int state;
 
 	bool isCacheDirty;
 } ApeLight;
