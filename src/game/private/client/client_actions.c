@@ -74,17 +74,17 @@ static void move_action( const ApeInputState state, const char *id )
 
 void game_client_actions_register_()
 {
-	ape_client_input_register_action( "game_say", nullptr, 0, ( ApeInputKey[] ) { 't' }, 1, say_action );
+	ape_client_input_register_action( "game_say", nullptr, 0, ( ApeInputKey[] ) { 't' }, 1, say_action, 0 );
 
 	// player movement
 
-	ape_client_input_register_action( "game_move_forward", nullptr, 0, ( ApeInputKey[] ) { 'w', APE_INPUT_KEY_UP }, 2, move_action );
-	ape_client_input_register_action( "game_move_backward", nullptr, 0, ( ApeInputKey[] ) { 's', APE_INPUT_KEY_DOWN }, 2, move_action );
-	ape_client_input_register_action( "game_move_left", nullptr, 0, ( ApeInputKey[] ) { 'a' }, 1, move_action );
-	ape_client_input_register_action( "game_move_right", nullptr, 0, ( ApeInputKey[] ) { 'd' }, 1, move_action );
+	ape_client_input_register_action( "game_move_forward", nullptr, 0, ( ApeInputKey[] ) { 'w', APE_INPUT_KEY_UP }, 2, move_action, 0 );
+	ape_client_input_register_action( "game_move_backward", nullptr, 0, ( ApeInputKey[] ) { 's', APE_INPUT_KEY_DOWN }, 2, move_action, 0 );
+	ape_client_input_register_action( "game_move_left", nullptr, 0, ( ApeInputKey[] ) { 'a' }, 1, move_action, 0 );
+	ape_client_input_register_action( "game_move_right", nullptr, 0, ( ApeInputKey[] ) { 'd' }, 1, move_action, 0 );
 
-	ape_client_input_register_action( "game_move_sprint", nullptr, 0, ( ApeInputKey[] ) { KEY_LEFT_SHIFT, KEY_RIGHT_SHIFT }, 2, move_action );
+	ape_client_input_register_action( "game_move_sprint", nullptr, 0, ( ApeInputKey[] ) { KEY_LEFT_SHIFT, KEY_RIGHT_SHIFT }, 2, move_action, 0 );
 
-	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action );
-	ape_client_input_register_action( "game_crouch", ( ApeInputButton[] ) { INPUT_LEFT_STICK }, 1, ( ApeInputKey[] ) { 'c' }, 1, move_action );
+	ape_client_input_register_action( "game_jump", ( ApeInputButton[] ) { INPUT_A }, 1, ( ApeInputKey[] ) { ' ' }, 1, move_action, 0 );
+	ape_client_input_register_action( "game_crouch", ( ApeInputButton[] ) { INPUT_LEFT_STICK }, 1, ( ApeInputKey[] ) { 'c' }, 1, move_action, 0 );
 }

@@ -93,7 +93,7 @@ void game_menu_splash_setup_queue_( const GameMenuSplash *splashes, const unsign
 		splashNum++;
 	}
 
-	ape_client_input_register_action( "game_menu_splash_skip", ( ApeInputButton[] ) { INPUT_A, INPUT_START }, 2, ( ApeInputKey[] ) { APE_INPUT_KEY_ESCAPE }, 1, skip_splash );
+	ape_client_input_register_action( "game_menu_splash_skip", ( ApeInputButton[] ) { INPUT_A, INPUT_START }, 2, ( ApeInputKey[] ) { APE_INPUT_KEY_ESCAPE }, 1, skip_splash, 0 );
 }
 
 bool game_menu_splash_is_complete_()

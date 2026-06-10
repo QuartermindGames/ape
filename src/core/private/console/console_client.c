@@ -16,6 +16,8 @@ static bool drawShadow    = false;
 static int   consoleAlpha     = 200;
 static float consoleFontScale = 1.0f;
 
+static ApeInputAction *consoleToggleAction;
+
 static char         inputBuffer[ CONSOLE_BUFFER_MAX_LENGTH ];
 static unsigned int inputBufferLength;
 
@@ -221,6 +223,16 @@ static void toggle_console_command( unsigned int, char ** )
 	toggle_console();
 }
 
+static void toggle_console_action( const ApeInputState state, const char * )
+{
+	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	{
+		return;
+	}
+
+	toggle_console();
+}
+
 static void clear_history_command( unsigned int, char ** )
 {
 	numHistoryItems  = 0;
@@ -276,12 +288,6 @@ static void clear_input_buffer( void )
 
 bool ape_console_handle_key_event_( int key, unsigned int keyState )
 {
-	if ( keyState == APE_INPUT_STATE_DOWN && ( key == '`' || key == '~' ) )
-	{
-		toggle_console();
-		return true;
-	}
-
 	/* only do anything if the console is open */
 	if ( !consoleIsOpen )
 	{
@@ -421,14 +427,31 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 
 bool ape_console_handle_text_event_( const char *key )
 {
-	// todo y3: allow this key to be customised
-	if ( !consoleIsOpen || *key == '`' || *key == '~' )
+	if ( !consoleIsOpen )
+	{
 		return false;
+	}
+
+	// discard whatever we've got bound as the console toggle keys, ew
+	// (this shouldn't be too bad, as we should only ever have one or two keys bound)
+	unsigned int numKeys;
+	ApeInputKey *keys = ape_input_action_get_keys( consoleToggleAction, &numKeys );
+	for ( unsigned int i = 0; i < numKeys; ++i )
+	{
+		if ( keys[ i ] != *key )
+		{
+			continue;
+		}
+
+		return false;
+	}
 
 	/* check length before appending so we can ensure
      * it's always null terminated */
 	if ( inputBufferLength + 1 >= CONSOLE_BUFFER_MAX_LENGTH )
+	{
 		return true;
+	}
 
 	inputBuffer[ inputBufferLength++ ] = *key;
 	inputBuffer[ inputBufferLength ]   = '\0';
@@ -445,8 +468,8 @@ bool ape_console_handle_text_event_( const char *key )
 static void draw_input_field( const ApeViewport *viewport, ApeGuiFont *font )
 {
 	const float scale = get_console_display_scale();
-	const float ch = gui_font_get_line_spacing( font ) * scale;
-	const float cw = ape_gui_font_get_character_pixel_width( font, scale, '>' );
+	const float ch    = gui_font_get_line_spacing( font ) * scale;
+	const float cw    = ape_gui_font_get_character_pixel_width( font, scale, '>' );
 	gui_font_draw_character( font, scale, ( float ) viewport->height - ch, scale, &PL_COLOUR_LIME, '>' );
 
 	/* cursor blinker */
@@ -685,4 +708,6 @@ void ape_console_register_cl_variables_( void )
 	ape_audio_register_console_variables_();
 	ape_register_world_console_variables_();
 	ape_editor_register_console_();
+
+	consoleToggleAction = ape_client_input_register_action( "console", nullptr, 0, ( ApeInputKey[] ) { '`', '~' }, 2, toggle_console_action, APE_INPUT_ACTION_FLAG_GLOBAL );
 }

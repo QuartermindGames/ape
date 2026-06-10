@@ -209,7 +209,7 @@ static void camera_input( ApeInputState state, const char *id )
 
 void nih_actions_register_()
 {
-	ape_client_input_register_action( "nih_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera );
-	ape_client_input_register_action( "nih_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal );
-	ape_client_input_register_action( "nih_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action );
+	ape_client_input_register_action( "nih_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { 'z' }, 1, toggle_camera, 0 );
+	ape_client_input_register_action( "nih_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal, 0 );
+	ape_client_input_register_action( "nih_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action, 0 );
 }

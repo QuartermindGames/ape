@@ -281,7 +281,7 @@ void ape_initialize_client_( void )
 	                          "Attempt to connect to the specified server.",
 	                          1, connect_command );
 
-	ape_client_input_register_action( "capture", nullptr, 0, &( ApeInputKey ) { KEY_F12 }, 1, capture_screenshot_action );
+	ape_client_input_register_action( "capture", nullptr, 0, &( ApeInputKey ) { KEY_F12 }, 1, capture_screenshot_action, 0 );
 }
 
 void ape_shutdown_client_( void )

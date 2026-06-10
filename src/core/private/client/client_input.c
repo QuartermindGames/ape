@@ -9,12 +9,9 @@
 #include "gui/gui_private.h"
 #include "yin/core_fs.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Private
-
 static AcmBranch *inputConfig;
 
-static const float DEFAULT_DEADZONE = 0.2f;
+static constexpr float DEFAULT_DEADZONE = 0.2f;
 
 #define SERIALISATION_NODE_NAME "input"
 
@@ -28,6 +25,8 @@ typedef struct ApeInputAction
 
 	ApeInputKey  keys[ APE_MAX_KEY_INPUTS ];
 	unsigned int numKeyBinds;
+
+	unsigned int flags;
 
 	QmOsLinkedListNode *node;
 } ApeInputAction;
@@ -56,7 +55,7 @@ static struct
 	QmOsLinkedList *activeKeyList;
 } inputKeyboard = {};
 
-#define CLIENT_INPUT_MAX_CONTROLLERS 4
+static constexpr unsigned int CLIENT_INPUT_MAX_CONTROLLERS = 4;
 
 static struct
 {
@@ -89,31 +88,28 @@ static unsigned int get_empty_controller( unsigned int *id )
 	return -1;
 }
 
+static void trigger_action( const ApeInputAction *action, ApeInputState state )
+{
+	if ( state == APE_INPUT_STATE_NONE || ( !( action->flags & APE_INPUT_ACTION_FLAG_GLOBAL ) && ape_is_console_open() ) )
+	{
+		return;
+	}
+
+	action->callback( state, action->id );
+}
+
 static void iterate_action( const ApeInputAction *action )
 {
 	for ( unsigned int i = 0; i < action->numButtonBinds; ++i )
 	{
 		for ( unsigned int j = 0; j < CLIENT_INPUT_MAX_CONTROLLERS; ++j )
 		{
-			ApeInputState state = inputControllers[ j ].buttons[ action->buttons[ i ] ].state;
-			if ( ( ape_is_console_open() && !( state & APE_INPUT_STATE_RELEASED ) ) || ( !( state & APE_INPUT_STATE_DOWN ) && !( state & APE_INPUT_STATE_PRESSED ) ) )
-			{
-				continue;
-			}
-
-			//TODO: callback should take controller index
-			action->callback( state, action->id );
+			trigger_action( action, inputControllers[ j ].buttons[ action->buttons[ i ] ].state );
 		}
 	}
 	for ( unsigned int i = 0; i < action->numKeyBinds; ++i )
 	{
-		ApeInputState state = inputKeyboard.keys[ action->keys[ i ] ].state;
-		if ( ( ape_is_console_open() && !( state & APE_INPUT_STATE_RELEASED ) ) || ( !( state & APE_INPUT_STATE_DOWN ) && !( state & APE_INPUT_STATE_PRESSED ) ) )
-		{
-			continue;
-		}
-
-		action->callback( state, action->id );
+		trigger_action( action, inputKeyboard.keys[ action->keys[ i ] ].state );
 	}
 }
 
@@ -465,7 +461,7 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 	Button *key = &inputKeyboard.keys[ keyIndex ];
 	if ( isPressed && key->state == APE_INPUT_STATE_NONE )
 	{
-		key->state |= ( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_DOWN );
+		key->state |= APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_DOWN;
 	}
 	else if ( !isPressed && key->state & APE_INPUT_STATE_DOWN )
 	{
@@ -545,8 +541,8 @@ void ape_begin_input_frame_( void )
 		int w, h;
 		shell_get_window_size( &w, &h );
 
-		inputMouse.dx = ( ( w / 2 ) - inputMouse.x );
-		inputMouse.dy = ( ( h / 2 ) - inputMouse.y );
+		inputMouse.dx = w / 2 - inputMouse.x;
+		inputMouse.dy = h / 2 - inputMouse.y;
 	}
 }
 
@@ -680,10 +676,22 @@ QmMathVector2f ape_client_input_get_controller_axis_state( unsigned int slot, un
 	return ( stickNum == 0 ) ? inputControllers[ slot ].stickL : inputControllers[ slot ].stickR;
 }
 
-void ape_client_input_register_action( const char    *id,
-                                       ApeInputButton buttons[], unsigned int numDefaultButtons,
-                                       ApeInputKey keys[], unsigned int numDefaultKeys,
-                                       ApeInputActionCallback actionCallback )
+ApeInputKey *ape_input_action_get_keys( ApeInputAction *self, unsigned int *numDst )
+{
+	*numDst = self->numKeyBinds;
+	return self->keys;
+}
+
+ApeInputButton *ape_input_action_get_buttons( ApeInputAction *self, unsigned int *numDst )
+{
+	*numDst = self->numButtonBinds;
+	return self->buttons;
+}
+
+ApeInputAction *ape_client_input_register_action( const char    *id,
+                                                  ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                                  ApeInputKey keys[], unsigned int numDefaultKeys,
+                                                  ApeInputActionCallback actionCallback, unsigned int flags )
 {
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL )
@@ -692,6 +700,7 @@ void ape_client_input_register_action( const char    *id,
 		if ( actionableList == NULL )
 		{
 			ape_console_error_( true, "Failed to create actionable list: %s\n", PlGetError() );
+			return nullptr;
 		}
 	}
 
@@ -710,8 +719,10 @@ void ape_client_input_register_action( const char    *id,
 	if ( inputAction == nullptr )
 	{
 		ape_console_warning_( "Failed to allocate action (%s)!\n", id );
-		return;
+		return nullptr;
 	}
+
+	inputAction->flags = flags;
 
 	snprintf( inputAction->id, sizeof( inputAction->id ), "%s", id );
 	inputAction->callback = actionCallback;
@@ -723,4 +734,6 @@ void ape_client_input_register_action( const char    *id,
 	inputAction->numKeyBinds = numDefaultKeys;
 
 	inputAction->node = qm_os_linked_list_push_back( actionableList, inputAction );
+
+	return inputAction;
 }
