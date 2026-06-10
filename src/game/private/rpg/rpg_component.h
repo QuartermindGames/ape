@@ -2,10 +2,14 @@
 
 #pragma once
 
+#include "rpg.h"
+
 typedef struct GameRpgBaseComponent
 {
 	unsigned int level;
 
 	unsigned int experience;
 	unsigned int maxExperience;
+
+	uint8_t stats[ GAME_RPG_STAT_TYPE_MAX ];
 } GameRpgBaseComponent;

@@ -323,7 +323,7 @@ void ape_register_renderer_console_variables_( void )
 	ape_console_var_register( "renderer.wireframe", "Enable wireframe mode.", "0", PL_VAR_BOOL, &ape_config_.renderer.wireframe, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );
 
 	//TODO: clamp msaa level - add a callback to check if it's valid before we regen render targets!
-	ape_console_var_register( "renderer.msaaSamples", "Set number of MSAA samples.", "1", PL_VAR_I32, &ape_config_.renderer.msaaSamples, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "renderer.msaaSamples", "Set number of MSAA samples.", "0", PL_VAR_I32, &ape_config_.renderer.msaaSamples, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
 	ape_console_var_register( "renderer.showFaceBounds", "Show the bounding volumes for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceBounds, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );
 	ape_console_var_register( "renderer.showFaceNormals", "Show normals for each face.", "0", PL_VAR_BOOL, &ape_config_.renderer.showFaceNormals, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );

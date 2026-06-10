@@ -903,11 +903,25 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	ape_rendererState_.mirror = ape_brush_face_is_mirror( visiblePortal->portalFace );
 
 	QmMathVector4f clipPlane;
-	clipPlane   = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z, 0.0f );
-	clipPlane.w = -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin );
+	if ( ape_rendererState_.mirror )
+	{
+		clipPlane = qm_math_vector4f( visiblePortal->normal.x, visiblePortal->normal.y, visiblePortal->normal.z,
+		                              -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin ) );
+	}
+	else
+	{
+		clipPlane = qm_math_vector4f( -visiblePortal->normal.x, -visiblePortal->normal.y, -visiblePortal->normal.z,
+		                              -qm_math_vector3f_dot_product( visiblePortal->normal, visiblePortal->origin ) );
+	}
 
-	PLMatrix4 clipMatrix = PlTranslateMatrix4( visiblePortal->origin );
+	PLMatrix4 clipMatrix = PlMatrix4Identity();
 	qm_gfx_set_clip_plane( &clipPlane, &clipMatrix, false );
+
+	// setup the projection matrix
+	PLMatrix4 oldProj = camera->proj;
+#if 0// TODO: of course... this isn't quite right
+	camera->proj      = qm_math_matrix4_oblique( &camera->proj, clipPlane );
+#endif
 
 	// now recurse into the next room
 
@@ -919,6 +933,9 @@ static void draw_portal( ApeCamera *camera, const ApeViewport *viewport, const A
 	ape_camera_setup_frustum( camera );
 
 	ape_room_draw_( camera, nextVisibleRoom, viewport );
+
+	// restore the projection matrix
+	camera->proj = oldProj;
 
 	// reset the view matrix back
 	camera->view = visibleRoom->viewMatrix;

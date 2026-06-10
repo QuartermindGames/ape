@@ -2,6 +2,22 @@
 
 #pragma once
 
+typedef enum GameRpgStatType : uint8_t
+{
+	GAME_RPG_STAT_TYPE_STR,// strength
+	GAME_RPG_STAT_TYPE_DEX,// dexterity
+	GAME_RPG_STAT_TYPE_END,// edurance; how much you can carry etc.
+	GAME_RPG_STAT_TYPE_INT,// intelligence
+	GAME_RPG_STAT_TYPE_AGI,// agility
+
+	GAME_RPG_STAT_TYPE_MAX
+} GameRpgStatType;
+
+typedef struct GameRpgSkill
+{
+
+} GameRpgSkill;
+
 /**
  * Base config you can use for setting up how
  * your game handles your roleplay elements.

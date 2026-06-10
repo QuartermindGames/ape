@@ -6,6 +6,7 @@
 #include <plgraphics/plg_texture.h>
 #include <plgraphics/plg_mesh.h>
 
+#include "ape/ape_public_editor.h"
 #include "ape/ape_public_renderer.h"
 
 #include "camera/camera.h"

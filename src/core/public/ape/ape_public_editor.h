@@ -8,12 +8,14 @@
 
 PL_EXTERN_C
 
+typedef struct ApeCamera   ApeCamera;
+typedef struct ApeViewport ApeViewport;
+
 typedef enum ApeEditorMode
 {
 	APE_EDITOR_MODE_INVALID,
 	APE_EDITOR_MODE_WORLD,
 	APE_EDITOR_MODE_MODEL,
-	APE_EDITOR_MODE_VECTOR,
 
 	APE_EDITOR_MAX_MODES
 } ApeEditorMode;

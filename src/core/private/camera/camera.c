@@ -551,7 +551,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 	if ( light->flags & APE_LIGHT_FLAG_FLARE && room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
 	{
 		//TODO: test the flare is actually visible!!
-		ape_add_flare_to_queue( self, &position, &QM_MATH_COLOUR4F_RGB( light->colour.r, light->colour.g, light->colour.b ), 1.0f, light->colour.a );
+		ape_add_flare_to_queue( self, &position, &QM_MATH_COLOUR4F_RGB( light->colour.r, light->colour.g, light->colour.b ), 4.0f, light->colour.a );
 	}
 
 	return true;

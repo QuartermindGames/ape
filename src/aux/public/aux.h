@@ -8,7 +8,7 @@
 #include "qmmath/public/qm_math_vector.h"
 #include "qmmath/public/qm_math_colour.h"
 
-#define COM_COPYRIGHT "Copyright © 2020-2025 Quartermind Games, Mark E Sowden"
+#define COM_COPYRIGHT "Copyright © 2020-2026 Quartermind Games, Mark E Sowden"
 
 #if !defined( _POSIX_SOURCE )
 #	define _POSIX_SOURCE 1
