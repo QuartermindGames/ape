@@ -486,7 +486,7 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 
 			// and now for the texture coords
 			QmMathVector3f delta = qm_math_vector3f_sub( decal->vertices[ j ], decal->position );
-			PlgImmTextureCoord( 0.5f + qm_math_vector3f_dot_product( delta, decal->tangent ) * textureScale,
+			PlgImmTextureCoord( 0.5f + qm_math_vector3f_dot_product( delta, decal->tangent ) * -textureScale,
 			                    0.5f + qm_math_vector3f_dot_product( delta, decal->bitangent ) * textureScale );
 		}
 
