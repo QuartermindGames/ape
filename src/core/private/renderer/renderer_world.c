@@ -105,25 +105,6 @@ static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance 
 	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
 	{
 		const ApeBrush *brush = ( ApeBrush * ) node;
-		if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
-		{
-			bool  selected = false;
-			void *p;
-			QM_OS_LINKED_LIST_ITERATE( p, instance->selectedObjects, i )
-			{
-				if ( ( ApeBrush * ) p == brush )
-				{
-					selected = true;
-					break;
-				}
-			}
-
-			if ( !selected )
-			{
-				return;
-			}
-		}
-
 		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
 		{
 			assert( displayLists[ 0 ].numSubMeshes < MAX_SUB_MESHES );
@@ -601,6 +582,8 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 	{
 		return;
 	}
+
+	displayLists[ 0 ] = ( DisplayList ) {};
 
 	unsigned int offset = 0;
 	build_selection_display_list( &room->base, instance, &offset );
