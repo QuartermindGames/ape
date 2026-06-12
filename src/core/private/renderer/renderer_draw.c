@@ -438,7 +438,7 @@ void ape_draw_initialize_debug_mesh_()
 	assert( debugDrawMesh == nullptr );
 	assert( debugDrawMaterial == nullptr );
 
-	debugDrawMesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_DYNAMIC, 0, 2048 );
+	debugDrawMesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_STREAM, 0, 2048 );
 	if ( debugDrawMesh == nullptr )
 	{
 		ape_console_error_( true, "Failed to create debug draw mesh: %s\n", PlGetError() );

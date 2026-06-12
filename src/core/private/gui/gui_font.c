@@ -195,7 +195,7 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 
 	PlDestroyImage( bitmapImage );
 
-	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 32, 32 );
+	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STREAM, 32, 32 );
 
 	return font;
 }

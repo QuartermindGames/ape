@@ -50,7 +50,7 @@ static ApeRendererDrawBatch *get_batch( ApeMaterial *material )
 	// batch for this material doesn't exist, so let's set one up
 
 	batch           = QM_OS_MEMORY_NEW( ApeRendererDrawBatch );
-	batch->mesh     = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_DYNAMIC, 256, 256 );
+	batch->mesh     = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STREAM, 256, 256 );
 	batch->material = material;//TODO: use shared_ptr instead...
 	batch->linkNode = qm_os_linked_list_push_back( batches, batch );
 	batch->hashNode = PlInsertHashTableNode( batchLookup, &ptr, sizeof( intptr_t ), batch );
