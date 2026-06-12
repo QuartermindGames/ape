@@ -47,8 +47,8 @@ typedef enum ApeInputKey
 	KEY_INVALID = -1,
 
 	KEY_BACKSPACE = 8,
-	KEY_TAB = 9,
-	KEY_ENTER = 13,
+	KEY_TAB       = 9,
+	KEY_ENTER     = 13,
 
 	KEY_CAPSLOCK = 128,
 	KEY_F1,
@@ -110,6 +110,8 @@ typedef enum SS_Acl_InputDeviceType
 	CLIENT_INPUT_DEVICE_CONTROLLER,
 } SS_Acl_InputDeviceType;
 
+typedef struct ApeInputAction ApeInputAction;
+
 // Controller API
 
 /**
@@ -131,14 +133,24 @@ QmMathVector2f ape_client_input_get_controller_axis_state( unsigned int slot, un
 void ape_client_input_get_mouse_position( int *x, int *y );
 void ape_client_input_get_mouse_delta( int *x, int *y );
 
-// Actions
+/////////////////////////////////////////////////////////////////////////////////////
+// Input Action
+/////////////////////////////////////////////////////////////////////////////////////
 
 typedef void ( *ApeInputActionCallback )( ApeInputState state, const char *id );
 
-void ape_client_input_register_action( const char *id,
-                                       ApeInputButton buttons[], unsigned int numDefaultButtons,
-                                       ApeInputKey keys[], unsigned int numDefaultKeys,
-                                   ApeInputActionCallback actionCallback );
+typedef enum ApeInputActionFlag
+{
+	QM_OS_BIT_FLAG( APE_INPUT_ACTION_FLAG_GLOBAL, 0 ),// allows the action at any time
+} ApeInputActionFlag;
+
+ApeInputKey    *ape_input_action_get_keys( ApeInputAction *self, unsigned int *numDst );
+ApeInputButton *ape_input_action_get_buttons( ApeInputAction *self, unsigned int *numDst );
+
+ApeInputAction *ape_client_input_register_action( const char    *id,
+                                                  ApeInputButton buttons[], unsigned int numDefaultButtons,
+                                                  ApeInputKey keys[], unsigned int numDefaultKeys,
+                                                  ApeInputActionCallback actionCallback, unsigned int flags );
 
 unsigned int ape_input_register_device( SS_Acl_InputDeviceType type );
 
