@@ -30,7 +30,7 @@ static void cache_rope()
 	PlRegisterConsoleVariable( "game_debug_rope", "Toggle the display of wireframe ropes.", "false", PL_VAR_BOOL, &showRopeDebug, nullptr, false );
 }
 
-static void *create_rope( ApeEntity *self, AcmBranch *properties )
+static void *create_rope( ApeEntity *self )
 {
 	RopeEntity *rope   = QM_OS_MEMORY_NEW( RopeEntity );
 	rope->numParticles = ROPE_DEFAULT_NUM_PARTICLES;

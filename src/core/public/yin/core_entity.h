@@ -60,7 +60,7 @@ typedef struct ApeEntityClassDefinition
 	const char *description;// for the editor
 
 	void ( *cacheFunction )( void );                                    // called upon registration
-	void *( *createFunction )( ApeEntity *self, AcmBranch *properties );// *required* called upon entity allocation, this is when the class should be allocated and returned
+	void *( *createFunction )( ApeEntity *self );// *required* called upon entity allocation, this is when the class should be allocated and returned
 	void ( *destroyFunction )( ApeEntity *self );                       // called when the entity is free'd, which should be done for the class too
 	void ( *spawnFunction )( ApeEntity *self );                         // this gets called when the entity is actually spawned into the world, at which point the class state can be reset
 	void ( *tickFunction )( ApeEntity *self, double delta );            // called per ticket, allowing for behaviours

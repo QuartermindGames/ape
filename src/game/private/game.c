@@ -88,6 +88,7 @@ extern ApeEntityClassDefinition game_ropeEntityClass_;
 extern ApeEntityClassDefinition game_portalEntityClass_;
 extern ApeEntityClassDefinition game_terrainEntityClass_;
 extern ApeEntityClassDefinition game_decalEntityClass_;
+extern ApeEntityClassDefinition game_soundEntityClass_;
 
 extern ApeEntityComponentDefinition game_cameraComponent_;
 extern ApeEntityComponentDefinition game_collisionComponent_;
@@ -105,6 +106,7 @@ static void register_standard_entity_components()
 	ape_register_entity_class( &game_portalEntityClass_ );
 	ape_register_entity_class( &game_terrainEntityClass_ );
 	ape_register_entity_class( &game_decalEntityClass_ );
+	ape_register_entity_class( &game_soundEntityClass_ );
 
 	// components
 	ape_register_entity_component( &game_cameraComponent_ );

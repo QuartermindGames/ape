@@ -2,14 +2,23 @@
 
 #include "audio.h"
 
+#include "core/public/yin/core_fs.h"
+
 #define STB_VORBIS_NO_PUSHDATA_API
 #define STB_VORBIS_NO_STDIO
 #include "stb_vorbis.c"
 
 ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file )
 {
-	const uint8 *data   = qm_fs_file_get_data( file );
-	const int    length = ( int ) qm_fs_file_get_size( file );
+	ApeAudioSample *sample = nullptr;
+
+	const int length = ( int ) qm_fs_file_get_size( file );
+	uint8_t  *data   = QM_OS_MEMORY_NEW_( uint8_t, length + 1 );
+	if ( qm_file_read( file, data, sizeof( uint8_t ), length ) != length )
+	{
+		ape_console_warning_( "Failed to read in entirety of ogg!\n" );
+		goto cleanup;
+	}
 
 	int    channels;
 	int    sampleRate;
@@ -19,23 +28,22 @@ ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file )
 	if ( samples < 0 )
 	{
 		qm_os_memory_free( output );
-
 		ape_console_warning_( "Failed to decode ogg!\n" );
-		return nullptr;
+		goto cleanup;
 	}
-	else if ( channels == 0 || channels > 2 )
+
+	if ( channels == 0 || channels > 2 )
 	{
 		qm_os_memory_free( output );
-
 		ape_console_warning_( "Invalid number of channels for ogg!\n" );
-		return nullptr;
+		goto cleanup;
 	}
 
-	ApeAudioSample *sample = QM_OS_MEMORY_NEW( ApeAudioSample );
-	sample->buffer         = output;
-	sample->bufferSize     = samples * channels * sizeof( int16_t );
-	sample->sampleRate     = sampleRate;
-	sample->channels       = channels;
+	sample             = QM_OS_MEMORY_NEW( ApeAudioSample );
+	sample->buffer     = output;
+	sample->bufferSize = samples * channels * sizeof( int16_t );
+	sample->sampleRate = sampleRate;
+	sample->channels   = channels;
 	if ( sample->channels == 1 )
 	{
 		sample->type = APE_AUDIO_SAMPLE_FORMAT_MONO16;
@@ -44,6 +52,9 @@ ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file )
 	{
 		sample->type = APE_AUDIO_SAMPLE_FORMAT_STEREO16;
 	}
+
+cleanup:
+	qm_os_memory_free( data );
 
 	return sample;
 }

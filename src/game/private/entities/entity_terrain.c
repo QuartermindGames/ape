@@ -427,7 +427,7 @@ static void build_terrain( ApeEntity *self, GameTerrainEntity *terrain )
 	terrain->oldNumTiles  = terrain->numTiles;
 }
 
-static void *terrain_create( ApeEntity *self, AcmBranch *properties )
+static void *terrain_create( ApeEntity *self )
 {
 	GameTerrainEntity *terrain = QM_OS_MEMORY_NEW( GameTerrainEntity );
 

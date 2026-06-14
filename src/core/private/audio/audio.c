@@ -304,19 +304,19 @@ ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const Q
 	return source;
 }
 
-void ape_audio_source_destroy( ApeAudioSource *audioSource )
+void ape_audio_source_destroy( ApeAudioSource *self )
 {
-	if ( audioSource == nullptr )
+	if ( self == nullptr )
 	{
 		return;
 	}
 
-	DRIVER_CALLBACK( destroySource, audioSource );
+	DRIVER_CALLBACK( destroySource, self );
 
-	qm_os_memory_free( audioSource );
+	qm_os_memory_free( self );
 }
 
-bool ape_audio_source_is_playing( const ApeAudioSource *audioSource )
+bool ape_audio_source_is_playing( const ApeAudioSource *self )
 {
 	if ( audioDriverInterface == nullptr )
 	{
@@ -324,31 +324,37 @@ bool ape_audio_source_is_playing( const ApeAudioSource *audioSource )
 	}
 
 	assert( audioDriverInterface->isSourcePlaying != nullptr );
-	return audioDriverInterface->isSourcePlaying( audioSource );
+	return audioDriverInterface->isSourcePlaying( self );
 }
 
-void ape_audio_source_set_position( ApeAudioSource *audioSource, const QmMathVector3f *position )
+void ape_audio_source_set_position( ApeAudioSource *self, const QmMathVector3f *position )
 {
-	audioSource->position = *position;
+	DRIVER_CALLBACK( setSourcePosition, self, position );
 }
 
-void ape_audio_source_set_velocity( ApeAudioSource *audioSource, const QmMathVector3f *velocity )
+void ape_audio_source_set_velocity( ApeAudioSource *self, const QmMathVector3f *velocity )
 {
-	audioSource->velocity = *velocity;
+	DRIVER_CALLBACK( setSourceVelocity, self, velocity );
 }
 
-void ape_audio_source_emit( ApeAudioSource *audioSource, ApeAudioSample *audioSample )
+void ape_audio_source_set_pitch( ApeAudioSource *self, float pitch )
 {
-	if ( audioSource == nullptr )
-	{
-		ape_console_warning_( "Passed an invalid audio source handle, ignoring!\n" );
-		return;
-	}
-	if ( audioSample == nullptr )
-	{
-		ape_console_warning_( "Passed an invalid audio sample handle, ignoring!\n" );
-		return;
-	}
+	DRIVER_CALLBACK( setSourcePitch, self, pitch );
+}
+
+void ape_audio_source_set_volume( ApeAudioSource *self, float volume )
+{
+	DRIVER_CALLBACK( setSourceVolume, self, volume );
+}
+
+void ape_audio_source_set_loop( ApeAudioSource *self, bool loop )
+{
+	DRIVER_CALLBACK( setSourceLoop, self, loop );
+}
+
+void ape_audio_source_emit( ApeAudioSource *self, ApeAudioSample *audioSample )
+{
+	DRIVER_CALLBACK( emitSource, self, audioSample );
 }
 
 /****************************************

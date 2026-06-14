@@ -226,8 +226,6 @@ static void al_tick( void )
 	QmMathVector3f angles = ape_audio_get_listener_angles();
 	QmMathVector3f up, forward;
 	PlAnglesAxes( angles, nullptr, &up, &forward );
-	//TODO: camera is inversed relative to everything else... fuuuuck
-	forward = qm_math_vector3f_invert( forward );
 	XAL_CALL( alListenerfv( AL_ORIENTATION, ( float[] ) { forward.x, forward.y, forward.z, up.x, up.y, up.z } ) );
 
 	QmMathVector3f velocity = ape_audio_get_listener_velocity();
@@ -318,13 +316,21 @@ static void al_emit_sample( ApeAudioSample *sample, const QmMathVector3f *positi
 	qm_os_linked_list_push_back( activeSources, source );
 }
 
-static bool al_create_source( ApeAudioSource *source )
+/////////////////////////////////////////////////////////////////////////////////////
+// Sources
+
+static bool al_source_create( ApeAudioSource *source )
 {
 	XAL_CALL( alGenSources( 1, ( ALuint * ) &source->user ) );
+
+	// set some reasonable (hopefully) defaults
+	XAL_CALL( alSourcef( source->user, AL_GAIN, 100.0f ) );
+	XAL_CALL( alSourcef( source->user, AL_PITCH, 1.0f ) );
+
 	return true;
 }
 
-static void al_destroy_source( ApeAudioSource *source )
+static void al_source_destroy( ApeAudioSource *source )
 {
 	if ( source->sample != nullptr )
 	{
@@ -337,12 +343,45 @@ static void al_destroy_source( ApeAudioSource *source )
 	XAL_CALL( alDeleteSources( 1, ( ALuint * ) &source->user ) );
 }
 
-static bool al_is_source_playing( const ApeAudioSource *source )
+static void al_source_set_position( ApeAudioSource *self, const QmMathVector3f *position )
+{
+	XAL_CALL( alSource3f( self->user, AL_POSITION, position->x, position->y, position->z ) );
+}
+
+static void al_source_set_velocity( ApeAudioSource *self, const QmMathVector3f *velocity )
+{
+	XAL_CALL( alSource3f( self->user, AL_VELOCITY, velocity->x, velocity->y, velocity->z ) );
+}
+
+static void al_source_set_pitch( ApeAudioSource *self, float pitch )
+{
+	XAL_CALL( alSourcef( self->user, AL_PITCH, pitch ) );
+}
+
+static void al_source_set_volume( ApeAudioSource *self, float volume )
+{
+	XAL_CALL( alSourcef( self->user, AL_GAIN, volume ) );
+}
+
+static void al_source_set_loop( ApeAudioSource *self, bool loop )
+{
+	XAL_CALL( alSourcei( self->user, AL_LOOPING, AL_TRUE ) );
+}
+
+static bool al_source_is_playing( const ApeAudioSource *source )
 {
 	ALint state;
 	XAL_CALL( alGetSourcei( source->user, AL_SOURCE_STATE, &state ) );
 	return state == AL_PLAYING;
 }
+
+static void al_source_emit( ApeAudioSource *self, ApeAudioSample *sample )
+{
+	XAL_CALL( alSourcei( self->user, AL_BUFFER, sample->user ) );
+	XAL_CALL( alSourcePlay( self->user ) );
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void )
 {
@@ -356,9 +395,15 @@ const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void )
 	driverInterface.freeSample  = al_free_sample;
 	driverInterface.emitSample  = al_emit_sample;
 
-	driverInterface.createSource    = al_create_source;
-	driverInterface.destroySource   = al_destroy_source;
-	driverInterface.isSourcePlaying = al_is_source_playing;
+	driverInterface.createSource      = al_source_create;
+	driverInterface.destroySource     = al_source_destroy;
+	driverInterface.setSourcePosition = al_source_set_position;
+	driverInterface.setSourceVelocity = al_source_set_velocity;
+	driverInterface.setSourcePitch    = al_source_set_pitch;
+	driverInterface.setSourceVolume   = al_source_set_volume;
+	driverInterface.setSourceLoop     = al_source_set_loop;
+	driverInterface.isSourcePlaying   = al_source_is_playing;
+	driverInterface.emitSource        = al_source_emit;
 
 	return &driverInterface;
 }

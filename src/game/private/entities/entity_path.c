@@ -19,7 +19,7 @@ typedef struct PathEntity
 } PathEntity;
 #define PATH_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), ENTITY_PATH_CLASS_NAME, PathEntity )
 
-static void *create_entity_path( ApeEntity *self, AcmBranch *properties )
+static void *create_entity_path( ApeEntity *self )
 {
 	if ( cameraFollowTable == nullptr )
 	{

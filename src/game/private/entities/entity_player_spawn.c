@@ -13,7 +13,7 @@ QmOsLinkedList *game_player_spawn_get_spawn_points()
 	return playerSpawnPoints;
 }
 
-static void *create_player_spawn( ApeEntity *self, AcmBranch *properties )
+static void *create_player_spawn( ApeEntity *self )
 {
 	GamePlayerSpawnEntity *spawnEntity = QM_OS_MEMORY_NEW( GamePlayerSpawnEntity );
 

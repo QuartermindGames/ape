@@ -6,7 +6,7 @@
 
 #include "qm1_entity_pawn.h"
 
-static void *create_class( ApeEntity *self, AcmBranch *properties )
+static void *create_class( ApeEntity *self )
 {
 	return QM_OS_MEMORY_NEW( SS1Pawn );
 }

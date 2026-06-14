@@ -136,7 +136,7 @@ static bool setup_entity_class( ApeEntity *self, const char *className )
 		return false;
 	}
 
-	self->classData = classDefinition->createFunction( self, nullptr );
+	self->classData = classDefinition->createFunction( self );
 	if ( self->classData == nullptr )
 	{
 		ape_console_warning_( "Creation failed for entity (%s)!\n", self->classDefinition->name );
@@ -369,6 +369,7 @@ static void serialize_properties( AcmBranch *root, const ApeProperty *properties
 			case APE_PROPERTY_TYPE_ENUM:
 				acm_push_ui32( root, property->internalName, *( ApeEnumProperty * ) ptr );
 				break;
+			case APE_PROPERTY_TYPE_BITFLAG:
 			case APE_PROPERTY_TYPE_INTEGER:
 				acm_push_i32( root, property->internalName, *( ApeIntegerProperty * ) ptr );
 				break;
@@ -413,6 +414,7 @@ static void deserialize_properties( AcmBranch *root, const ApeProperty *properti
 			case APE_PROPERTY_TYPE_ENUM:
 				*( ApeEnumProperty * ) ptr = acm_get_uint( root, property->internalName, *( ApeEnumProperty * ) ptr );
 				break;
+			case APE_PROPERTY_TYPE_BITFLAG:
 			case APE_PROPERTY_TYPE_INTEGER:
 				*( ApeIntegerProperty * ) ptr = acm_get_int( root, property->internalName, *( ApeIntegerProperty * ) ptr );
 				break;

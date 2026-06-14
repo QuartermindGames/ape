@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../ape_private.h"
+#include "ape_private.h"
 
 #include "ape/ape_public_audio.h"
 
@@ -56,6 +56,12 @@ typedef struct ApeAudioDriverInterface
 
 	bool ( *createSource )( ApeAudioSource *audioSource );
 	void ( *destroySource )( ApeAudioSource *audioSource );
+	void ( *setSourcePosition )( ApeAudioSource *audioSource, const QmMathVector3f *position );
+	void ( *setSourceVelocity )( ApeAudioSource *audioSource, const QmMathVector3f *velocity );
+	void ( *setSourcePitch )( ApeAudioSource *audioSource, float pitch );
+	void ( *setSourceVolume )( ApeAudioSource *audioSource, float volume );
+	void ( *setSourceLoop )( ApeAudioSource *audioSource, bool loop );
+	void ( *emitSource )( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 	bool ( *isSourcePlaying )( const ApeAudioSource *audioSource );
 } ApeAudioDriverInterface;

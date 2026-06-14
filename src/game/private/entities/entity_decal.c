@@ -40,7 +40,7 @@ static void decal_entity_set_material( GameDecalEntity *decalEntity )
 }
 
 static void  decal_entity_on_update_property( ApeEntity *self, [[maybe_unused]] const ApeProperty *property );
-static void *decal_entity_create( ApeEntity *self, AcmBranch * )
+static void *decal_entity_create( ApeEntity *self )
 {
 	GameDecalEntity *decalEntity = QM_OS_MEMORY_NEW( GameDecalEntity );
 	if ( decalEntity != nullptr )
@@ -81,6 +81,8 @@ static void decal_entity_destroy( ApeEntity *self )
 		ape_material_release_reference( decalEntity->material );
 		decalEntity->material = nullptr;
 	}
+
+	qm_os_memory_free( decalEntity );
 }
 
 static QmMathVector3f decal_entity_get_projection_dir( ApeEntity *self )

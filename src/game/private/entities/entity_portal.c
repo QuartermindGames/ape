@@ -50,7 +50,7 @@ typedef struct GamePortalEntity
 
 static ApeMaterial *portalMaterial;
 
-static void *create_portal( [[maybe_unused]] ApeEntity *self, [[maybe_unused]] AcmBranch *properties )
+static void *create_portal( [[maybe_unused]] ApeEntity *self )
 {
 	if ( portalMaterial == nullptr )
 	{

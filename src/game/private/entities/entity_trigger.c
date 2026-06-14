@@ -12,7 +12,7 @@ typedef struct TriggerEntity
 } TriggerEntity;
 #define TRIGGER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), TRIGGER_CLASS_NAME, TriggerEntity )
 
-static void *create_trigger( ApeEntity *self, AcmBranch *properties )
+static void *create_trigger( ApeEntity *self )
 {
 	return QM_OS_MEMORY_NEW( TriggerEntity );
 }

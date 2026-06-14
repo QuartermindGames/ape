@@ -13,12 +13,10 @@ typedef struct GameAmbienceManagerEntity
 
 #define AMBIENCE_MANAGER_ENTITY( SELF ) APE_ENT_CLASS( ( SELF ), GAME_AMBIENCE_MANAGER_CLASS_NAME, GameAmbienceManagerEntity )
 
-static void *create_ambience_manager( ApeEntity *self, [[maybe_unused]] AcmBranch *properties )
+static void *create_ambience_manager( ApeEntity *self )
 {
 	GameAmbienceManagerEntity *manager = QM_OS_MEMORY_NEW( GameAmbienceManagerEntity );
 	assert( manager != nullptr );
-
-
 
 	return manager;
 }

@@ -29,7 +29,7 @@ static constexpr float NIH_PLAYER_WALK_SPEED = 45.0f;
 static constexpr float NIH_PLAYER_RUN_SPEED  = 75.0f;
 static constexpr float NIH_PLAYER_JUMP_SPEED = 100.0f;
 
-static void *create_player_entity( ApeEntity *self, AcmBranch *properties )
+static void *create_player_entity( ApeEntity *self )
 {
 	Qm1PlayerEntity *player = QM_OS_MEMORY_NEW( Qm1PlayerEntity );
 
