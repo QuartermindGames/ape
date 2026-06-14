@@ -33,10 +33,9 @@ Some semblance of documentation can be found [here](docs).
   - GLSL pre-processor with support for directives such as `include`
   - Virtual file-system allowing for directories and packages to be mounted at runtime
 - Console interface, with auto-completion, commands and variables
-- Per-pixel lighting and stencil shadow volumes
+- Baked lighting, with optional support for stencil shadow volumes
 - Flexible material system providing support for outlining multiple passes, blend modes and more
 - Simple post-processing pipeline with support for FXAA, bloom, [depth-of-field](https://hogsy.me/media/ape/2025-10/2025-10-17%2009-57-42.png) and more
-- Super-sampling up to 2x display resolution
 - Memory manager with garbage collection and usage tracking
 - [ACM (Another Config Markup)](https://github.com/QuartermindGames/acm) for serialisation/deserialisation; can be stored as either binary or text
 - Editor frontend, dubbed _Forge_, using [FOX Toolkit](http://www.fox-toolkit.org/)
@@ -106,15 +105,6 @@ So essentially, what you're seeing is the "clean" version.
 
 Additionally, there were several resets which also resulted in the history being wiped.
 Early versions are available via the tags.
-
-### Can I contribute to the project?
-
-I'm afraid I'm not willing to accept contributions at this time, particularly because I've not yet decided on a formal licence yet.
-Some earlier versions were made available under public-domain and LGPL, and these can be found on my blog [here](https://www.hogsy.me/ape.htm).
-
-This is pretty much just here as a portfolio item for now.
-
-That said, I appreciate the thought!
 
 ### What makes this better than engine _X_?
 
