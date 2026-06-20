@@ -401,21 +401,28 @@ bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, con
 	float a_squared = r1 * r1 - h * h;
 	if ( a_squared < QM_MATH_EPSILON )
 	{
-		*result = P;
+		if ( result != nullptr )
+		{
+			*result = P;
+		}
+
 		return true;
 	}
-	float a = sqrtf( a_squared );
 
-	QmMathVector3f dir = qm_math_vector3f_normalize( difference );
-
+	QmMathVector3f dir  = qm_math_vector3f_normalize( difference );
 	QmMathVector3f perp = qm_math_vector3f_cross_product( dir, QM_MATH_VECTOR3F( 0.0f, 1.0f, 0.0f ) );
 	if ( qm_math_vector3f_length( perp ) < QM_MATH_EPSILON )
 	{
 		perp = qm_math_vector3f_cross_product( dir, QM_MATH_VECTOR3F( 0.0f, 0.0f, 1.0f ) );
 	}
+
 	perp = qm_math_vector3f_normalize( perp );
 
-	*result = qm_math_vector3f_add( P, qm_math_vector3f_scale_float( perp, a ) );
+	if ( result != nullptr )
+	{
+		*result = qm_math_vector3f_add( P, qm_math_vector3f_scale_float( perp, sqrtf( a_squared ) ) );
+	}
+
 	return true;
 }
 
@@ -423,9 +430,43 @@ bool com_collision_sphere_intersect_sphere( const PLCollisionSphere *sphere, con
 // Ray Casting
 /////////////////////////////////////////////////////////////////////////////////////
 
+static bool ray_range_test( const PLCollisionRay *ray, const QmMathVector3f point )
+{
+	assert( ray->range >= 0.0f );
+
+	// we need to account for the range of the ray
+	// this check is a botch to support cases from before we supported range!
+	if ( ray->range > 0.0f )
+	{
+		float pointRange = qm_math_vector3f_distance( ray->origin, point );
+		if ( pointRange >= ray->range )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, QmMathVector3f *result )
 {
-	return PlIsRayIntersectingAabb( aabb, ray, result );
+	QmMathVector3f intersection;
+	if ( PlIsRayIntersectingAabb( aabb, ray, &intersection ) )
+	{
+		if ( !ray_range_test( ray, intersection ) )
+		{
+			return false;
+		}
+
+		if ( result != nullptr )
+		{
+			*result = intersection;
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, QmMathVector3f *result )
@@ -443,11 +484,19 @@ bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLColli
 		return false;
 	}
 
+	QmMathVector3f intersection;
+	intersection.x = ray->origin.x + t * ray->direction.x;
+	intersection.y = ray->origin.y + t * ray->direction.y;
+	intersection.z = ray->origin.z + t * ray->direction.z;
+
+	if ( !ray_range_test( ray, intersection ) )
+	{
+		return false;
+	}
+
 	if ( result != nullptr )
 	{
-		result->x = ray->origin.x + t * ray->direction.x;
-		result->y = ray->origin.y + t * ray->direction.y;
-		result->z = ray->origin.z + t * ray->direction.z;
+		*result = intersection;
 	}
 
 	return true;
@@ -489,6 +538,11 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 		        .z = ray->origin.z + t * ray->direction.z,
 		};
 
+		if ( !ray_range_test( ray, intersection ) )
+		{
+			continue;
+		}
+
 		QmMathVector3f point = qm_math_vector3f_sub( intersection, *v0 );
 
 		float area = qm_math_vector3f_dot_product( normal, normal );
@@ -517,6 +571,7 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 		{
 			*result = intersection;
 		}
+
 		return true;
 	}
 
