@@ -81,7 +81,8 @@ bool game_menu_is_open();
 
 void game_menu_draw_( const ApeViewport *viewport );
 
-void game_menu_set_title( const char *title );
+void game_menu_set_title( const char *str );
+void game_menu_set_subtitle( const char *str );
 void game_menu_set_font( ApeGuiFont *font );
 void game_menu_set_title_font( ApeGuiFont *font );
 

@@ -14,6 +14,7 @@ static GameMenu    *currentMenu;
 static unsigned int currentMenuOption;
 
 static char menuTitle[ 128 ];
+static char subTitle[ 128 ];
 
 static ApeGuiFont *menuFont;
 static ApeGuiFont *menuTitleFont;
@@ -233,8 +234,18 @@ void game_menu_draw_( const ApeViewport *viewport )
 	if ( *menuTitle != '\0' )
 	{
 		assert( menuTitleFont != nullptr );
-		gui_font_set_shadow_offset( 2.0f, 2.0f );
-		gui_font_draw_string( menuTitleFont, x, y, &x, &y, scale, &PL_COLOUR_WHITE, menuTitle, strlen( menuTitle ), true );
+
+		gui_font_set_shadow_offset( 16.0f, 16.0f );
+		gui_font_draw_string( menuTitleFont, x, y, &x, &y, scale, &PL_COLOUR_RED, menuTitle, strlen( menuTitle ), true );
+
+		if ( *subTitle != '\0' )
+		{
+			assert( menuTitleFont != nullptr );
+			gui_font_draw_string( menuTitleFont, x + 128.0f * scale, y - 64.0f, nullptr, &y, scale / 2.0f, &PL_COLOUR_WHITE, subTitle, strlen( subTitle ), false );
+		}
+
+		gui_font_set_shadow_offset( GUI_FONT_SHADOW_DEFAULT_OFFSET );
+		gui_font_set_shadow_colour( GUI_FONT_SHADOW_DEFAULT_COLOUR );
 	}
 
 	assert( menuFont != nullptr );
@@ -247,7 +258,6 @@ void game_menu_draw_( const ApeViewport *viewport )
 		y = ( viewport->height - gui_font_get_line_spacing( menuFont ) * 2.0f ) / 2.0f;
 	}
 
-	gui_font_set_shadow_offset( GUI_FONT_SHADOW_DEFAULT );
 	gui_font_draw_string( menuFont, x, y, nullptr, &y, scale, &PL_COLOUR_WHITE, G_STR_( menu->heading ), strlen( menu->heading ), true );
 	x += 30.0f;
 	for ( unsigned int i = 0; i < menu->numOptions; ++i )
@@ -292,9 +302,14 @@ void game_menu_draw_( const ApeViewport *viewport )
 	gui_font_display( menuTitleFont );
 }
 
-void game_menu_set_title( const char *title )
+void game_menu_set_title( const char *str )
 {
-	snprintf( menuTitle, sizeof( menuTitle ), "%s\n", G_STR_( title ) );
+	snprintf( menuTitle, sizeof( menuTitle ), "%s\n", G_STR_( str ) );
+}
+
+void game_menu_set_subtitle( const char *str )
+{
+	snprintf( subTitle, sizeof( subTitle ), "%s\n", G_STR_( str ) );
 }
 
 void game_menu_set_font( ApeGuiFont *font )

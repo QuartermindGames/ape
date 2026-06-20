@@ -22,7 +22,7 @@ ApeGuiCanvas *ape_gui_canvas_create( int width, int height );
 void          ape_gui_canvas_destroy( ApeGuiCanvas *canvas );
 void          ape_gui_canvas_set_size( ApeGuiCanvas *canvas, int width, int height );
 void          ape_gui_canvas_get_size( const ApeGuiCanvas *canvas, int *width, int *height );
-QmGfxTexture   *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas );
+QmGfxTexture *ape_gui_get_canvas_texture( ApeGuiCanvas *canvas );
 
 /****************************************
  ****************************************/
@@ -47,8 +47,8 @@ void ape_gui_update_mouse_position_( int x, int y );
 void gui_update_mouse_wheel( float x, float y );
 void guiUpdateMouseButton( GuiMouseButton button, bool isDown );
 
-void     ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour );
-void     ape_gui_draw_quad( PLGMesh *mesh, QmMathVector2i tl, QmMathVector2i tr, QmMathVector2i ll, QmMathVector2i lr, int z, const QmMathColour4f *colour );
+void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour );
+void ape_gui_draw_quad( PLGMesh *mesh, QmMathVector2i tl, QmMathVector2i tr, QmMathVector2i ll, QmMathVector2i lr, int z, const QmMathColour4f *colour );
 
 /****************************************
  * Font
@@ -64,7 +64,8 @@ typedef enum GuiFontDefaultType
 	GUI_MAX_FONT_DEFAULTS
 } GuiFontDefaultType;
 
-#define GUI_FONT_SHADOW_DEFAULT 1.0f, 1.0f
+#define GUI_FONT_SHADOW_DEFAULT_OFFSET 1.0f, 1.0f
+#define GUI_FONT_SHADOW_DEFAULT_COLOUR 0, 0, 0, 255
 
 /**
  * Retrieves the line spacing value from the specified GuiFont.
@@ -115,6 +116,8 @@ void gui_font_set_slant( float slant );
  * @param y Y offset.
  */
 void gui_font_set_shadow_offset( float x, float y );
+
+void gui_font_set_shadow_colour( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
 
 /**
  * Calculates the pixel size of a given string when rendered with the specified font and scale.

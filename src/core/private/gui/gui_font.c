@@ -34,8 +34,9 @@ static PLVectorArray *cachedFonts;
 static PLHashTable   *cachedFontsTable;
 static ApeGuiFont    *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
-static float          fontSlant        = 0.0f;
-static QmMathVector2f fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
+static float           fontSlant        = 0.0f;
+static QmMathVector2f  fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
+static QmMathColour4ub fontShadowColour = QM_MATH_COLOUR4UB( 0, 0, 0, 255 );
 
 static uint32_t decode_utf8_char( const char **string )
 {
@@ -273,6 +274,14 @@ void gui_font_set_shadow_offset( float x, float y )
 	fontShadowOffset.y = y;
 }
 
+void gui_font_set_shadow_colour( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
+{
+	fontShadowColour.r = r;
+	fontShadowColour.g = g;
+	fontShadowColour.b = b;
+	fontShadowColour.a = a;
+}
+
 void gui_font_get_string_pixel_size( const ApeGuiFont *self, float scale, const char *string, size_t length, float *dw, float *dh )
 {
 	float w = 0;
@@ -408,7 +417,7 @@ void gui_font_draw_string( const ApeGuiFont *self, float x, float y, float *ox, 
 
 		if ( shadow )
 		{
-			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &QM_MATH_COLOUR4UB( 0, 0, 0, currentColour.a ), glyph );
+			gui_font_draw_glyph( self, nx + fontShadowOffset.x, ny + fontShadowOffset.y, scale, &fontShadowColour, glyph );
 		}
 
 		gui_font_draw_glyph( self, nx, ny, scale, &currentColour, glyph );

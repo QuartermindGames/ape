@@ -173,11 +173,18 @@ void nih_menu_initialize_( void )
 	menuFont      = gui_font_load( menuFontPath, gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM ) );
 	menuTitleFont = gui_font_load( menuTitleFontPath, gui_get_default_font( GUI_FONT_DEFAULT_LARGE ) );
 
+	game_menu_initialize();
+
 	// use the name from the project conf. for the title, so mods etc. can set their own thing
 	const char *title = acm_get_string( com_project_get_config(), "name", NIH_GAME_TITLE );
+	game_menu_set_title( title );
 
-	game_menu_initialize();
-	game_menu_set_title( G_STR_( title ) );
+	const char *subtitle;
+	if ( ( subtitle = acm_get_string( com_project_get_config(), "subtitle", nullptr ) ) != nullptr )
+	{
+		game_menu_set_subtitle( subtitle );
+	}
+
 	game_menu_set_font( menuFont );
 	game_menu_set_title_font( menuTitleFont );
 
