@@ -12,7 +12,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static PLLinkedList  *cachePoolsList[ APE_MAX_CACHE_POOLS ];
+static PLLinkedList *cachePoolsList[ APE_MAX_CACHE_POOLS ];
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Resource Cache
@@ -290,6 +290,27 @@ void ape_memory_reference_release( ApeMemoryReference *m )
 int ape_memory_get_num_references( const ApeMemoryReference *m )
 {
 	return m->numReferences;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Alloc
+// These are basically just wrappers on top of QMFWs memory methods.
+/////////////////////////////////////////////////////////////////////////////////////
+
+void *ape_memory_calloc( size_t num, size_t size, void ( *destructor )( void * ), bool die )
+{
+	void *ptr = qm_os_memory_alloc( num, size, destructor );
+	if ( ptr == nullptr )
+	{
+		ape_console_error_( die, "Failed on memory alloc (%u bytes)!\n", size * num );
+	}
+
+	return ptr;
+}
+
+void *ape_memory_alloc( const size_t size, void ( *destructor )( void * ), bool die )
+{
+	return ape_memory_calloc( 1, size, destructor, die );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

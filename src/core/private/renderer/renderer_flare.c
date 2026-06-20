@@ -226,8 +226,8 @@ void ape_flare_draw_( const ApeViewport *viewport )
 		float dx = flare->screenPos.x - cx;
 		float dy = flare->screenPos.y - cy;
 
-		float deltaX = dx / ( float ) flareDecls[ flare->declType ].numElements * 2.0f;
-		float deltaY = dy / ( float ) flareDecls[ flare->declType ].numElements * 2.0f;
+		float deltaX = dx / ( float ) flareDecls[ flare->declType ].numElements * 4.0f;
+		float deltaY = dy / ( float ) flareDecls[ flare->declType ].numElements * 4.0f;
 
 		float maxDistance = qm_math_vector2f_length( QM_MATH_VECTOR2F( w, h ) ) / 4.0f;
 		float intensity   = QM_MATH_CLAMP( 0.0f, ( 1.0f - ( qm_math_vector2f_length( QM_MATH_VECTOR2F( dx, dy ) ) / maxDistance ) ) - ( flare->distance / ( MAX_FLARE_DISTANCE ) ), 1.0f );

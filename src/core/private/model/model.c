@@ -320,6 +320,11 @@ void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, un
 	//TODO: only will work with static models for now...
 }
 
+bool ape_model_is_static( const ApeModel *model )
+{
+	return !( model->flags & APE_MODEL_FLAG_ANIMATED );
+}
+
 static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 {
 	PLCollisionAABB bounds = {};

@@ -43,6 +43,8 @@ typedef struct ApeDecal
 	QmMathVector3f normal;
 	QmMathVector3f tangent, bitangent;
 
+	QmMathColour3f lighting;
+
 	QmMathVector3f vertices[ MAX_DECAL_VERTS ];
 	unsigned int   numVertices;
 
@@ -236,6 +238,26 @@ static bool decal_build_rect( ApeDecal *self )
 
 	ApeBrush *brush = face->parent;
 	assert( brush != nullptr );
+
+	ApeRoom *room = ape_brush_face_get_room( face );
+	if ( room != nullptr )
+	{
+		//TODO: this is a hack until we've got better sampling in from the light grid
+		//		(as some parts of the grid are between the wall and exterior)
+		QmMathVector3f repos = qm_math_vector3f_add( npos, qm_math_vector3f_scale_float( self->normal, 10.0f ) );
+
+		// another solution I considered here which I've seen done elsewhere is basically fetching
+		// the relative UV coordinates of the attached face for the lightmap, and use the lightmap
+		// page that the face is using during draw. would certainly look really nice, esp. for
+		// large decals, but I'm not sure if it's really worth it? plus in theory the grid solution
+		// is way faster
+
+		QmMathColour3f16 lighting = {};
+		QmMathVector3f   dir      = {};
+		ape_room_get_light_sample( room, repos, &lighting, &dir );
+
+		self->lighting = QM_MATH_COLOUR3F16_TO_3F( lighting );
+	}
 
 	// and now, clip it
 	for ( unsigned int i = 0; i < face->numVertices; ++i )
@@ -482,7 +504,10 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 		{
 			PlgImmPushVertex( decal->vertices[ j ].x, decal->vertices[ j ].y, decal->vertices[ j ].z );
 			PlgImmNormal( decal->normal.x, decal->normal.y, decal->normal.z );
-			PlgImmColour( 255, 255, 255, QM_MATH_FTOB( fade ) );
+			PlgImmColour( QM_MATH_FTOB( decal->lighting.r ),
+			              QM_MATH_FTOB( decal->lighting.g ),
+			              QM_MATH_FTOB( decal->lighting.b ),
+			              QM_MATH_FTOB( fade ) );
 
 			// and now for the texture coords
 			QmMathVector3f delta = qm_math_vector3f_sub( decal->vertices[ j ], decal->position );

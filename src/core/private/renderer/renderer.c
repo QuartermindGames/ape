@@ -341,7 +341,7 @@ void ape_register_renderer_console_variables_( void )
 	//TODO: move these into the material system
 	ape_console_var_register( "renderer.fogNearOverride", "Override fog near value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogNearOverride, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );
 	ape_console_var_register( "renderer.fogFarOverride", "Override fog far value.", "-1", PL_VAR_F32, &ape_config_.renderer.fogFarOverride, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );
-
+	ape_console_var_register( "renderer.showLightGrid", "Show the light grid.", "false", PL_VAR_BOOL, nullptr, nullptr, 0 );
 	ape_console_var_register( "renderer.lightJitterSamples", "Jitter lights to emulate smooth shadows.", "0", PL_VAR_I32, &ape_config_.renderer.lightJitterSamples, nullptr, 0 );
 
 	//TODO: move into flare code...

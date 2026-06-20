@@ -35,6 +35,228 @@
  */
 
 /////////////////////////////////////////////////////////////////////////////////////
+// Light Grid
+// The light grid allows objects in the world to more accurately sample lighting data
+// without depending on the lightmap. So, essentially they can be lit somewhat
+// more precisely in 3D space.
+/////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ApeLightGridCell
+{
+	QmMathColour3f16 totalLight;
+	QmMathVector3f   averageDir;
+	uint8_t          numLights;
+} ApeLightGridCell;
+
+typedef struct ApeLightGrid
+{
+	QmMathVector3f mins;
+	QmMathVector3f maxs;
+	QmMathVector3i density;
+	QmMathVector3f cellSize;
+
+	ApeLightGridCell *cells;
+	unsigned int      numCells;
+} ApeLightGrid;
+
+static QmMathVector3f light_grid_get_cell_world_position( const ApeLightGrid *self, const QmMathVector3i xyz )
+{
+	return QM_MATH_VECTOR3F( self->mins.x + ( xyz.x + 0.5f ) * self->cellSize.x,
+	                         self->mins.y + ( xyz.y + 0.5f ) * self->cellSize.y,
+	                         self->mins.z + ( xyz.z + 0.5f ) * self->cellSize.z );
+}
+
+static ApeLightGridCell *light_grid_get_cell( const ApeLightGrid *self, const QmMathVector3i xyz )
+{
+	return &self->cells[ xyz.x + xyz.y * self->density.x + xyz.z * self->density.x * self->density.y ];
+}
+
+static ApeLightGridCell *light_grid_get_cell_by_position( const ApeLightGrid *self, const QmMathVector3f position )
+{
+	if ( position.x < self->mins.x || position.y < self->mins.y || position.z < self->mins.z ||
+	     position.x > self->maxs.x || position.y > self->maxs.y || position.z > self->maxs.z )
+	{
+		return nullptr;
+	}
+
+	QmMathVector3f grid = qm_math_vector3f_div( qm_math_vector3f_sub( position, self->mins ), self->cellSize );
+
+	return light_grid_get_cell( self, QM_MATH_VECTOR3I( grid.x, grid.y, grid.z ) );
+}
+
+static void light_grid_destroy( void *ptr )
+{
+	ApeLightGrid *grid = ptr;
+
+	qm_os_memory_free( grid->cells );
+}
+
+ApeLightGrid *ape_light_grid_create_( const QmMathVector3f mins, const QmMathVector3f maxs, const QmMathVector3i density )
+{
+	ApeLightGrid *grid = ape_memory_alloc( sizeof( ApeLightGrid ), light_grid_destroy, false );
+	if ( grid == nullptr )
+	{
+		return nullptr;
+	}
+
+	grid->mins = mins;
+	grid->maxs = maxs;
+
+	grid->density = density;
+
+	grid->cellSize = qm_math_vector3f_div( qm_math_vector3f_sub( grid->maxs, grid->mins ),
+	                                       QM_MATH_VECTOR3F( density.x, density.y, density.z ) );
+
+	grid->numCells = grid->density.x * grid->density.y * grid->density.z;
+	grid->cells    = ape_memory_calloc( grid->numCells, sizeof( ApeLightGridCell ), nullptr, false );
+	if ( grid->cells == nullptr )
+	{
+		qm_os_memory_free( grid );
+		grid = nullptr;
+	}
+
+	return grid;
+}
+
+void ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **lights, unsigned int numLights )
+{
+	QmMathVector3f cellMins = qm_math_vector3f_invert( self->cellSize );
+	QmMathVector3f cellMaxs = self->cellSize;
+
+	for ( unsigned int z = 0; z < self->density.z; ++z )
+	{
+		for ( unsigned int y = 0; y < self->density.y; ++y )
+		{
+			for ( unsigned int x = 0; x < self->density.x; ++x )
+			{
+				ApeLightGridCell *cell = light_grid_get_cell( self, QM_MATH_VECTOR3I( x, y, z ) );
+				if ( cell->numLights >= UINT8_MAX )
+				{
+					ape_console_warning_( "Hit maximum light limit for cell, skipping!\n" );
+					continue;
+				}
+
+				QmMathVector3f worldPos = light_grid_get_cell_world_position( self, QM_MATH_VECTOR3I( x, y, z ) );
+				for ( unsigned int i = 0; i < numLights; ++i )
+				{
+					const ApeLight *light = lights[ i ];
+					if ( !ape_light_test_bounds( light, worldPos, cellMins, cellMaxs ) )
+					{
+						continue;
+					}
+
+					QmMathVector3f lightPos = ape_light_get_position( light );
+					QmMathVector3f lightDir;
+					if ( light->type == APE_LIGHT_TYPE_SUN )
+					{
+						PLCollisionAABB bounds = ape_world_node_get_bounds( APE_WORLD_NODE( room ) );
+
+						//TODO: this is unreliable, bounds will change at runtime - this should be reversed, cast from luxel out rather than casting from luxel to bounds...
+						//		we're also seeing weird precision issues because of this at times, so, yeah...
+						lightDir = ape_light_get_direction( light );
+						lightPos = qm_math_vector3f_add( worldPos, qm_math_vector3f_scale_float( qm_math_vector3f_invert( lightDir ), bounds.maxs.y * bounds.maxs.y ) );
+					}
+					else
+					{
+						lightDir = qm_math_vector3f_sub( worldPos, lightPos );
+						lightDir = qm_math_vector3f_normalize( lightDir );
+					}
+
+					PLCollisionRay ray = {};
+					ray.origin         = lightPos;
+					ray.direction      = lightDir;
+
+					ApeCollisionIntersection result = {};
+					if ( ape_room_ray_intersect( room, &ray, &result ) )
+					{
+						float lightDistance = qm_math_vector3f_distance( worldPos, lightPos );
+						if ( result.distance < lightDistance )
+						{
+							continue;
+						}
+					}
+
+					QmMathVector3f c = qm_math_vector3f_scale_float( qm_math_vector3f( light->colour.r, light->colour.g, light->colour.b ), light->colour.a );
+					if ( light->type == APE_LIGHT_TYPE_SPOT )
+					{
+#if 0
+						QmMathVector3f angles = ape_world_node_get_angles( APE_WORLD_NODE( light ) );
+						PlAnglesAxes( angles, nullptr, nullptr, &lightDirection );
+						lightDirection = qm_math_vector3f_normalize( lightDirection );
+
+						float d = qm_math_vector3f_distance( lightPos, luxelPos );
+						float theta = qm_math_vector3f_dot_product( lightDir, light->angle );
+#endif
+					}
+					else// assumed omni
+					{
+						float d = qm_math_vector3f_distance( lightPos, worldPos );
+#ifdef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
+						float r = light->radius * 10.0f / ( d * d );
+#else
+						float r = QM_MATH_CLAMP( 0.0f, 1.0f - d / light->radius, 1.0f );
+#endif
+						c = qm_math_vector3f_scale_float( c, r );
+					}
+
+					cell->totalLight.r += c.x;
+					cell->totalLight.g += c.y;
+					cell->totalLight.b += c.z;
+					cell->numLights++;
+				}
+			}
+		}
+	}
+}
+
+const ApeLightGridCell *ape_light_grid_sample_cell_( const ApeLightGrid *self, const QmMathVector3f position, QmMathColour3f16 *dstColour, QmMathVector3f *dstDir )
+{
+	ApeLightGridCell *cell = light_grid_get_cell_by_position( self, position );
+	if ( cell != nullptr )
+	{
+		dstColour->r = cell->totalLight.r / ( cell->numLights + 1 );
+		dstColour->g = cell->totalLight.g / ( cell->numLights + 1 );
+		dstColour->b = cell->totalLight.b / ( cell->numLights + 1 );
+	}
+
+	return cell;
+}
+
+void ape_light_grid_draw_( const ApeLightGrid *self )
+{
+	PLCollisionAABB bounds = {};
+	bounds.mins.x          = -self->cellSize.x;
+	bounds.mins.y          = -self->cellSize.y;
+	bounds.mins.z          = -self->cellSize.z;
+	bounds.maxs.x          = self->cellSize.x;
+	bounds.maxs.y          = self->cellSize.y;
+	bounds.maxs.z          = self->cellSize.z;
+
+	for ( unsigned int z = 0; z < self->density.z; ++z )
+	{
+		for ( unsigned int y = 0; y < self->density.y; ++y )
+		{
+			for ( unsigned int x = 0; x < self->density.x; ++x )
+			{
+				ApeLightGridCell *cell = light_grid_get_cell( self, QM_MATH_VECTOR3I( x, y, z ) );
+
+				bounds.origin = light_grid_get_cell_world_position( self, QM_MATH_VECTOR3I( x, y, z ) );
+
+				QmMathColour3f colour = {};
+				if ( cell->numLights > 0 )
+				{
+					colour.r = QM_MATH_CLAMP( 0.0f, cell->totalLight.r / cell->numLights, 1.0f );
+					colour.g = QM_MATH_CLAMP( 0.0f, cell->totalLight.g / cell->numLights, 1.0f );
+					colour.b = QM_MATH_CLAMP( 0.0f, cell->totalLight.b / cell->numLights, 1.0f );
+				}
+
+				ape_draw_debug_aabb( &bounds, QM_MATH_COLOUR3F_TO_4UB( colour, 255 ) );
+			}
+		}
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 // Lightmap
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -717,6 +939,10 @@ static void compute_light( ApeLight *light, ApeRoom *room, ApeBrushFace **faces,
 	}
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// General "Light" API
+/////////////////////////////////////////////////////////////////////////////////////
+
 void ape_editor_light_generate_( ApeRoom *room )
 {
 	ape_console_print_( "Generating lightmap...\n" );
@@ -751,6 +977,26 @@ void ape_editor_light_generate_( ApeRoom *room )
 	}
 
 	ape_console_print_( "Processing %u lights, %u faces...\n", numLights, numFaces );
+
+	// attempt to build the light grid
+
+	qm_os_memory_free( room->lightGrid );
+
+	PLCollisionAABB bounds = ape_world_node_get_bounds( APE_WORLD_NODE( room ) );
+	room->lightGrid        = ape_light_grid_create_( bounds.mins, bounds.maxs, QM_MATH_VECTOR3I( 32, 32, 32 ) );
+	if ( room->lightGrid != nullptr )
+	{
+		double gridStart = qm_os_time_get_seconds();
+
+		ape_light_grid_compute_( room->lightGrid, room, lights, numLights );
+
+		double gridEnd = qm_os_time_get_seconds();
+		ape_console_print_( "Light grid generation took %.3f seconds.\n", gridEnd - gridStart );
+	}
+	else
+	{
+		ape_console_warning_( "Failed to create light grid, room will be lit incorrectly!\n" );
+	}
 
 	// now, generate the lightmap for each light
 	for ( unsigned int i = 0; i < numLights; ++i )

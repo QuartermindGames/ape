@@ -11,9 +11,13 @@
 #include "audio/audio.h"
 #include "camera/camera.h"
 
+typedef struct ApeLightGrid     ApeLightGrid;
+typedef struct ApeLightGridCell ApeLightGridCell;
+
 typedef struct ApeLightmapPixel ApeLightmapPixel;
 typedef struct ApeLightmap      ApeLightmap;
 
+//TODO: this'll get removed and we'll move over to flexible pages in future :)
 static constexpr unsigned int APE_ROOM_MAX_LIGHTMAPS = 4;
 
 typedef struct ApeRoom
@@ -38,9 +42,10 @@ typedef struct ApeRoom
 
 	ApeDecalManager *decalManager;
 
-	unsigned int lightmapEdgeLength;                 // represents w and h value
-	ApeLightmap *lightmaps[ APE_ROOM_MAX_LIGHTMAPS ];// lightmap buffers
-	unsigned int numLightmaps;
+	ApeLightGrid *lightGrid;                          // 3d grid for querying lighting values
+	unsigned int  lightmapEdgeLength;                 // represents w and h value
+	ApeLightmap  *lightmaps[ APE_ROOM_MAX_LIGHTMAPS ];// lightmap buffers
+	unsigned int  numLightmaps;
 } ApeRoom;
 
 PL_EXTERN_C

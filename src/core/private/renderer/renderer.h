@@ -49,6 +49,25 @@ static constexpr PLGCullMode        APE_RENDERER_DEFAULT_CULL_FUNCTION  = PLG_CU
 // Lighting
 /////////////////////////////////////////////////////////////////////////////////////
 
+typedef struct ApeLightGrid     ApeLightGrid;
+typedef struct ApeLightGridCell ApeLightGridCell;
+
+/**
+ * Create a new light grid.
+ * Can be destroyed by calling free - includes destructor.
+ */
+ApeLightGrid *ape_light_grid_create_( QmMathVector3f mins, QmMathVector3f maxs, QmMathVector3i density );
+
+void                    ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **lights, unsigned int numLights );
+const ApeLightGridCell *ape_light_grid_sample_cell_( const ApeLightGrid *self, QmMathVector3f position, QmMathColour3f16 *dstColour, QmMathVector3f *dstDir );
+
+/**
+ * Attempts to draw the given light grid.
+ * Mind this method is *very* expensive, especially if you've got a high density
+ * grid.
+ */
+void ape_light_grid_draw_( const ApeLightGrid *self );
+
 typedef struct __attribute__( ( packed ) ) ApeLightmapPixel
 {
 	QmMathColour3f16 colour;

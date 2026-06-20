@@ -132,6 +132,21 @@ const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *
 // Room Lightmaps
 /////////////////////////////////////////////////////////////////////////////////////
 
+bool ape_room_get_light_sample( ApeRoom *self, const QmMathVector3f position, QmMathColour3f16 *dstLight, QmMathVector3f *dstDir )
+{
+	if ( self->lightGrid == nullptr )
+	{
+		return false;
+	}
+
+	if ( ape_light_grid_sample_cell_( self->lightGrid, position, dstLight, dstDir ) == nullptr )
+	{
+		return false;
+	}
+
+	return true;
+}
+
 #if 0
 /**
  * A very gross method to form a path for a lightmap, from the given room.
@@ -390,7 +405,7 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 {
 	unsigned int              maxHits = RAY_HIT_INC;
 	unsigned int              numHits = 0;
-	ApeCollisionIntersection *hits    = QM_OS_MEMORY_NEW_( ApeCollisionIntersection, maxHits );
+	ApeCollisionIntersection *hits    = APE_MEMORY_NEW_C( ApeCollisionIntersection, maxHits );
 
 	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits ) || numHits == 0 )
 	{

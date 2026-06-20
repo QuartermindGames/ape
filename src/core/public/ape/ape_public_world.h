@@ -548,6 +548,8 @@ QmMathColour4f ape_room_get_ambience( const ApeRoom *self );
 void                 ape_room_set_reverb_preset( ApeRoom *self, ApeAudioReverbPreset reverbPreset );
 ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
 
+bool ape_room_get_light_sample( ApeRoom *self, QmMathVector3f position, QmMathColour3f16 *dstLight, QmMathVector3f *dstDir );
+
 void         ape_room_set_lightmap_edge_length( ApeRoom *self, unsigned int edgeLength );
 unsigned int ape_room_get_lightmap_edge_length( const ApeRoom *self );
 
@@ -699,6 +701,8 @@ ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
 bool ape_light_is_active( const ApeLight *light );
 
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane );
+bool ape_light_test_sphere( const ApeLight *self, const PLCollisionSphere *sphere );
+bool ape_light_test_bounds( const ApeLight *self, QmMathVector3f origin, QmMathVector3f mins, QmMathVector3f maxs );
 bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face );
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane );
 

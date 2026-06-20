@@ -501,13 +501,22 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 {
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
+	ApeRoom *room = ape_camera_get_room( self->camera );
+	if ( room != nullptr && room->lightGrid != nullptr )
+	{
+		PL_GET_CVAR( "renderer.showLightGrid", showLightGrid );
+		if ( showLightGrid != nullptr && showLightGrid->b_value )
+		{
+			ape_light_grid_draw_( room->lightGrid );
+		}
+	}
+
 	switch ( self->geometryMode )
 	{
 		default:
 			break;
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			ApeRoom *room = ape_camera_get_room( self->camera );
 			if ( room != nullptr )
 			{
 				ape_room_draw_selected_( room, self );

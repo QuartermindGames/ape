@@ -42,6 +42,11 @@ typedef struct ApeModelMesh
 	unsigned int endIndex;
 } ApeModelMesh;
 
+typedef enum ApeModelFlag
+{
+	QM_OS_BIT_FLAG( APE_MODEL_FLAG_ANIMATED, 0 ),// if the model doesn't have this, it's assumed static
+} ApeModelFlag;
+
 typedef struct ApeModel
 {
 	ApeModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
@@ -50,6 +55,8 @@ typedef struct ApeModel
 	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
 	ApeFormatBone *rootBone;
 	unsigned int   numBones;
+
+	unsigned int flags;
 
 	PLGMesh *cache;
 

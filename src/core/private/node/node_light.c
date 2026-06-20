@@ -154,6 +154,36 @@ bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 	return dot < 0;
 }
 
+bool ape_light_test_sphere( const ApeLight *self, const PLCollisionSphere *sphere )
+{
+#ifndef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
+	if ( self->type != APE_LIGHT_TYPE_SUN && !com_collision_sphere_intersect_sphere( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, sphere, nullptr ) )
+	{
+		return false;
+	}
+#endif
+
+	return true;
+}
+
+bool ape_light_test_bounds( const ApeLight *self, QmMathVector3f origin, QmMathVector3f mins, const QmMathVector3f maxs )
+{
+	// urgh, we need to move away from this
+	PLCollisionAABB bounds = {};
+	bounds.mins            = mins;
+	bounds.maxs            = maxs;
+	bounds.origin          = origin;
+
+#ifndef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
+	if ( self->type != APE_LIGHT_TYPE_SUN && !aux_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &bounds, nullptr ) )
+	{
+		return false;
+	}
+#endif
+
+	return true;
+}
+
 bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
 {
 	// we're only doing this check for anything other than the sun, because
@@ -164,12 +194,10 @@ bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
 		return false;
 	}
 
-#ifndef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
-	if ( self->type != APE_LIGHT_TYPE_SUN && !aux_collision_sphere_intersect_aabb( &( PLCollisionSphere ) { .origin = ape_light_get_position( self ), .radius = self->radius }, &face->bounds, nullptr ) )
+	if ( !ape_light_test_bounds( self, face->bounds.origin, face->bounds.mins, face->bounds.maxs ) )
 	{
 		return false;
 	}
-#endif
 
 	QmMathVector3f dir;
 	if ( self->type == APE_LIGHT_TYPE_SUN || self->type == APE_LIGHT_TYPE_SPOT )
