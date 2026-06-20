@@ -498,6 +498,8 @@ ApeWorld *ape_world_create( void );
 
 void ape_world_spawn_entities( ApeWorld *self );
 
+void ape_world_compute_light_grids( ApeWorld *self );
+
 ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path );
 
 /**

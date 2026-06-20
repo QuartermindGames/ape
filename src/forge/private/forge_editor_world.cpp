@@ -376,6 +376,7 @@ long forge::WorldEditor::on_add_room( FXObject *, FXSelector, void * )
 	}
 
 	ape_world_node_attach( APE_WORLD_NODE( room ), APE_WORLD_NODE( _world ) );
+	ape_world_compute_light_grids( _world );
 
 	update_tree();
 

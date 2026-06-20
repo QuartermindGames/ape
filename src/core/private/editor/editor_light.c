@@ -852,7 +852,7 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 	}
 }
 
-static void gather_nodes( ApeWorldNode *node, PLVectorArray *lights, PLVectorArray *faces )
+static void gather_nodes( ApeWorldNode *node, PLVectorArray *lights, PLVectorArray *faces, bool buildLightmap )
 {
 	if ( node->type == APE_WORLD_NODE_TYPE_LIGHT )
 	{
@@ -862,7 +862,8 @@ static void gather_nodes( ApeWorldNode *node, PLVectorArray *lights, PLVectorArr
 			PlPushBackVectorArrayElement( lights, light );
 		}
 	}
-	else if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	//TODO: move all this out of gather and into the lightmap compute
+	else if ( node->type == APE_WORLD_NODE_TYPE_BRUSH && buildLightmap )
 	{
 		ApeBrush *brush = ( ApeBrush * ) node;
 		ApeRoom  *room  = ape_world_node_get_room( APE_WORLD_NODE( brush ) );
@@ -913,7 +914,7 @@ static void gather_nodes( ApeWorldNode *node, PLVectorArray *lights, PLVectorArr
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		gather_nodes( child, lights, faces );
+		gather_nodes( child, lights, faces, buildLightmap );
 	}
 }
 
@@ -943,10 +944,61 @@ static void compute_light( ApeLight *light, ApeRoom *room, ApeBrushFace **faces,
 // General "Light" API
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_editor_light_generate_( ApeRoom *room )
+static void room_compute_light_grid( ApeRoom *self, ApeLight **lights, unsigned int numLights )
 {
-	ape_console_print_( "Generating lightmap...\n" );
+	qm_os_memory_free( self->lightGrid );
 
+	PLCollisionAABB bounds = ape_world_node_get_bounds( APE_WORLD_NODE( self ) );
+	self->lightGrid        = ape_light_grid_create_( bounds.mins, bounds.maxs, QM_MATH_VECTOR3I( 32, 32, 32 ) );
+	if ( self->lightGrid != nullptr )
+	{
+		double gridStart = qm_os_time_get_seconds();
+
+		ape_light_grid_compute_( self->lightGrid, self, lights, numLights );
+
+		double gridEnd = qm_os_time_get_seconds();
+		ape_console_print_( "Light grid generation took %.3f seconds.\n", gridEnd - gridStart );
+	}
+	else
+	{
+		ape_console_warning_( "Failed to create light grid, room will be lit incorrectly!\n" );
+	}
+}
+
+static void room_compute_lightmap( ApeRoom *self, ApeLight **lights, unsigned int numLights, ApeBrushFace **faces, unsigned int numFaces )
+{
+	//TODO: this should only be done if it's dirty!
+	ape_room_destroy_lightmaps_( self );
+
+	double startTime = qm_os_time_get_seconds();
+
+	// now, generate the lightmap for each light
+	for ( unsigned int i = 0; i < numLights; ++i )
+	{
+		compute_light( lights[ i ], self, faces, numFaces );
+	}
+
+	double endTime = qm_os_time_get_seconds();
+	ape_console_print_( "Lightmap generation took %.3f seconds (%u lightmaps created).\n", endTime - startTime, self->numLightmaps );
+
+#if 0
+	for ( unsigned int i = 0; i < numFaces; ++i )
+	{
+		if ( !ape_brush_face_is_emissive( faces[ i ] ) )
+		{
+			continue;
+		}
+
+		compute_face_lightmap( room, faces[ i ], nullptr );
+	}
+#endif
+
+	// convert the lightmap into a texture we can use
+	ape_room_upload_lightmaps_( self );
+}
+
+void ape_editor_light_generate_( ApeRoom *room, bool buildLightmap, bool buildLightGrid )
+{
 	// first, gather all the objects for the given room we need to operate on
 
 	PLVectorArray *lightsArray = PlCreateVectorArray( 1024 );
@@ -957,12 +1009,7 @@ void ape_editor_light_generate_( ApeRoom *room )
 		goto cleanup;
 	}
 
-	double startTime = qm_os_time_get_seconds();
-
-	//TODO: this should only be done if it's dirty!
-	ape_room_destroy_lightmaps_( room );
-
-	gather_nodes( APE_WORLD_NODE( room ), lightsArray, facesArray );
+	gather_nodes( APE_WORLD_NODE( room ), lightsArray, facesArray, buildLightmap );
 
 	unsigned int numLights;
 	ApeLight   **lights = ( ApeLight ** ) PlGetVectorArrayDataEx( lightsArray, &numLights );
@@ -970,55 +1017,17 @@ void ape_editor_light_generate_( ApeRoom *room )
 	unsigned int   numFaces;
 	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( facesArray, &numFaces );
 
-	if ( numLights == 0 || numFaces == 0 )
-	{
-		ape_console_warning_( "No faces or lights to operate on for lightmap!\n" );
-		goto cleanup;
-	}
-
 	ape_console_print_( "Processing %u lights, %u faces...\n", numLights, numFaces );
 
-	// attempt to build the light grid
-
-	qm_os_memory_free( room->lightGrid );
-
-	PLCollisionAABB bounds = ape_world_node_get_bounds( APE_WORLD_NODE( room ) );
-	room->lightGrid        = ape_light_grid_create_( bounds.mins, bounds.maxs, QM_MATH_VECTOR3I( 32, 32, 32 ) );
-	if ( room->lightGrid != nullptr )
+	if ( buildLightGrid )
 	{
-		double gridStart = qm_os_time_get_seconds();
-
-		ape_light_grid_compute_( room->lightGrid, room, lights, numLights );
-
-		double gridEnd = qm_os_time_get_seconds();
-		ape_console_print_( "Light grid generation took %.3f seconds.\n", gridEnd - gridStart );
-	}
-	else
-	{
-		ape_console_warning_( "Failed to create light grid, room will be lit incorrectly!\n" );
+		room_compute_light_grid( room, lights, numLights );
 	}
 
-	// now, generate the lightmap for each light
-	for ( unsigned int i = 0; i < numLights; ++i )
+	if ( buildLightmap )
 	{
-		compute_light( lights[ i ], room, faces, numFaces );
+		room_compute_lightmap( room, lights, numLights, faces, numFaces );
 	}
-
-	for ( unsigned int i = 0; i < numFaces; ++i )
-	{
-		if ( !ape_brush_face_is_emissive( faces[ i ] ) )
-		{
-			continue;
-		}
-
-		compute_face_lightmap( room, faces[ i ], nullptr );
-	}
-
-	// convert the lightmap into a texture we can use
-	ape_room_upload_lightmaps_( room );
-
-	double endTime = qm_os_time_get_seconds();
-	ape_console_print_( "Lightmap generation took %.3f seconds (%u lightmaps created).\n", endTime - startTime, room->numLightmaps );
 
 cleanup:
 	PlDestroyVectorArray( lightsArray );
@@ -1057,7 +1066,7 @@ void ape_light_command_( unsigned int, char ** )
 		return;
 	}
 
-	ape_editor_light_generate_( room );
+	ape_editor_light_generate_( room, true, true );
 }
 
 static QmMathVector2f uvOffset;

@@ -246,6 +246,10 @@ void game_spawn_world( ApeWorld *world, ApeRoom *room )
 
 	currentWorld = world;
 
+	// this is quick enough we can just do it here for now,
+	// though in the future we might want to save and load this data instead
+	ape_world_compute_light_grids( world );
+
 	if ( ape_gameInterface->spawnWorld != nullptr )
 	{
 		ape_gameInterface->spawnWorld( room );

@@ -5,6 +5,8 @@
 
 #include "ape_private.h"
 #include "world.h"
+
+#include "editor/editor.h"
 #include "renderer/renderer.h"
 
 static void *create_world( ApeWorldNode *parent )
@@ -71,6 +73,17 @@ static bool spawn_entity( ApeWorldNode *self, void *user )
 void ape_world_spawn_entities( ApeWorld *self )
 {
 	ape_world_node_visit_children( APE_WORLD_NODE( self ), APE_WORLD_NODE_TYPE_ENTITY, true, spawn_entity, self );
+}
+
+static bool compute_light_grid( ApeWorldNode *self, void *user )
+{
+	ape_editor_light_generate_( ( ApeRoom * ) self, false, true );
+	return true;
+}
+
+void ape_world_compute_light_grids( ApeWorld *self )
+{
+	ape_world_node_visit_children( APE_WORLD_NODE( self ), APE_WORLD_NODE_TYPE_ROOM, false, compute_light_grid, nullptr );
 }
 
 void ape_world_tick_entities_( ApeWorld *self, double delta )

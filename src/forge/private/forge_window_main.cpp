@@ -198,6 +198,7 @@ long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 	//TODO: move world creation and attachment into world editor class
 	ApeWorld *world = ape_world_create();
 	ape_world_node_attach( APE_WORLD_NODE( room ), APE_WORLD_NODE( world ) );
+	ape_world_compute_light_grids( world );
 
 	auto *editor = static_cast< WorldEditor * >( add_tab( new WorldEditor( _tabBook, PlGetFileName( filename.text() ), world ) ) );
 	editor->update_tree();
