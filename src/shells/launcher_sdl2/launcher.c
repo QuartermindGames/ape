@@ -13,6 +13,8 @@
 
 #include <yin/core.h>
 
+#include "qmos/public/qm_os_string.h"
+
 #include "aux/public/aux.h"
 #include "aux/public/aux_project.h"
 
@@ -381,9 +383,7 @@ static bool initialize_display( void )
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
 	{
-		size_t size       = strlen( exePath ) + PL_SYSTEM_MAX_PATH + 1;
-		char  *driverPath = QM_OS_MEMORY_NEW_( char, size );
-		snprintf( driverPath, size, "local://%s", exePath );
+		char *driverPath = qm_os_string_alloc( "local://%s", exePath );
 		PlgScanForDrivers( driverPath );
 		qm_os_memory_free( driverPath );
 	}

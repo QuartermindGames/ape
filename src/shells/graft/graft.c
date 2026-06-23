@@ -4,112 +4,124 @@
 
 #include "graft.h"
 
-typedef struct GraftSplashScreen
+#include "plcore/pl_filesystem.h"
+
+#include "plgraphics/plg.h"
+#include "plgraphics/plg_driver_interface.h"
+
+typedef struct GraftWindow
 {
-	GtkWidget *window;
-	GtkWidget *progressBar;
-} GraftSplashScreen;
+	SDL_Window *system;
+	void       *user;
+} GraftWindow;
 
-GtkWidget *graft_splash_screen_create( GtkWidget *parent )
+SDL_GLContext glContext;
+
+static bool setup_display()
 {
-	GtkWidget *stack = gtk_stack_new();
-	gtk_stack_set_transition_type( GTK_STACK( stack ), GTK_STACK_TRANSITION_TYPE_CROSSFADE );
-	gtk_stack_set_transition_duration( GTK_STACK( stack ), 500 );
-	gtk_window_set_child( GTK_WINDOW( parent ), stack );
+	PlgInitializeGraphics();
 
-	GtkWidget *splashBox = gtk_box_new( GTK_ORIENTATION_VERTICAL, 15 );
-	gtk_widget_set_halign( splashBox, GTK_ALIGN_CENTER );
-	gtk_widget_set_valign( splashBox, GTK_ALIGN_CENTER );
-
-	char tmp[ 64 ];
-	snprintf( tmp, sizeof( tmp ), "%s is loading...", GRAFT_NAME );
-	GtkWidget *label = gtk_label_new( tmp );
-	gtk_box_append( GTK_BOX( splashBox ), label );
-
-	GtkWidget *progress = gtk_progress_bar_new();
-	gtk_widget_set_size_request( progress, 300, -1 );
-	gtk_box_append( GTK_BOX( splashBox ), progress );
-	gtk_progress_bar_set_fraction( GTK_PROGRESS_BAR( progress ), 0.5 );
-
-	gtk_stack_add_named( GTK_STACK( stack ), splashBox, "splash" );
-
-	GraftSplashScreen *splash = g_new0( GraftSplashScreen, 1 );
-	splash->window            = stack;
-	splash->progressBar       = progress;
-
-	return stack;
-}
-
-static GtkApplication *graftApp;
-
-static void graft_quit_action( GSimpleAction *action, GVariant *parameter, gpointer userData )
-{
-	g_application_quit( G_APPLICATION( graftApp ) );
-}
-
-static void graft_activate( GtkApplication *app, gpointer userData )
-{
-	GtkWidget *window = gtk_application_window_new( app );
-	gtk_window_set_title( GTK_WINDOW( window ), GRAFT_NAME );
-	gtk_window_set_default_size( GTK_WINDOW( window ), 1024, 768 );
-	gtk_window_maximize( GTK_WINDOW( window ) );
-
-	GtkWidget *header = gtk_header_bar_new();
-	gtk_window_set_titlebar( GTK_WINDOW( window ), header );
-
-	// menu
+	// attempt to fetch the driver directly from the executable location if possible
+	PLPath exePath;
+	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
 	{
-		GMenu *menu = g_menu_new();
-
-		// file
-		{
-			GMenu *fileMenu = g_menu_new();
-
-			g_menu_append( fileMenu, "New Room...", "app.new_room" );
-			GSimpleAction *newRoomAction = g_simple_action_new( "new_room", nullptr );
-			g_signal_connect( newRoomAction, "activate", G_CALLBACK( graft_quit_action ), app );
-			g_action_map_add_action( G_ACTION_MAP( app ), G_ACTION( newRoomAction ) );
-
-			g_menu_append( fileMenu, "Open Room...", "app.open_room" );
-			GSimpleAction *openRoomAction = g_simple_action_new( "open_room", nullptr );
-			g_signal_connect( openRoomAction, "activate", G_CALLBACK( graft_quit_action ), app );
-			g_action_map_add_action( G_ACTION_MAP( app ), G_ACTION( openRoomAction ) );
-
-			g_menu_append( fileMenu, "Quit", "app.quit" );
-			GSimpleAction *quitAction = g_simple_action_new( "quit", nullptr );
-			g_signal_connect( quitAction, "activate", G_CALLBACK( graft_quit_action ), app );
-			g_action_map_add_action( G_ACTION_MAP( app ), G_ACTION( quitAction ) );
-
-			g_menu_append_submenu( menu, "File", G_MENU_MODEL( fileMenu ) );
-		}
-
-		GtkWidget *menuButton = gtk_menu_button_new();
-		gtk_menu_button_set_icon_name( GTK_MENU_BUTTON( menuButton ), "open-menu-symbolic" );
-		gtk_menu_button_set_menu_model( GTK_MENU_BUTTON( menuButton ), G_MENU_MODEL( menu ) );
-
-		gtk_header_bar_pack_end( GTK_HEADER_BAR( header ), menuButton );
+		char *driverPath = qm_os_string_alloc( "local://%s", exePath );
+		PlgScanForDrivers( driverPath );
+		qm_os_memory_free( driverPath );
+	}
+	else
+	{
+		PlgScanForDrivers( "." );
 	}
 
-	//GtkWidget *splashScreen = graft_splash_screen_create( window );
+	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
-	//GtkWidget *editor_label = gtk_label_new( "Main Editor Interface Goes Here" );
-	//gtk_stack_add_named( GTK_STACK( splashScreen ), editor_label, "editor" );
+	unsigned int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED;
+	if ( !PlHasCommandLineArgument( "/nodpi" ) )
+	{
+		flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+	}
 
-	//gtk_stack_set_visible_child_name( GTK_STACK( splashScreen ), "splash" );
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1 );
 
-	gtk_window_present( GTK_WINDOW( window ) );
+	const char *projectName = com_project_get_name();
+	char       *title       = qm_os_string_alloc( "%s (%s)", GRAFT_NAME, projectName );
+
+	SDL_Window *window;
+	if ( ( window = SDL_CreateWindow( title, 640, 480, flags ) ) == nullptr )
+	{
+		fprintf( stderr, "Failed to create SDL window: %s\n", SDL_GetError() );
+	}
+
+	qm_os_memory_free( title );
+
+	if ( window == nullptr )
+	{
+		return false;
+	}
+
+	if ( ( glContext = SDL_GL_CreateContext( window ) ) == nullptr )
+	{
+		SDL_DestroyWindow( window );
+		fprintf( stderr, "Failed to create GL context: %s\n", SDL_GetError() );
+		return false;
+	}
+
+	SDL_GL_MakeCurrent( window, glContext );
+	SDL_GL_SetSwapInterval( -1 );
+
+	//TODO: we're just hardcoding this until this is all redone
+	static constexpr char DRIVER[] = "opengl";
+	if ( PlgSetDriver( DRIVER ) != PL_RESULT_SUCCESS )
+	{
+		return false;
+	}
+
+	return true;
 }
 
 int qm_os_main( const int argc, char **argv )
 {
-	graftApp = gtk_application_new( "com.quartermind.graft", G_APPLICATION_DEFAULT_FLAGS );
-	g_signal_connect( graftApp, "activate", G_CALLBACK( graft_activate ), nullptr );
+	if ( !SDL_Init( SDL_INIT_EVENTS | SDL_INIT_VIDEO ) )
+	{
+		fprintf( stderr, "Failed to initialize SDL: %s\n", SDL_GetError() );
+		return EXIT_FAILURE;
+	}
 
-	int status = g_application_run( G_APPLICATION( graftApp ), argc, argv );
+	aux_initialize( argc, argv );
 
-	g_object_unref( graftApp );
+	const char *appDir = com_get_app_data_directory();
+	qm_fs_mount_local_location( appDir );
+	const char *localDir = com_get_local_data_directory();
+	qm_fs_mount_local_location( localDir );
 
-	return status;
+	const char *projectName;
+	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == nullptr )
+	{
+		projectName = "base";
+	}
+
+	if ( com_project_mount( projectName ) == nullptr )
+	{
+		fprintf( stderr, "Failed to mount project (%s)!\n", projectName );
+		return EXIT_FAILURE;
+	}
+
+	// setup the main window
+	if ( !setup_display() )
+	{
+		fprintf( stderr, "Failed to setup display!\n" );
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 QM_OS_SYSTEM_IMPLEMENT_MAIN()
