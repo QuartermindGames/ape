@@ -654,7 +654,7 @@ void ape_input_center_mouse( void )
 void ape_end_input_frame_( void )
 {
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook == NULL || !mouseLook->b_value )
+	if ( !mouseLook->b_value )
 	{
 		return;
 	}

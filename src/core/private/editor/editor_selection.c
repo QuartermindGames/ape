@@ -505,7 +505,7 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 	if ( room != nullptr && room->lightGrid != nullptr )
 	{
 		PL_GET_CVAR( "renderer.showLightGrid", showLightGrid );
-		if ( showLightGrid != nullptr && showLightGrid->b_value )
+		if ( showLightGrid->b_value )
 		{
 			ape_light_grid_draw_( room->lightGrid );
 		}

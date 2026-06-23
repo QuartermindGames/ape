@@ -1096,16 +1096,6 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		QmMathColour4f lightColour = ( light != NULL ) ? light->colour : ( QmMathColour4f ) {};
 		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ] >= 0 )
-	{
-		QmMathVector3f lightPosition = ( light != NULL ) ? ape_light_get_position( light ) : ( QmMathVector3f ) {};
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_POSITION ], &lightPosition, false );
-	}
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ] >= 0 )
-	{
-		float lightRadius = ( light != NULL ) ? light->radius : 0.0f;
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_RADIUS ], &lightRadius, false );
-	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ] >= 0 )
 	{
 		QmMathVector3f lightDirection;
@@ -1117,38 +1107,8 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		{
 			lightDirection = QM_MATH_VECTOR3F_ZERO;
 		}
+
 		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &lightDirection, false );
-	}
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ] >= 0 )
-	{
-		float lightCutOff = light != nullptr && light->type == APE_LIGHT_TYPE_SPOT ? cosf( QM_MATH_DEG2RAD( light->angle ) ) : 0.0f;
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_CUTOFF ], &lightCutOff, false );
-	}
-
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ] >= 0 )
-	{
-		QmMathColour4f sunColour = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? light->colour : ( QmMathColour4f ) {};
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_COLOUR ], &sunColour, false );
-	}
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ] >= 0 )
-	{
-		QmMathVector3f lightPosition = ( light != nullptr && light->type == APE_LIGHT_TYPE_SUN ) ? ape_light_get_position( light ) : ( QmMathVector3f ) {};
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_SUN_POSITION ], &lightPosition, false );
-	}
-
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ] >= 0 )
-	{
-		QmMathColour4f sunAmbience;
-		if ( ape_rendererState_.camera != nullptr && ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED ) )
-		{
-			sunAmbience = QM_MATH_COLOUR4F_RGB( 1.0f, 1.0f, 1.0f );
-		}
-		else
-		{
-			sunAmbience = ape_rendererState_.ambience;
-		}
-
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_AMBIENCE ], &sunAmbience, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ] >= 0 )

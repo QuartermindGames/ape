@@ -175,7 +175,7 @@ static void *component_camera_deserialize( void *ptr, AcmBranch *root )
 void game_component_camera_handle_input_( GameCameraComponent *component, double delta )
 {
 	PL_GET_CVAR( "input/mlook", mouseLook );
-	if ( mouseLook != NULL && mouseLook->b_value )
+	if ( mouseLook->b_value )
 	{
 		int mx, my;
 		ape_client_input_get_mouse_delta( &mx, &my );

@@ -363,7 +363,7 @@ void ape_gui_draw_( ApeViewport *viewport )
 	ape_editor_draw_gui_( viewport );
 
 	PL_GET_CVAR( "renderer.showPortalVolumes", showPortalVolumes );
-	if ( showPortalVolumes && showPortalVolumes->b_value )
+	if ( showPortalVolumes->b_value )
 	{
 		const ApeCamera *camera = ape_rendererState_.camera;
 		if ( camera != nullptr && camera->pvs.numRooms > 0 )

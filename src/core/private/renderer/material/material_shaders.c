@@ -27,16 +27,8 @@ static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
         [APE_SHADER_UNIFORM_FOG_NEAR]   = "fogNear",
         [APE_SHADER_UNIFORM_FOG_FAR]    = "fogFar",
 
-        [APE_SHADER_UNIFORM_LIGHT_COLOUR]    = "light.colour",
-        [APE_SHADER_UNIFORM_LIGHT_POSITION]  = "light.position",
-        [APE_SHADER_UNIFORM_LIGHT_RADIUS]    = "light.radius",
-        [APE_SHADER_UNIFORM_LIGHT_DIRECTION] = "light.direction",
-        [APE_SHADER_UNIFORM_LIGHT_CUTOFF]    = "light.cutOff",
-
-        [APE_SHADER_UNIFORM_SUN_COLOUR]   = "sun.colour",
-        [APE_SHADER_UNIFORM_SUN_POSITION] = "sun.position",
-
-        [APE_SHADER_UNIFORM_AMBIENCE] = "sun.ambience",
+        [APE_SHADER_UNIFORM_LIGHT_COLOUR]    = "lighting.colour",
+        [APE_SHADER_UNIFORM_LIGHT_DIRECTION] = "lighting.dir",
 
         [APE_SHADER_UNIFORM_TEXTURE_MATRIX]    = "pl_texture",
         [APE_SHADER_UNIFORM_VIEW_MATRIX]       = "pl_view",
