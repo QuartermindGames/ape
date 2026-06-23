@@ -150,6 +150,11 @@ ApeAudioSample *ape_audio_format_vorbis_load_( QmFsFile *file );
 ApeAudioSample *ape_audio_format_wav_load_( QmFsFile *file );
 ApeAudioSample *ape_audio_sample_cache( const char *path )
 {
+	if ( !audioInitialized )
+	{
+		return nullptr;
+	}
+
 	ApeAudioSample *sample = ape_memory_get_from_pool_( path, APE_CACHE_POOL_SAMPLES );
 	if ( sample != nullptr )
 	{
