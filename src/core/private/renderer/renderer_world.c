@@ -266,6 +266,7 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 		build_brush_display_list( child, light, camera, visibleRoom, &offset, flags );
 	}
 
+	PL_GET_CVAR( "renderer.showNormals", showNormals );
 	for ( unsigned int i = 0; i < numDisplayLists; ++i )
 	{
 		if ( displayLists[ i ].numSubMeshes == 0 )
@@ -277,6 +278,11 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 		mesh->numSubMeshes   = displayLists[ i ].numSubMeshes;
 		mesh->firstSubMeshes = displayLists[ i ].firstSubMeshes;
 		mesh->subMeshes      = displayLists[ i ].subMeshes;
+
+		if ( showNormals->b_value )
+		{
+			displayLists[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_DEBUG_NORMALS );
+		}
 
 		ape_material_draw( displayLists[ i ].material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
 

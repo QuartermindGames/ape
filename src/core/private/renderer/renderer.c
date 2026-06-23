@@ -336,6 +336,7 @@ void ape_register_renderer_console_variables_( void )
 	ape_console_var_register( "renderer.showShadowWireframe", "Show the wireframe of the stencil shadow volume.", "false", PL_VAR_BOOL, &ape_config_.renderer.showShadowWireframe, nullptr, APE_CONSOLE_VAR_FLAG_CHEAT );
 	ape_console_var_register( "renderer.forceShadows", "Force all lights to emit shadows (not recommended).", "false", PL_VAR_BOOL, &ape_config_.renderer.forceShadows, nullptr, 0 );
 
+	ape_console_var_register( "renderer.showNormals", "Show all surface normals.", "false", PL_VAR_BOOL, nullptr, nullptr, 0 );
 	ape_console_var_register( "renderer.showSelectionBuffer", "Show the selection buffer.", "false", PL_VAR_BOOL, &ape_config_.renderer.showSelectionBuffer, nullptr, 0 );
 
 	//TODO: move these into the material system
