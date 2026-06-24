@@ -213,7 +213,7 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 }
 
 ApeEntityComponentDefinition game_movementComponent_ = {
-        .name                = "movement",
+        .name                = GAME_MOVEMENT_COMPONENT_NAME,
         .createFunction      = create_movement,
         .destroyFunction     = destroy_movement,
         .serializeFunction   = serialize_movement,

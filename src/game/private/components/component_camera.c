@@ -112,13 +112,23 @@ static void third_person_tick( const GameCameraComponent *component, ApeCamera *
 	ape_camera_set_angles( camera, &cang );
 }
 
-static void first_person_tick( const GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, const double delta )
+static void first_person_tick( GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, QmMathVector3f velocity, const double delta )
 {
 	QmMathVector3f cpos = ape_camera_get_position( camera );
 	QmMathVector3f cang = ape_camera_get_angles( camera );
 
+	float vlength = qm_math_vector3f_length( velocity );
+	if ( vlength > 0.0f )
+	{
+		component->viewBob += sinf( ape_get_num_ticks() / 5.0f ) / 2.0f * vlength;
+	}
+	else
+	{
+		component->viewBob = PlLinearInterpolate( component->viewBob, 0.0f, 7.0f * delta );
+	}
+
 	// entity camera position + view height
-	trackPos.y = trackPos.y + component->height;
+	trackPos.y = trackPos.y + component->height + component->viewBob;
 
 	// entity camera angles
 	QmMathVector3f eang = component->angles;
@@ -205,7 +215,7 @@ void game_component_camera_handle_input_( GameCameraComponent *component, double
 	aux_math_normalize_angles( &component->angles, &component->angles );
 }
 
-void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, const QmMathVector3f trackPos, const double delta )
+void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, const QmMathVector3f trackPos, QmMathVector3f velocity, const double delta )
 {
 	game_component_camera_handle_input_( component, delta );
 
@@ -221,7 +231,7 @@ void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *cam
 	}
 	else
 	{
-		first_person_tick( component, camera, trackPos, delta );
+		first_person_tick( component, camera, trackPos, velocity, delta );
 	}
 }
 

@@ -4,7 +4,9 @@
 
 #include "nihlexa.h"
 #include "nihlexa_menu.h"
+
 #include "components/component_camera.h"
+#include "components/component_movement.h"
 
 #include "integrations/integrations.h"
 
@@ -51,11 +53,18 @@ void nih_client_tick_( const double delta )
 		ApeEntity *entity = game_server_get_local_entity_();
 		if ( entity != nullptr )
 		{
+			QmMathVector3f         velocity          = {};
+			GameMovementComponent *movementComponent = ape_entity_get_component( entity, GAME_MOVEMENT_COMPONENT_NAME );
+			if ( movementComponent != nullptr )
+			{
+				velocity = movementComponent->velocity;
+			}
+
 			GameCameraComponent *cameraComponent = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
 			if ( cameraComponent != nullptr )
 			{
 				QmMathVector3f entityPos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-				game_component_camera_tick_( cameraComponent, player->camera, entityPos, delta );
+				game_component_camera_tick_( cameraComponent, player->camera, entityPos, velocity, delta );
 			}
 		}
 

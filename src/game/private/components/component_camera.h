@@ -25,12 +25,14 @@ typedef struct GameCameraComponent
 	float          side;    // how far the camera should shift left or right
 	float          height;  // height from origin of entity
 	QmMathVector3f angles;  // orbital rotation around the entity
+
+	float viewBob;
 } GameCameraComponent;
 
 static constexpr char GAME_CAMERA_COMPONENT_NAME[] = "camera";
 
 void game_component_camera_handle_input_( GameCameraComponent *component, double delta );
-void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, double delta );
+void game_component_camera_tick_( GameCameraComponent *component, ApeCamera *camera, QmMathVector3f trackPos, QmMathVector3f velocity, double delta );
 
 void game_component_camera_set_state_( GameCameraComponent *component, GameCameraState state );
 void game_component_camera_cycle_state_( GameCameraComponent *component );

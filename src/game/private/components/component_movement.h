@@ -47,4 +47,6 @@ typedef struct GameMovementComponent
 	ApeBrushFace *groundedFace;
 } GameMovementComponent;
 
+static constexpr char GAME_MOVEMENT_COMPONENT_NAME[] = "movement";
+
 void game_component_movement_tick_( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta );
