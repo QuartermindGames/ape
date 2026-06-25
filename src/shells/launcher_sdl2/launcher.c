@@ -20,9 +20,9 @@
 
 #include "launcher.h"
 
-static AcmBranch *shellConfig;
+#include "shells/sdl3/shell_sdl3.c"
 
-static PLConsoleVariable *tickFrequencyVar;
+static AcmBranch *shellConfig;
 
 /****************************************
  * WINDOW MANAGEMENT
@@ -35,44 +35,6 @@ static ApeViewport *windowViewport;
 
 static int drawW, drawH;
 
-void shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
-{
-	const char         *title;
-	SDL_MessageBoxFlags flags;
-	switch ( messageType )
-	{
-		case SS_SHELL_MESSAGE_BOX_TYPE_ERROR:
-			title = "Error";
-			flags = SDL_MESSAGEBOX_ERROR;
-			break;
-		case SS_SHELL_MESSAGE_BOX_TYPE_WARNING:
-			title = "Warning";
-			flags = SDL_MESSAGEBOX_WARNING;
-			break;
-		default:
-		case SS_SHELL_MESSAGE_BOX_TYPE_INFO:
-			title = "Info";
-			flags = SDL_MESSAGEBOX_INFORMATION;
-			break;
-	}
-
-	va_list args;
-	va_start( args, message );
-
-	int   l   = pl_vscprintf( message, args );
-	char *buf = QM_OS_MEMORY_MALLOC_( l + 1 );
-
-	vsnprintf( buf, l, message, args );
-
-	va_end( args );
-
-	PlLogWFunction( launcherLog, "%s", buf );
-
-	SDL_ShowSimpleMessageBox( flags, title, buf, nullptr );
-
-	qm_os_memory_free( buf );
-}
-
 float shell_get_display_scale()
 {
 	if ( sdlWindow == nullptr )
@@ -81,13 +43,6 @@ float shell_get_display_scale()
 	}
 
 	return SDL_GetWindowDisplayScale( sdlWindow );
-}
-
-static bool IsWindowActive( void )
-{
-	assert( sdlWindow != NULL );
-	uint32_t flags = SDL_GetWindowFlags( sdlWindow );
-	return ( !( flags & SDL_WINDOW_HIDDEN ) && ( flags & SDL_WINDOW_INPUT_FOCUS ) );
 }
 
 static SDL_Window *create_window( const char *title, int width, int height, bool fullscreen, uint8_t mode )
@@ -249,114 +204,6 @@ void ss_shell_grab_mouse( bool grab )
 	}
 }
 
-static int Sys_TranslateSDLKeyInput( int key )
-{
-	switch ( key )
-	{
-		default:
-			break;
-		case SDLK_CAPSLOCK:
-			return KEY_CAPSLOCK;
-		case SDLK_F1:
-			return KEY_F1;
-		case SDLK_F2:
-			return KEY_F2;
-		case SDLK_F3:
-			return KEY_F3;
-		case SDLK_F4:
-			return KEY_F4;
-		case SDLK_F5:
-			return KEY_F5;
-		case SDLK_F6:
-			return KEY_F6;
-		case SDLK_F7:
-			return KEY_F7;
-		case SDLK_F8:
-			return KEY_F8;
-		case SDLK_F9:
-			return KEY_F9;
-		case SDLK_F10:
-			return KEY_F10;
-		case SDLK_F11:
-			return KEY_F11;
-		case SDLK_F12:
-			return KEY_F12;
-		case SDLK_PRINTSCREEN:
-			return KEY_PRINTSCREEN;
-		case SDLK_SCROLLLOCK:
-			return KEY_SCROLLLOCK;
-		case SDLK_PAUSE:
-			return KEY_PAUSE;
-		case SDLK_INSERT:
-			return KEY_INSERT;
-		case SDLK_HOME:
-			return KEY_HOME;
-		case SDLK_PAGEUP:
-			return KEY_PAGEUP;
-		case SDLK_PAGEDOWN:
-			return KEY_PAGEDOWN;
-		case SDLK_DELETE:
-			return KEY_DELETE;
-		case SDLK_END:
-			return KEY_END;
-		case SDLK_KP_TAB:
-		case SDLK_TAB:
-			return KEY_TAB;
-		case SDLK_KP_ENTER:
-			return KEY_ENTER;
-		case SDLK_UP:
-			return APE_INPUT_KEY_UP;
-		case SDLK_DOWN:
-			return APE_INPUT_KEY_DOWN;
-		case SDLK_LEFT:
-			return APE_INPUT_KEY_LEFT;
-		case SDLK_RIGHT:
-			return APE_INPUT_KEY_RIGHT;
-		case SDLK_LCTRL:
-			return KEY_LEFT_CTRL;
-		case SDLK_RCTRL:
-			return KEY_RIGHT_CTRL;
-		case SDLK_LSHIFT:
-			return KEY_LEFT_SHIFT;
-		case SDLK_RSHIFT:
-			return KEY_RIGHT_SHIFT;
-		case SDLK_LALT:
-			return KEY_LEFT_ALT;
-		case SDLK_RALT:
-			return KEY_RIGHT_ALT;
-		case SDLK_ESCAPE:
-			return APE_INPUT_KEY_ESCAPE;
-	}
-
-	if ( key < 128 )
-	{
-		return key;
-	}
-
-	return KEY_INVALID;
-}
-
-/****************************************
- * TIMER MANAGEMENT
- ****************************************/
-
-static SDL_TimerID  sdlTimer = 0;
-static unsigned int timer_callback( void *userData, SDL_TimerID timerId, uint32_t interval )
-{
-	SDL_UserEvent userEvent = {};
-	userEvent.type          = SDL_EVENT_USER;
-	userEvent.code          = 0;
-
-	SDL_Event event;
-	event.type = SDL_EVENT_USER;
-	event.user = userEvent;
-
-	SDL_PushEvent( &event );
-
-	assert( tickFrequencyVar->i_value > 0 );
-	return tickFrequencyVar->i_value;
-}
-
 /****************************************
  * INITIALIZATION
  ****************************************/
@@ -365,12 +212,19 @@ void ss_shell_shutdown( void )
 {
 	com_write_config( shellConfig, "shell" );
 
-	if ( sdlTimer != 0 )
+	if ( sdlGLContext != nullptr )
 	{
-		SDL_RemoveTimer( sdlTimer );
+		SDL_GL_DestroyContext( sdlGLContext );
+		sdlGLContext = nullptr;
 	}
 
-	exit( EXIT_SUCCESS );
+	if ( sdlWindow != nullptr )
+	{
+		SDL_DestroyWindow( sdlWindow );
+		sdlWindow = nullptr;
+	}
+
+	shell_shutdown();
 }
 
 int launcherLog;
@@ -412,12 +266,6 @@ static bool initialize_display( void )
 		driverMode = SS_SHELL_GRAPHICS_MODE_OTHER;
 	}
 
-	const char *windowTitle = com_project_get_name();
-	if ( windowTitle == NULL )
-	{
-		windowTitle = "APE Game Shell";
-	}
-
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
 #if !NDEBUG
@@ -453,7 +301,7 @@ static bool initialize_display( void )
 		height = ( int ) strtol( arg, nullptr, 10 );
 	}
 
-	if ( ( sdlWindow = create_window( windowTitle, width, height, fullscreen, driverMode ) ) == NULL )
+	if ( ( sdlWindow = create_window( com_project_get_name(), width, height, fullscreen, driverMode ) ) == NULL )
 	{
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
@@ -478,6 +326,11 @@ static bool initialize_display( void )
 		}
 	}
 
+	if ( !SDL_StartTextInput( sdlWindow ) )
+	{
+		PrintError( "Failed to start text input: %s\n", SDL_GetError() );
+	}
+
 	return true;
 }
 
@@ -490,47 +343,13 @@ int qm_os_main( const int argc, char **argv )
 	prctl( PR_SET_DUMPABLE, 1 );
 #endif
 
-	aux_initialize( argc, argv );
+	if ( !shell_initialize( argc, argv ) )
+	{
+		return EXIT_FAILURE;
+	}
 
 	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
 	Print( "Log output initialized!\n" );
-
-	if ( !SDL_Init( SDL_INIT_EVENTS | SDL_INIT_VIDEO ) )
-	{
-		PrintError( "Failed to initialize SDL: %s\n", SDL_GetError() );
-	}
-
-	qm_fs_mount_local_location( com_get_app_data_directory() );
-	qm_fs_mount_local_location( com_get_local_data_directory() );
-
-	shellConfig = com_get_config( "shell" );
-
-	const char *projectName;
-	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
-	{
-		projectName = acm_get_string( shellConfig, "defaultProject", "base" );
-	}
-
-	if ( com_project_mount( projectName ) == nullptr )
-	{
-		PrintError( "Failed to mount project (%s)!\n", projectName );
-	}
-
-#if !defined( _WIN32 )
-	// allow us to cook everything before launching, if desired
-	if ( PlHasCommandLineArgument( "/cook" ) )
-	{
-		PLPath exePath;
-		PlGetExecutableDirectory( exePath, sizeof( exePath ) );
-
-		char tmp[ sizeof( exePath ) + 64 ];
-		snprintf( tmp, sizeof( tmp ), "%s/cook %s", exePath, projectName );
-		if ( system( tmp ) == -1 )
-		{
-			PrintWarn( "Failed to execute cook command!\n" );
-		}
-	}
-#endif
 
 	if ( !initialize_display() )
 	{
@@ -544,28 +363,17 @@ int qm_os_main( const int argc, char **argv )
 
 	int w, h;
 	shell_get_window_size( &w, &h );
-	windowViewport = ape_viewport_create( 0, 0, w, h, sdlWindow, true );
-	if ( windowViewport == NULL )
+	if ( ( windowViewport = ape_viewport_create( 0, 0, w, h, sdlWindow, true ) ) == NULL )
 	{
 		PrintError( "Failed to create virtual window viewport!\n" );
 	}
 
 	// setup our timers, in this case we're just setting up our tick
 
-	tickFrequencyVar = PlGetConsoleVariable( "tickFrequency" );
-	if ( tickFrequencyVar == nullptr )
+	if ( !shell_setup_tick_timer() )
 	{
-		PrintError( "No tick frequency variable found: %s\n", PlGetError() );
-	}
-
-	if ( ( sdlTimer = SDL_AddTimer( tickFrequencyVar->i_value, timer_callback, NULL ) ) == 0 )
-	{
-		PrintError( "Failed to setup timer: %s\n", SDL_GetError() );
-	}
-
-	if ( !SDL_StartTextInput( sdlWindow ) )
-	{
-		PrintError( "Failed to start text input: %s\n", SDL_GetError() );
+		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to setup ticket timer!" );
+		return EXIT_FAILURE;
 	}
 
 	// this variable denotes whether we should only draw a frame on tick, or always draw
@@ -598,10 +406,10 @@ int qm_os_main( const int argc, char **argv )
 
 				case SDL_EVENT_MOUSE_WHEEL:
 				{
-					float x = ( event.wheel.x > 0 ) ? 1.0f : ( event.wheel.x < 0 ) ? -1.0f
-					                                                               : 0.0f;
-					float y = ( event.wheel.y > 0 ) ? 1.0f : ( event.wheel.y < 0 ) ? -1.0f
-					                                                               : 0.0f;
+					float x = event.wheel.x > 0 ? 1.0f : event.wheel.x < 0 ? -1.0f
+					                                                       : 0.0f;
+					float y = event.wheel.y > 0 ? 1.0f : event.wheel.y < 0 ? -1.0f
+					                                                       : 0.0f;
 					ape_input_handle_mouse_wheel_event( x, y );
 					break;
 				}
@@ -616,7 +424,7 @@ int qm_os_main( const int argc, char **argv )
 				case SDL_EVENT_KEY_DOWN:
 				case SDL_EVENT_KEY_UP:
 				{
-					int key = Sys_TranslateSDLKeyInput( event.key.key );
+					int key = shell_translate_key_input( event.key.key );
 					if ( key == KEY_INVALID )
 					{
 						//PrintWarn( "Unhandled key, %d\n", key );
