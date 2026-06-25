@@ -534,6 +534,11 @@ PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode 
 	PLCollisionAABB bounds    = self->localBounds;
 	PLMatrix4       transform = ape_world_node_get_transform( self );
 	bounds.origin             = PlGetMatrix4Translation( &transform );
+
+	QmMathVector3f scale = qm_math_matrix4_get_scale( &transform );
+	bounds.mins          = qm_math_vector3f_scale( bounds.mins, scale );
+	bounds.maxs          = qm_math_vector3f_scale( bounds.maxs, scale );
+
 	return bounds;
 }
 

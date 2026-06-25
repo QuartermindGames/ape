@@ -633,6 +633,12 @@ bool ape_camera_pvs_test_brush_face_( const ApeCamera *self, const ApeBrushFace 
 
 static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBrush *brush, ApeCameraVisibleRoom *visibleRoom )
 {
+	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( brush ) );
+	if ( parent == nullptr )
+	{
+		return false;
+	}
+
 	PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( APE_WORLD_NODE( brush ) );
 	if ( !ape_camera_test_aabb( self, &bounds ) )
 	{
@@ -642,15 +648,12 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 	unsigned int numVisibleFaces = 0;
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
-		if ( !ape_camera_pvs_test_brush_face_( self, &brush->faces[ i ] ) )
+		// can't account for scaling/rotation madness per face if it's attached to something else, so skip that check
+		// in those situations
+		if ( parent->type == APE_WORLD_NODE_TYPE_ROOM && !ape_camera_pvs_test_brush_face_( self, &brush->faces[ i ] ) )
 		{
 			continue;
 		}
-
-		PLMatrix4 transform       = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
-		bounds                    = brush->faces[ i ].bounds;
-		bounds.origin             = PlGetMatrix4Translation( &transform );
-		QmMathVector3f faceOrigin = qm_math_vector3f_add( bounds.absOrigin, bounds.origin );
 
 		if ( ape_brush_face_is_portal( &brush->faces[ i ] ) )
 		{
@@ -687,6 +690,11 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 					numVisibleFaces++;
 					continue;
 				}
+
+				PLMatrix4 transform       = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+				bounds                    = brush->faces[ i ].bounds;
+				bounds.origin             = PlGetMatrix4Translation( &transform );
+				QmMathVector3f faceOrigin = qm_math_vector3f_add( bounds.absOrigin, bounds.origin );
 
 				visiblePortal->screenRect = screenRect;
 				visiblePortal->portalFace = &brush->faces[ i ];
