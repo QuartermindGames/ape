@@ -102,50 +102,81 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera )
 
 static void build_selection_display_list( ApeWorldNode *node, ApeEditorInstance *instance, unsigned int *offset )
 {
-	if ( node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	if ( node->type != APE_WORLD_NODE_TYPE_BRUSH )
 	{
-		const ApeBrush *brush = ( ApeBrush * ) node;
-		for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+		return;
+	}
+
+	const ApeBrush *brush = ( ApeBrush * ) node;
+	for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
+	{
+		assert( displayLists[ 0 ].numSubMeshes < MAX_SUB_MESHES );
+		if ( displayLists[ 0 ].numSubMeshes >= MAX_SUB_MESHES )
 		{
-			assert( displayLists[ 0 ].numSubMeshes < MAX_SUB_MESHES );
-			if ( displayLists[ 0 ].numSubMeshes >= MAX_SUB_MESHES )
-			{
-				ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
-				break;
-			}
+			ape_console_warning_( "Hit submesh limit for draw, will squeeze into another batch!\n" );
+			break;
+		}
 
-			const ApeBrushFace *face = &brush->faces[ i ];
-			if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+		const ApeBrushFace *face = &brush->faces[ i ];
+		if ( instance->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+		{
+			void *p;
+			QM_OS_LINKED_LIST_ITERATE( p, instance->selectedObjects, i )
 			{
-				void *p;
-				QM_OS_LINKED_LIST_ITERATE( p, instance->selectedObjects, i )
+				if ( ( ApeBrushFace * ) p == face )
 				{
-					if ( ( ApeBrushFace * ) p == face )
+					if ( ape_camera_test_aabb( instance->camera, &face->bounds ) )
 					{
-						if ( ape_camera_test_aabb( instance->camera, &face->bounds ) )
-						{
-							displayLists[ 0 ].subMeshes[ displayLists[ 0 ].numSubMeshes ]      = face->numVertices;
-							displayLists[ 0 ].firstSubMeshes[ displayLists[ 0 ].numSubMeshes ] = *offset;
-							displayLists[ 0 ].numSubMeshes++;
-
-							ape_rendererPerformance_.numFacesDrawn++;
-						}
-
-						break;
+						displayLists[ 0 ].subMeshes[ displayLists[ 0 ].numSubMeshes ]      = face->numVertices;
+						displayLists[ 0 ].firstSubMeshes[ displayLists[ 0 ].numSubMeshes ] = *offset;
+						displayLists[ 0 ].numSubMeshes++;
 					}
+
+					break;
 				}
 			}
 		}
 	}
-
-	ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		build_selection_display_list( child, instance, offset );
-	}
 }
 
-static void build_brush_display_list( ApeWorldNode *node, ApeLight *light, ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
+void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
+{
+	if ( qm_os_linked_list_get_size( instance->selectedObjects ) == 0 )
+	{
+		return;
+	}
+
+	displayLists[ 0 ] = ( DisplayList ) {};
+
+	unsigned int offset = 0;
+	build_selection_display_list( APE_WORLD_NODE( room ), instance, &offset );
+
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, APE_WORLD_NODE( room )->children, i )
+	{
+		build_selection_display_list( child, instance, &offset );
+	}
+
+	if ( displayLists[ 0 ].numSubMeshes == 0 )
+	{
+		return;
+	}
+
+	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
+	mesh->numSubMeshes   = displayLists[ 0 ].numSubMeshes;
+	mesh->firstSubMeshes = displayLists[ 0 ].firstSubMeshes;
+	mesh->subMeshes      = displayLists[ 0 ].subMeshes;
+
+	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
+	assert( material != nullptr );
+	ape_material_draw( material, mesh, nullptr );
+
+	ape_rendererPerformance_.numFacesDrawn += mesh->numSubMeshes;
+
+	mesh->numSubMeshes = displayLists[ 0 ].numSubMeshes = 0;
+}
+
+static void build_brush_display_list( ApeWorldNode *node, const ApeLight *light, const ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, unsigned int *offset, ApeRendererPassFlag stage )
 {
 	if ( node->flags == APE_WORLD_NODE_FLAG_HIDDEN || node->type != APE_WORLD_NODE_TYPE_BRUSH )
 	{
@@ -225,8 +256,6 @@ static void build_brush_display_list( ApeWorldNode *node, ApeLight *light, ApeCa
 			list->subMeshes[ list->numSubMeshes ]      = face->numVertices;
 			list->firstSubMeshes[ list->numSubMeshes ] = *offset;
 			list->numSubMeshes++;
-
-			ape_rendererPerformance_.numFacesDrawn++;
 		}
 	}
 
@@ -285,6 +314,8 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 		}
 
 		ape_material_draw( displayLists[ i ].material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
+
+		ape_rendererPerformance_.numFacesDrawn += mesh->numSubMeshes;
 
 		mesh->numSubMeshes = displayLists[ i ].numSubMeshes = 0;
 	}
@@ -581,35 +612,6 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, const ApeLight *light )
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
-
-void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
-{
-	if ( qm_os_linked_list_get_size( instance->selectedObjects ) == 0 )
-	{
-		return;
-	}
-
-	displayLists[ 0 ] = ( DisplayList ) {};
-
-	unsigned int offset = 0;
-	build_selection_display_list( &room->base, instance, &offset );
-
-	if ( displayLists[ 0 ].numSubMeshes == 0 )
-	{
-		return;
-	}
-
-	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
-	mesh->numSubMeshes   = displayLists[ 0 ].numSubMeshes;
-	mesh->firstSubMeshes = displayLists[ 0 ].firstSubMeshes;
-	mesh->subMeshes      = displayLists[ 0 ].subMeshes;
-
-	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
-	assert( material != nullptr );
-	ape_material_draw( material, mesh, nullptr );
-
-	mesh->numSubMeshes = displayLists[ 0 ].numSubMeshes = 0;
-}
 
 static void draw_translucent_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom )
 {
