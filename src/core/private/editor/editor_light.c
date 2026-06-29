@@ -485,6 +485,8 @@ static bool setup_face_lightmap( ApeRoom *room, ApeBrushFace *face )
 
 			//TODO: why are we storing ambient light as an rgba value!?
 			lightmap_clear( lightmap, &QM_MATH_COLOUR4F_TO_3F( room->ambientLight ), room->lightmapEdgeLength );
+
+			room->lightmaps[ face->lightmapIndex ] = lightmap;
 		}
 
 		if ( lightmap->packer == nullptr && ( lightmap->packer = aux_texture_packer_node_create_root( room->lightmapEdgeLength, room->lightmapEdgeLength ) ) == nullptr )
@@ -967,9 +969,6 @@ static void room_compute_light_grid( ApeRoom *self, ApeLight **lights, unsigned 
 
 static void room_compute_lightmap( ApeRoom *self, ApeLight **lights, unsigned int numLights, ApeBrushFace **faces, unsigned int numFaces )
 {
-	//TODO: this should only be done if it's dirty!
-	ape_room_destroy_lightmaps_( self );
-
 	double startTime = qm_os_time_get_seconds();
 
 	// now, generate the lightmap for each light
@@ -1007,6 +1006,12 @@ void ape_editor_light_generate_( ApeRoom *room, bool buildLightmap, bool buildLi
 	{
 		ape_console_warning_( "Failed to create lists for lightmap generation!\n" );
 		goto cleanup;
+	}
+
+	if ( buildLightmap )
+	{
+		//TODO: this should only be done if it's dirty!
+		ape_room_destroy_lightmaps_( room );
 	}
 
 	gather_nodes( APE_WORLD_NODE( room ), lightsArray, facesArray, buildLightmap );
