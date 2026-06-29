@@ -17,8 +17,8 @@ static constexpr float CAMERA_DEFAULT_FOCUS_SCALE = 0.f;
 static constexpr float CAMERA_DEFAULT_APERTURE    = 0.f;
 
 static constexpr float CAMERA_DEFAULT_FOV  = 75.0f;
-static constexpr float CAMERA_DEFAULT_NEAR = 0.1f;
-static constexpr float CAMERA_DEFAULT_FAR  = 1000.0f;
+static constexpr float CAMERA_DEFAULT_NEAR = 1.0f;
+static constexpr float CAMERA_DEFAULT_FAR  = 10000.0f;
 
 void ape_camera_make_active( ApeCamera *camera )
 {
