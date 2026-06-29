@@ -3,12 +3,14 @@
 // Author:  Mark E. Sowden
 
 #include "qmos/public/qm_os_time.h"
+#include "qmos/public/qm_os_string.h"
 
 #include "plcore/pl_hashtable.h"
 #include "plcore/pl_timer.h"
-#include <plcore/pl_filesystem.h>
+#include "plcore/pl_filesystem.h"
 
 #include "cook.h"
+
 #include "model/model.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +40,8 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 	const char *materialPath = acm_get_string( root, "materialPath", folder );
 	PlSetupPath( dst->materialPath, true, "%s", materialPath );
 
-	dst->scale = acm_get_f32( root, "scale", 1.0f );
+	dst->isStatic = acm_get_bool( root, "isStatic", false );
+	dst->scale    = acm_get_f32( root, "scale", 1.0f );
 
 	const char *body = acm_get_string( root, "body", nullptr );
 	if ( body != nullptr )
@@ -50,13 +53,13 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 			return;
 		}
 
-		PLPath bodyPath;
-		PlSetupPath( bodyPath, true, "%s/%s", folder, body );
+		char *bodyPath = qm_os_string_alloc( "%s/%s", folder, body );
+		assert( bodyPath != nullptr );
 
 		const CookModelFormatInterface **interface = modelCookFormats;
 		while ( *interface != nullptr )
 		{
-			if ( ( *interface )->extension != nullptr && ( pl_strcasecmp( ( *interface )->extension, ext ) == 0 ) )
+			if ( ( *interface )->extension != nullptr && pl_strcasecmp( ( *interface )->extension, ext ) == 0 )
 			{
 				assert( ( *interface )->loadFunction );
 				assert( ( *interface )->convertFunction );
@@ -76,6 +79,13 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 			interface++;
 		}
 
+		if ( interface == nullptr )
+		{
+			qm_os_memory_free( bodyPath );
+			WARN( "Failed to load body (%s)!\n", bodyPath );
+			return;
+		}
+
 		// apply the scale here...
 		for ( unsigned int i = 0; i < dst->numVertices; ++i )
 		{
@@ -83,11 +93,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 			dst->vertices[ i ].normal   = qm_math_vector3f_scale_float( dst->vertices[ i ].normal, dst->scale );
 		}
 
-		if ( interface == nullptr )
-		{
-			WARN( "Failed to load body (%s)!\n", bodyPath );
-			return;
-		}
+		qm_os_memory_free( bodyPath );
 	}
 	else
 	{
@@ -95,7 +101,6 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 		return;
 	}
 
-	dst->isStatic = acm_get_bool( root, "isStatic", false );
 	if ( !dst->isStatic )
 	{
 		if ( dst->numBones > 0 )
@@ -141,7 +146,7 @@ static unsigned int get_vector_index( const QmMathVector3f *v, PLHashTable *vect
 
 static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const CookModelVertex *vertices )
 {
-	char *c = strrchr( mesh->material, '/' );
+	const char *c = strrchr( mesh->material, '/' );
 	printf( "\tSerialising mesh (%s)\n", c != nullptr ? c + 1 : mesh->material );
 
 	AcmBranch *meshBranch = acm_push_object( root, nullptr );

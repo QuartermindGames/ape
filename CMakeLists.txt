@@ -181,6 +181,8 @@ if (APE_OPTION_TOOLS)
     add_subdirectory(src/forge)
     set_target_properties(Forge PROPERTIES FOLDER "Tools")
 
+    add_subdirectory(src/shells/graft)
+
     add_subdirectory(src/tools/cook)
     set_target_properties(cook PROPERTIES FOLDER "Tools")
 
