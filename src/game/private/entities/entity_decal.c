@@ -40,7 +40,7 @@ static void decal_entity_set_material( GameDecalEntity *decalEntity )
 }
 
 static void  decal_entity_on_update_property( ApeEntity *self, [[maybe_unused]] const ApeProperty *property );
-static void *decal_entity_create( ApeEntity *self )
+static void *decal_entity_create( [[maybe_unused]] ApeEntity *self )
 {
 	GameDecalEntity *decalEntity = QM_OS_MEMORY_NEW( GameDecalEntity );
 	if ( decalEntity != nullptr )
@@ -169,7 +169,7 @@ static void decal_entity_on_draw_editor( ApeEntity *self, const bool isSelected 
 	GameDecalEntity *decalEntity = GAME_DECAL_ENTITY( self );
 	assert( decalEntity != nullptr );
 
-	if ( isSelected )
+	if ( isSelected || decalEntity->decalPtr == nullptr )
 	{
 		QmMathColour4ub colour = decalEntity->decalPtr != nullptr ? PL_COLOUR_GREEN : PL_COLOUR_RED;
 
