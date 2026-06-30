@@ -162,7 +162,7 @@ void ape_setup_default_draw_state_( const ApeViewport *viewport )
 	PlgSetShaderProgram( program->internal );
 }
 
-void ape_draw_begin_( ApeViewport *viewport )
+void ape_renderer_begin( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -252,7 +252,7 @@ static void write_screenshot( void )
 	qm_os_memory_free( buf );
 }
 
-void ape_draw_end_( ApeViewport *viewport )
+void ape_renderer_end( ApeViewport *viewport )
 {
 	qm_gfx_framebuffer_bind( nullptr, PLG_FRAMEBUFFER_DEFAULT );
 

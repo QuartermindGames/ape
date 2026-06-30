@@ -296,20 +296,19 @@ void ape_render_frame_( ApeViewport *viewport )
 {
 	COM_PROFILE_FUNCTION_START();
 
-	ape_draw_begin_( viewport );
+	ape_renderer_begin( viewport );
 
-	// Let the game draw from its own camera
-	if ( !ape_editor_is_active() && ape_gameInterface->draw != nullptr )
-	{
-		ape_gameInterface->draw( viewport );
-	}
-	else
+	if ( ape_editor_is_active() && viewport->camera != nullptr )
 	{
 		ape_camera_draw_perspective( viewport->camera, viewport );
 	}
+	else if ( ape_gameInterface->draw != nullptr )
+	{
+		ape_gameInterface->draw( viewport );
+	}
 
-	ape_draw_menu_( viewport );
-	ape_draw_end_( viewport );
+	ape_renderer_draw_menu( viewport );
+	ape_renderer_end( viewport );
 
 	COM_PROFILE_FUNCTION_END();
 }

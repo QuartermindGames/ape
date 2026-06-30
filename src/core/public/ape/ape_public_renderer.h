@@ -33,7 +33,13 @@ typedef struct ApeRoom         ApeRoom;
 typedef struct ApeWorld        ApeWorld;
 typedef struct ApeBrushFace    ApeBrushFace;
 
+typedef struct ApeRendererPassState ApeRendererPassState;
+
 typedef struct ApeGuiFont ApeGuiFont;
+
+void ape_renderer_begin( ApeViewport *viewport );
+void ape_renderer_end( ApeViewport *viewport );
+void ape_renderer_draw_menu( ApeViewport *viewport );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Viewport API
@@ -173,7 +179,7 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material );
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights );
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, const ApeRendererPassState *state );
 
 ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, unsigned int pass );
 

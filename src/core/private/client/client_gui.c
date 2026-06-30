@@ -50,7 +50,7 @@ void ape_get_2d_viewport_size_( int *width, int *height )
 	qm_gfx_get_viewport( nullptr, nullptr, width, height );
 }
 
-void ape_draw_menu_( ApeViewport *viewport )
+void ape_renderer_draw_menu( ApeViewport *viewport )
 {
 	if ( viewport == nullptr )
 	{

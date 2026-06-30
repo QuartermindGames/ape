@@ -188,6 +188,11 @@ void ape_world_node_destroy( ApeWorldNode *self );
 void ape_world_node_dettach( ApeWorldNode *self );
 void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent );
 
+/**
+ * Returns the center of the node bounding volume in world-space.
+ */
+QmMathVector3f ape_world_node_get_bounds_center( const ApeWorldNode *self );
+
 QmMathVector3f ape_world_node_get_local_position( const ApeWorldNode *self );
 QmMathVector3f ape_world_node_get_position( const ApeWorldNode *self );
 void           ape_world_node_set_position( ApeWorldNode *self, const QmMathVector3f *position );

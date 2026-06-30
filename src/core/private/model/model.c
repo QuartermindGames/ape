@@ -53,7 +53,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 		branch         = acm_get_first_child( branch );
 		while ( branch != nullptr )
 		{
-			unsigned int vertexIndices[ 3 ];
+			unsigned int vertexIndices[ 3 ] = {};
 
 			AcmBranch *childBranch;
 			if ( ( childBranch = acm_get_child_by_name( branch, "vertex" ) ) != nullptr )
@@ -268,7 +268,7 @@ static QmMathVector3f get_transformed_bone_position( const ApeModel *model, cons
 	return pos;
 }
 
-void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light )
+void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, const ApeRendererPassState *passState )
 {
 	qm_gfx_debug_push_group_marker( "Draw Model" );
 
@@ -304,10 +304,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		model->cache->start = model->meshes[ i ].startIndex;
 		model->cache->range = model->meshes[ i ].endIndex - model->meshes[ i ].startIndex;
 
-		ApeLightPointerArray lights;
-		lights[ 0 ] = light;
-
-		ape_material_draw( model->meshes[ i ].material, model->cache, light == nullptr ? nullptr : lights );
+		ape_material_draw( model->meshes[ i ].material, model->cache, passState );
 	}
 
 	PlPopMatrix();
@@ -341,14 +338,14 @@ static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 		if ( model->cache->vertices[ i ].position.z < min ) min = model->cache->vertices[ i ].position.z;
 	}
 
-	if ( ( min * -1 ) > max ) max = ( min * -1 );
+	if ( min * -1 > max ) max = min * -1;
 	bounds.mins = qm_math_vector3f( -max, -max, -max );
 	bounds.maxs = qm_math_vector3f( max, max, max );
 
 	return bounds;
 }
 
-void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light )
+void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRendererPassState *state )
 {
 	COM_PROFILE_FUNCTION_START();
 
@@ -371,8 +368,15 @@ void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLig
 				continue;
 			}
 
+			QmMathVector3f spos = ape_world_node_get_bounds_center( APE_WORLD_NODE( sceneNode ) );
+
+			ApeRendererPassState newState = *state;
+			newState.lighting.ambience    = QM_MATH_COLOUR4F_TO_3F( ape_room_get_ambience( room ) );
+
+			ape_room_get_light_sample( room, spos, &newState.lighting.colour, &newState.lighting.dir );
+
 			PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( sceneNode ) );
-			ape_model_draw( model, &( ApeModelAnimationState ) {}, &transform, light );
+			ape_model_draw( model, &( ApeModelAnimationState ) {}, &transform, &newState );
 		}
 	}
 

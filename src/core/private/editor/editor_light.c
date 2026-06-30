@@ -202,6 +202,13 @@ void ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **ligh
 					cell->totalLight.r += c.x;
 					cell->totalLight.g += c.y;
 					cell->totalLight.b += c.z;
+
+					lightDir = qm_math_vector3f_invert( lightDir );
+					cell->averageDir.x += lightDir.x / ( cell->numLights + 1 );
+					cell->averageDir.y += lightDir.y / ( cell->numLights + 1 );
+					cell->averageDir.z += lightDir.z / ( cell->numLights + 1 );
+					cell->averageDir = qm_math_vector3f_normalize( cell->averageDir );
+
 					cell->numLights++;
 				}
 			}
@@ -217,6 +224,8 @@ const ApeLightGridCell *ape_light_grid_sample_cell_( const ApeLightGrid *self, c
 		dstColour->r = cell->totalLight.r / ( cell->numLights + 1 );
 		dstColour->g = cell->totalLight.g / ( cell->numLights + 1 );
 		dstColour->b = cell->totalLight.b / ( cell->numLights + 1 );
+
+		*dstDir = cell->averageDir;
 	}
 
 	return cell;

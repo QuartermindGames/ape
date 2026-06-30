@@ -27,6 +27,7 @@ static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
         [APE_SHADER_UNIFORM_FOG_NEAR]   = "fogNear",
         [APE_SHADER_UNIFORM_FOG_FAR]    = "fogFar",
 
+        [APE_SHADER_UNIFORM_LIGHT_AMBIENCE]  = "lighting.ambience",
         [APE_SHADER_UNIFORM_LIGHT_COLOUR]    = "lighting.colour",
         [APE_SHADER_UNIFORM_LIGHT_DIRECTION] = "lighting.dir",
 

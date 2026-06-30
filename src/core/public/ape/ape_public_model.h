@@ -28,7 +28,7 @@ ApeModel *ape_model_load( const char *path );
 /**
  * Draw the model.
  */
-void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, ApeLight *light );
+void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state, const PLMatrix4 *transform, const ApeRendererPassState *passState );
 
 /**
  * Draw an instanced version of the model.

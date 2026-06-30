@@ -37,6 +37,7 @@ typedef struct ApeSpriteFrame
 	QmGfxTexture *texture;
 } ApeSpriteFrame;
 
+typedef struct ApeTexture      ApeTexture;
 typedef struct ApeRenderTarget ApeRenderTarget;
 
 ////////////////////////////////////////////////////////////////////
@@ -107,9 +108,6 @@ typedef struct ApeLight
 	bool isCacheDirty;
 } ApeLight;
 
-#define APE_MAX_LIGHTS_PER_PASS 8// !! make sure this matches shared.inc.glsl !!
-typedef ApeLight *ApeLightPointerArray[ APE_MAX_LIGHTS_PER_PASS ];
-
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -134,8 +132,6 @@ typedef struct ApeRendererPassState
 	ApeCullMode cullMode;// override default cull mode
 	//ApeRendererPassFlag passStage;
 
-	QmMathColour4f ambience;
-
 	PLGBlend blendModeA, blendModeB;
 	bool     overrideBlendMode;
 
@@ -154,8 +150,12 @@ typedef struct ApeRendererPassState
 
 	ApeCamera *camera;
 
-	ApeLightPointerArray lights;
-	unsigned int         numLights;
+	struct
+	{
+		QmMathColour3f   ambience;
+		QmMathColour3f16 colour;
+		QmMathVector3f   dir;
+	} lighting;
 
 	QmGfxTexture *lightmapTexture;
 	unsigned int  lightmapIndex;
@@ -177,9 +177,6 @@ unsigned int ape_renderer_clip_polygon( const QmMathVector3f *vertices, unsigned
 bool ape_get_capture_state_( void );
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport );
-void ape_draw_begin_( ApeViewport *viewport );
-void ape_draw_end_( ApeViewport *viewport );
-void ape_draw_menu_( ApeViewport *viewport );
 
 void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, const QmMathColour4ub *colour );
 void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, float depth, const QmMathColour4ub *colour, bool inset );

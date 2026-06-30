@@ -340,6 +340,12 @@ void ape_world_node_attach( ApeWorldNode *self, ApeWorldNode *parent )
 	ape_world_node_mark_dirty_( parent );
 }
 
+QmMathVector3f ape_world_node_get_bounds_center( const ApeWorldNode *self )
+{
+	const PLCollisionAABB bounds = ape_world_node_get_transformed_local_bounds( self );
+	return PlGetAabbAbsOrigin( &bounds, bounds.origin );
+}
+
 QmMathVector3f ape_world_node_get_local_position( const ApeWorldNode *self )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );

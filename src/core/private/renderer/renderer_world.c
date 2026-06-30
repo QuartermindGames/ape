@@ -169,7 +169,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
 	assert( material != nullptr );
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, mesh, &ape_rendererState_ );
 
 	ape_rendererPerformance_.numFacesDrawn += mesh->numSubMeshes;
 
@@ -313,7 +313,7 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 			displayLists[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_DEBUG_NORMALS );
 		}
 
-		ape_material_draw( displayLists[ i ].material, mesh, light != nullptr ? ( ApeLightPointerArray ) { light } : nullptr );
+		ape_material_draw( displayLists[ i ].material, mesh, &ape_rendererState_ );
 
 		ape_rendererPerformance_.numFacesDrawn += mesh->numSubMeshes;
 
@@ -374,7 +374,7 @@ static void draw_node_meshes( ApeWorldNode *worldNode, const ApeCameraVisibleRoo
 	}
 }
 
-void ape_model_draw_models( const ApeRoom *room, const ApeCamera *camera, ApeLight *light );
+void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRendererPassState *state );
 
 static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoom, ApeLight *light, const ApeRendererPassFlag flags )
 {
@@ -388,7 +388,7 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	ApeRoom *room = visibleRoom->room;
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience = room->ambientLight;
+		ape_rendererState_.lighting.ambience = QM_MATH_COLOUR4F_TO_3F( room->ambientLight );
 	}
 
 	// recurse down the tree to draw all nodes with explicit meshes
@@ -397,12 +397,12 @@ static void draw_room( ApeCamera *camera, const ApeCameraVisibleRoom *visibleRoo
 	//TODO: botch, we don't check render pass flag under draw models yet
 	if ( !( flags & APE_RENDERER_PASS_FLAG_TRANSLUCENT ) )
 	{
-		ape_model_draw_models( room, camera, light );
+		ape_model_draw_models( room, camera, &ape_rendererState_ );
 	}
 
 	if ( flags & APE_RENDERER_PASS_FLAG_DEPTH_PREPASS )
 	{
-		ape_rendererState_.ambience = QM_MATH_COLOUR4F_ZERO;
+		ape_rendererState_.lighting.ambience = ( QmMathColour3f ) {};
 	}
 
 	COM_PROFILE_FUNCTION_END();
@@ -602,7 +602,7 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, const ApeLight *light )
 	{
 		ApeMaterial *shadowMaterial = ape_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
 		assert( shadowMaterial != NULL );
-		ape_material_draw( shadowMaterial, mesh, nullptr );
+		ape_material_draw( shadowMaterial, mesh, &ape_rendererState_ );
 	}
 
 	PlPopMatrix();
@@ -778,12 +778,12 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 
 	if ( useMaterial )
 	{
-		ape_material_draw( portal->material, mesh, nullptr );
+		ape_material_draw( portal->material, mesh, &ape_rendererState_ );
 	}
 	else
 	{
 		ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
-		ape_material_draw( material, mesh, nullptr );
+		ape_material_draw( material, mesh, &ape_rendererState_ );
 	}
 
 	PlPopMatrix();

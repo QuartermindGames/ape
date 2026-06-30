@@ -1062,7 +1062,7 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 	}
 }
 
-static void set_global_uniforms( const ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeLight *light )
+static void set_global_uniforms( const ApeShaderProgram *program, const ApeMaterialPass *pass, const ApeRendererPassState *state )
 {
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_NUM_TICKS ] >= 0 )
 	{
@@ -1091,24 +1091,18 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_FOG_FAR ], &ape_rendererState_.fogFar, false );
 	}
 
+	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_AMBIENCE ] >= 0 )
+	{
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_AMBIENCE ], &state->lighting.ambience, false );
+	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ] >= 0 )
 	{
-		QmMathColour4f lightColour = ( light != NULL ) ? light->colour : ( QmMathColour4f ) {};
+		QmMathColour3f lightColour = QM_MATH_COLOUR3F16_TO_3F( state->lighting.colour );
 		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_COLOUR ], &lightColour, false );
 	}
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ] >= 0 )
 	{
-		QmMathVector3f lightDirection;
-		if ( light != nullptr )
-		{
-			lightDirection = ape_light_get_direction( light );
-		}
-		else
-		{
-			lightDirection = QM_MATH_VECTOR3F_ZERO;
-		}
-
-		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &lightDirection, false );
+		qm_gfx_shader_set_uniform_value_by_index( program->internal, program->globalUniforms[ APE_SHADER_UNIFORM_LIGHT_DIRECTION ], &state->lighting.dir, false );
 	}
 
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ] >= 0 )
@@ -1120,8 +1114,8 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 
 		PlTranslateMatrix( qm_math_vector3f( pass->textureOffset.x, pass->textureOffset.y, 0.0f ) );
 
-		float scaleX = ( pass->textureScale.x != 0.0f ) ? 1.0f / pass->textureScale.x : 1.0f;
-		float scaleY = ( pass->textureScale.y != 0.0f ) ? 1.0f / pass->textureScale.y : 1.0f;
+		float scaleX = pass->textureScale.x != 0.0f ? 1.0f / pass->textureScale.x : 1.0f;
+		float scaleY = pass->textureScale.y != 0.0f ? 1.0f / pass->textureScale.y : 1.0f;
 		PlScaleMatrix( qm_math_vector3f( scaleX, scaleY, 1.0f ) );
 
 		qm_gfx_shader_set_uniform_value_by_index( program->internal,
@@ -1279,25 +1273,35 @@ static QmGfxTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 	return texture;
 }
 
-void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights )
+void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, const ApeRendererPassState *state )
 {
-	if ( ape_rendererState_.camera != NULL )
+	if ( state == nullptr )
 	{
-		if ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED || ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
+		state = &ape_rendererState_;
+	}
+
+	ApeCamera *camera = state->camera;
+	if ( camera != nullptr )
+	{
+#if 0
+		if ( camera->drawMode == APE_CAMERA_DRAW_MODE_TEXTURED || camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 		{
-			lights = nullptr;
+			state->lighting.ambience = QM_MATH_COLOUR3F( 1.0f, 1.0f, 1.0f );
 		}
-		if ( ape_rendererState_.camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
+#endif
+
+		if ( camera->drawMode == APE_CAMERA_DRAW_MODE_SOLID )
 		{
 			material = defaultMaterials[ APE_MATERIAL_DEFAULT_VERTEX ];
 		}
 	}
 
-	if ( ape_rendererState_.overrideBlendMode )
+	if ( state->overrideBlendMode )
 	{
 		PlgEnableGraphicsState( PLG_GFX_STATE_BLEND );
 		PlgSetBlendMode( ape_rendererState_.blendModeA, ape_rendererState_.blendModeB );
 	}
+
 	if ( ape_rendererState_.overrideDepthMode )
 	{
 		PlgDepthBufferFunction( ape_rendererState_.overrideDepthMode );
@@ -1306,10 +1310,6 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
 		ApeMaterialPass *curPass = &material->passes[ i ];
-		if ( !( curPass->program->flags & APE_SHADER_PROGRAM_FLAG_SUPPORTS_LIGHTING ) && lights != nullptr )
-		{
-			continue;
-		}
 
 		PLGCullMode cullMode;
 		if ( ape_rendererState_.cullMode == APE_RENDERER_CULL_MODE_FRONT )
@@ -1371,7 +1371,7 @@ void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, ApeLight **lights 
 				PlgDepthBufferFunction( curPass->depthMode );
 			}
 
-			set_global_uniforms( curPass->program, curPass, lights != nullptr ? lights[ 0 ] : nullptr );
+			set_global_uniforms( curPass->program, curPass, state );
 
 			unsigned int curUnit = 0;
 			for ( unsigned int j = 0; j < curPass->numVariables; ++j )
