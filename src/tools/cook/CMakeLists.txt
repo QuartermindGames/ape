@@ -9,8 +9,5 @@ add_executable(cook
         model/model_psk.c
         model/model_smd.c
 )
-
-target_link_libraries(cook
-        ape-aux
-        ape-core
-)
+set_target_properties(cook PROPERTIES FOLDER "Tools")
+target_link_libraries(cook ape-aux ape-core)
