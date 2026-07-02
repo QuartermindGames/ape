@@ -44,6 +44,8 @@ float ape_audio_get_global_volume_( void );
 
 typedef struct ApeAudioDriverInterface
 {
+	const char *name;
+
 	bool ( *initialize )( void );
 	void ( *shutdown )( void );
 	void ( *tick )( void );

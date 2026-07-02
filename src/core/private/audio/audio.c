@@ -5,6 +5,8 @@
 #include "ape_private.h"
 #include "audio.h"
 
+#include "core_console.h"
+
 // Provided as a list so we can hand this to the tools later...
 const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
         {"none",            APE_AUDIO_REVERB_PRESET_NONE           },
@@ -41,7 +43,20 @@ const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
 };
 const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = QM_OS_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
-static const ApeAudioDriverInterface *audioDriverInterface = nullptr;
+#if defined( APE_SUPPORT_OPENAL )
+extern ApeAudioDriverInterface ape_audioDriverOpenAL;
+#endif
+
+static const ApeAudioDriverInterface *audioDriverInterfaces[] = {
+        nullptr,
+#if defined( APE_SUPPORT_OPENAL )
+        &ape_audioDriverOpenAL,
+#endif
+};
+static constexpr unsigned int numAudioDriverInterfaces = QM_OS_ARRAY_ELEMENTS( audioDriverInterfaces );
+
+static PLConsoleString                audioDriverInterfaceName;
+static const ApeAudioDriverInterface *audioDriverInterface;
 #define DRIVER_CALLBACK( FUNCTION, ... )                                                                                        \
 	{                                                                                                                           \
 		if ( audioDriverInterface != nullptr && audioDriverInterface->FUNCTION ) audioDriverInterface->FUNCTION( __VA_ARGS__ ); \
@@ -102,6 +117,49 @@ static void test_3d_command( unsigned int, char ** )
 	ape_audio_sample_release_reference( sample );
 }
 
+static void audio_driver_set_interface( const char *name )
+{
+	if ( audioDriverInterface != nullptr && strcmp( audioDriverInterface->name, name ) == 0 )
+	{
+		return;
+	}
+
+	const ApeAudioDriverInterface *newInterface = nullptr;
+	for ( unsigned int i = 0; i < numAudioDriverInterfaces; ++i )
+	{
+		if ( audioDriverInterfaces[ i ] == nullptr )
+		{
+			continue;
+		}
+
+		if ( strcmp( name, audioDriverInterfaces[ i ]->name ) != 0 )
+		{
+			continue;
+		}
+
+		newInterface = audioDriverInterfaces[ i ];
+		break;
+	}
+
+	if ( newInterface == nullptr )
+	{
+		ape_console_warning_( "Failed to find specified audio driver (%s)!\n", name );
+		return;
+	}
+
+	if ( audioDriverInterface != nullptr )
+	{
+		audioDriverInterface->shutdown();
+	}
+
+	audioDriverInterface = newInterface;
+}
+
+static void audio_driver_callback( PLConsoleVariable *self )
+{
+	audio_driver_set_interface( self->s_value );
+}
+
 void ape_audio_initialize_( void )
 {
 	if ( PlHasCommandLineArgument( "/nosound" ) || audioInitialized )
@@ -112,8 +170,10 @@ void ape_audio_initialize_( void )
 	ape_console_print_( "Initializing audio\n" );
 
 	// initialise the driver interface (TODO: allow us to pick the backend we want)
-	const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void );
-	audioDriverInterface = ape_audio_get_driver_interface_();
+
+	ape_console_var_register( "audio.driver", "Audio driver to use.", "openal", PL_VAR_STRING, audioDriverInterfaceName, audio_driver_callback, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+
+	audio_driver_set_interface( audioDriverInterfaceName );
 	if ( audioDriverInterface == nullptr || !audioDriverInterface->initialize() )
 	{
 		ape_console_warning_( "Failed to initialize audio driver!\n" );

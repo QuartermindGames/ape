@@ -1,19 +1,21 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 // Purpose: OpenAL driver for Yin
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/efx.h>
-#include <AL/efx-presets.h>
+#if defined( APE_SUPPORT_OPENAL )
 
-#include "audio.h"
+#	include <AL/al.h>
+#	include <AL/alc.h>
+#	include <AL/efx.h>
+#	include <AL/efx-presets.h>
+
+#	include "audio.h"
 
 /**
  * Cheekily based on the work I'd previously done here...
  * 	https://github.com/TalonBraveInfo/OpenHoW/blob/master/src/engine/audio/AudioManager.cpp
  */
 
-#if !defined( NDEBUG )
+#	if !defined( NDEBUG )
 
 static void handle_al_error( unsigned int err, const char *file, int line )
 {
@@ -50,16 +52,16 @@ static void handle_al_error( unsigned int err, const char *file, int line )
 	assert( err == AL_NO_ERROR );
 }
 
-#	define XAL_CALL( X )                                \
-		{                                                \
-			alGetError();                                \
-			X;                                           \
-			unsigned int _err = alGetError();            \
-			handle_al_error( _err, __FILE__, __LINE__ ); \
-		}
-#else
-#	define XAL_CALL( X ) X
-#endif
+#		define XAL_CALL( X )                                \
+			{                                                \
+				alGetError();                                \
+				X;                                           \
+				unsigned int _err = alGetError();            \
+				handle_al_error( _err, __FILE__, __LINE__ ); \
+			}
+#	else
+#		define XAL_CALL( X ) X
+#	endif
 
 static ALCdevice  *xalDevice;
 static ALCcontext *xalContext;
@@ -383,27 +385,26 @@ static void al_source_emit( ApeAudioSource *self, ApeAudioSample *sample )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-const ApeAudioDriverInterface *ape_audio_get_driver_interface_( void )
-{
-	static ApeAudioDriverInterface driverInterface;
+const ApeAudioDriverInterface ape_audioDriverOpenAL = {
+        .name = "openal",
 
-	driverInterface.initialize  = initialize_openal;
-	driverInterface.shutdown    = shutdown_openal;
-	driverInterface.tick        = al_tick;
-	driverInterface.pause       = al_pause;
-	driverInterface.cacheSample = al_cache_sample;
-	driverInterface.freeSample  = al_free_sample;
-	driverInterface.emitSample  = al_emit_sample;
+        .initialize  = initialize_openal,
+        .shutdown    = shutdown_openal,
+        .tick        = al_tick,
+        .pause       = al_pause,
+        .cacheSample = al_cache_sample,
+        .freeSample  = al_free_sample,
+        .emitSample  = al_emit_sample,
 
-	driverInterface.createSource      = al_source_create;
-	driverInterface.destroySource     = al_source_destroy;
-	driverInterface.setSourcePosition = al_source_set_position;
-	driverInterface.setSourceVelocity = al_source_set_velocity;
-	driverInterface.setSourcePitch    = al_source_set_pitch;
-	driverInterface.setSourceVolume   = al_source_set_volume;
-	driverInterface.setSourceLoop     = al_source_set_loop;
-	driverInterface.isSourcePlaying   = al_source_is_playing;
-	driverInterface.emitSource        = al_source_emit;
+        .createSource      = al_source_create,
+        .destroySource     = al_source_destroy,
+        .setSourcePosition = al_source_set_position,
+        .setSourceVelocity = al_source_set_velocity,
+        .setSourcePitch    = al_source_set_pitch,
+        .setSourceVolume   = al_source_set_volume,
+        .setSourceLoop     = al_source_set_loop,
+        .isSourcePlaying   = al_source_is_playing,
+        .emitSource        = al_source_emit,
+};
 
-	return &driverInterface;
-}
+#endif
