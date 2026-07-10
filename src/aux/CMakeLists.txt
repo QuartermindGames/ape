@@ -3,6 +3,7 @@ add_library(ape-aux STATIC
 
         private/aux.c
         private/aux_collision.c
+        private/aux_log.c
         private/aux_math.c
         private/aux_profiler.c
         private/aux_project.c

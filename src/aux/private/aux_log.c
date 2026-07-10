@@ -1,27 +1,33 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
-// Purpose: Console message logging system.
+// Purpose: Logging
 // Author:  Mark E. Sowden
 
 #include "qmos/public/qm_os_string.h"
 
-#include "ape_private.h"
+#include "plcore/pl_filesystem.h"
 
-typedef struct ApeConsoleLogger
+#include "aux_private.h"
+
+#include "aux/public/aux_log.h"
+
+typedef struct AuxLogSource
 {
 	const char     *prefix;
 	QmMathColour4ub colour;
 	bool            isActive;
-} ApeConsoleLogger;
+} AuxLogSource;
 
 static constexpr unsigned int MAX_LOG_LEVELS = 16;
-static ApeConsoleLogger       logLevels[ MAX_LOG_LEVELS ];
+static AuxLogSource           logLevels[ MAX_LOG_LEVELS ];
 static unsigned int           numLogLevels;
+
+static AuxLogCallback logCallback;
 
 #if !defined( NDEBUG )
 static FILE *out;
 #endif
 
-static ApeConsoleLogger *get_logger_for_id( const int id )
+static AuxLogSource *get_logger_for_id( const int id )
 {
 	if ( id < 0 || id >= MAX_LOG_LEVELS )
 	{
@@ -43,7 +49,7 @@ static int get_next_free_logger_id()
 	return numLogLevels;
 }
 
-void ape_console_log_initialize_()
+bool aux_log_initialize_()
 {
 #if !defined( NDEBUG )
 	char       *path;
@@ -65,14 +71,17 @@ void ape_console_log_initialize_()
 	out = fopen( path, "w" );
 	if ( out == nullptr )
 	{
-		ape_console_warning_( "Failed to open log, output will be missing!\n" );
+		fprintf( stderr, "Failed to open log, output will be missing!\n" );
+		return false;
 	}
 
 	qm_os_memory_free( path );
 #endif
+
+	return true;
 }
 
-void ape_console_log_shutdown_()
+void aux_log_shutdown_()
 {
 #if !defined( NDEBUG )
 	if ( out != nullptr )
@@ -83,37 +92,48 @@ void ape_console_log_shutdown_()
 #endif
 }
 
-int ape_console_log_register_input( const char *prefix, const QmMathColour4ub colour, const bool isActive )
+void aux_log_set_callback( const AuxLogCallback callback )
+{
+	logCallback = callback;
+}
+
+int aux_log_register_source( const char *prefix, const QmMathColour4ub colour, const bool isActive )
 {
 	int i = get_next_free_logger_id();
 	if ( i == -1 )
 	{
-		ape_console_warning_( "Reached maximum number of logger levels!\n" );
 		return -1;
 	}
 
-	ApeConsoleLogger *logger = &logLevels[ i ];
-	logger->colour           = colour;
-	logger->prefix           = prefix;
-	logger->isActive         = isActive;
+	AuxLogSource *logger = &logLevels[ i ];
+	logger->colour       = colour;
+	logger->prefix       = prefix;
+	logger->isActive     = isActive;
 
 	numLogLevels++;
 
 	return i;
 }
 
-void ape_console_push_message_( const char *message, QmMathColour4ub colour );
-void ape_console_log_push_message( const int id, const char *msg, ... )
+void aux_log_source_status( int id, bool status )
+{
+	AuxLogSource *logger = get_logger_for_id( id );
+	assert( logger != nullptr );
+
+	logger->isActive = status;
+}
+
+void aux_log_push_message( const int id, const char *msg, ... )
 {
 	if ( id == -1 )
 	{
 		return;
 	}
 
-	ApeConsoleLogger *logger = get_logger_for_id( id );
+	AuxLogSource *logger = get_logger_for_id( id );
 	assert( logger != nullptr );
 
-	va_list args;
+	va_list args = {};
 	va_start( args, msg );
 
 	int l = pl_vscprintf( msg, args ) + 1;
@@ -129,7 +149,10 @@ void ape_console_log_push_message( const int id, const char *msg, ... )
 
 	printf( "%s", buf );
 
-	ape_console_push_message_( buf, logger->colour );
+	if ( logCallback != nullptr )
+	{
+		logCallback( buf, logger->colour );
+	}
 
 #if !defined( NDEBUG )
 	if ( out != nullptr )

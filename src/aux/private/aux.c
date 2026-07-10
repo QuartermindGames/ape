@@ -5,7 +5,13 @@
 
 #include <acm/acm.h>
 
+#include "aux/public/aux_log.h"
+
 #include "aux_private.h"
+
+static int logPrint;
+static int logWarn;
+static int logError;
 
 void aux_initialize( int argc, char **argv )
 {
@@ -16,6 +22,17 @@ void aux_initialize( int argc, char **argv )
 	// Initialize directory lookups
 	com_get_local_data_directory();
 	com_get_app_data_directory();
+
+	aux_log_initialize_();
+
+	logPrint = aux_log_register_source( "aux", PL_COLOUR_WHITE, true );
+	logWarn  = aux_log_register_source( "aux/warn", PL_COLOUR_YELLOW, true );
+	logError = aux_log_register_source( "aux/error", PL_COLOUR_RED, true );
+}
+
+void aux_shutdown()
+{
+	aux_log_shutdown_();
 }
 
 const char *com_get_local_data_directory( void )
@@ -124,8 +141,7 @@ void com_print_( const char *m, ... )
 
 	va_end( args );
 
-	//TODO
-	//PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_INFO ], "%s", buf );
+	aux_log_push_message( logPrint, "%s", buf );
 }
 
 void com_warning_( const char *m, ... )
@@ -138,8 +154,7 @@ void com_warning_( const char *m, ... )
 
 	va_end( args );
 
-	//TODO
-	//PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_WARN ], "%s", buf );
+	aux_log_push_message( logWarn, "%s", buf );
 }
 
 void com_error_( const char *m, ... )
@@ -152,8 +167,7 @@ void com_error_( const char *m, ... )
 
 	va_end( args );
 
-	//TODO
-	//PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_ERROR ], "%s", buf );
+	aux_log_push_message( logError, "%s", buf );
 
 	abort();
 }

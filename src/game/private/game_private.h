@@ -12,6 +12,7 @@
 #include <acm/acm.h>
 
 #include "aux/public/aux_math.h"
+#include "aux/public/aux_log.h"
 
 #include "core/public/yin/core.h"
 #include "core/public/yin/core_entity.h"

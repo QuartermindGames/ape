@@ -13,24 +13,24 @@
 
 extern int launcherLog;
 
-#define Print( ... ) ape_console_log_push_message( launcherLog, __VA_ARGS__ )
+#define Print( ... ) aux_log_push_message( launcherLog, __VA_ARGS__ )
 #define PrintWarn( ... )                                                         \
 	{                                                                            \
-		ape_console_log_push_message( launcherLog, __VA_ARGS__ );                \
+		aux_log_push_message( launcherLog, __VA_ARGS__ );                        \
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_WARNING, __VA_ARGS__ ); \
 	}
 
 #ifdef NDEBUG
 #	define PrintError( ... )                                                      \
 		{                                                                          \
-			ape_console_log_push_message( launcherLog, __VA_ARGS__ );              \
+			aux_log_push_message( launcherLog, __VA_ARGS__ );                      \
 			shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, __VA_ARGS__ ); \
 			exit( EXIT_FAILURE );                                                  \
 		}
 #else
 #	define PrintError( ... )                                                      \
 		{                                                                          \
-			ape_console_log_push_message( launcherLog, __VA_ARGS__ );              \
+			aux_log_push_message( launcherLog, __VA_ARGS__ );                      \
 			shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, __VA_ARGS__ ); \
 			abort();                                                               \
 		}

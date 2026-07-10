@@ -220,7 +220,7 @@ void ape_console_print_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( logLevels[ APE_LOG_INFORMATION ], buf );
+	aux_log_push_message( logLevels[ APE_LOG_INFORMATION ], buf );
 }
 
 void ape_console_verbose_( const char *message, ... )
@@ -231,7 +231,7 @@ void ape_console_verbose_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( logLevels[ APE_LOG_VERBOSE ], buf );
+	aux_log_push_message( logLevels[ APE_LOG_VERBOSE ], buf );
 }
 
 void ape_console_warning_( const char *message, ... )
@@ -242,7 +242,7 @@ void ape_console_warning_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( logLevels[ APE_LOG_WARNING ], "$cFF0000FFWARNING: $cFFFFFFFF%s", buf );
+	aux_log_push_message( logLevels[ APE_LOG_WARNING ], "$cFF0000FFWARNING: $cFFFFFFFF%s", buf );
 }
 
 void ape_console_error_( const bool die, const char *message, ... )
@@ -253,7 +253,7 @@ void ape_console_error_( const bool die, const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( logLevels[ APE_LOG_ERROR ], "$cFF0000FFERROR: $cFFFFFFFF%s", buf );
+	aux_log_push_message( logLevels[ APE_LOG_ERROR ], "$cFF0000FFERROR: $cFFFFFFFF%s", buf );
 
 	if ( die )
 	{
@@ -319,9 +319,10 @@ static void console_find_command( unsigned int argc, const char *const *argv )
  */
 void ape_initialize_console_( void )
 {
+	aux_log_set_callback( ape_console_push_message_ );
+
 	ape_console_var_initialize_();
 	ape_console_cmd_initialize_();
-	ape_console_log_initialize_();
 
 	ape_console_cmd_register( "help",
 	                          "Returns information regarding specified command or variable.",
@@ -330,11 +331,11 @@ void ape_initialize_console_( void )
 	                          "Find the specific command or variable. You can specify 'cmd' or 'vars' to filter.",
 	                          1, console_find_command );
 
-	logLevels[ APE_LOG_ERROR ]       = ape_console_log_register_input( "ape/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_WARNING ]     = ape_console_log_register_input( "ape/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_INFORMATION ] = ape_console_log_register_input( "ape", PL_COLOUR_WHITE, true );
-	logLevels[ APE_LOG_VERBOSE ]     = ape_console_log_register_input( "ape/verbose", PL_COLOUR_BLUE, false );
-	logLevels[ ACL_LOG_DEBUG ]       = ape_console_log_register_input( "ape/debug", PL_COLOUR_ORCHID,
+	logLevels[ APE_LOG_ERROR ]       = aux_log_register_source( "ape/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_WARNING ]     = aux_log_register_source( "ape/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_INFORMATION ] = aux_log_register_source( "ape", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_VERBOSE ]     = aux_log_register_source( "ape/verbose", PL_COLOUR_BLUE, false );
+	logLevels[ ACL_LOG_DEBUG ]       = aux_log_register_source( "ape/debug", PL_COLOUR_ORCHID,
 #if !defined( NDEBUG )
 	                                                             true
 #else
@@ -342,13 +343,13 @@ void ape_initialize_console_( void )
 #endif
 	);
 
-	logLevels[ APE_LOG_CLIENT_ERROR ]       = ape_console_log_register_input( "ape/client/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_CLIENT_WARNING ]     = ape_console_log_register_input( "ape/client/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_CLIENT_INFORMATION ] = ape_console_log_register_input( "ape/client", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_CLIENT_ERROR ]       = aux_log_register_source( "ape/client/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_CLIENT_WARNING ]     = aux_log_register_source( "ape/client/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_CLIENT_INFORMATION ] = aux_log_register_source( "ape/client", PL_COLOUR_WHITE, true );
 
-	logLevels[ APE_LOG_SERVER_ERROR ]       = ape_console_log_register_input( "ape/server/error", PL_COLOUR_RED, true );
-	logLevels[ APE_LOG_SERVER_WARNING ]     = ape_console_log_register_input( "ape/server/warning", PL_COLOUR_YELLOW, true );
-	logLevels[ APE_LOG_SERVER_INFORMATION ] = ape_console_log_register_input( "ape/server", PL_COLOUR_WHITE, true );
+	logLevels[ APE_LOG_SERVER_ERROR ]       = aux_log_register_source( "ape/server/error", PL_COLOUR_RED, true );
+	logLevels[ APE_LOG_SERVER_WARNING ]     = aux_log_register_source( "ape/server/warning", PL_COLOUR_YELLOW, true );
+	logLevels[ APE_LOG_SERVER_INFORMATION ] = aux_log_register_source( "ape/server", PL_COLOUR_WHITE, true );
 }
 
 void ape_shutdown_console_( void )
@@ -357,7 +358,6 @@ void ape_shutdown_console_( void )
 
 	//save_user_config();
 
-	ape_console_log_shutdown_();
 	ape_console_cmd_shutdown_();
 	ape_console_var_shutdown_();
 }

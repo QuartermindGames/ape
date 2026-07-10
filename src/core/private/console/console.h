@@ -39,12 +39,3 @@ bool ape_console_cmd_parse_( const char *name, unsigned int argc, const char *co
 
 void ape_console_cmd_find_( const char *term );
 bool ape_console_cmd_help_( const char *name );
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Console Log
-/////////////////////////////////////////////////////////////////////////////////////
-
-void ape_console_log_initialize_();
-void ape_console_log_shutdown_();
-
-void ape_console_push_message_( const char *message, QmMathColour4ub colour );

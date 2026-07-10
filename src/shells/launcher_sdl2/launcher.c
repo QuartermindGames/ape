@@ -15,6 +15,7 @@
 
 #include "aux/public/aux.h"
 #include "aux/public/aux_project.h"
+#include "aux/public/aux_log.h"
 
 #include "launcher.h"
 
@@ -361,7 +362,7 @@ int qm_os_main( const int argc, char **argv )
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}
 
-	launcherLog = ape_console_log_register_input( "launcher", PL_COLOUR_CORAL, true );
+	launcherLog = aux_log_register_source( "launcher", PL_COLOUR_CORAL, true );
 
 	int w, h;
 	shell_get_window_size( &w, &h );
@@ -494,6 +495,8 @@ int qm_os_main( const int argc, char **argv )
 	SDL_StopTextInput( sdlWindow );
 
 	ape_shutdown();
+
+	aux_shutdown();
 
 	return EXIT_SUCCESS;
 }

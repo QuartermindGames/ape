@@ -25,6 +25,7 @@
 
 #include "aux/public/aux.h"
 #include "aux/public/aux_math.h"
+#include "aux/public/aux_log.h"
 
 #include <yin/core.h>
 

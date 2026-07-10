@@ -84,11 +84,4 @@ void ape_console_cmd_register( const char *name, const char *description, int ar
 
 unsigned int ape_console_cmd_match( const char *name, const char **dstOptions, unsigned int dstSize );
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Console Log
-/////////////////////////////////////////////////////////////////////////////////////
-
-int  ape_console_log_register_input( const char *prefix, QmMathColour4ub colour, bool isActive );
-void ape_console_log_push_message( int id, const char *msg, ... );
-
 PL_EXTERN_C_END

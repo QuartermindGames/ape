@@ -573,7 +573,11 @@ int main( int argc, char **argv )
 
 	dummy->hide();
 
-	return app.run();
+	unsigned int r = app.run();
+
+	aux_shutdown();
+
+	return r;
 }
 
 extern "C"

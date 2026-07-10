@@ -30,7 +30,7 @@ void game_print_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( globalGameLog, buf );
+	aux_log_push_message( globalGameLog, buf );
 }
 
 #if !defined( NDEBUG )
@@ -42,7 +42,7 @@ void game_debug_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( globalGameDebugLog, buf );
+	aux_log_push_message( globalGameDebugLog, buf );
 }
 #endif
 
@@ -54,7 +54,7 @@ void game_warning_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( globalGameWarningLog, buf );
+	aux_log_push_message( globalGameWarningLog, buf );
 }
 
 #if !defined( NDEBUG )
@@ -69,7 +69,7 @@ void game_error_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	ape_console_log_push_message( globalGameErrorLog, buf );
+	aux_log_push_message( globalGameErrorLog, buf );
 
 #if !defined( NDEBUG )
 	raise( SIGINT );
@@ -198,11 +198,11 @@ bool game_initialize_( void )
 	ape_console_cmd_register( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
 	ape_console_cmd_register( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
 
-	globalGameLog        = ape_console_log_register_input( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
-	globalGameWarningLog = ape_console_log_register_input( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
-	globalGameErrorLog   = ape_console_log_register_input( "game.error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
+	globalGameLog        = aux_log_register_source( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
+	globalGameWarningLog = aux_log_register_source( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
+	globalGameErrorLog   = aux_log_register_source( "game.error", PL_COLOUR_RED, acm_get_bool( gameConfig, "logError", true ) );
 
-	globalGameDebugLog = ape_console_log_register_input( "game.debug", PL_COLOUR_WHITE_SMOKE,
+	globalGameDebugLog = aux_log_register_source( "game.debug", PL_COLOUR_WHITE_SMOKE,
 #if !defined( NDEBUG )
 	                                                     true
 #else

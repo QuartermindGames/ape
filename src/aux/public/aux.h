@@ -17,37 +17,19 @@
 PL_EXTERN_C
 
 /**
- * @brief Initializes aux library components and settings.
- *
- * This function sets up logging levels, registers packages, and initializes
- * necessary directories for the application's operation. It prepares the
- * aux library for use by setting up various subsystems like logging and
- * directory lookups essential for the application's functionality.
+ * Initializes aux library components and settings.
  */
 void aux_initialize( int argc, char **argv );
 
+void aux_shutdown();
+
 /**
- * @brief Retrieves the local data directory path for the application.
- *
- * This function determines the local data directory path by analyzing the
- * executable directory and sets the path accordingly. It attempts to resolve
- * the directory using relative paths from the executable directory or the
- * current working directory. On Unix systems, it further resolves the path
- * using realpath to obtain the canonicalized absolute pathname.
- *
- * @return A const char pointer to the resolved local data directory path.
+ * Retrieves the local data directory path for the application.
  */
 const char *com_get_local_data_directory( void );
 
 /**
- * @brief Retrieves the application data directory path.
- *
- * This function returns the path to the application's data directory,
- * where application-specific data is stored. It attempts to fetch the
- * directory path using system functions, and if unsuccessful, defaults
- * to the current directory. The result is cached for subsequent calls.
- *
- * @return A pointer to a string containing the application's data directory path.
+ * Retrieves the application data directory path.
  */
 const char *com_get_app_data_directory( void );
 
