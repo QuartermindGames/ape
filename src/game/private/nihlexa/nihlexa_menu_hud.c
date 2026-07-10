@@ -11,11 +11,11 @@ static float hudScale = 1.0f;
 
 void nih_menu_hud_initialize_()
 {
-	PlRegisterConsoleVariable( "qm1_menu_hud.scale",
+	ape_console_var_register( "qm1_menu_hud.scale",
 	                           "Scale of the HUD.",
 	                           "1.0",
 	                           PL_VAR_F32, &hudScale,
-	                           nullptr, true );
+	                           nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
 	hudHealthBodyMaterial = ape_material_cache( HUD_HEALTH_BODY, APE_CACHE_GROUP_GLOBAL, true );
 }

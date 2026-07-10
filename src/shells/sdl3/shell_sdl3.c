@@ -11,19 +11,17 @@
 #include "qmos/public/qm_os_memory.h"
 
 #include "plcore/pl_filesystem.h"
-#include "plcore/pl_console.h"
 
 #include "acm/acm.h"
 
 #include "aux/public/aux.h"
 #include "aux/public/aux_project.h"
 
+#include "yin/core.h"
 #include "yin/core_input.h"
 #include "yin/core_shell.h"
 
 static AcmBranch *shellConfig;
-
-static PLConsoleVariable *tickFrequencyVar;
 
 static SDL_TimerID  tickTimer;
 static unsigned int tick_timer_callback( void *userData, SDL_TimerID timer, uint32_t interval )
@@ -38,8 +36,7 @@ static unsigned int tick_timer_callback( void *userData, SDL_TimerID timer, uint
 
 	SDL_PushEvent( &event );
 
-	assert( tickFrequencyVar->i_value > 0 );
-	return tickFrequencyVar->i_value;
+	return ape_get_tick_frequency();
 }
 
 void shell_display_message( SS_Shell_MessageBoxType messageType, const char *message, ... )
@@ -128,14 +125,8 @@ bool shell_initialize( unsigned int argc, char **argv )
 
 bool shell_setup_tick_timer()
 {
-	tickFrequencyVar = PlGetConsoleVariable( "tickFrequency" );
-	if ( tickFrequencyVar == nullptr )
-	{
-		fprintf( stderr, "No tick frequency variable found: %s\n", PlGetError() );
-		return false;
-	}
-
-	if ( ( tickTimer = SDL_AddTimer( tickFrequencyVar->i_value, tick_timer_callback, NULL ) ) == 0 )
+	unsigned int tickFrequency = ape_get_tick_frequency();
+	if ( ( tickTimer = SDL_AddTimer( tickFrequency, tick_timer_callback, NULL ) ) == 0 )
 	{
 		fprintf( stderr, "Failed to setup timer: %s\n", SDL_GetError() );
 		return false;

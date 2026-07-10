@@ -5,8 +5,6 @@
 #include "ape_private.h"
 #include "audio.h"
 
-#include "core_console.h"
-
 // Provided as a list so we can hand this to the tools later...
 const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
         {"none",            APE_AUDIO_REVERB_PRESET_NONE           },
@@ -44,18 +42,18 @@ const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
 const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = QM_OS_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
 #if defined( APE_SUPPORT_OPENAL )
-extern ApeAudioDriverInterface ape_audioDriverOpenAL;
+extern ApeAudioDriverInterface ape_audioDriverOpenAL_;
 #endif
 
 static const ApeAudioDriverInterface *audioDriverInterfaces[] = {
         nullptr,
 #if defined( APE_SUPPORT_OPENAL )
-        &ape_audioDriverOpenAL,
+        &ape_audioDriverOpenAL_,
 #endif
 };
 static constexpr unsigned int numAudioDriverInterfaces = QM_OS_ARRAY_ELEMENTS( audioDriverInterfaces );
 
-static PLConsoleString                audioDriverInterfaceName;
+static ApeConsoleVarString            audioDriverInterfaceName;
 static const ApeAudioDriverInterface *audioDriverInterface;
 #define DRIVER_CALLBACK( FUNCTION, ... )                                                                                        \
 	{                                                                                                                           \
@@ -80,7 +78,7 @@ static struct
 
 APE_MEMORY_IMPLEMENT_INTERFACE( ape_audio_sample, ApeAudioSample, reference )
 
-static void play_audio_command( unsigned int argc, char **argv )
+static void play_audio_command( unsigned int argc, const char *const *argv )
 {
 	const char     *path   = ( argc > 1 ) ? argv[ 1 ] : "sounds/testing/ping.wav";
 	ApeAudioSample *sample = ape_audio_sample_cache( path );
@@ -93,12 +91,12 @@ static void play_audio_command( unsigned int argc, char **argv )
 	ape_audio_sample_release_reference( sample );
 }
 
-static void pause_audio_command( unsigned int argc, char **argv )
+static void pause_audio_command( unsigned int argc, const char *const *argv )
 {
 	ape_audio_pause_( !audioPaused );
 }
 
-static void test_3d_command( unsigned int, char ** )
+static void test_3d_command( unsigned int argc, const char *const *argv )
 {
 	ApeAudioSample *sample = ape_audio_sample_cache( "sounds/testing/ping.wav" );
 	if ( sample == nullptr )
@@ -155,7 +153,7 @@ static void audio_driver_set_interface( const char *name )
 	audioDriverInterface = newInterface;
 }
 
-static void audio_driver_callback( PLConsoleVariable *self )
+static void audio_driver_callback( ApeConsoleVar *self )
 {
 	audio_driver_set_interface( self->s_value );
 }
@@ -180,9 +178,9 @@ void ape_audio_initialize_( void )
 		return;
 	}
 
-	PlRegisterConsoleCommand( "audio_play", "Play a specific sound. If no sound is specified, plays a test sound.", -1, play_audio_command );
-	PlRegisterConsoleCommand( "audio_pause", "Pause all audio.", 0, pause_audio_command );
-	PlRegisterConsoleCommand( "audio_test_3d", "Test a 3D audio source.", 0, test_3d_command );
+	ape_console_cmd_register( "audio_play", "Play a specific sound. If no sound is specified, plays a test sound.", -1, play_audio_command );
+	ape_console_cmd_register( "audio_pause", "Pause all audio.", 0, pause_audio_command );
+	ape_console_cmd_register( "audio_test_3d", "Test a 3D audio source.", 0, test_3d_command );
 
 	// reset listener
 	ape_audio_clear_listener();
@@ -192,7 +190,7 @@ void ape_audio_initialize_( void )
 
 void ape_audio_register_console_variables_( void )
 {
-	PlRegisterConsoleVariable( "audio.volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, nullptr, true );
+	ape_console_var_register( "audio.volume", "Set the global audio volume.", "1.0", PL_VAR_F32, &audioVolume, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
 static void destroy_sample( void *user )

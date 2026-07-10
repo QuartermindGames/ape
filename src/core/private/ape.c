@@ -39,7 +39,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		char commandBuf[ 1024 ];
 		snprintf( commandBuf, sizeof( commandBuf ), "%s", argv[ i ] + 1 );
 
-		PlParseConsoleString( commandBuf );
+		ape_console_parse( commandBuf );
 	}
 
 	if ( engineConfig == NULL )
@@ -78,7 +78,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 			continue;
 		}
 
-		PlParseConsoleString( commands[ i ] );
+		ape_console_parse( commands[ i ] );
 		qm_os_memory_free( commands[ i ] );
 	}
 }
@@ -104,6 +104,26 @@ bool ape_is_dedicated()
 }
 
 static double lastTime;
+
+static int  tickFrequency;
+static void validate_tick_frequency( ApeConsoleVar *variable )
+{
+	if ( variable->i_value > 0 )
+	{
+		return;
+	}
+
+	ape_console_warning_( "Invalid value specified for tick frequency (%i), resetting to default!\n", variable->i_value );
+
+	char tmp[ 64 ];
+	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
+	ape_console_var_set_( variable, tmp );
+}
+
+unsigned int ape_get_tick_frequency()
+{
+	return tickFrequency;
+}
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config )
 {
@@ -141,6 +161,10 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 	ape_console_register_variables_( engineTerminalMode );
 	ape_console_register_commands_( engineTerminalMode );
+
+	char tmp[ 64 ];
+	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
+	ape_console_var_register( "tickFrequency", "Frequency of the tick rate in ms.", tmp, PL_VAR_I32, &tickFrequency, validate_tick_frequency, 0 );
 
 	ape_fs_setup_config( engineConfig );
 

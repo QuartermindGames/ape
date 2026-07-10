@@ -324,7 +324,7 @@ static void reload_shader_program( ApeShaderProgram *program )
 	program->timestamp = qm_fs_get_local_file_timestamp( program->path );
 }
 
-static void reload_shader_program_command( unsigned int argc, char **argv )
+static void reload_shader_program_command( unsigned int argc, const char * const *argv )
 {
 	if ( argc > 1 )
 	{
@@ -387,16 +387,16 @@ ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderP
 
 void ape_register_shader_console_variables_()
 {
-	PlRegisterConsoleVariable( "shaders.autoHotReload", "Enable automatic reload of shaders.",
+	ape_console_var_register( "shaders.autoHotReload", "Enable automatic reload of shaders.",
 #if !defined( NDEBUG )
-	                           "true",
+	                          "true",
 #else
-	                           "false",
+	                          "false",
 #endif
-	                           PL_VAR_BOOL, &hotReload, nullptr, true );
-	PlRegisterConsoleVariable( "shaders.hotReloadDelay", "Delay before attempting to reload shaders.", QM_OS_TO_STRING( HOT_RELOAD_TICKS_DEFAULT ), PL_VAR_I32, &incHotReloadTicks, nullptr, true );
+	                          PL_VAR_BOOL, &hotReload, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "shaders.hotReloadDelay", "Delay before attempting to reload shaders.", QM_OS_TO_STRING( HOT_RELOAD_TICKS_DEFAULT ), PL_VAR_I32, &incHotReloadTicks, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
-	PlRegisterConsoleCommand( "reload_shaders", "Reload shader programs.", -1, reload_shader_program_command );
+	ape_console_cmd_register( "reload_shaders", "Reload shader programs.", -1, reload_shader_program_command );
 }
 
 void ape_material_shaders_check_hot_reload_()

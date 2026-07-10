@@ -385,7 +385,7 @@ static void al_source_emit( ApeAudioSource *self, ApeAudioSample *sample )
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-const ApeAudioDriverInterface ape_audioDriverOpenAL = {
+const ApeAudioDriverInterface ape_audioDriverOpenAL_ = {
         .name = "openal",
 
         .initialize  = initialize_openal,

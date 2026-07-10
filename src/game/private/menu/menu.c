@@ -91,7 +91,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 			{
 				if ( option->button.command != nullptr )
 				{
-					PlParseConsoleString( option->button.command );
+					ape_console_parse( option->button.command );
 				}
 				break;
 			}
@@ -99,7 +99,7 @@ static void handle_menu_action( ApeInputState state, const char *id )
 			{
 				if ( option->checkbox.var != nullptr )
 				{
-					PlSetConsoleVariable( option->checkbox.var, option->checkbox.var->b_value ? "0" : "1" );
+					ape_console_var_set_( option->checkbox.var, option->checkbox.var->b_value ? "0" : "1" );
 				}
 				break;
 			}

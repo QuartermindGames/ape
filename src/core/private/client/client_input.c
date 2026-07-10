@@ -5,9 +5,12 @@
 #include <SDL3/SDL.h>
 
 #include "ape_private.h"
-#include "client_input.h"
-#include "gui/gui_private.h"
+
 #include "yin/core_fs.h"
+
+#include "client_input.h"
+
+#include "gui/gui_private.h"
 
 static AcmBranch *inputConfig;
 
@@ -290,7 +293,7 @@ static float clamp_axis_input( float value, float deadzone )
 	return copysignf( ( float ) ( t > 0.0f ), value ) * fminf( t / ( 1.0f - deadzone ), 1.0f ) * ( float ) ( t > 0.0f );
 }
 
-static void list_actions_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+static void list_actions_command( unsigned int argc, const char *const *argv )
 {
 	ApeInputAction *action;
 	QM_OS_LINKED_LIST_ITERATE( action, actionableList, i )
@@ -299,7 +302,7 @@ static void list_actions_command( [[maybe_unused]] unsigned int argc, [[maybe_un
 	}
 }
 
-static void dump_actions_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+static void dump_actions_command( unsigned int argc, const char *const *argv )
 {
 	static const char *FILENAME = "dump.txt";
 
@@ -321,8 +324,8 @@ static void dump_actions_command( [[maybe_unused]] unsigned int argc, [[maybe_un
 
 static void register_console_commands()
 {
-	PlRegisterConsoleCommand( "input_list_actions", "List all registered input actions.", 0, list_actions_command );
-	PlRegisterConsoleCommand( "input_dump_actions", "Dumps all of the available actions to a file.", 0, dump_actions_command );
+	ape_console_cmd_register( "input_list_actions", "List all registered input actions.", 0, list_actions_command );
+	ape_console_cmd_register( "input_dump_actions", "Dumps all of the available actions to a file.", 0, dump_actions_command );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

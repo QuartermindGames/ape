@@ -30,8 +30,8 @@ typedef struct GameMenuOption
 	{
 		struct
 		{
-			const char        *varName;
-			PLConsoleVariable *var;
+			const char    *varName;
+			ApeConsoleVar *var;
 		} checkbox;
 		struct
 		{

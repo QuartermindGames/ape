@@ -20,7 +20,7 @@ void ape_grid_setup_( ApeEditorGrid *self )
 	self->transform = PlMatrix4Identity();
 }
 
-void ape_grid_toggle_command_( unsigned int, char ** )
+void ape_grid_toggle_command_( unsigned int argc, const char *const *argv )
 {
 	ApeEditorInstance *state = ape_editor_get_active_instance();
 	if ( state == nullptr )

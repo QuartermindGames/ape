@@ -11,7 +11,7 @@ typedef struct PkgHeader
 	uint32_t magic;
 	uint32_t numFiles;
 } PkgHeader;
-static const size_t PKG_HEADER_SIZE = sizeof( PkgHeader );
+static constexpr size_t PKG_HEADER_SIZE = sizeof( PkgHeader );
 
 /////////////////////////////////////////////////////////////////
 // READ
@@ -23,14 +23,14 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 	if ( header.magic != PKG_MAGIC )
 	{
 		com_warning_( "Unexpected magic for pkg: %d\n", header.magic );
-		return NULL;
+		return nullptr;
 	}
 
 	header.numFiles = PL_READUINT32( file, false, NULL );
 	if ( header.numFiles == 0 )
 	{
 		com_warning_( "Empty package!\n" );
-		return NULL;
+		return nullptr;
 	}
 
 	const char *path = qm_fs_file_get_path( file );
@@ -58,7 +58,7 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 		if ( !qm_fs_file_seek( file, ( PLFileOffset ) index->compressedSize, QM_FS_SEEK_CUR ) )
 		{
 			com_warning_( "Failed to seek to the next file within package: %s\n", PlGetError() );
-			package->numFiles = ( i + 1 );
+			package->numFiles = i + 1;
 			break;
 		}
 	}
@@ -70,7 +70,7 @@ static QmFsPackage *load_pkg_file( const char *path )
 {
 	QmFsFile *file = qm_fs_file_open( path, false );
 	if ( file == NULL )
-		return NULL;
+		return nullptr;
 
 	QmFsPackage *package = parse_pkg_file( file );
 

@@ -7,13 +7,13 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static ApeMaterial *fxaaMaterial = NULL;
+static ApeMaterial *fxaaMaterial = nullptr;
 
 static bool fxaaEnabled = false;
 
 static void register_fxaa_console_variables( void )
 {
-	PlRegisterConsoleVariable( "postfx_fxaa", "Enable FXAA anti-aliasing.", "false", PL_VAR_BOOL, &fxaaEnabled, NULL, true );
+	ape_console_var_register( "postfx_fxaa", "Enable FXAA anti-aliasing.", "false", PL_VAR_BOOL, &fxaaEnabled, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
 static bool setup_fxaa_effect( void )
@@ -48,7 +48,6 @@ static void draw_fxaa_effect( const ApeViewport *viewport, [[maybe_unused]] cons
 const ApePostProcessEffect *ape_postfx_get_fxaa_( void )
 {
 	static ApePostProcessEffect renderFXAAPostProcess;
-	QM_OS_ZERO_( renderFXAAPostProcess );
 	renderFXAAPostProcess.registerConsoleVariables = register_fxaa_console_variables;
 	renderFXAAPostProcess.setup                    = setup_fxaa_effect;
 	renderFXAAPostProcess.cleanup                  = cleanup_fxaa_effect;

@@ -5,8 +5,6 @@
 
 #include "qmos/public/qm_os_memory.h"
 
-#include <plcore/pl_console.h>
-
 #include "aux/public/aux.h"
 
 void com_print_( const char *m, ... );

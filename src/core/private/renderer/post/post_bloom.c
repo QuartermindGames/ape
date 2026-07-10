@@ -4,8 +4,6 @@
 
 #include "post.h"
 
-#include "core_console.h"
-
 #include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 

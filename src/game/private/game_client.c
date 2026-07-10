@@ -3,7 +3,7 @@
 #include "game_private.h"
 #include "game_client.h"
 
-static void say_command( unsigned int argc, char **argv )
+static void say_command( unsigned int argc, const char *const *argv )
 {
 	if ( !ape_is_client_connected() )
 	{
@@ -45,7 +45,7 @@ void game_client_initialize_()
 		return;
 	}
 
-	PlRegisterConsoleCommand( "game.say",
+	ape_console_cmd_register( "game.say",
 	                          "Broadcast a text message to other clients.",
 	                          1, say_command );
 

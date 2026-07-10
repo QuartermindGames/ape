@@ -4,13 +4,16 @@
 
 #include "ape_private.h"
 
-#include "console.h"
+#include "yin/core_fs.h"
 
 #include "client/client_input.h"
-#include "yin/core_fs.h"
 #include "node/node_entity.h"
 
+#include "console.h"
+
 static int logLevels[ APE_LOG_LEVELS ];
+
+static constexpr unsigned int CONSOLE_MAX_ARGS = 8;
 
 void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour );
 
@@ -30,7 +33,7 @@ static void clear_output_buffer( void )
 	conOutputBuffer.numLines = 0;
 }
 
-static void clear_console_command( unsigned int argc, char **argv )
+static void clear_console_command( unsigned int argc, const char *const *argv )
 {
 	( void ) ( argc );
 	( void ) ( argv );
@@ -64,7 +67,7 @@ void ape_console_push_message_( const char *message, const QmMathColour4ub colou
 
 /* CONSOLE COMMANDS */
 
-#define CMD_CALLBACK( NAME ) static void Cmd_##NAME( unsigned int argc, char **argv )
+#define CMD_CALLBACK( NAME ) static void Cmd_##NAME( unsigned int argc, const char *const *argv )
 
 CMD_CALLBACK( Quit )
 {
@@ -87,17 +90,17 @@ static void save_user_config( void );
 static void load_user_config( void )
 {
 	AcmBranch *root = com_acm_load_file( ape_fs_get_user_config_location(), "config" );
-	if ( root == NULL )
+	if ( root == nullptr )
 		return;
 
 	/* now iterate through the list and update all our children */
 	AcmBranch *child = acm_get_first_child( root );
-	while ( child != NULL )
+	while ( child != nullptr )
 	{
 		const char *cvarName = acm_branch_get_name( child );
 		char        cvarValue[ PL_SYSTEM_MAX_PATH ];
 		if ( acm_branch_get_string( child, cvarValue, sizeof( cvarValue ) ) == ND_ERROR_SUCCESS )
-			PlSetConsoleVariableByName( cvarName, cvarValue );
+			ape_console_var_set( cvarName, cvarValue );
 		else
 			ape_console_warning_( "Failed to fetch value: %s\n", cvarName );
 
@@ -115,15 +118,18 @@ static void save_user_config( void )
 	snprintf( path, sizeof( path ), "%s", ape_fs_get_user_config_location() );
 	ape_console_verbose_( "Saving user config: \"%s\"\n", path );
 
-	PLConsoleVariable **cvars;
-	size_t              numVars;
+	ApeConsoleVar **cvars;
+	size_t          numVars;
 	PlGetConsoleVariables( &cvars, &numVars );
 
 	AcmBranch *root = acm_push_object( nullptr, "config" );
 	for ( unsigned int i = 0; i < numVars; ++i )
 	{
-		if ( !cvars[ i ]->archive )
+		if ( !( cvars[ i ]->flags & APE_CONSOLE_VAR_FLAG_ARCHIVE ) )
+		{
 			continue;
+		}
+
 		/* don't bother storing it if it matches the default */
 		if ( strcmp( cvars[ i ]->value, cvars[ i ]->default_value ) == 0 )
 			continue;
@@ -153,9 +159,9 @@ static void save_user_config( void )
 	ape_console_print_( "User config saved.\n" );
 }
 
-static void toggle_command( unsigned int, char **argv )
+static void toggle_command( unsigned int argc, const char *const *argv )
 {
-	PLConsoleVariable *variable = PlGetConsoleVariable( argv[ 1 ] );
+	ApeConsoleVar *variable = PlGetConsoleVariable( argv[ 1 ] );
 	if ( variable == nullptr )
 	{
 		ape_console_warning_( "Failed to find the specified variable (%s)!\n" );
@@ -167,17 +173,17 @@ static void toggle_command( unsigned int, char **argv )
 		return;
 	}
 
-	PlSetConsoleVariable( variable, variable->b_value ? "false" : "true" );
+	ape_console_var_set_( variable, variable->b_value ? "false" : "true" );
 }
 
 void ape_test_register_commands_();
 void ape_console_register_commands_( bool isDedicated )
 {
-	PlRegisterConsoleCommand( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
-	PlRegisterConsoleCommand( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
-	PlRegisterConsoleCommand( "version", "Prints out the current engine version.", 0, Cmd_Version );
-	PlRegisterConsoleCommand( "clear", "Clear the console buffer.", 0, clear_console_command );
-	PlRegisterConsoleCommand( "toggle", "Toggle a specific variable.", 1, toggle_command );
+	ape_console_cmd_register( "quit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
+	ape_console_cmd_register( "exit", "Shutdown any existing server and terminate the application.", 0, Cmd_Quit );
+	ape_console_cmd_register( "version", "Prints out the current engine version.", 0, Cmd_Version );
+	ape_console_cmd_register( "clear", "Clear the console buffer.", 0, clear_console_command );
+	ape_console_cmd_register( "toggle", "Toggle a specific variable.", 1, toggle_command );
 
 	ape_entity_register_commands_();
 	ape_test_register_commands_();
@@ -188,29 +194,12 @@ void ape_console_register_commands_( bool isDedicated )
 	}
 }
 
-static void validate_tick_frequency( PLConsoleVariable *variable )
-{
-	if ( variable->i_value > 0 )
-	{
-		return;
-	}
-
-	ape_console_warning_( "Invalid value specified for tick frequency (%i), resetting to default!\n", variable->i_value );
-
-	char tmp[ 64 ];
-	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
-	PlSetConsoleVariable( variable, tmp );
-}
-
 void ape_server_register_console_variables_();
 void ape_client_register_console_variables_();
 void ape_model_register_console_variables_();
 void ape_console_register_variables_( bool isDedicated )
 {
-	char tmp[ 64 ];
-	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
-	PlRegisterConsoleVariable( "tickFrequency", "Frequency of the tick rate in ms.", tmp, PL_VAR_I32, nullptr, validate_tick_frequency, false );
-	PlRegisterConsoleVariable( "renderTimeLock", "Will only render a frame on tick.", "true", PL_VAR_BOOL, nullptr, nullptr, true );
+	ape_console_var_register( "renderTimeLock", "Will only render a frame on tick.", "true", PL_VAR_BOOL, nullptr, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
 	ape_server_register_console_variables_();
 	ape_model_register_console_variables_();
@@ -272,12 +261,74 @@ void ape_console_error_( const bool die, const char *message, ... )
 	}
 }
 
+static void console_help_command( unsigned int argc, const char *const *argv )
+{
+	if ( ape_console_var_help_( argv[ 1 ] ) || ape_console_cmd_help_( argv[ 1 ] ) )
+	{
+		return;
+	}
+
+	ape_console_print_( "Unknown variable/command, %s!\n", argv[ 1 ] );
+}
+
+static void console_find_command( unsigned int argc, const char *const *argv )
+{
+	const char *term = argv[ 1 ];
+
+	bool findVars     = true;
+	bool findCommands = true;
+	if ( argc > 2 )
+	{
+		if ( strcmp( term, "var" ) == 0 )
+		{
+			findVars     = true;
+			findCommands = false;
+			term         = argv[ 2 ];
+		}
+		else if ( strcmp( term, "cmd" ) == 0 )
+		{
+			findVars     = false;
+			findCommands = true;
+			term         = argv[ 2 ];
+		}
+	}
+	else
+	{
+		findVars = findCommands = true;
+	}
+
+	if ( term == nullptr )
+	{
+		ape_console_warning_( "Invalid arguments provided!\n" );
+		return;
+	}
+
+	if ( findVars )
+	{
+		ape_console_var_find_( term );
+	}
+
+	if ( findCommands )
+	{
+		ape_console_cmd_find_( term );
+	}
+}
+
 /**
  * Set the console up.
  */
 void ape_initialize_console_( void )
 {
+	ape_console_var_initialize_();
+	ape_console_cmd_initialize_();
 	ape_console_log_initialize_();
+
+	ape_console_cmd_register( "help",
+	                          "Returns information regarding specified command or variable.",
+	                          1, console_help_command );
+	ape_console_cmd_register( "find",
+	                          "Find the specific command or variable. You can specify 'cmd' or 'vars' to filter.",
+	                          1, console_find_command );
 
 	logLevels[ APE_LOG_ERROR ]       = ape_console_log_register_input( "ape/error", PL_COLOUR_RED, true );
 	logLevels[ APE_LOG_WARNING ]     = ape_console_log_register_input( "ape/warning", PL_COLOUR_YELLOW, true );
@@ -307,4 +358,45 @@ void ape_shutdown_console_( void )
 	//save_user_config();
 
 	ape_console_log_shutdown_();
+	ape_console_cmd_shutdown_();
+	ape_console_var_shutdown_();
+}
+
+void ape_console_parse( const char *string )
+{
+	if ( string == nullptr || *string == '\0' )
+	{
+		ape_console_verbose_( "Invalid string passed to ParseConsoleString!\n" );
+		return;
+	}
+
+	static char **argv;
+	if ( argv == nullptr )
+	{
+		argv = APE_MEMORY_NEW_C( char *, CONSOLE_MAX_ARGS );
+		for ( char **arg = argv; arg < argv + CONSOLE_MAX_ARGS; ++arg )
+		{
+			*arg = APE_MEMORY_NEW_C( char, 1024 );
+		}
+	}
+
+	unsigned int argc = 0;
+	for ( const char *pos = string; *pos; )
+	{
+		size_t arglen = strcspn( pos, " " );
+		if ( arglen > 0 )
+		{
+			strncpy( argv[ argc ], pos, arglen );
+			argv[ argc ][ arglen ] = '\0';
+			++argc;
+		}
+		pos += arglen;
+		pos += strspn( pos, " " );
+	}
+
+	// need to cast for magical C reasons, wheeee
+	if ( !ape_console_cmd_parse_( argv[ 0 ], argc, ( const char *const * ) argv ) && !ape_console_var_parse_( argv[ 0 ], argc, ( const char *const * ) argv ) )
+	{
+		ape_console_print_( "Unknown variable/command, %s!\n", argv[ 0 ] );
+	}
 }

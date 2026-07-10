@@ -11,14 +11,15 @@
 
 #include <acm/acm.h>
 
-#include <yin/core.h>
-
 #include "qmos/public/qm_os_string.h"
 
 #include "aux/public/aux.h"
 #include "aux/public/aux_project.h"
 
 #include "launcher.h"
+
+#include "core/public/yin/core.h"
+#include "core/public/core_console.h"
 
 #include "shells/sdl3/shell_sdl3.c"
 
@@ -348,7 +349,6 @@ int qm_os_main( const int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	launcherLog = PlAddLogLevel( "launcher", PL_COLOUR_WHITE, true );
 	Print( "Log output initialized!\n" );
 
 	if ( !initialize_display() )
@@ -360,6 +360,8 @@ int qm_os_main( const int argc, char **argv )
 	{
 		PrintError( "Failed to initialize engine!\nCheck debug logs.\n" );
 	}
+
+	launcherLog = ape_console_log_register_input( "launcher", PL_COLOUR_CORAL, true );
 
 	int w, h;
 	shell_get_window_size( &w, &h );
@@ -465,9 +467,9 @@ int qm_os_main( const int argc, char **argv )
 		if ( updateProfiler )
 		{
 			//TODO: ditch this once console interface is in aux?
-			static bool               checkFail;
-			static PLConsoleVariable *profilerFrequency;
-			static unsigned int       freq = 32;
+			static bool           checkFail;
+			static ApeConsoleVar *profilerFrequency;
+			static unsigned int   freq = 32;
 			if ( profilerFrequency == nullptr && !checkFail )
 			{
 				profilerFrequency = PlGetConsoleVariable( "debug/profilerFrequency" );
@@ -480,7 +482,7 @@ int qm_os_main( const int argc, char **argv )
 
 			if ( profilerFrequency != nullptr )
 			{
-				const char *c = PlGetConsoleVariableValue( "debug/profilerFrequency" );
+				const char *c = ape_console_var_get( "debug/profilerFrequency" );
 				freq          = strtol( c, nullptr, 10 );
 			}
 

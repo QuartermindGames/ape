@@ -14,8 +14,6 @@
 
 #include "material.h"
 
-#include "console/console.h"
-
 #include "world/world.h"
 #include "game/game_public.h"
 #include "gui/gui_private.h"
@@ -24,12 +22,12 @@ static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
 static ApeTexture *normalFallbackTexture;
 
-static PLConsoleString materialTextureFilter;
-static int32_t         materialTextureAnisotropy = 16;
-static bool            materialSkipDiffuse;
-static bool            materialSkipNormal;
-static bool            materialSkipSpecular;
-static bool            materialSkipLightmap;
+static ApeConsoleVarString materialTextureFilter;
+static int32_t             materialTextureAnisotropy = 16;
+static bool                materialSkipDiffuse;
+static bool                materialSkipNormal;
+static bool                materialSkipSpecular;
+static bool                materialSkipLightmap;
 
 typedef struct ApeMaterial
 {

@@ -1,6 +1,5 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include <plcore/pl_console.h>
 #include <plcore/pl_filesystem.h>
 
 #include <plgraphics/plg.h>
@@ -48,7 +47,8 @@ void forge_print_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], buf );
+	//TODO
+	//PlLogMessage( editorLogLevels[ EDITOR_LOG_PRINT ], buf );
 }
 
 void forge_warning_( const char *message, ... )
@@ -59,7 +59,8 @@ void forge_warning_( const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( editorLogLevels[ EDITOR_LOG_WARNING ], buf );
+	//TODO
+	//PlLogMessage( editorLogLevels[ EDITOR_LOG_WARNING ], buf );
 }
 
 void forge_error_( bool die, const char *message, ... )
@@ -70,7 +71,8 @@ void forge_error_( bool die, const char *message, ... )
 	vsnprintf( buf, sizeof( buf ), message, args );
 	va_end( args );
 
-	PlLogMessage( editorLogLevels[ EDITOR_LOG_ERROR ], buf );
+	//TODO
+	//PlLogMessage( editorLogLevels[ EDITOR_LOG_ERROR ], buf );
 
 	if ( die )
 	{
@@ -474,9 +476,10 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	editorLogLevels[ EDITOR_LOG_PRINT ]   = PlAddLogLevel( "forge", PL_COLOUR_BLUE_VIOLET, true );
-	editorLogLevels[ EDITOR_LOG_WARNING ] = PlAddLogLevel( "forge/warning", PL_COLOUR_YELLOW, true );
-	editorLogLevels[ EDITOR_LOG_ERROR ]   = PlAddLogLevel( "forge/error", PL_COLOUR_RED, true );
+	//TODO
+	//editorLogLevels[ EDITOR_LOG_PRINT ]   = PlAddLogLevel( "forge", PL_COLOUR_BLUE_VIOLET, true );
+	//editorLogLevels[ EDITOR_LOG_WARNING ] = PlAddLogLevel( "forge/warning", PL_COLOUR_YELLOW, true );
+	//editorLogLevels[ EDITOR_LOG_ERROR ]   = PlAddLogLevel( "forge/error", PL_COLOUR_RED, true );
 
 	qm_fs_mount_local_location( com_get_app_data_directory() );
 	qm_fs_mount_local_location( com_get_local_data_directory() );

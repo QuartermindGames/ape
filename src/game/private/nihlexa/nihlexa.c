@@ -32,7 +32,7 @@ NihGameMode nih_get_game_mode()
 	return gameMode->i_value;
 }
 
-static void damage_player_command( [[maybe_unused]] const unsigned int argc, char **argv )
+static void damage_player_command( unsigned int argc, const char *const *argv )
 {
 	int16_t value;
 	if ( argc > 1 )
@@ -47,7 +47,7 @@ static void damage_player_command( [[maybe_unused]] const unsigned int argc, cha
 	//TODO: pump the event...
 }
 
-static void print_camera_pos_command( unsigned int argc, char **argv )
+static void print_camera_pos_command( unsigned int argc, const char *const *argv )
 {
 	GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr || player->camera == nullptr )
@@ -64,7 +64,7 @@ static void print_camera_pos_command( unsigned int argc, char **argv )
 	game_print_( "Camera Ang: %s\n", qm_math_vector3f_print( cameraAngles, tmp, sizeof( tmp ) ) );
 }
 
-static void camera_save_pos_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+static void camera_save_pos_command( unsigned int argc, const char *const *argv )
 {
 	GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr || player->camera == nullptr )
@@ -93,7 +93,7 @@ static void camera_save_pos_command( [[maybe_unused]] unsigned int argc, [[maybe
 	qm_os_memory_free( path );
 }
 
-static void camera_restore_pos_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+static void camera_restore_pos_command( unsigned int argc, const char *const *argv )
 {
 	GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr || player->camera == nullptr )
@@ -150,10 +150,10 @@ static bool nih_initialize()
 
 	register_entities();
 
-	PlRegisterConsoleCommand( "nih_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
-	PlRegisterConsoleCommand( "nih_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
-	PlRegisterConsoleCommand( "nih_camera_save_pos", "Save the current camera position.", 0, camera_save_pos_command );
-	PlRegisterConsoleCommand( "nih_camera_restore_pos", "Restore the camera position.", 0, camera_restore_pos_command );
+	ape_console_cmd_register( "nih_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
+	ape_console_cmd_register( "nih_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
+	ape_console_cmd_register( "nih_camera_save_pos", "Save the current camera position.", 0, camera_save_pos_command );
+	ape_console_cmd_register( "nih_camera_restore_pos", "Restore the camera position.", 0, camera_restore_pos_command );
 
 	nih_serverState_.config        = com_get_config( NIH_GAME_CONFIG );
 	nih_serverState_.isFirstLaunch = acm_get_bool( nih_serverState_.config, "isFirstLaunch", true );

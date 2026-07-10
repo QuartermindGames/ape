@@ -6,7 +6,7 @@
 #include "qmmath/public/qm_math_plane.h"
 
 #include "ape_private.h"
-#include "core_console.h"
+
 #include "renderer.h"
 
 /**

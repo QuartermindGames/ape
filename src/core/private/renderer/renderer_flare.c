@@ -113,7 +113,7 @@ void ape_initialize_flares_( void )
 
 void ape_register_flare_console_variables_( void )
 {
-	PlRegisterConsoleVariable( "renderer.flareEnabled", "Enable/disable rendering of lensflare effects.", "true", PL_VAR_BOOL, &flareEnabled, NULL, true );
+	ape_console_var_register( "renderer.flareEnabled", "Enable/disable rendering of lensflare effects.", "true", PL_VAR_BOOL, &flareEnabled, NULL, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }
 
 void ape_shutdown_flares_( void )

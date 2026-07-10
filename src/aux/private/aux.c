@@ -1,34 +1,15 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include <plcore/pl_filesystem.h>
-#include <plcore/pl_console.h>
+#include <plcore/pl_math.h>
 
 #include <acm/acm.h>
 
 #include "aux_private.h"
 
-enum ComLogLevel
-{
-	COM_LOG_LEVEL_INFO,
-	COM_LOG_LEVEL_DEBUG,
-	COM_LOG_LEVEL_WARN,
-	COM_LOG_LEVEL_ERROR,
-
-	COM_MAX_LOG_LEVELS
-};
-
-static int com_logLevels_[ COM_MAX_LOG_LEVELS ];
-
 void aux_initialize( int argc, char **argv )
 {
 	PlInitialize( argc, argv );
-
-	com_logLevels_[ COM_LOG_LEVEL_INFO ]  = PlAddLogLevel( "common", PL_COLOUR_WHITE, true );
-	com_logLevels_[ COM_LOG_LEVEL_WARN ]  = PlAddLogLevel( "common/warning", PL_COLOUR_YELLOW, true );
-	com_logLevels_[ COM_LOG_LEVEL_ERROR ] = PlAddLogLevel( "common/error", PL_COLOUR_RED, true );
-	com_logLevels_[ COM_LOG_LEVEL_DEBUG ] = PlAddLogLevel( "common/debug", PL_COLOUR_WHITE, true );
-
-	com_print_( "Common Library initialized\n" );
 
 	com_pack_pkg_register_();
 
@@ -101,8 +82,6 @@ const char *com_get_app_data_directory( void )
 		return appDataPath;
 	}
 
-	com_warning_( "Failed to fetch application data directory: %s\n", PlGetError() );
-
 	PlSetupPath( appDataPath, true, "." );
 	return appDataPath;
 }
@@ -114,7 +93,6 @@ AcmBranch *com_get_config( const char *name )
 	AcmBranch *root = com_acm_load_file( path, "config" );
 	if ( root == NULL )
 	{
-		com_warning_( "Failed to load user config file (%s)! Creating empty config.\n", path );
 		root = acm_push_object( nullptr, "config" );
 	}
 
@@ -127,7 +105,6 @@ bool com_write_config( struct AcmBranch *root, const char *name )
 	PlSetupPath( path, true, "%s/configs/", com_get_app_data_directory() );
 	if ( !PlCreatePath( path ) )
 	{
-		com_warning_( "Failed to create configs path (%s): %s\n", path, PlGetError() );
 		return false;
 	}
 
@@ -147,7 +124,8 @@ void com_print_( const char *m, ... )
 
 	va_end( args );
 
-	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_INFO ], "%s", buf );
+	//TODO
+	//PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_INFO ], "%s", buf );
 }
 
 void com_warning_( const char *m, ... )
@@ -160,7 +138,8 @@ void com_warning_( const char *m, ... )
 
 	va_end( args );
 
-	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_WARN ], "%s", buf );
+	//TODO
+	//PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_WARN ], "%s", buf );
 }
 
 void com_error_( const char *m, ... )
@@ -173,7 +152,8 @@ void com_error_( const char *m, ... )
 
 	va_end( args );
 
-	PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_ERROR ], "%s", buf );
+	//TODO
+	//PlLogMessage( com_logLevels_[ COM_LOG_LEVEL_ERROR ], "%s", buf );
 
 	abort();
 }

@@ -9,7 +9,7 @@
 
 static PLHashTable   *languageStringsTable;
 static PLVectorArray *languages;
-static char           currentLanguage[ PL_VAR_VALUE_LENGTH ];
+static char           currentLanguage[ APE_CONSOLE_VAR_MAX_STRING ];
 
 static void parse_language_entry( const char *name, AcmBranch *stringsBranch )
 {
@@ -43,12 +43,12 @@ static void parse_language_entry( const char *name, AcmBranch *stringsBranch )
 	}
 }
 
-static void test_translate_command( unsigned int argc, char **argv )
+static void test_translate_command( unsigned int argc, const char *const *argv )
 {
 	game_print_( "%s -> %s\n", argv[ 1 ], G_STR_( argv[ 1 ] ) );
 }
 
-static void test_command( unsigned int, char ** )
+static void test_command( unsigned int argc, const char *const *argv )
 {
 	// store the old language
 	char tmp[ sizeof( currentLanguage ) ];
@@ -63,9 +63,9 @@ static void test_command( unsigned int, char ** )
 
 void game_language_initialize_()
 {
-	PlRegisterConsoleVariable( "language", "The current language.", "", PL_VAR_STRING, currentLanguage, nullptr, true );
-	PlRegisterConsoleCommand( "language_test_translate", "Test language translations.", 1, test_translate_command );
-	PlRegisterConsoleCommand( "language_test", "Generic test for language translation.", 0, test_command );
+	ape_console_var_register( "language", "The current language.", "", PL_VAR_STRING, currentLanguage, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_cmd_register( "language_test_translate", "Test language translations.", 1, test_translate_command );
+	ape_console_cmd_register( "language_test", "Generic test for language translation.", 0, test_command );
 
 	static const char *languagesPath = "scripts/strings.cfg.n";
 
@@ -134,7 +134,7 @@ void game_language_set_current( const char *id )
 		return;
 	}
 
-	PlSetConsoleVariableByName( "language", id == nullptr ? "" : id );
+	ape_console_var_set( "language", id == nullptr ? "" : id );
 	// Should we bother doing validation here??
 }
 

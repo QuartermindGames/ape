@@ -229,15 +229,15 @@ ApeBrushFace **ape_world_get_tagged_surfaces( ApeWorld *self, unsigned int *numD
 
 void ape_register_world_console_variables_( void )
 {
-	PlRegisterConsoleVariable( "world.skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.world.skipDraw, nullptr, false );
-	PlRegisterConsoleVariable( "world.skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, &ape_config_.world.skipPortals, nullptr, false );
-	PlRegisterConsoleVariable( "world.showAllRooms", "Toggle rendering of all rooms.", "false", PL_VAR_BOOL, &ape_config_.world.showAllRooms, nullptr, false );
-	PlRegisterConsoleVariable( "world.showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, nullptr, false );
-	PlRegisterConsoleVariable( "world.sortLights", "Sort lights before drawing world.", "false", PL_VAR_BOOL, &ape_config_.world.sortLights, nullptr, false );
-	PlRegisterConsoleVariable( "world.showNodeVolumes", "Shows bounding volumes of all nodes currently in the scene.", "false", PL_VAR_BOOL, &ape_config_.world.showNodeVolumes, nullptr, false );
-	PlRegisterConsoleVariable( "world.gravityModifier.x", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.x, nullptr, false );
-	PlRegisterConsoleVariable( "world.gravityModifier.y", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.y, nullptr, false );
-	PlRegisterConsoleVariable( "world.gravityModifier.z", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.z, nullptr, false );
+	ape_console_var_register( "world.skipDraw", "Toggle rendering of world.", "false", PL_VAR_BOOL, &ape_config_.world.skipDraw, nullptr, 0 );
+	ape_console_var_register( "world.skipPortals", "Toggle display of rooms visible through portals.", "false", PL_VAR_BOOL, &ape_config_.world.skipPortals, nullptr, 0 );
+	ape_console_var_register( "world.showAllRooms", "Toggle rendering of all rooms.", "false", PL_VAR_BOOL, &ape_config_.world.showAllRooms, nullptr, 0 );
+	ape_console_var_register( "world.showPortals", "Toggles the display of portals.", "false", PL_VAR_BOOL, &ape_config_.world.showPortals, nullptr, 0 );
+	ape_console_var_register( "world.sortLights", "Sort lights before drawing world.", "false", PL_VAR_BOOL, &ape_config_.world.sortLights, nullptr, 0 );
+	ape_console_var_register( "world.showNodeVolumes", "Shows bounding volumes of all nodes currently in the scene.", "false", PL_VAR_BOOL, &ape_config_.world.showNodeVolumes, nullptr, 0 );
+	ape_console_var_register( "world.gravityModifier.x", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.x, nullptr, 0 );
+	ape_console_var_register( "world.gravityModifier.y", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.y, nullptr, 0 );
+	ape_console_var_register( "world.gravityModifier.z", "Modifies the given level of gravity.", "0.0", PL_VAR_F32, &ape_config_.world.gravityModifier.z, nullptr, 0 );
 }
 
 const ApeWorldNodeClass ape_rootClass = {

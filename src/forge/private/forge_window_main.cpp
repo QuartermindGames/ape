@@ -117,9 +117,9 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 		ape_tick_frame();
 
 		//TODO: ditch this once console interface is in aux?
-		static bool               checkFail;
-		static PLConsoleVariable *profilerFrequency;
-		static unsigned int       freq = 32;
+		static bool           checkFail;
+		static ApeConsoleVar *profilerFrequency;
+		static unsigned int   freq = 32;
 		if ( profilerFrequency == nullptr && !checkFail )
 		{
 			profilerFrequency = PlGetConsoleVariable( "debug/profilerFrequency" );
@@ -132,7 +132,7 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 
 		if ( profilerFrequency != nullptr )
 		{
-			const char *c = PlGetConsoleVariableValue( "debug/profilerFrequency" );
+			const char *c = ape_console_var_get( "debug/profilerFrequency" );
 			freq          = strtol( c, nullptr, 10 );
 		}
 
@@ -340,37 +340,37 @@ long forge::MainWindow::on_toggle_console( FXObject *object, FXSelector, void * 
 
 long forge::MainWindow::on_toggle_node_volumes( FXObject *object, FXSelector, void * )
 {
-	PlSetConsoleVariableByName( "world.showNodeVolumes", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	ape_console_var_set( "world.showNodeVolumes", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
 long forge::MainWindow::on_toggle_selection_buffer( FXObject *object, FXSelector, void * )
 {
-	PlSetConsoleVariableByName( "renderer.showSelectionBuffer", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	ape_console_var_set( "renderer.showSelectionBuffer", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
 long forge::MainWindow::on_toggle_post_processing( FXObject *object, FXSelector, void * )
 {
-	PlSetConsoleVariableByName( "postfx", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	ape_console_var_set( "postfx", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
 long forge::MainWindow::on_toggle_room_visibility( FXObject *object, FXSelector, void * )
 {
-	PlSetConsoleVariableByName( "world.showAllRooms", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	ape_console_var_set( "world.showAllRooms", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
 long forge::MainWindow::on_toggle_lightmap_overlay( FXObject *object, FXSelector, void * )
 {
-	PlSetConsoleVariableByName( "editor.showLightmapOverlay", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
+	ape_console_var_set( "editor.showLightmapOverlay", static_cast< FXMenuCheck * >( object )->getCheck() ? "true" : "false" );
 	return TRUE;
 }
 
 long forge::MainWindow::on_build_lightmap( FXObject *, FXSelector, void * )
 {
-	PlParseConsoleString( "editor_light" );
+	ape_console_parse( "editor_light" );
 	return TRUE;
 }
 

@@ -29,7 +29,7 @@ static bool showHiddenFaces;
 
 void ape_renderer_world_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "renderer_world.showHiddenFaces", "Toggle hidden faces.", "false", PL_VAR_BOOL, &showHiddenFaces, nullptr, false );
+	ape_console_var_register( "renderer_world.showHiddenFaces", "Toggle hidden faces.", "false", PL_VAR_BOOL, &showHiddenFaces, nullptr, 0 );
 }
 
 static void draw_face_wireframe( const ApeBrushFace *face )

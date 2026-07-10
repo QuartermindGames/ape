@@ -11,7 +11,6 @@
 #include <plcore/pl.h>
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_package.h>
-#include <plcore/pl_console.h>
 #include <plcore/pl_hashtable.h>
 #include <plcore/pl_linkedlist.h>
 
@@ -24,7 +23,8 @@
 #include "aux/public/aux_math.h"
 
 // Yin
-#include <yin/core.h>
+#include "core/public/yin/core.h"
+#include "core/public/core_console.h"
 
 // FOX Toolkit
 #include <fx.h>

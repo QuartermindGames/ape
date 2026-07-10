@@ -9,7 +9,6 @@
 #include "renderer/material/material.h"
 #include "renderer/post/post.h"
 #include "yin/core_game.h"
-#include "core_console.h"
 
 //TODO: eventually this should be used, rather than what we're doing
 #define USE_GUI_CANVAS 0

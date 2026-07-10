@@ -9,7 +9,6 @@
 
 #include "editor.h"
 
-#include "core_console.h"
 #include "renderer/renderer.h"
 #include "renderer/material/material.h"
 
@@ -431,7 +430,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static void save_command( unsigned int, char **argv )
+static void save_command( unsigned int argc, const char *const *argv )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
@@ -443,7 +442,7 @@ static void save_command( unsigned int, char **argv )
 	//TODO
 }
 
-static void load_command( unsigned int, char **argv )
+static void load_command( unsigned int argc, const char *const *argv )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr )
@@ -468,11 +467,13 @@ void ape_initialize_editor_( void )
 		editorConfigRoot = acm_push_object( root, "editor" );
 	}
 
+	ape_editor_ui_initialize_();
 	ape_editor_selection_initialize_();
 }
 
 void ape_shutdown_editor_( void )
 {
+	ape_editor_ui_shutdown_();
 	ape_editor_selection_shutdown_();
 }
 
@@ -552,15 +553,15 @@ QmMathVector2f ape_editor_get_default_material_scale()
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_grid_toggle_command_( unsigned int, char ** );
-void ape_light_command_( unsigned int, char ** );
+void ape_grid_toggle_command_( unsigned int argc, const char * const *argv );
+void ape_light_command_( unsigned int argc, const char * const *argv );
 
 void ape_editor_register_console_( void )
 {
-	PlRegisterConsoleCommand( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
-	PlRegisterConsoleCommand( "editor_save", "Save the current instance.", 1, save_command );
-	PlRegisterConsoleCommand( "editor_load", "Load for the current instance.", 1, load_command );
-	PlRegisterConsoleCommand( "editor_light", "Generate lightmap.", 0, ape_light_command_ );
+	ape_console_cmd_register( "editor_toggle_grid", "Toggle the editing grid.", 0, ape_grid_toggle_command_ );
+	ape_console_cmd_register( "editor_save", "Save the current instance.", 1, save_command );
+	ape_console_cmd_register( "editor_load", "Load for the current instance.", 1, load_command );
+	ape_console_cmd_register( "editor_light", "Generate lightmap.", 0, ape_light_command_ );
 
 	ape_console_var_register( "editor.showIcons", "Show icons in the editor mode.", "true", PL_VAR_BOOL, &showIcons, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 	ape_console_var_register( "editor.iconFade", "Fade range for icons displayed in the editor.", "0.25", PL_VAR_F32, &iconFade, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
@@ -838,6 +839,9 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 	{
 		return;
 	}
+
+	//TODO: eventually all the surrounding logic should get moved into this!
+	ape_editor_ui_draw_( viewport );
 
 	ApeCamera *camera = viewport->camera;
 	if ( camera == nullptr )

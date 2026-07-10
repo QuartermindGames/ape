@@ -15,7 +15,7 @@ static PLHashTable   *entityComponentDefinitions;
 static PLHashTable   *entityClassLookup;
 static PLVectorArray *entityClasses;
 
-static void list_entity_classes_command( unsigned int, char ** )
+static void list_entity_classes_command( unsigned int argc, const char * const *argv )
 {
 	if ( entityClassLookup == NULL )
 	{
@@ -61,7 +61,7 @@ static void list_entity_classes_command( unsigned int, char ** )
 
 void ape_entity_register_commands_( void )
 {
-	PlRegisterConsoleCommand( "list_entity_classes", "List all of the registered entity classes.", 0, list_entity_classes_command );
+	ape_console_cmd_register( "list_entity_classes", "List all of the registered entity classes.", 0, list_entity_classes_command );
 }
 
 void ape_register_entity_class( const ApeEntityClassDefinition *definition )

@@ -1062,7 +1062,7 @@ cleanup:
 	}
 }
 
-void ape_light_command_( unsigned int, char ** )
+void ape_light_command_( unsigned int argc, const char *const *argv )
 {
 	ApeEditorInstance *instance = ape_editor_get_active_instance();
 	if ( instance == nullptr || instance->camera == nullptr )

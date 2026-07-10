@@ -11,7 +11,6 @@
 #include "qmmath/public/qm_math_colour.h"
 
 #include <plcore/pl.h>
-#include <plcore/pl_console.h>
 #include <plcore/pl_filesystem.h>
 #include <plcore/pl_package.h>
 #include <plcore/pl_array_vector.h>
@@ -97,17 +96,7 @@ ApeConsoleOutput *apeGetConsoleOutput( void );
 void ape_initialize_console_( void );
 void ape_shutdown_console_( void );
 
-void ape_console_register_commands_( bool isDedicated );
-void ape_console_register_variables_( bool isDedicated );
-
-void ape_console_draw_( const ApeViewport *viewport );
-void ape_console_register_cl_commands_( void );
-void ape_console_register_cl_variables_( void );
-
-void ape_console_print_( const char *message, ... );
-void ape_console_verbose_( const char *message, ... );
-void ape_console_warning_( const char *message, ... );
-void ape_console_error_( bool die, const char *message, ... );
+#include "console/console.h"
 
 typedef struct ApeConfig
 {

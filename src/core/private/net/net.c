@@ -1,6 +1,7 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include "ape_private.h"
+
 #include "net.h"
 
 #include <limits.h>
@@ -126,7 +127,7 @@ static bool execute_test( void )
 	return true;
 }
 
-static void test_net_command( unsigned int argc, char **argv )
+static void test_net_command( unsigned int argc, const char *const *argv )
 {
 	QM_OS_ZERO_( testData );
 
@@ -154,7 +155,7 @@ void ape_initialize_net_( void )
 #endif
 
 #if !defined( NDEBUG )
-	PlRegisterConsoleCommand( "test_net", "Test networking API", 0, test_net_command );
+	ape_console_cmd_register( "test_net", "Test networking API", 0, test_net_command );
 #endif
 }
 

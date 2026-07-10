@@ -8,14 +8,12 @@
 #include "ape/ape_public_game.h"
 #include "server.h"
 
-#include "core_console.h"
-
 #define SERVER_CLIENT_TIMEOUT 1024
 
 static ApeNetSocket *hostSocket;
 
-static char serverName[ PL_VAR_VALUE_LENGTH ];
-static char serverPass[ PL_VAR_VALUE_LENGTH ];
+static char serverName[ APE_CONSOLE_VAR_MAX_STRING ];
+static char serverPass[ APE_CONSOLE_VAR_MAX_STRING ];
 
 static bool showServerHeartbeat;
 

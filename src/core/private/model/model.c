@@ -15,7 +15,7 @@ APE_MEMORY_IMPLEMENT_INTERFACE( ape_model, ApeModel, reference )
 
 void ape_model_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "model.showSkeleton", "Toggle display of a model skeleton.", "false", PL_VAR_BOOL, &modelShowSkeleton, nullptr, false );
+	ape_console_var_register( "model.showSkeleton", "Toggle display of a model skeleton.", "false", PL_VAR_BOOL, &modelShowSkeleton, nullptr, 0 );
 }
 
 static void model_cleanup_callback_( void *userData )

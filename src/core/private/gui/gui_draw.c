@@ -1,7 +1,5 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include <plcore/pl_console.h>
-
 #include "ape_private.h"
 #include "gui_private.h"
 

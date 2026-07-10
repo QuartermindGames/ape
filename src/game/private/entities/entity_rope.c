@@ -27,7 +27,7 @@ static bool showRopeDebug;
 
 static void cache_rope()
 {
-	PlRegisterConsoleVariable( "game_debug_rope", "Toggle the display of wireframe ropes.", "false", PL_VAR_BOOL, &showRopeDebug, nullptr, false );
+	ape_console_var_register( "game_debug_rope", "Toggle the display of wireframe ropes.", "false", PL_VAR_BOOL, &showRopeDebug, nullptr, 0 );
 }
 
 static void *create_rope( ApeEntity *self )

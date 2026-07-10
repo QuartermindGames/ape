@@ -8,6 +8,7 @@ if (APE_OPTION_TOOLS)
             private/editor/editor_grid.c
             private/editor/editor_light.c
             private/editor/editor_selection.c
+            private/editor/editor_ui.c
     )
 
     # This is sort of gross - just use the fallback per ISPC
@@ -29,6 +30,7 @@ add_library(ape-core STATIC
         # Console
         private/console/console.c
         private/console/console_client.c
+        private/console/console_cmd.c
         private/console/console_log.c
         private/console/console_var.c
 

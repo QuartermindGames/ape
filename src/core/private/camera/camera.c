@@ -10,6 +10,7 @@
 #include "renderer/renderer.h"
 #include "renderer/material/material.h"
 #include "renderer/post/post.h"
+
 #include "world/world.h"
 
 static constexpr float CAMERA_DEFAULT_FOCUS_POINT = 16.0f;
@@ -666,7 +667,7 @@ static bool pvs_test_brush( ApeCamera *self, const ApeViewport *viewport, ApeBru
 			{
 				char tmp[ 64 ];
 				snprintf( tmp, sizeof( tmp ), "%u", APE_CAMERA_MAX_PORTAL_DEPTH );
-				PlSetConsoleVariable( maxPortalDepth, tmp );
+				ape_console_var_set_( maxPortalDepth, tmp );
 			}
 
 			if ( visibleRoom->numPortals < APE_CAMERA_MAX_ROOM_PORTALS && ape_rendererState_.depth < maxPortalDepth->i_value )

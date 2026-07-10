@@ -3,18 +3,22 @@
 #include "qmos/public/qm_os_time.h"
 #include "qmos/public/qm_os_string.h"
 
-#include "../ape_private.h"
+#include "ape_private.h"
 
-#include "../net/net.h"
+#include "net/net.h"
+
 #include "client.h"
 #include "client_input.h"
-#include "game/game_public.h"
 #include "client_gui.h"
+
+#include "game/game_public.h"
 #include "editor/editor.h"
+
 #include "renderer/renderer.h"
+#include "renderer/material/material.h"
+
 #include "audio/audio.h"
 #include "ape_protocol.h"
-#include "renderer/material/material.h"
 #include "yin/core_game.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +42,7 @@ typedef struct ClientState
 	ApeProtocolMessage message;
 	double             lastMessageTime;
 
-	PLConsoleString name;
+	ApeConsoleVarString name;
 } ClientState;
 static ClientState clientState;
 
@@ -209,7 +213,7 @@ static void handle_connection_state( void )
 	}
 }
 
-static void connect_command( [[maybe_unused]] unsigned int argc, char **argv )
+static void connect_command( unsigned int argc, const char *const *argv )
 {
 	char *address = qm_os_string_alloc( "%s", argv[ 1 ] );
 	if ( address == nullptr )
@@ -277,7 +281,7 @@ void ape_initialize_client_( void )
 	ape_initialize_gui_();
 	ape_input_initialize_();
 
-	PlRegisterConsoleCommand( "connect",
+	ape_console_cmd_register( "connect",
 	                          "Attempt to connect to the specified server.",
 	                          1, connect_command );
 
@@ -409,5 +413,5 @@ bool ape_client_send( const void **buf, size_t *bufSizes, unsigned int numBuffer
 
 void ape_client_register_console_variables_()
 {
-	PlRegisterConsoleVariable( "client.name", "Identifying name for the client.", "anonymous", PL_VAR_STRING, &clientState.name, nullptr, true );
+	ape_console_var_register( "client.name", "Identifying name for the client.", "anonymous", PL_VAR_STRING, &clientState.name, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 }

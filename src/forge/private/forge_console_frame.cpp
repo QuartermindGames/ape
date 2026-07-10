@@ -46,7 +46,7 @@ long forge::ConsoleFrame::submit_command( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	PlParseConsoleString( command.text() );
+	ape_console_parse( command.text() );
 
 	submitField->appendItem( command );
 	submitField->setText( "" );

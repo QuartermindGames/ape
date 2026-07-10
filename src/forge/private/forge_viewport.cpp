@@ -568,8 +568,7 @@ long Viewport::on_create( FXObject *object, FXSelector selector, void * )
 
 long Viewport::on_screenshot( FXObject *, FXSelector, void * )
 {
-	PlParseConsoleString( "screenshot" );
-
+	ape_console_parse( "screenshot" );
 	return TRUE;
 }
 

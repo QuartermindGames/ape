@@ -116,7 +116,7 @@ static void register_standard_entity_components()
 	ape_register_entity_component( &game_inventoryComponent_ );
 }
 
-static void load_room_command( [[maybe_unused]] unsigned int argc, char **argv )
+static void load_room_command( unsigned int argc, const char *const *argv )
 {
 	ApeWorld *world = ape_world_create();
 	assert( world != nullptr );
@@ -149,7 +149,7 @@ static void print_world_name( const char *path, void * )
 	game_print_( "%s\n", name );
 }
 
-static void list_rooms_command( unsigned int, char ** )
+static void list_rooms_command( unsigned int argc, const char *const *argv )
 {
 	PlScanDirectory( "rooms", "n", print_world_name, true, nullptr );
 }
@@ -169,7 +169,7 @@ static void navigate_world_tree( const ApeWorldNode *node, const unsigned int de
 	}
 }
 
-static void print_world_tree_command( unsigned int argc, char **argv )
+static void print_world_tree_command( unsigned int argc, const char *const *argv )
 {
 	ApeWorld *world = game_get_current_world();
 	if ( world == nullptr )
@@ -194,9 +194,9 @@ bool game_initialize_( void )
 	                          "0", PL_VAR_I32,
 	                          nullptr, nullptr, 0 );
 
-	PlRegisterConsoleCommand( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
-	PlRegisterConsoleCommand( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
-	PlRegisterConsoleCommand( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
+	ape_console_cmd_register( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
+	ape_console_cmd_register( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
+	ape_console_cmd_register( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
 
 	globalGameLog        = ape_console_log_register_input( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
 	globalGameWarningLog = ape_console_log_register_input( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );

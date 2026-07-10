@@ -35,10 +35,10 @@ static float get_console_display_scale()
 // Autocomplete
 /////////////////////////////////////////////////////////////////////////////////////
 
-#define MAX_AUTOCOMPLETE_RESULTS 8
-static const char  *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ];
-static bool         enableAutoCompleteList;
-static unsigned int autoCompleteSelection;
+static constexpr unsigned int MAX_AUTOCOMPLETE_RESULTS = 16;
+static const char            *autoComplete[ MAX_AUTOCOMPLETE_RESULTS ];
+static bool                   enableAutoCompleteList;
+static unsigned int           autoCompleteSelection;
 
 static void update_auto_complete_result( const char *input )
 {
@@ -49,22 +49,26 @@ static void update_auto_complete_result( const char *input )
 		return;
 	}
 
-	// fetch all matching results
-	unsigned int numOptions;
-	const char **list = PlAutocompleteConsoleString( input, &numOptions );
-	if ( numOptions >= MAX_AUTOCOMPLETE_RESULTS )
+	static constexpr unsigned int MAX_OPTIONS = MAX_AUTOCOMPLETE_RESULTS / 2;
+
+	unsigned int numOptions = 0;
+
+	const char  *commands[ MAX_OPTIONS ] = {};
+	unsigned int numCommands             = ape_console_cmd_match( input, commands, MAX_OPTIONS );
+	for ( unsigned int i = 0; i < numCommands; ++i )
 	{
-		numOptions = MAX_AUTOCOMPLETE_RESULTS - 1;
+		autoComplete[ numOptions++ ] = commands[ i ];
 	}
 
-	// fill the list, leaving the last item null so we know where it ends
-	for ( unsigned int i = 0; i < numOptions; ++i )
+	const char  *vars[ MAX_OPTIONS ] = {};
+	unsigned int numVars             = ape_console_var_match( input, vars, MAX_OPTIONS );
+	for ( unsigned int i = 0; i < numVars; ++i )
 	{
-		autoComplete[ i ] = list[ i ];
+		autoComplete[ numOptions++ ] = vars[ i ];
 	}
+
 	autoComplete[ numOptions ] = nullptr;
-
-	autoCompleteSelection = 0;
+	autoCompleteSelection      = 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +89,7 @@ static int                  consoleMaxNotifications = 8;
 static ConsoleNotification *consoleNotifications;
 static unsigned int         consoleNumNotifications;
 
-static void update_notification_limit( PLConsoleVariable * )
+static void update_notification_limit( ApeConsoleVar * )
 {
 	if ( consoleMaxNotifications == 0 )
 	{
@@ -218,7 +222,7 @@ static void toggle_console( void )
 	}
 }
 
-static void toggle_console_command( unsigned int, char ** )
+static void toggle_console_command( unsigned int argc, const char *const *argv )
 {
 	toggle_console();
 }
@@ -233,7 +237,7 @@ static void toggle_console_action( const ApeInputState state, const char * )
 	toggle_console();
 }
 
-static void clear_history_command( unsigned int, char ** )
+static void clear_history_command( unsigned int argc, const char *const *argv )
 {
 	numHistoryItems  = 0;
 	historySelection = 0;
@@ -382,7 +386,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 			{
 				ape_console_print_( "%s\n", inputBuffer );
 
-				PlParseConsoleString( inputBuffer );
+				ape_console_parse( inputBuffer );
 
 				// shuffle everything back and then tack it onto our history list
 				for ( int i = numHistoryItems - 1; i > 0; i-- )
@@ -653,7 +657,7 @@ void ape_console_draw_( const ApeViewport *viewport )
  * CLIENT CONSOLE INIT
  ****************************************/
 
-static void input_mlook_command( PLConsoleVariable *consoleVariable )
+static void input_mlook_command( ApeConsoleVar *consoleVariable )
 {
 	if ( !consoleVariable->b_value )
 	{
@@ -665,9 +669,9 @@ static void input_mlook_command( PLConsoleVariable *consoleVariable )
 
 void ape_console_register_cl_commands_( void )
 {
-	PlRegisterConsoleCommand( "console_toggle",
+	ape_console_cmd_register( "console_toggle",
 	                          "Toggle the console.", 0, toggle_console_command );
-	PlRegisterConsoleCommand( "console_clear_history",
+	ape_console_cmd_register( "console_clear_history",
 	                          "Clear the console input history. Not to be confused with the \"clear\" command.",
 	                          0, clear_history_command );
 }
@@ -679,27 +683,27 @@ void ape_decal_manager_register_console_();
 
 void ape_console_register_cl_variables_( void )
 {
-	PlRegisterConsoleVariable( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, nullptr, true );
+	ape_console_var_register( "local_name", "Set the name of the local player.", "unnamed", PL_VAR_STRING, NULL, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
-	PlRegisterConsoleVariable( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "1", PL_VAR_BOOL, NULL, input_mlook_command, true );
+	ape_console_var_register( "input/mlook", "Toggle mouse look. If enabled, mouse is captured.", "1", PL_VAR_BOOL, NULL, input_mlook_command, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
-	PlRegisterConsoleVariable( "debug/profilerFrequency",
-	                           "Set frequency at which profile graph updates.",
-	                           "32", PL_VAR_I32, NULL, nullptr, false );
+	ape_console_var_register( "debug/profilerFrequency",
+	                          "Set frequency at which profile graph updates.",
+	                          "32", PL_VAR_I32, NULL, nullptr, 0 );
 
-	PlRegisterConsoleVariable( "console.autoCompleteList",
-	                           "Enable/disable list of options that are presented for auto-completion.",
-	                           "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, true );
-	PlRegisterConsoleVariable( "console.alpha",
-	                           "Level of transparency to use for the console background.",
-	                           "200", PL_VAR_I32, &consoleAlpha, nullptr, true );
-	PlRegisterConsoleVariable( "console.drawShadow",
-	                           "Shadow for text, which will improve legibility. Disabling might yield a slight performance boost on slower machines.",
-	                           "false", PL_VAR_BOOL, &drawShadow, nullptr, true );
-	PlRegisterConsoleVariable( "console.maxNotifications",
-	                           "Maximum number of notifications to show from the console buffer.",
-	                           "8", PL_VAR_I32, &consoleMaxNotifications, update_notification_limit, true );
-	PlRegisterConsoleVariable( "console.fontScale", "Set the font scale for the console.", "1.0", PL_VAR_F32, &consoleFontScale, nullptr, true );
+	ape_console_var_register( "console.autoCompleteList",
+	                          "Enable/disable list of options that are presented for auto-completion.",
+	                          "true", PL_VAR_BOOL, &enableAutoCompleteList, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "console.alpha",
+	                          "Level of transparency to use for the console background.",
+	                          "200", PL_VAR_I32, &consoleAlpha, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "console.drawShadow",
+	                          "Shadow for text, which will improve legibility. Disabling might yield a slight performance boost on slower machines.",
+	                          "false", PL_VAR_BOOL, &drawShadow, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "console.maxNotifications",
+	                          "Maximum number of notifications to show from the console buffer.",
+	                          "8", PL_VAR_I32, &consoleMaxNotifications, update_notification_limit, APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "console.fontScale", "Set the font scale for the console.", "1.0", PL_VAR_F32, &consoleFontScale, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
 	ape_register_renderer_console_variables_();
 	ape_decal_manager_register_console_();

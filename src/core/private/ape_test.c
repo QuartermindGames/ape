@@ -15,7 +15,7 @@
 // Models
 /////////////////////////////////////////////////////////////////////////////////////
 
-static void test_model_command( unsigned int argc, char **argv )
+static void test_model_command( unsigned int argc, const char * const *argv )
 {
 	ApeWorld *world = game_get_current_world();
 	if ( world == nullptr )
@@ -47,7 +47,7 @@ static void test_model_command( unsigned int argc, char **argv )
 
 void ape_test_register_commands_()
 {
-	PlRegisterConsoleCommand( "test_model",
+	ape_console_cmd_register( "test_model",
 	                          "Test a specific model. The given test model will be drawn into the world.",
 	                          -1, test_model_command );
 }

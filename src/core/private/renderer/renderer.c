@@ -9,9 +9,8 @@
 #include "world/world.h"
 
 #include "renderer.h"
-
-#include "core_console.h"
 #include "renderer_render_target.h"
+
 #include "camera/camera.h"
 
 #include "editor/editor.h"
@@ -21,7 +20,7 @@
 
 ApeRendererStats ape_rendererPerformance_ = {};
 //TODO: kill this, caller instead sets up state and passes it into draw call
-ApeRendererPassState ape_rendererState_;
+ApeRendererPassState ape_rendererState_ = {};
 
 static ApeCamera *currentCamera;
 
@@ -105,7 +104,7 @@ static void *process_capture_queue( void * )
 	return NULL;
 }
 
-static void capture_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+static void capture_command( unsigned int argc, const char *const *argv )
 {
 	numCaptureFrames = 0;
 	isCapturing      = !isCapturing;
@@ -304,16 +303,16 @@ void ape_prepare_screenshot_capture_( void )
 	isScreenshotPending = true;
 }
 
-static void prepare_screenshot_capture_command( [[maybe_unused]] unsigned int argc, [[maybe_unused]] char **argv )
+static void prepare_screenshot_capture_command( unsigned int argc, const char *const *argv )
 {
 	ape_prepare_screenshot_capture_();
 }
 
 void ape_register_renderer_console_variables_( void )
 {
-	PlRegisterConsoleCommand( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture_command );
+	ape_console_cmd_register( "screenshot", "Take a screenshot.", 0, prepare_screenshot_capture_command );
 
-	PlRegisterConsoleCommand( "capture", "Capture frames continuously until called again.", 0, capture_command );
+	ape_console_cmd_register( "capture", "Capture frames continuously until called again.", 0, capture_command );
 	ape_console_var_register( "capture.numThreads", "Specify the number of threads to use for capturing.", "4", PL_VAR_I32, &numCaptureThreads, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 	ape_console_var_register( "capture.useQoi", "Capture to qoi format, rather than jpeg, which is faster but less supported.", "true", PL_VAR_BOOL, &useCaptureToQoi, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 	ape_console_var_register( "capture.quality", "Set the quality of the capture. Only applies if using jpeg.", "90", PL_VAR_I32, &captureQuality, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
