@@ -4,6 +4,8 @@
 
 #include "qmmath/public/qm_math_colour.h"
 
+PL_EXTERN_C
+
 void ape_console_parse( const char *string );
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -88,3 +90,5 @@ unsigned int ape_console_cmd_match( const char *name, const char **dstOptions, u
 
 int  ape_console_log_register_input( const char *prefix, QmMathColour4ub colour, bool isActive );
 void ape_console_log_push_message( int id, const char *msg, ... );
+
+PL_EXTERN_C_END

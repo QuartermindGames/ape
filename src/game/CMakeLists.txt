@@ -91,7 +91,7 @@ target_include_directories(Nihlexa PRIVATE private)
 set_target_properties(Nihlexa PROPERTIES FOLDER "Games")
 
 add_executable(NEditor WIN32 ${NIH_SOURCES})
-target_link_libraries(NEditor ape-editor ${GAME_LINK_LIBS})
+target_link_libraries(NEditor ${GAME_LINK_LIBS} ape-editor)
 target_compile_definitions(NEditor PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(NEditor PRIVATE private)
 set_target_properties(NEditor PROPERTIES FOLDER "Games")
