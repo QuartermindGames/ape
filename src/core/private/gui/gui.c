@@ -119,7 +119,7 @@ static void draw_debug_window( const char *title, const float x, const float y, 
 	ApeGuiFont *font      = gui_get_default_font( GUI_FONT_DEFAULT_MEDIUM );
 	float       barHeight = gui_font_get_line_spacing( font );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLES );
 
 	// title bar
 	if ( title != nullptr )
@@ -232,7 +232,7 @@ static void draw_profiler( const ApeViewport *viewport )
 		unsigned int  numPoints;
 		const double *points = com_profiler_get_samples( groups[ i ], &numPoints );
 
-		PLGMesh *lineMesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+		QmGfxMesh *lineMesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP );
 
 		for ( unsigned int j = 1; j < numPoints; ++j )
 		{

@@ -68,7 +68,7 @@ static void draw_room_wireframe( const ApeCamera *camera )
 #if 0//TODO
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlgImmBegin( PLG_MESH_LINES );
+	PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 
 	unsigned int   numFaces;
 	ApeBrushFace **faces = ( ApeBrushFace ** ) PlGetVectorArrayDataEx( camera->pvs.faces, &numFaces );
@@ -162,7 +162,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 		return;
 	}
 
-	PLGMesh *mesh        = APE_WORLD_NODE( room )->mesh;
+	QmGfxMesh *mesh      = APE_WORLD_NODE( room )->mesh;
 	mesh->numSubMeshes   = displayLists[ 0 ].numSubMeshes;
 	mesh->firstSubMeshes = displayLists[ 0 ].firstSubMeshes;
 	mesh->subMeshes      = displayLists[ 0 ].subMeshes;
@@ -303,7 +303,7 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 			continue;
 		}
 
-		PLGMesh *mesh        = worldNode->mesh;
+		QmGfxMesh *mesh      = worldNode->mesh;
 		mesh->numSubMeshes   = displayLists[ i ].numSubMeshes;
 		mesh->firstSubMeshes = displayLists[ i ].firstSubMeshes;
 		mesh->subMeshes      = displayLists[ i ].subMeshes;
@@ -503,7 +503,7 @@ static void draw_brush_stencil_shadow_cap( const ApeBrushFace *face, const ApeLi
 	}
 }
 
-static void draw_node_shadow_volume( ApeWorldNode *node, const ApeLight *light, PLGMesh *mesh, unsigned int *numIndices )
+static void draw_node_shadow_volume( ApeWorldNode *node, const ApeLight *light, QmGfxMesh *mesh, unsigned int *numIndices )
 {
 #if 0// projection on gpu
 if ( !build_shadow_display_list( room, light ) )
@@ -594,7 +594,7 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, const ApeLight *light )
 	//todo: cache!!!!
 
 	unsigned int numIndices = 0;
-	PLGMesh     *mesh       = PlgImmBegin( PLG_MESH_TRIANGLES );
+	QmGfxMesh   *mesh       = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLES );
 
 	draw_node_shadow_volume( APE_WORLD_NODE( room ), light, mesh, &numIndices );
 
@@ -767,7 +767,7 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 	ApeBrush *brush = portal->parent;
 	assert( brush != nullptr );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN );
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{
 		const ApeBrushFaceVertex *vertex = &portal->vertices[ portal->edgeLoopOrder[ j ] ];
@@ -802,7 +802,7 @@ static void draw_wireframe_portal_face( const ApeBrushFace *portal )
 
 	ape_set_active_shader_by_default_( APE_SHADER_DEFAULT_VERTEX );
 
-	PlgImmBegin( PLG_MESH_LINE_LOOP );
+	PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINE_LOOP );
 
 	for ( unsigned int j = 0; j < portal->numVertices; ++j )
 	{

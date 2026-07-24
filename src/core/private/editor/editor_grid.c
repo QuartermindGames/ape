@@ -171,10 +171,18 @@ void ape_grid_draw_( const ApeEditorGrid *self )
 
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_GRID );
 
-	//TODO: don't set these like this!!! AAaaaahhhh *melts*
 	QmMathVector3f cursorPos = ape_grid_transform_point( self, &self->cursor );
-	PlgSetShaderUniformValue( program->internal, "cursorPos", &cursorPos, false );
-	PlgSetShaderUniformValue( program->internal, "gridScale", &self->size, false );
+
+	//TODO: don't set these like this!!! AAaaaahhhh *melts*
+	int slot;
+	if ( ( slot = qm_gfx_shader_program_get_uniform_slot( program->internal, "cursorPos" ) ) != -1 )
+	{
+		qm_gfx_shader_program_set_uniform( program->internal, slot, &cursorPos, false );
+	}
+	if ( ( slot = qm_gfx_shader_program_get_uniform_slot( program->internal, "gridScale" ) ) != -1 )
+	{
+		qm_gfx_shader_program_set_uniform( program->internal, slot, &self->size, false );
+	}
 
 	int size     = QM_MATH_CLAMP( APE_EDITOR_GRID_MAX_POINTS_ROW, self->size * self->size, APE_EDITOR_GRID_MAX_POINTS );
 	int position = -size / 2;
@@ -182,7 +190,7 @@ void ape_grid_draw_( const ApeEditorGrid *self )
 	QmMathColour4ub colour = QM_MATH_COLOUR4UB( 0, 0, 255, 255 );
 
 	//TODO: cache this...
-	PlgImmBegin( PLG_MESH_LINES );
+	PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 	for ( int r = 0; r < size; r += self->size )
 	{
 		PlgImmPushVertex( self->cursor.x + position, 0.0f, self->cursor.y + position + r );
@@ -214,7 +222,7 @@ void ape_grid_post_draw_( const ApeEditorGrid *self )
 
 	PlgSetDepthBufferMode( PLG_DEPTHBUFFER_DISABLE );
 
-	PlgImmBegin( PLG_MESH_LINES );
+	PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 
 	static constexpr float AXIS_SCALE = 16.0f;
 

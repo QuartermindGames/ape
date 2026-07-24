@@ -19,7 +19,7 @@ static void get_uv_coords_for_sub_rect( const PLQuad *subRect, QmGfxTexture *tex
 	*ty = subRect->y / ( float ) texture->h;
 }
 
-void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, QmGfxTexture *texture, float x, float y, float w, float h )
+void ape_draw_textured_sub( QmGfxMesh *mesh, const PLQuad *subRect, QmGfxTexture *texture, float x, float y, float w, float h )
 {
 	float tw, th, tx, ty;
 	get_uv_coords_for_sub_rect( subRect, texture, &tw, &th, &tx, &ty );
@@ -36,12 +36,51 @@ void ape_draw_textured_sub( PLGMesh *mesh, const PLQuad *subRect, QmGfxTexture *
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
+#if 0
+
+void PlgDrawEllipse( unsigned int segments, const QmMathVector2f *position, float w, float h, const QmMathColour4ub *colour ) {
+	QmGfxMesh *mesh = GetInternalMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN );
+
+	for ( unsigned int i = 0, pos = 0; i < 360; i += ( 360 / segments ) ) {
+		if ( pos >= segments ) {
+			break;
+		}
+
+		QmMathVector3f coord = qm_math_vector3f(
+				( position->x + w ) + cosf( QM_MATH_DEG2RAD( ( float ) i ) ) * w,
+				( position->y + h ) + sinf( QM_MATH_DEG2RAD( ( float ) i ) ) * h,
+				0.0f );
+
+		PlgAddMeshVertex( mesh, &coord, &QM_MATH_VECTOR3F_ZERO, colour, &QM_MATH_VECTOR2F_ZERO );
+	}
+
+	PlMatrixMode( PL_MODELVIEW_MATRIX );
+	PlPushMatrix();
+
+	PlLoadIdentityMatrix();
+
+	QmGfxShaderProgram *program = PlgGetCurrentShaderProgram();
+	if ( program ) {
+		int slot;
+		if ( ( slot = qm_gfx_shader_program_get_uniform_slot( program, "pl_model" ) ) >= 0 ) {
+			qm_gfx_shader_program_set_uniform( program, slot, PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+		}
+	}
+
+	PlgUploadMesh( mesh );
+	PlgDrawMesh( mesh );
+
+	PlPopMatrix();
+}
+
+#endif
+
 void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMathColour4f *colour, const QmMathVector3f *position, const QmMathVector3f *origin, const QmMathVector3f *angles, float scale )
 {
 	ApeTexture *texture = ape_material_get_texture_( material, 0, "diffuseMap" );
 	assert( texture != nullptr );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP );
 	assert( mesh != nullptr );
 
 	PlMatrixMode( PL_MODELVIEW_MATRIX );
@@ -87,7 +126,7 @@ void ape_draw_sprite( ApeMaterial *material, const PLQuad *subRect, const QmMath
 
 void ape_draw_textured_quad( ApeMaterial *material, float x, float y, float w, float h, const QmMathColour4ub *colour, float z )
 {
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP );
 	assert( mesh != NULL );
 
 	PlgImmPushVertex( x, y, z );
@@ -145,6 +184,7 @@ void ape_draw_axis_pivot( QmMathVector3f position, QmMathVector3f rotation, floa
 	PlPopMatrix();
 }
 
+#if 0
 void ape_draw_digit( QmGfxTexture *numTextureTable[], float x, float y, int digit )
 {
 	if ( digit < 0 )
@@ -158,7 +198,9 @@ void ape_draw_digit( QmGfxTexture *numTextureTable[], float x, float y, int digi
 
 	PlgDrawTexturedRectangle( x, y, ( float ) numTextureTable[ digit ]->w, ( float ) numTextureTable[ digit ]->h, numTextureTable[ digit ] );
 }
+#endif
 
+#if 0
 void ape_draw_number( QmGfxTexture *numTextureTable[], float x, float y, int number )
 {
 	/* restrict it for sanity */
@@ -187,6 +229,7 @@ void ape_draw_number( QmGfxTexture *numTextureTable[], float x, float y, int num
 
 	ape_draw_digit( numTextureTable, x, y, number % 10 );
 }
+#endif
 
 void ape_draw_graph( const char *heading, float x, float y, float w, float h, const double *values, unsigned int numPoints, float min, float max, ApeGuiFont *font )
 {
@@ -300,7 +343,7 @@ void ape_draw_graph( const char *heading, float x, float y, float w, float h, co
 	qm_os_memory_free( points );
 }
 
-void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, const QmMathColour4ub *colour )
+void ape_draw_rectangle_( QmGfxMesh *mesh, float x, float y, float w, float h, const QmMathColour4ub *colour )
 {
 	unsigned int a, b, c, d;
 	a = PlgPushVertex3f( mesh, x, y, 0.0f );
@@ -316,7 +359,7 @@ void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, con
 	PlgPushTriangle( mesh, c, d, b );
 }
 
-void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, float depth, const QmMathColour4ub *colour, bool inset )
+void ape_draw_bevel_rectangle_( QmGfxMesh *mesh, float x, float y, float w, float h, float depth, const QmMathColour4ub *colour, bool inset )
 {
 	unsigned int a, b, c, d;
 
@@ -430,7 +473,7 @@ void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float 
 // Debug Draw
 /////////////////////////////////////////////////////////////////////////////////////
 
-static PLGMesh     *debugDrawMesh;
+static QmGfxMesh   *debugDrawMesh;
 static ApeMaterial *debugDrawMaterial;
 
 void ape_draw_initialize_debug_mesh_()
@@ -438,7 +481,7 @@ void ape_draw_initialize_debug_mesh_()
 	assert( debugDrawMesh == nullptr );
 	assert( debugDrawMaterial == nullptr );
 
-	debugDrawMesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_STREAM, 0, 2048 );
+	debugDrawMesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_LINES, QM_GFX_MESH_DRAW_MODE_STREAM, 0, 2048 );
 	if ( debugDrawMesh == nullptr )
 	{
 		ape_console_error_( true, "Failed to create debug draw mesh: %s\n", PlGetError() );

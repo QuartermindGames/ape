@@ -27,7 +27,7 @@ typedef struct ApeGuiFont
 	float lineSpacing;
 	float tabWidth;
 
-	PLGMesh *mesh;
+	QmGfxMesh *mesh;
 } ApeGuiFont;
 
 static PLVectorArray *cachedFonts;
@@ -196,7 +196,7 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 
 	PlDestroyImage( bitmapImage );
 
-	font->mesh = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STREAM, 32, 32 );
+	font->mesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 32, 32 );
 
 	return font;
 }
@@ -438,8 +438,16 @@ void gui_font_display( ApeGuiFont *font )
 
 	ApeShaderProgram *program = ape_get_default_shader( APE_SHADER_DEFAULT_FONT );
 	PlgSetShaderProgram( program->internal );
-	PlgSetShaderUniformValue( program->internal, "pl_model", PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
-	PlgSetShaderUniformValue( program->internal, "pl_texture", PlGetMatrix( PL_TEXTURE_MATRIX ), false );
+
+	int slot;
+	if ( ( slot = qm_gfx_shader_program_get_uniform_slot( program->internal, "pl_model" ) ) != -1 )
+	{
+		qm_gfx_shader_program_set_uniform( program->internal, slot, PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+	}
+	if ( ( slot = qm_gfx_shader_program_get_uniform_slot( program->internal, "pl_texture" ) ) != -1 )
+	{
+		qm_gfx_shader_program_set_uniform( program->internal, slot, PlGetMatrix( PL_TEXTURE_MATRIX ), false );
+	}
 
 	PlgSetBlendMode( PLG_BLEND_DEFAULT );
 

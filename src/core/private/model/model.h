@@ -58,7 +58,7 @@ typedef struct ApeModel
 
 	unsigned int flags;
 
-	PLGMesh *cache;
+	QmGfxMesh *cache;
 
 	PLLinkedList *sceneNodes;
 

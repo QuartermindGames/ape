@@ -41,7 +41,7 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 
 	ape_draw_textured_quad( compassBackground, x - w / 2.0f, y - h / 2.0f, w * scale, h * scale, &QM_MATH_COLOUR4UB( 0, 0, 0, 128 ), 0.0f );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINES );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 
 	for ( unsigned int i = 0; i < 360; i += 360 / ( 360 / 5 ) )
 	{

@@ -7,8 +7,6 @@
 #include "renderer/renderer_render_target.h"
 #include "renderer/material/material.h"
 
-static PLGCamera *camera;
-
 typedef struct ApeGuiCanvas
 {
 	ApeRenderTarget *renderTarget;
@@ -116,9 +114,9 @@ void ape_gui_canvas_display( ApeGuiCanvas *canvas )
 	//printf( "%d tris, %d batches\n", guiState.numTriangles, guiState.numBatches );
 }
 
-void ape_gui_draw_filled_rectangle( PLGMesh *mesh, const int x, const int y, const int w, const int h, const int z, const QmMathColour4ub *colour )
+void ape_gui_draw_filled_rectangle( QmGfxMesh *mesh, const int x, const int y, const int w, const int h, const int z, const QmMathColour4ub *colour )
 {
-	assert( mesh->primitive == PLG_MESH_TRIANGLES );
+	assert( mesh->primitive == QM_GFX_MESH_PRIMITIVE_TRIANGLES );
 
 	unsigned int vertices[] = {
 	        PlgAddMeshVertex( mesh, &QM_MATH_VECTOR3F( x, y, z ), &QM_MATH_VECTOR3F_ZERO, colour, &QM_MATH_VECTOR2F_ZERO ),
@@ -134,9 +132,9 @@ void ape_gui_draw_filled_rectangle( PLGMesh *mesh, const int x, const int y, con
 /**
  * Similar to draw_filled_rectangle, only more explicit for the frame coords.
  */
-void ape_gui_draw_quad( PLGMesh *mesh, const QmMathVector2i tl, const QmMathVector2i tr, const QmMathVector2i ll, const QmMathVector2i lr, const int z, const QmMathColour4f *colour )
+void ape_gui_draw_quad( QmGfxMesh *mesh, const QmMathVector2i tl, const QmMathVector2i tr, const QmMathVector2i ll, const QmMathVector2i lr, const int z, const QmMathColour4f *colour )
 {
-	assert( mesh->primitive == PLG_MESH_TRIANGLES );
+	assert( mesh->primitive == QM_GFX_MESH_PRIMITIVE_TRIANGLES );
 
 	// todo: drawing API should take floating-point colours!
 	QmMathColour4ub bColour = QM_MATH_COLOUR4F_TO_4UB( *colour );

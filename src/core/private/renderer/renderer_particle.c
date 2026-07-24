@@ -96,7 +96,7 @@ ApeParticleEmitter *ss_arl_particle_emitter_create( void )
 	ApeParticleEmitter *emitter = QM_OS_MEMORY_NEW( ApeParticleEmitter );
 	emitter->particles          = PlCreateLinkedList();
 
-	emitter->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_STRIP, PLG_DRAW_STREAM, 1000, 1000 );
+	emitter->mesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP, QM_GFX_MESH_DRAW_MODE_STREAM, 1000, 1000 );
 	if ( emitter->mesh == NULL )
 		ape_console_error_( true, "Failed to create emitter mesh!\nPL: %s\n", PlGetError() );
 

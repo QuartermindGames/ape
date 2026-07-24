@@ -4,8 +4,6 @@
 
 #include "ape/ape_public_camera.h"
 
-typedef struct PLGCamera PLGCamera;
-
 static constexpr unsigned int APE_CAMERA_MAX_PORTAL_DEPTH = 8;// maximum depth into a portal
 
 static constexpr unsigned int APE_CAMERA_MAX_ROOMS        = 8;   // maximum rooms visible at a time

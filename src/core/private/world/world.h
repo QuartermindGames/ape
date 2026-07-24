@@ -73,9 +73,9 @@ void ape_world_draw_wireframe_( ApeWorld *world, ApeCamera *camera );
 
 ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, ApeWorldNodeType type, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles );
 
-void     ape_world_node_mark_dirty_( ApeWorldNode *self );
-PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self );
-void     ape_world_node_update_mesh_cache_( ApeWorldNode *self );
+void       ape_world_node_mark_dirty_( ApeWorldNode *self );
+QmGfxMesh *ape_world_node_get_mesh_( ApeWorldNode *self );
+void       ape_world_node_update_mesh_cache_( ApeWorldNode *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Rooms

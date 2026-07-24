@@ -135,7 +135,7 @@ void game_menu_splash_tick_( const double delta )
 
 static void draw_rect( const float x, const float y, const float w, const float h, const QmMathColour4ub *colour, ApeMaterial *material )
 {
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP );
 
 	PlgImmPushVertex( x, y, 0.0f );
 	PlgImmTextureCoord( 0.0f, 0.0f );

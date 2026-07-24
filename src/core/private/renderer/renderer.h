@@ -178,8 +178,8 @@ bool ape_get_capture_state_( void );
 
 void ape_setup_default_draw_state_( const ApeViewport *viewport );
 
-void ape_draw_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, const QmMathColour4ub *colour );
-void ape_draw_bevel_rectangle_( PLGMesh *mesh, float x, float y, float w, float h, float depth, const QmMathColour4ub *colour, bool inset );
+void ape_draw_rectangle_( QmGfxMesh *mesh, float x, float y, float w, float h, const QmMathColour4ub *colour );
+void ape_draw_bevel_rectangle_( QmGfxMesh *mesh, float x, float y, float w, float h, float depth, const QmMathColour4ub *colour, bool inset );
 
 void ape_setup_2d_viewport_( int w, int h );
 void ape_get_2d_viewport_size_( int *width, int *height );

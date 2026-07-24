@@ -179,7 +179,7 @@ int8_t ape_material_get_surface_type( const ApeMaterial *material );
  * Draws the given mesh with the given material. This also updates the peformance tracking,
  * so ideally you should always use this when drawing any mesh.
  */
-void ape_material_draw( ApeMaterial *material, PLGMesh *mesh, const ApeRendererPassState *state );
+void ape_material_draw( ApeMaterial *material, QmGfxMesh *mesh, const ApeRendererPassState *state );
 
 ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, unsigned int pass );
 

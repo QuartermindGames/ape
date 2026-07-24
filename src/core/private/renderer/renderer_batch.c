@@ -9,7 +9,7 @@
 
 typedef struct ApeRendererDrawBatch
 {
-	PLGMesh     *mesh;
+	QmGfxMesh   *mesh;
 	ApeMaterial *material;
 	bool         usedThisFrame;
 
@@ -50,7 +50,7 @@ static ApeRendererDrawBatch *get_batch( ApeMaterial *material )
 	// batch for this material doesn't exist, so let's set one up
 
 	batch           = QM_OS_MEMORY_NEW( ApeRendererDrawBatch );
-	batch->mesh     = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STREAM, 256, 256 );
+	batch->mesh     = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 256, 256 );
 	batch->material = material;//TODO: use shared_ptr instead...
 	batch->linkNode = qm_os_linked_list_push_back( batches, batch );
 	batch->hashNode = PlInsertHashTableNode( batchLookup, &ptr, sizeof( intptr_t ), batch );
@@ -118,7 +118,7 @@ void ape_renderer_batch_display_()
 	cleanup_batch_queue();
 }
 
-PLGMesh *ape_renderer_batch_get_mesh( ApeMaterial *material )
+QmGfxMesh *ape_renderer_batch_get_mesh( ApeMaterial *material )
 {
 	ApeRendererDrawBatch *batch = get_batch( material );
 	if ( batch == nullptr )

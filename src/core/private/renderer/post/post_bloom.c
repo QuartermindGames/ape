@@ -21,6 +21,10 @@ static float bloomIntensity;
 static float bloomThreshold;
 static bool  bloomAdditive;
 
+static int bloomThresholdUniform;
+static int bloomIntensityUniform;
+static int bloomViewportSizeUniform;
+
 static void register_bloom_console_variables( void )
 {
 	ape_console_var_register( "post_bloom", "Enable/disable bloom effect.", "true", PL_VAR_BOOL, &bloomEnabled, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
@@ -47,6 +51,12 @@ static bool setup_bloom_effect( void )
 	{
 		return false;
 	}
+
+	bloomThresholdUniform = qm_gfx_shader_program_get_uniform_slot( bloomFilterShader->internal, "threshold" );
+	bloomIntensityUniform = qm_gfx_shader_program_get_uniform_slot( bloomFilterShader->internal, "intensity" );
+
+	bloomViewportSizeUniform = qm_gfx_shader_program_get_uniform_slot( bloomBlurShader->internal, "viewportSize" );
+
 	return true;
 }
 
@@ -84,8 +94,8 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 
 		ape_shader_set_active_( bloomFilterShader );
 
-		PlgSetShaderUniformValue( bloomFilterShader->internal, "threshold", &bloomThreshold, false );
-		PlgSetShaderUniformValue( bloomFilterShader->internal, "intensity", &bloomIntensity, false );
+		qm_gfx_shader_program_set_uniform( bloomFilterShader->internal, bloomThresholdUniform, &bloomThreshold, false );
+		qm_gfx_shader_program_set_uniform( bloomFilterShader->internal, bloomIntensityUniform, &bloomIntensity, false );
 		qm_gfx_texture_set( viewportTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
@@ -101,7 +111,7 @@ static void draw_bloom_effect( const ApeViewport *viewport, [[maybe_unused]] con
 
 		ape_shader_set_active_( bloomBlurShader );
 
-		PlgSetShaderUniformValue( bloomBlurShader->internal, "viewportSize", &QM_MATH_VECTOR2F( ( float ) bw, ( float ) bh ), false );
+		qm_gfx_shader_program_set_uniform( bloomBlurShader->internal, bloomViewportSizeUniform, &QM_MATH_VECTOR2F( ( float ) bw, ( float ) bh ), false );
 		qm_gfx_texture_set( bloomFilterTexture, 0 );
 
 		ape_draw_textured_quad( nullptr, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );

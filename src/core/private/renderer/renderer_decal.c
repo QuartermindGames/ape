@@ -497,7 +497,7 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 			}
 		}
 
-		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN );
 
 		float textureScale = 1.0f / decal->scale;
 		for ( unsigned int j = 0; j < decal->numVertices; ++j )

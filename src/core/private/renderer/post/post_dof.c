@@ -86,13 +86,13 @@ static void draw_dof_effect( const ApeViewport *viewport, const ApeCamera *camer
 		ape_shader_set_active_( dofShader );
 
 		float focusPoint = dofFocusPoint + camera->dof.focusPoint;
-		qm_gfx_shader_set_uniform_value_by_index( dofShader->internal, dofFocusPointSlot, &focusPoint, false );
+		qm_gfx_shader_program_set_uniform( dofShader->internal, dofFocusPointSlot, &focusPoint, false );
 
 		float focusScale = dofFocusScale + camera->dof.focusScale;
-		qm_gfx_shader_set_uniform_value_by_index( dofShader->internal, dofFocusScaleSlot, &focusScale, false );
+		qm_gfx_shader_program_set_uniform( dofShader->internal, dofFocusScaleSlot, &focusScale, false );
 
 		float aperture = dofAperture + camera->dof.aperture;
-		qm_gfx_shader_set_uniform_value_by_index( dofShader->internal, dofApertureSlot, &aperture, false );
+		qm_gfx_shader_program_set_uniform( dofShader->internal, dofApertureSlot, &aperture, false );
 
 		ape_draw_textured_quad( dofMaterial, 0.0f, 0.0f, ( float ) bw, ( float ) bh, &PL_COLOUR_WHITE, 0 );
 

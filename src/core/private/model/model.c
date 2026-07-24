@@ -133,7 +133,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		return nullptr;
 	}
 
-	model->cache = PlgCreateMesh( PLG_MESH_TRIANGLES, PLG_DRAW_STATIC, 0, numVertices );
+	model->cache = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STATIC, 0, numVertices );
 	if ( model->cache == nullptr )
 	{
 		ape_console_warning_( "Failed to create cache for model: %s\n", PlGetError() );

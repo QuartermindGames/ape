@@ -249,7 +249,7 @@ static void draw_dial( const int16_t value, const float radius, const float thic
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP );
 	assert( mesh != nullptr );
 
 	static constexpr float RANDOM_VARIATION = 10.0f;

@@ -35,7 +35,7 @@ typedef struct ApeParticleEmitter
 
 	PLCollisionAABB bounds;
 
-	struct PLGMesh     *mesh;
+	struct QmGfxMesh   *mesh;
 	struct ApeMaterial *material;
 	ApeMemoryReference  mem;
 

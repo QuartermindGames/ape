@@ -9,7 +9,7 @@
 
 PL_EXTERN_C
 
-typedef struct PLGMesh     PLGMesh;
+typedef struct QmGfxMesh   QmGfxMesh;
 typedef struct ApeMaterial ApeMaterial;
 
 /****************************************
@@ -47,8 +47,8 @@ void ape_gui_update_mouse_position_( int x, int y );
 void gui_update_mouse_wheel( float x, float y );
 void guiUpdateMouseButton( GuiMouseButton button, bool isDown );
 
-void ape_gui_draw_filled_rectangle( PLGMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour );
-void ape_gui_draw_quad( PLGMesh *mesh, QmMathVector2i tl, QmMathVector2i tr, QmMathVector2i ll, QmMathVector2i lr, int z, const QmMathColour4f *colour );
+void ape_gui_draw_filled_rectangle( QmGfxMesh *mesh, int x, int y, int w, int h, int z, const QmMathColour4ub *colour );
+void ape_gui_draw_quad( QmGfxMesh *mesh, QmMathVector2i tl, QmMathVector2i tr, QmMathVector2i ll, QmMathVector2i lr, int z, const QmMathColour4f *colour );
 
 /****************************************
  * Font

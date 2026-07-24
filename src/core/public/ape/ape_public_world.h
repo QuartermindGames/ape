@@ -132,8 +132,8 @@ typedef struct ApeWorldNode
 	bool needsSyncOnConnect;
 	bool needsSyncOnTick;
 
-	struct PLGMesh *mesh;       // used for brush geometry childed to the given node
-	bool            isMeshDirty;// indicates the mesh needs updating
+	struct QmGfxMesh *mesh;       // used for brush geometry childed to the given node
+	bool              isMeshDirty;// indicates the mesh needs updating
 
 	ApeRoom                 *room;
 	ApeWorldNode            *parent;

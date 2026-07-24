@@ -144,7 +144,7 @@ static void render_brush_face_selection( const ApeBrush *brush )
 	//todo: optimize this... :(
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
-		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN );
 		for ( unsigned int j = 0; j < brush->faces[ i ].numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *vertex = &brush->faces[ i ].vertices[ brush->faces[ i ].edgeLoopOrder[ j ] ];
@@ -166,7 +166,7 @@ static void render_brush_selection( const ApeBrush *brush )
 	//todo: optimize this... :(
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
-		PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_FAN );
+		QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN );
 		for ( unsigned int j = 0; j < brush->faces[ i ].numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *vertex = &brush->faces[ i ].vertices[ brush->faces[ i ].edgeLoopOrder[ j ] ];
@@ -216,7 +216,7 @@ static void draw_selection_cube( const QmMathVector3f *position, const QmMathCol
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLES );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLES );
 	for ( unsigned int i = 0; i < QM_OS_ARRAY_ELEMENTS( CUBE_INDICES ); ++i )
 	{
 		for ( unsigned int j = 0; j < 3; ++j )
@@ -326,7 +326,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINES );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 	PlgImmSetPrimitiveScale( 2.0f );
 
 	ApeBrushFace *face;
@@ -377,7 +377,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ape_material_draw( material, mesh, nullptr );
 }
 
-static void render_wireframe_brush( PLGMesh *lineMesh, const ApeBrush *brush, const QmMathColour4ub *colour )
+static void render_wireframe_brush( QmGfxMesh *lineMesh, const ApeBrush *brush, const QmMathColour4ub *colour )
 {
 	for ( unsigned int i = 0; i < brush->numFaces; ++i )
 	{
@@ -410,7 +410,7 @@ static void render_selected_objects( ApeEditorInstance *self )
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_LINES );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 	PlgImmSetPrimitiveScale( 2.0f );
 
 	ApeWorldNode *worldNode;
@@ -659,15 +659,15 @@ ApeViewport *ape_editor_selection_get_viewport_( void )
 /////////////////////////////////////////////////////////////////////////////////////
 // Transform Widget
 
-static PLGMesh *transformWidgetWireframeMesh;
-static PLGMesh *transformWidgetSelectionMesh;
+static QmGfxMesh *transformWidgetWireframeMesh;
+static QmGfxMesh *transformWidgetSelectionMesh;
 
 static void setup_transform_widget()
 {
 	static constexpr float TRANSFORM_SCALE       = 32.0f;
 	static constexpr float TRANSFORM_ARROW_SCALE = 4.0f;
 
-	transformWidgetWireframeMesh = PlgCreateMesh( PLG_MESH_LINES, PLG_DRAW_STATIC, 0, 18 );
+	transformWidgetWireframeMesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_LINES, QM_GFX_MESH_DRAW_MODE_STATIC, 0, 18 );
 
 	PlgSetMeshPrimitiveScale( transformWidgetWireframeMesh, 2.0f );
 

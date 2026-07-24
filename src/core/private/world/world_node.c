@@ -867,7 +867,7 @@ void ape_world_node_mark_dirty_( ApeWorldNode *self )
 	self->isMeshDirty = true;
 }
 
-PLGMesh *ape_world_node_get_mesh_( ApeWorldNode *self )
+QmGfxMesh *ape_world_node_get_mesh_( ApeWorldNode *self )
 {
 	return self->mesh;
 }
@@ -917,7 +917,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 
 	if ( self->mesh == nullptr )
 	{
-		self->mesh = PlgCreateMesh( PLG_MESH_TRIANGLE_FAN, PLG_DRAW_STATIC, 0, numVertices );
+		self->mesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN, QM_GFX_MESH_DRAW_MODE_STATIC, 0, numVertices );
 		if ( self->mesh == nullptr )
 		{
 			ape_console_warning_( "Failed to create mesh for node: %s\n", PlGetError() );

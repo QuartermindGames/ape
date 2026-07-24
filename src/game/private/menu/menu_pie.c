@@ -181,7 +181,7 @@ static void draw_pie_option( GamePieMenuOption *option, float x, float y, bool i
 	x -= w / 2;
 	y -= h / 2;
 
-	PLGMesh *mesh = PlgImmBegin( PLG_MESH_TRIANGLE_STRIP );
+	QmGfxMesh *mesh = PlgImmBegin( QM_GFX_MESH_PRIMITIVE_TRIANGLE_STRIP );
 
 	PlgImmPushVertex( x, y, 0.0f );
 	PlgImmTextureCoord( 0.0f, 0.0f );

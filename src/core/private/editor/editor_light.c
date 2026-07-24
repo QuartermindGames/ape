@@ -1117,7 +1117,7 @@ static bool display_brush_uv( ApeWorldNode *node, void *user )
 			start = qm_math_vector2f_scale_float( start, edgeLength );
 			end   = qm_math_vector2f_scale_float( end, edgeLength );
 
-			PlgImmBegin( PLG_MESH_LINES );
+			PlgImmBegin( QM_GFX_MESH_PRIMITIVE_LINES );
 			PlgImmPushVertex( start.x, start.y, 1.0f );
 			PlgImmColour( colour.r, colour.g, colour.b, 255 );
 			PlgImmPushVertex( end.x, end.y, 1.0f );
