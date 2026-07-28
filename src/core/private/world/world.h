@@ -3,7 +3,8 @@
 #pragma once
 
 #include <plcore/pl_array_vector.h>
-#include <plgraphics/plg_mesh.h>
+
+#include <plgraphics/plg.h>
 
 #include "ape/ape_public_world.h"
 

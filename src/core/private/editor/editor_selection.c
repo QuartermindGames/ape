@@ -713,7 +713,7 @@ static void setup_transform_widget()
 	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, -TRANSFORM_ARROW_SCALE, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE );
 	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
 
-	PlgUploadMesh( transformWidgetWireframeMesh );
+	PlgUploadMesh( transformWidgetWireframeMesh, nullptr );
 }
 
 static void cleanup_transform_widget()

@@ -67,7 +67,7 @@ void PlgDrawEllipse( unsigned int segments, const QmMathVector2f *position, floa
 		}
 	}
 
-	PlgUploadMesh( mesh );
+	PlgUploadMesh( mesh,nullptr );
 	PlgDrawMesh( mesh );
 
 	PlPopMatrix();

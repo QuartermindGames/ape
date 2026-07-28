@@ -1432,7 +1432,7 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh *mesh, const ApeRendere
 			}
 		}
 
-		PlgUploadMesh( mesh );
+		PlgUploadMesh( mesh, nullptr );
 		PlgDrawMesh( mesh );
 
 		ape_rendererPerformance_.numBatches++;

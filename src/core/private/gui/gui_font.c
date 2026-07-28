@@ -453,7 +453,7 @@ void gui_font_display( ApeGuiFont *font )
 
 	qm_gfx_texture_set( font->texture, 0 );
 
-	PlgUploadMesh( font->mesh );
+	PlgUploadMesh( font->mesh, nullptr );
 	PlgDrawMesh( font->mesh );
 
 	ape_rendererPerformance_.numTriangles += font->mesh->num_triangles;

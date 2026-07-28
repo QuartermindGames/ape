@@ -992,7 +992,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 		}
 	}
 
-	PlgUploadMesh( self->mesh );
+	PlgUploadMesh( self->mesh, nullptr );
 	self->isMeshDirty = false;
 
 	COM_PROFILE_FUNCTION_END();
