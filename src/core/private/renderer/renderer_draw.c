@@ -67,8 +67,8 @@ void PlgDrawEllipse( unsigned int segments, const QmMathVector2f *position, floa
 		}
 	}
 
-	PlgUploadMesh( mesh,nullptr );
-	PlgDrawMesh( mesh );
+	qm_gfx_mesh_upload( mesh,nullptr,nullptr );
+	qm_gfx_mesh_draw( mesh );
 
 	PlPopMatrix();
 }
@@ -481,7 +481,7 @@ void ape_draw_initialize_debug_mesh_()
 	assert( debugDrawMesh == nullptr );
 	assert( debugDrawMaterial == nullptr );
 
-	debugDrawMesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_LINES, QM_GFX_MESH_DRAW_MODE_STREAM, 0, 2048 );
+	debugDrawMesh = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_LINES, QM_GFX_MESH_DRAW_MODE_STREAM, 0, 2048 );
 	if ( debugDrawMesh == nullptr )
 	{
 		ape_console_error_( true, "Failed to create debug draw mesh: %s\n", PlGetError() );
@@ -499,7 +499,7 @@ void ape_draw_destroy_debug_mesh_()
 	assert( debugDrawMesh != nullptr );
 	assert( debugDrawMaterial != nullptr );
 
-	PlgDestroyMesh( debugDrawMesh );
+	qm_gfx_mesh_destroy( debugDrawMesh );
 	debugDrawMesh = nullptr;
 
 	ape_material_release_reference( debugDrawMaterial );

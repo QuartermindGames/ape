@@ -1432,8 +1432,8 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh *mesh, const ApeRendere
 			}
 		}
 
-		PlgUploadMesh( mesh, nullptr );
-		PlgDrawMesh( mesh );
+		qm_gfx_mesh_upload( mesh, nullptr, nullptr );
+		qm_gfx_mesh_draw( mesh );
 
 		ape_rendererPerformance_.numBatches++;
 		if ( mesh->primitive == QM_GFX_MESH_PRIMITIVE_TRIANGLES )

@@ -253,7 +253,7 @@ void ape_world_node_destroy( ApeWorldNode *self )
 
 	PlDestroyLinkedList( self->children );
 
-	PlgDestroyMesh( self->mesh );
+	qm_gfx_mesh_destroy( self->mesh );
 
 	assert( self->classType->destroy );
 	self->classType->destroy( self, parent );
@@ -911,13 +911,13 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 	unsigned int numVertices = get_total_verts_for_layer( self );
 	if ( numVertices == 0 )
 	{
-		PlgDestroyMesh( self->mesh );
+		qm_gfx_mesh_destroy( self->mesh );
 		return;
 	}
 
 	if ( self->mesh == nullptr )
 	{
-		self->mesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN, QM_GFX_MESH_DRAW_MODE_STATIC, 0, numVertices );
+		self->mesh = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_TRIANGLE_FAN, QM_GFX_MESH_DRAW_MODE_STATIC, 0, numVertices );
 		if ( self->mesh == nullptr )
 		{
 			ape_console_warning_( "Failed to create mesh for node: %s\n", PlGetError() );
@@ -992,7 +992,7 @@ void ape_world_node_update_mesh_cache_( ApeWorldNode *self )
 		}
 	}
 
-	PlgUploadMesh( self->mesh, nullptr );
+	qm_gfx_mesh_upload( self->mesh, nullptr, nullptr );
 	self->isMeshDirty = false;
 
 	COM_PROFILE_FUNCTION_END();

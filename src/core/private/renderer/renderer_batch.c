@@ -24,7 +24,7 @@ static void destroy_batch( ApeRendererDrawBatch *batch )
 {
 	if ( batch->mesh != nullptr )
 	{
-		PlgDestroyMesh( batch->mesh );
+		qm_gfx_mesh_destroy( batch->mesh );
 	}
 
 #if 0// nah, don't do this... the original caller should be responsible
@@ -50,7 +50,7 @@ static ApeRendererDrawBatch *get_batch( ApeMaterial *material )
 	// batch for this material doesn't exist, so let's set one up
 
 	batch           = QM_OS_MEMORY_NEW( ApeRendererDrawBatch );
-	batch->mesh     = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 256, 256 );
+	batch->mesh     = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 256, 256 );
 	batch->material = material;//TODO: use shared_ptr instead...
 	batch->linkNode = qm_os_linked_list_push_back( batches, batch );
 	batch->hashNode = PlInsertHashTableNode( batchLookup, &ptr, sizeof( intptr_t ), batch );

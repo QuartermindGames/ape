@@ -86,6 +86,7 @@ CMD_CALLBACK( Version )
 
 /*------------------------------------------------------------------*/
 
+#if 0
 static void save_user_config( void );
 static void load_user_config( void )
 {
@@ -158,6 +159,7 @@ static void save_user_config( void )
 
 	ape_console_print_( "User config saved.\n" );
 }
+#endif
 
 static void toggle_command( unsigned int argc, const char *const *argv )
 {

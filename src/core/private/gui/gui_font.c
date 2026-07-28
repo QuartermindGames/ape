@@ -96,7 +96,7 @@ void ape_gui_font_destroy( ApeGuiFont *font )
 {
 	PlDestroyHashTable( font->glyphTable );
 	qm_os_memory_free( font->texture );
-	PlgDestroyMesh( font->mesh );
+	qm_gfx_mesh_destroy( font->mesh );
 	qm_os_memory_free( font->glyphs );
 	qm_os_memory_free( font );
 }
@@ -196,7 +196,7 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 
 	PlDestroyImage( bitmapImage );
 
-	font->mesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 32, 32 );
+	font->mesh = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 32, 32 );
 
 	return font;
 }
@@ -453,8 +453,8 @@ void gui_font_display( ApeGuiFont *font )
 
 	qm_gfx_texture_set( font->texture, 0 );
 
-	PlgUploadMesh( font->mesh, nullptr );
-	PlgDrawMesh( font->mesh );
+	qm_gfx_mesh_upload( font->mesh, nullptr, nullptr );
+	qm_gfx_mesh_draw( font->mesh );
 
 	ape_rendererPerformance_.numTriangles += font->mesh->num_triangles;
 	ape_rendererPerformance_.numBatches++;

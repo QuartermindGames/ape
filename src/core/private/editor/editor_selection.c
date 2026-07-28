@@ -667,9 +667,9 @@ static void setup_transform_widget()
 	static constexpr float TRANSFORM_SCALE       = 32.0f;
 	static constexpr float TRANSFORM_ARROW_SCALE = 4.0f;
 
-	transformWidgetWireframeMesh = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_LINES, QM_GFX_MESH_DRAW_MODE_STATIC, 0, 18 );
+	transformWidgetWireframeMesh = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_LINES, QM_GFX_MESH_DRAW_MODE_STATIC, 0, 18 );
 
-	PlgSetMeshPrimitiveScale( transformWidgetWireframeMesh, 2.0f );
+	qm_gfx_mesh_set_primitive_scale( transformWidgetWireframeMesh, 2.0f );
 
 	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, 0.0f, 0.0f );
 	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_RED );
@@ -713,13 +713,13 @@ static void setup_transform_widget()
 	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, -TRANSFORM_ARROW_SCALE, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE );
 	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
 
-	PlgUploadMesh( transformWidgetWireframeMesh, nullptr );
+	qm_gfx_mesh_upload( transformWidgetWireframeMesh, nullptr, nullptr );
 }
 
 static void cleanup_transform_widget()
 {
-	PlgDestroyMesh( transformWidgetWireframeMesh );
-	PlgDestroyMesh( transformWidgetSelectionMesh );
+	qm_gfx_mesh_destroy( transformWidgetWireframeMesh );
+	qm_gfx_mesh_destroy( transformWidgetSelectionMesh );
 }
 
 static void render_transform_widget( ApeEditorInstance *instance )

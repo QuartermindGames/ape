@@ -30,7 +30,7 @@ static void model_cleanup_callback_( void *userData )
 
 	PlDestroyLinkedList( model->sceneNodes );
 
-	PlgDestroyMesh( model->cache );
+	qm_gfx_mesh_destroy( model->cache );
 
 	qm_os_memory_free( model );
 }
@@ -133,7 +133,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		return nullptr;
 	}
 
-	model->cache = PlgCreateMesh( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STATIC, 0, numVertices );
+	model->cache = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STATIC, 0, numVertices );
 	if ( model->cache == nullptr )
 	{
 		ape_console_warning_( "Failed to create cache for model: %s\n", PlGetError() );
