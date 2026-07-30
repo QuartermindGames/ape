@@ -50,8 +50,6 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 		ape_console_error_( true, "Failed to insert node for cache pool!\n" );
 	}
 
-	ape_console_print_( "Added \"%s\" (%u) to cache pool %u\n", id, header->id, pool );
-
 	return header;
 }
 

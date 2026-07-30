@@ -12,6 +12,35 @@
 static constexpr float GAME_MOVEMENT_DEFAULT_ACCELERATION = 1.0f;
 static constexpr float GAME_MOVEMENT_DEFAULT_FRICTION     = 16.0f;
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Footstep sound stuff
+// A lot of this will probably go in the trash once we've got a proper sound script
+// system in place.
+
+static constexpr unsigned int MAX_FOOTSTEP_SOUNDS_PER_TYPE = 5;
+static ApeAudioSample       **footstepSounds;
+
+static void game_component_movement_on_register()
+{
+	uint8_t numSurfaces = game_physics_surface_get_num();
+	if ( numSurfaces > 0 )
+	{
+		footstepSounds = APE_MEMORY_NEW_C( ApeAudioSample *, MAX_FOOTSTEP_SOUNDS_PER_TYPE * numSurfaces );
+		for ( unsigned int i = 0; i < numSurfaces; ++i )
+		{
+			const char *key = game_physics_surface_get_key( i );
+			for ( unsigned int j = 0; j < MAX_FOOTSTEP_SOUNDS_PER_TYPE; ++j )
+			{
+				char path[ strlen( key ) + 64 ];
+				snprintf( path, sizeof( path ), "sounds/footsteps/footstep_%s_%02u.wav", key, j );
+				footstepSounds[ i * MAX_FOOTSTEP_SOUNDS_PER_TYPE + j ] = ape_audio_sample_cache( path );
+			}
+		}
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 static void *create_movement()
 {
 	GameMovementComponent *movement = QM_OS_MEMORY_NEW( GameMovementComponent );
@@ -40,12 +69,12 @@ static void *deserialize_movement( void *ptr, AcmBranch *root )
 	return movement;
 }
 
-static void ground_check( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity )
+static ApeBrushFace *ground_check( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity )
 {
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
 	if ( room == nullptr )
 	{
-		return;
+		return nullptr;
 	}
 
 	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
@@ -69,7 +98,7 @@ static void ground_check( GameMovementComponent *self, GameCollisionComponent *c
 		}
 	}
 
-	ape_draw_debug_sphere( result.intersection, self->isGrounded ? PL_COLOUR_GREEN : PL_COLOUR_RED, SPHERE_SIZE );
+	return result.face;
 }
 
 void game_component_movement_tick_( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta )
@@ -109,7 +138,20 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
 	pos                = qm_math_vector3f_add( pos, self->velocity );
 
-	//TODO: test collisions
+	if ( collision != nullptr )
+	{
+		ApeBrushFace *face = ground_check( self, collision, entity );
+		if ( face != nullptr && self->isGrounded )
+		{
+			uint8_t     surfaceType = ape_material_get_surface_type( face->material );
+			const char *key         = game_physics_surface_get_key( surfaceType );
+			if ( key != nullptr )
+			{
+				const char *materialPath = ape_material_get_path( face->material );
+				game_print_( "You're standing on %s (%s)\n", key, materialPath );
+			}
+		}
+	}
 
 	// now update the entity position
 	ape_world_node_set_position( APE_WORLD_NODE( entity ), &pos );
@@ -218,4 +260,6 @@ ApeEntityComponentDefinition game_movementComponent_ = {
         .destroyFunction     = destroy_movement,
         .serializeFunction   = serialize_movement,
         .deserializeFunction = deserialize_movement,
+
+        .onRegister = game_component_movement_on_register,
 };

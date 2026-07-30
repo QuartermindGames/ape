@@ -191,7 +191,7 @@ int main( int argc, char **argv )
 		return EXIT_FAILURE;
 	}
 
-	if ( !LoadSurfacesConfig( "materials/surfaces." APE_FORMAT_CONFIG_EXTENSION ) )
+	if ( !LoadSurfacesConfig( "scripts/surfaces" ACM_DEFAULT_EXTENSION ) )
 	{
 		printf( "Failed to load surfaces config!\n" );
 	}

@@ -268,8 +268,6 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 	ape_memory_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
 	ape_memory_reference_add( &sample->reference );
 
-	ape_console_verbose_( "Cached sound, \"%s\"\n", path );
-
 	return sample;
 }
 

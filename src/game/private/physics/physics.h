@@ -5,6 +5,44 @@
 #include "../game_private.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
+// Surfaces
+// Basically, the things that you walk on and bump into.
+// Materials define this via the surfaceType var.
+
+/**
+ * Fetches the surfaces config and loads everything in.
+ */
+void game_physics_surface_initialize();
+
+/**
+ * Shuts down the surface system and cleans up all surfaces.
+ */
+void game_physics_surface_shutdown();
+
+/**
+ * Returns the key specified by the specific surface entry.
+ */
+const char *game_physics_surface_get_key( uint8_t index );
+
+/**
+ * Returns the number of available surfaces.
+ */
+uint8_t game_physics_surface_get_num();
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+static inline bool game_physics_get_ground( ApeRoom *room, const QmMathVector3f *position, ApeCollisionIntersection *result )
+{
+	PLCollisionRay ray = {};
+	ray.origin         = *position;
+	ray.direction      = qm_math_vector3f( 0.0f, -1.0f, 0.0f );
+
+	ape_room_ray_intersect( room, &ray, result );
+
+	return result->face != nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 // Physics Rope
 
 #define GAME_PHYSICS_ROPE_MAX_PARTICLES 256
@@ -129,14 +167,3 @@ QmMathVector3f game_physics_rope_get_start_position( const GamePhysicsRope *self
 QmMathVector3f game_physics_rope_get_end_position( const GamePhysicsRope *self );
 
 /////////////////////////////////////////////////////////////////////////////////////
-
-static inline bool game_physics_get_ground( ApeRoom *room, const QmMathVector3f *position, ApeCollisionIntersection *result )
-{
-	PLCollisionRay ray = {};
-	ray.origin         = *position;
-	ray.direction      = qm_math_vector3f( 0.0f, -1.0f, 0.0f );
-
-	ape_room_ray_intersect( room, &ray, result );
-
-	return result->face != nullptr;
-}

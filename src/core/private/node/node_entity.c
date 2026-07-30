@@ -94,8 +94,6 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 	{
 		definition->cacheFunction();
 	}
-
-	ape_console_print_( "Registered \"%s\" entity class\n", definition->name );
 }
 
 const ApeEntityClassDefinition **ape_entity_get_classes( unsigned int *numClasses )
@@ -293,7 +291,10 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 
 	PlInsertHashTableNode( entityComponentDefinitions, definition->name, strlen( definition->name ), ( void * ) definition );
 
-	ape_console_print_( "Registered \"%s\" entity component\n", definition->name );
+	if ( definition->onRegister != nullptr )
+	{
+		definition->onRegister();
+	}
 }
 
 void *ape_entity_add_component( ApeEntity *self, const char *name )

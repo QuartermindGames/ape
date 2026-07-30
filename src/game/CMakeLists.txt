@@ -40,6 +40,7 @@ set(GAME_SHARED_FILES
         private/menu/menu_splash.c
 
         private/physics/physics_rope.c
+        private/physics/physics_surface.c
 
         private/rpg/rpg_component.c
 )

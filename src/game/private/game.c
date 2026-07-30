@@ -5,6 +5,7 @@
 #include "integrations/integrations.h"
 
 #include "menu/menu.h"
+#include "physics/physics.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -184,7 +185,7 @@ static void print_world_tree_command( unsigned int argc, const char *const *argv
 void game_server_initialize_();
 void game_client_initialize_();
 void game_language_initialize_();
-bool game_initialize_( void )
+bool game_initialize_()
 {
 	gameConfig = com_get_config( "game_shared" );
 
@@ -204,15 +205,17 @@ bool game_initialize_( void )
 
 	globalGameDebugLog = aux_log_register_source( "game.debug", PL_COLOUR_WHITE_SMOKE,
 #if !defined( NDEBUG )
-	                                                     true
+	                                              true
 #else
-	                                                     false
+	                                              false
 #endif
 	);
 
 	game_language_initialize_();
 	game_server_initialize_();
 	game_client_initialize_();
+
+	game_physics_surface_initialize();
 
 	register_standard_entity_components();
 
@@ -222,6 +225,8 @@ bool game_initialize_( void )
 void game_language_shutdown_();
 void game_shutdown_()
 {
+	game_physics_surface_shutdown();
+
 	game_language_shutdown_();
 	game_integrations_discord_shutdown_();
 }
