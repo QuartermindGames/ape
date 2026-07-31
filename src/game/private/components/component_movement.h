@@ -43,6 +43,8 @@ typedef struct GameMovementComponent
 	float acceleration;
 	float jumpSpeed;
 
+	bool hasPlayedStep;
+
 	bool          isGrounded;
 	ApeBrushFace *groundedFace;
 } GameMovementComponent;

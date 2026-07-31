@@ -2,9 +2,12 @@
 // Purpose: Handler for general entity movement.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_random.h"
+
 #include "game_private.h"
 
 #include "component_movement.h"
+#include "component_camera.h"
 #include "component_collision.h"
 
 #include "physics/physics.h"
@@ -12,16 +15,24 @@
 static constexpr float GAME_MOVEMENT_DEFAULT_ACCELERATION = 1.0f;
 static constexpr float GAME_MOVEMENT_DEFAULT_FRICTION     = 16.0f;
 
+static bool printCurrentSurface;
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Footstep sound stuff
-// A lot of this will probably go in the trash once we've got a proper sound script
-// system in place.
+// This pretty much just exists for the tech demo and will go in the trash once
+// there's a proper event system for models in place.
 
 static constexpr unsigned int MAX_FOOTSTEP_SOUNDS_PER_TYPE = 5;
 static ApeAudioSample       **footstepSounds;
 
+static float footstepDelay;
+static float lastFootstepTime;
+
 static void game_component_movement_on_register()
 {
+	ape_console_var_register( "game.printCurrentSurface", "Print information on the current surface we're standing on.", "false", PL_VAR_BOOL, &printCurrentSurface, nullptr, 0 );
+	ape_console_var_register( "game.footstepDelay", "Time delay between each footstep sound.", "0", PL_VAR_F32, &footstepDelay, nullptr, 0 );
+
 	uint8_t numSurfaces = game_physics_surface_get_num();
 	if ( numSurfaces > 0 )
 	{
@@ -35,6 +46,58 @@ static void game_component_movement_on_register()
 				snprintf( path, sizeof( path ), "sounds/footsteps/footstep_%s_%02u.wav", key, j );
 				footstepSounds[ i * MAX_FOOTSTEP_SOUNDS_PER_TYPE + j ] = ape_audio_sample_cache( path );
 			}
+		}
+	}
+}
+
+static ApeBrushFace *ground_check( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, ApeCollisionIntersection *result );
+
+static void game_component_movement_footstep( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta )
+{
+	// again, this is all just for the tech demo - there are so many issues with this otherwise
+	// like, the movement system should have almost nothing to do with the camera here and all
+	// of this should be defined by the model instead
+
+	GameCameraComponent *camera = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
+	if ( camera == nullptr )
+	{
+		return;
+	}
+
+	ApeCollisionIntersection result;
+	ApeBrushFace            *face = ground_check( self, collision, entity, &result );
+	if ( face == nullptr || !self->isGrounded )
+	{
+		return;
+	}
+
+	uint8_t surfaceType = ape_material_get_surface_type( face->material );
+
+	//game_print_( "view bob %f\n", camera->viewBob );
+	if ( !self->hasPlayedStep && camera->viewBob <= -0.5f )
+	{
+		unsigned int    seed   = qm_os_random_seed_initialize();
+		uint8_t         r      = qm_os_random_int( &seed ) % MAX_FOOTSTEP_SOUNDS_PER_TYPE;
+		ApeAudioSample *sample = footstepSounds[ surfaceType * MAX_FOOTSTEP_SOUNDS_PER_TYPE + r ];
+		if ( sample != nullptr )
+		{
+			ape_audio_sample_emit( sample, &result.intersection, 100.0f, 0.5f + qm_os_random_float( &seed, 0.5f ) );
+		}
+
+		self->hasPlayedStep = true;
+	}
+	else if ( self->hasPlayedStep && camera->viewBob >= 0.5f )
+	{
+		self->hasPlayedStep = false;
+	}
+
+	if ( printCurrentSurface )
+	{
+		const char *key = game_physics_surface_get_key( surfaceType );
+		if ( key != nullptr )
+		{
+			const char *materialPath = ape_material_get_path( face->material );
+			game_print_( "You're standing on %s (%s)\n", key, materialPath );
 		}
 	}
 }
@@ -69,7 +132,7 @@ static void *deserialize_movement( void *ptr, AcmBranch *root )
 	return movement;
 }
 
-static ApeBrushFace *ground_check( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity )
+static ApeBrushFace *ground_check( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, ApeCollisionIntersection *result )
 {
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
 	if ( room == nullptr )
@@ -84,21 +147,23 @@ static ApeBrushFace *ground_check( GameMovementComponent *self, GameCollisionCom
 	static constexpr float SPHERE_SIZE = 4.0f;
 
 	// check if we're still grounded
-	ApeCollisionIntersection result = {};
-	if ( game_physics_get_ground( room, &pos, &result ) )
+	*result = ( ApeCollisionIntersection ) {};
+	if ( game_physics_get_ground( room, &pos, result ) )
 	{
-		self->isGrounded = result.distance <= SPHERE_SIZE;
+		self->isGrounded = result->distance <= SPHERE_SIZE;
 		if ( self->isGrounded )
 		{
 			self->velocity.y = 0.0f;
-			if ( result.face != nullptr )
+
+			ApeBrushFace *face = result->face;
+			if ( face != nullptr )
 			{
-				self->contactNormal = result.face->normal;
+				self->contactNormal = face->normal;
 			}
 		}
 	}
 
-	return result.face;
+	return result->face;
 }
 
 void game_component_movement_tick_( GameMovementComponent *self, GameCollisionComponent *collision, ApeEntity *entity, double delta )
@@ -140,17 +205,7 @@ void game_component_movement_tick_( GameMovementComponent *self, GameCollisionCo
 
 	if ( collision != nullptr )
 	{
-		ApeBrushFace *face = ground_check( self, collision, entity );
-		if ( face != nullptr && self->isGrounded )
-		{
-			uint8_t     surfaceType = ape_material_get_surface_type( face->material );
-			const char *key         = game_physics_surface_get_key( surfaceType );
-			if ( key != nullptr )
-			{
-				const char *materialPath = ape_material_get_path( face->material );
-				game_print_( "You're standing on %s (%s)\n", key, materialPath );
-			}
-		}
+		game_component_movement_footstep( self, collision, entity, delta );
 	}
 
 	// now update the entity position
