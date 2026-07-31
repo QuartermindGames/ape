@@ -25,13 +25,9 @@ static bool printCurrentSurface;
 static constexpr unsigned int MAX_FOOTSTEP_SOUNDS_PER_TYPE = 5;
 static ApeAudioSample       **footstepSounds;
 
-static float footstepDelay;
-static float lastFootstepTime;
-
 static void game_component_movement_on_register()
 {
 	ape_console_var_register( "game.printCurrentSurface", "Print information on the current surface we're standing on.", "false", PL_VAR_BOOL, &printCurrentSurface, nullptr, 0 );
-	ape_console_var_register( "game.footstepDelay", "Time delay between each footstep sound.", "0", PL_VAR_F32, &footstepDelay, nullptr, 0 );
 
 	uint8_t numSurfaces = game_physics_surface_get_num();
 	if ( numSurfaces > 0 )
