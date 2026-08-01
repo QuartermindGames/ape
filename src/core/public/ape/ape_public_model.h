@@ -53,4 +53,8 @@ typedef struct ApeModelNode ApeModelNode;
  */
 ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, const char *path );
 
+/////////////////////////////////////////////////////////////////////////////////////
+
+void ape_model_compute_models_lighting( double delta );
+
 PL_EXTERN_C_END

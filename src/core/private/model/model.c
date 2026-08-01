@@ -345,6 +345,41 @@ static PLCollisionAABB compute_model_bounds( const ApeModel *model )
 	return bounds;
 }
 
+static void ape_model_compute_lighting( ApeModelNode *sceneNode, double delta )
+{
+	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( sceneNode ) );
+	if ( room == nullptr || APE_WORLD_NODE( sceneNode )->flags == APE_WORLD_NODE_FLAG_HIDDEN )
+	{
+		return;
+	}
+
+	QmMathVector3f spos = ape_world_node_get_bounds_center( APE_WORLD_NODE( sceneNode ) );
+
+	ApeRendererLightGridSample sample = {};
+	ape_room_get_light_sample( room, spos, &sample.colour, &sample.dir );
+
+	aux_math_interpolate_angles( &sceneNode->light.dir, &sample.dir, 7.0f * delta, &sceneNode->light.dir );
+	aux_math_interpolate_colour_3f16( &sceneNode->light.colour, &sample.colour, 7.0f * delta, &sceneNode->light.colour );
+
+	sceneNode->light.ambience = QM_MATH_COLOUR4F_TO_3F( ape_room_get_ambience( room ) );
+}
+
+void ape_model_compute_models_lighting( const double delta )
+{
+	// fetch all the models currently cached in the scene
+	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
+
+	ApeMemoryCacheHeader *header;
+	COM_ITERATE_LINKED_LIST( header, models, i )
+	{
+		ApeModelNode *sceneNode;
+		COM_ITERATE_LINKED_LIST( sceneNode, ( ( ApeModel * ) header->userData )->sceneNodes, j )
+		{
+			ape_model_compute_lighting( sceneNode, delta );
+		}
+	}
+}
+
 void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRendererPassState *state )
 {
 	COM_PROFILE_FUNCTION_START();
@@ -368,12 +403,8 @@ void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRen
 				continue;
 			}
 
-			QmMathVector3f spos = ape_world_node_get_bounds_center( APE_WORLD_NODE( sceneNode ) );
-
 			ApeRendererPassState newState = *state;
-			newState.lighting.ambience    = QM_MATH_COLOUR4F_TO_3F( ape_room_get_ambience( room ) );
-
-			ape_room_get_light_sample( room, spos, &newState.lighting.colour, &newState.lighting.dir );
+			newState.lighting             = sceneNode->light;
 
 			PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( sceneNode ) );
 			ape_model_draw( model, &( ApeModelAnimationState ) {}, &transform, &newState );

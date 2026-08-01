@@ -5,6 +5,8 @@
 #include "ape/ape_formats.h"
 #include "ape/ape_public_model.h"
 
+#include "renderer/renderer.h"
+
 PL_EXTERN_C
 
 typedef struct PLHashTableNode PLHashTableNode;
@@ -72,6 +74,8 @@ typedef struct ApeModelNode
 
 	PLPath    modelPath;
 	ApeModel *model;
+
+	ApeRendererLightGridSample light;
 
 	struct PLLinkedListNode *modelSceneNode;
 } ApeModelNode;

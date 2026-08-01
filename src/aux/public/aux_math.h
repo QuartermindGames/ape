@@ -58,3 +58,30 @@ static inline QmMathVector3f *aux_math_interpolate_angles( const QmMathVector3f 
 
 	return c;
 }
+
+static inline QmMathColour3f16 *aux_math_interpolate_colour_3f16( const QmMathColour3f16 *a, const QmMathColour3f16 *b, float t, QmMathColour3f16 *c )
+{
+	QmMathColour3f16 delta;
+	delta.r = b->r - a->r;
+	delta.g = b->g - a->g;
+	delta.b = b->b - a->b;
+
+	c->r = a->r + delta.r * t;
+	c->g = a->g + delta.g * t;
+	c->b = a->b + delta.b * t;
+
+	if ( c->r < 0.0f )
+	{
+		c->r = 0.0f;
+	}
+	if ( c->g < 0.0f )
+	{
+		c->g = 0.0f;
+	}
+	if ( c->b < 0.0f )
+	{
+		c->b = 0.0f;
+	}
+
+	return c;
+}

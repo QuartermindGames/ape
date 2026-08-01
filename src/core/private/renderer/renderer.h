@@ -127,6 +127,13 @@ typedef enum ApeRendererPassFlag
 	QM_OS_BIT_FLAG( APE_RENDERER_PASS_FLAG_PORTAL, 3 ),
 } ApeRendererPassFlag;
 
+typedef struct ApeRendererLightGridSample
+{
+	QmMathColour3f   ambience;
+	QmMathColour3f16 colour;
+	QmMathVector3f   dir;
+} ApeRendererLightGridSample;
+
 typedef struct ApeRendererPassState
 {
 	ApeCullMode cullMode;// override default cull mode
@@ -150,20 +157,15 @@ typedef struct ApeRendererPassState
 
 	ApeCamera *camera;
 
-	struct
-	{
-		QmMathColour3f   ambience;
-		QmMathColour3f16 colour;
-		QmMathVector3f   dir;
-	} lighting;
+	ApeRendererLightGridSample lighting;
 
 	QmGfxTexture *lightmapTexture;
 	unsigned int  lightmapIndex;
 } ApeRendererPassState;
 extern ApeRendererPassState ape_rendererState_;
 
-void ape_renderer_initialize_( void );
-void ape_shutdown_renderer_( void );
+void ape_renderer_initialize_();
+void ape_shutdown_renderer_();
 
 /**
  * Returns the camera currently being used to draw the scene.

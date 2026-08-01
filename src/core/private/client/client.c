@@ -17,6 +17,7 @@
 #include "renderer/renderer.h"
 #include "renderer/material/material.h"
 
+#include "model/model.h"
 #include "audio/audio.h"
 #include "ape_protocol.h"
 #include "yin/core_game.h"
@@ -327,6 +328,9 @@ void ape_tick_client_( const double delta )
 	ape_tick_gui_( delta );
 	ape_tick_materials_( delta );
 	ape_audio_tick_();
+
+	//TODO: move this somewhere better
+	ape_model_compute_models_lighting( delta );
 
 	if ( ape_gameInterface->clientTick != nullptr )
 	{
