@@ -2,15 +2,16 @@
 
 #include <plcore/pl_filesystem.h>
 
-#include <float.h>
+#include "plgraphics/plg.h"
 
 #include "qmparse/public/qm_parse.h"
+
+#include <float.h>
 
 #include "../cook.h"
 #include "model.h"
 
 #include "model_obj.h"
-#include "plgraphics/plg_mesh.h"
 
 static void parse_material_template_library( ObjModel *obj, const char *path )
 {
