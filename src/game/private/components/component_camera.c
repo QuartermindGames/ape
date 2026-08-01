@@ -6,7 +6,7 @@
 #include "component_camera.h"
 
 static constexpr float CAMERA_DEFAULT_HEIGHT   = 64.0f;
-static constexpr float CAMERA_DEFAULT_DISTANCE = 50.0f;
+static constexpr float CAMERA_DEFAULT_DISTANCE = -50.0f;
 static constexpr float CAMERA_DEFAULT_SIDE     = 10.0f;
 
 //TODO: this shouldn't be here...
