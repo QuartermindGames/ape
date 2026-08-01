@@ -188,7 +188,7 @@ void ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **ligh
 						float theta = qm_math_vector3f_dot_product( lightDir, light->angle );
 #endif
 					}
-					else// assumed omni
+					else if ( light->type == APE_LIGHT_TYPE_OMNI )// assumed omni
 					{
 						float d = qm_math_vector3f_distance( lightPos, worldPos );
 #ifdef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
