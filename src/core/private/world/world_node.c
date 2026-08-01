@@ -392,6 +392,13 @@ void ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles
 	update_transform( self );
 }
 
+void ape_world_node_set_scale( ApeWorldNode *self, const QmMathVector3f *scale )
+{
+	self->scale = *scale;
+
+	update_transform( self );
+}
+
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs )
 {
 	assert( ape_world_node_is_valid( self, self->type ) );
