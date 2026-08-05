@@ -155,10 +155,10 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		ape_console_warning_( "No meshes for model!\n" );
 		return nullptr;
 	}
-	if ( model->numMaterials >= APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( model->numMaterials >= IO_MODEL_MAX_MATERIALS )
 	{
-		ape_console_warning_( "Unexpected number of meshes (%u >= %u)!\n", model->numMaterials, APE_FORMAT_MODEL_MAX_MATERIALS );
-		model->numMaterials = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
+		ape_console_warning_( "Unexpected number of meshes (%u >= %u)!\n", model->numMaterials, IO_MODEL_MAX_MATERIALS );
+		model->numMaterials = IO_MODEL_MAX_MATERIALS - 1;
 	}
 
 	if ( meshArray != nullptr )
@@ -181,10 +181,10 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	if ( bonesList != NULL )
 	{
 		model->numBones = acm_get_num_of_children( bonesList );
-		if ( model->numBones >= APE_FORMAT_MODEL_MAX_BONES )
+		if ( model->numBones >= IO_MODEL_MAX_BONES )
 		{
-			ape_console_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, APE_FORMAT_MODEL_MAX_BONES );
-			model->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
+			ape_console_warning_( "Unexpected number of bones (%u >= %u)!", model->numBones, IO_MODEL_MAX_BONES );
+			model->numBones = ( IO_MODEL_MAX_BONES - 1 );
 		}
 
 		AcmBranch *child = acm_get_first_child( bonesList );
@@ -253,12 +253,12 @@ ApeModel *ape_model_load( const char *path )
 	return model;
 }
 
-static QmMathVector3f get_transformed_bone_position( const ApeModel *model, const ApeFormatBone *bone, const PLMatrix4 *transform )
+static QmMathVector3f get_transformed_bone_position( const ApeModel *model, const IOModelBone *bone, const PLMatrix4 *transform )
 {
 	QmMathVector3f pos = bone->position;
 	while ( bone->parent != -1 )
 	{
-		const ApeFormatBone *parent = &model->bones[ bone->parent ];
+		const IOModelBone *parent = &model->bones[ bone->parent ];
 
 		pos  = PlTransformVector3( &pos, transform );
 		pos  = qm_math_vector3f_add( pos, parent->position );
@@ -278,7 +278,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		{
 			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
 
-			const ApeFormatBone *a  = &model->bones[ i ];
+			const IOModelBone *a  = &model->bones[ i ];
 			const QmMathVector3f pa = get_transformed_bone_position( model, a, mat );
 			ape_draw_debug_sphere( pa, PL_COLOUR_CYAN, 1.0f );
 
@@ -287,7 +287,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 				continue;
 			}
 
-			const ApeFormatBone *b  = &model->bones[ model->bones[ i ].parent ];
+			const IOModelBone *b  = &model->bones[ model->bones[ i ].parent ];
 			const QmMathVector3f pb = get_transformed_bone_position( model, b, mat );
 			ape_draw_debug_arrow( pa, pb, PL_COLOUR_WHITE, 2.0f );
 		}
@@ -319,7 +319,7 @@ void ape_model_draw_instanced( ApeModel *model, const PLMatrix4 **transforms, un
 
 bool ape_model_is_static( const ApeModel *model )
 {
-	return !( model->flags & APE_MODEL_FLAG_ANIMATED );
+	return !( model->flags & IO_MODEL_FLAG_ANIMATED );
 }
 
 static PLCollisionAABB compute_model_bounds( const ApeModel *model )

@@ -119,7 +119,7 @@ add_subdirectory(src/3rdparty/lua)
 set_target_properties(lua PROPERTIES FOLDER "3rdParty")
 
 ####################################################################
-# main projects
+# 1st party libraries
 
 if (WIN32)
     if (${APE_SYSTEM_ARCH} MATCHES x86_64)
@@ -182,6 +182,8 @@ elseif (MINGW)
     link_directories(src/3rdparty/sdl2/lib/x64_mingw)
 endif ()
 
+add_subdirectory(src/io_model)
+
 ####################################################################
 # ApeTech
 ####################################################################
@@ -189,7 +191,6 @@ endif ()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 23)
 
-add_subdirectory(src/io_model)
 add_subdirectory(src/aux)
 add_subdirectory(src/core)
 

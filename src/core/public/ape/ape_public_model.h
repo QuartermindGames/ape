@@ -4,14 +4,14 @@
 
 PL_EXTERN_C
 
-typedef struct ApeModelAnimationFrame ApeModelAnimationFrame;
-typedef struct ApeModelAnimation      ApeModelAnimation;
-typedef struct ApeModel               ApeModel;
+typedef struct IOModelAnimationFrame IOModelAnimationFrame;
+typedef struct IOModelAnimation      IOModelAnimation;
+typedef struct ApeModel              ApeModel;
 
 typedef struct ApeModelAnimationState
 {
-	ApeModelAnimation *currentAnimation;
-	ApeModelAnimation *oldAnimation;
+	IOModelAnimation *currentAnimation;
+	IOModelAnimation *oldAnimation;
 
 	unsigned int frame;
 	unsigned int oldFrame;

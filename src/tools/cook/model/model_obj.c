@@ -366,10 +366,10 @@ void model_obj_destroy( ObjModel *obj )
 CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )
 {
 	out->numMeshes = obj->numSubObjects;
-	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( out->numMeshes >= IO_MODEL_MAX_MATERIALS )
 	{
-		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
-		out->numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
+		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, IO_MODEL_MAX_MATERIALS );
+		out->numMeshes = IO_MODEL_MAX_MATERIALS - 1;
 	}
 
 	for ( unsigned int i = 0; i < out->numMeshes; ++i )

@@ -9,54 +9,22 @@
 
 PL_EXTERN_C
 
-typedef struct PLHashTableNode PLHashTableNode;
-
-typedef struct ApeModelAnimationFrame
-{
-	QmMathVector3f mins;
-	QmMathVector3f maxs;
-} ApeModelAnimationFrame;
-
-typedef struct ApeModelAnimation
-{
-	char                  name[ 64 ];
-	ApeModelAnimationFlag flags;
-
-	unsigned int numFrames;
-
-	float speed;
-
-	unsigned int numBones;
-} ApeModelAnimation;
-
-typedef struct ApeModelVertexWeight
-{
-	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
-	unsigned int    numWeights;
-} ApeModelVertexWeight;
-
 typedef struct ApeModelMesh
 {
-	ApeMaterial         *material;
-	ApeModelVertexWeight weights[ APE_FORMAT_MODEL_MAX_VERTICES ];
+	ApeMaterial *material;
 
 	unsigned int startIndex;
 	unsigned int endIndex;
 } ApeModelMesh;
 
-typedef enum ApeModelFlag
-{
-	QM_OS_BIT_FLAG( APE_MODEL_FLAG_ANIMATED, 0 ),// if the model doesn't have this, it's assumed static
-} ApeModelFlag;
-
 typedef struct ApeModel
 {
-	ApeModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
+	ApeModelMesh meshes[ IO_MODEL_MAX_MATERIALS ];
 	unsigned int numMaterials;// also corrisponds to number of meshes...
 
-	ApeFormatBone  bones[ APE_FORMAT_MODEL_MAX_BONES ];
-	ApeFormatBone *rootBone;
-	unsigned int   numBones;
+	IOModelBone  bones[ IO_MODEL_MAX_BONES ];
+	IOModelBone *rootBone;
+	unsigned int numBones;
 
 	unsigned int flags;
 

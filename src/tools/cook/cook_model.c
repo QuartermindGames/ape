@@ -163,7 +163,7 @@ static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const Co
 	}
 }
 
-static void serialize_bone( AcmBranch *root, const ApeFormatBone *bone, const CookModel *model )
+static void serialize_bone( AcmBranch *root, const IOModelBone *bone, const CookModel *model )
 {
 	//printf( "\tSerialising bone (%s)\n", bone->name );
 

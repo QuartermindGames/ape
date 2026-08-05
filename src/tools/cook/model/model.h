@@ -8,10 +8,10 @@
 
 PL_EXTERN_C
 
-#define SMD_MAX_MESHES    APE_FORMAT_MODEL_MAX_MATERIALS
-#define SMD_MAX_TRIANGLES APE_FORMAT_MODEL_MAX_TRIANGLES
+#define SMD_MAX_MESHES    IO_MODEL_MAX_MATERIALS
+#define SMD_MAX_TRIANGLES IO_MODEL_MAX_TRIANGLES
 #define SMD_MAX_WEIGHTS   4
-#define SMD_MAX_BONES     APE_FORMAT_MODEL_MAX_BONES
+#define SMD_MAX_BONES     IO_MODEL_MAX_BONES
 #define SMD_MAX_FRAMES    2048
 
 typedef struct SmdFrame
@@ -24,7 +24,7 @@ typedef struct SmdFrame
 typedef struct SmdBone
 {
 	int             id;
-	char            name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
+	char            name[ IO_MODEL_MAX_BONE_NAME ];
 	struct SmdBone *parent;
 	SmdFrame        frames[ SMD_MAX_FRAMES ];
 } SmdBone;
@@ -80,7 +80,7 @@ typedef struct CookModelVertex
 	QmMathVector3f normal;
 	QmMathVector2f uv;
 
-	ApeFormatWeight weights[ APE_FORMAT_MODEL_MAX_WEIGHTS ];
+	IOModelVertexWeight weights[ IO_MODEL_MAX_WEIGHTS ];
 	unsigned int    numWeights;
 } CookModelVertex;
 
@@ -93,7 +93,7 @@ typedef struct CookModelMesh
 {
 	PLPath material;
 
-	CookModelTriangle triangles[ APE_FORMAT_MODEL_MAX_TRIANGLES ];
+	CookModelTriangle triangles[ IO_MODEL_MAX_TRIANGLES ];
 	unsigned int      numTriangles;
 } CookModelMesh;
 
@@ -103,13 +103,13 @@ typedef struct CookModel
 
 	PLPath materialPath;
 
-	CookModelVertex vertices[ APE_FORMAT_MODEL_MAX_VERTICES ];
+	CookModelVertex vertices[ IO_MODEL_MAX_VERTICES ];
 	unsigned int    numVertices;
 
-	ApeFormatBone bones[ APE_FORMAT_MODEL_MAX_BONES ];
+	IOModelBone bones[ IO_MODEL_MAX_BONES ];
 	unsigned int  numBones;
 
-	CookModelMesh meshes[ APE_FORMAT_MODEL_MAX_MATERIALS ];
+	CookModelMesh meshes[ IO_MODEL_MAX_MATERIALS ];
 	unsigned int  numMeshes;
 
 	float scale;

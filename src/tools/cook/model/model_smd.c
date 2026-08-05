@@ -244,17 +244,17 @@ void model_smd_destroy( SmdModel *model )
 static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 {
 	out->numMeshes = smd->numMeshes;
-	if ( out->numMeshes >= APE_FORMAT_MODEL_MAX_MATERIALS )
+	if ( out->numMeshes >= IO_MODEL_MAX_MATERIALS )
 	{
-		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, APE_FORMAT_MODEL_MAX_MATERIALS );
-		out->numMeshes = ( APE_FORMAT_MODEL_MAX_MATERIALS - 1 );
+		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, IO_MODEL_MAX_MATERIALS );
+		out->numMeshes = IO_MODEL_MAX_MATERIALS - 1;
 	}
 
 	out->numBones = smd->numBones;
-	if ( out->numBones >= APE_FORMAT_MODEL_MAX_BONES )
+	if ( out->numBones >= IO_MODEL_MAX_BONES )
 	{
-		WARN( "Hit maximum bone limit (%u >= %u)!\n", out->numBones, APE_FORMAT_MODEL_MAX_BONES );
-		out->numBones = ( APE_FORMAT_MODEL_MAX_BONES - 1 );
+		WARN( "Hit maximum bone limit (%u >= %u)!\n", out->numBones, IO_MODEL_MAX_BONES );
+		out->numBones = IO_MODEL_MAX_BONES - 1;
 	}
 
 	for ( unsigned int i = 0; i < out->numBones; ++i )
@@ -298,10 +298,10 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 		}
 
 		mesh->numTriangles = smd->meshes[ i ].numTriangles;
-		if ( mesh->numTriangles >= APE_FORMAT_MODEL_MAX_TRIANGLES )
+		if ( mesh->numTriangles >= IO_MODEL_MAX_TRIANGLES )
 		{
-			WARN( "Hit maximum triangle limit (%u >= %u)!\n", mesh->numTriangles, APE_FORMAT_MODEL_MAX_TRIANGLES );
-			mesh->numTriangles = ( APE_FORMAT_MODEL_MAX_TRIANGLES - 1 );
+			WARN( "Hit maximum triangle limit (%u >= %u)!\n", mesh->numTriangles, IO_MODEL_MAX_TRIANGLES );
+			mesh->numTriangles = IO_MODEL_MAX_TRIANGLES - 1;
 		}
 
 		for ( unsigned int tri = 0; tri < mesh->numTriangles; ++tri )

@@ -242,8 +242,8 @@ static CookModel *conv_md2( const CookModel *model, CookModel *out )
 // Public
 
 const CookModelFormatInterface modelMd2Interface = {
-        "md2",
-        load_md2,
-        conv_md2,
-        destroy_md2,
+        .extension       = "md2",
+        .loadFunction    = load_md2,
+        .convertFunction = conv_md2,
+        .deleteFunction  = destroy_md2,
 };

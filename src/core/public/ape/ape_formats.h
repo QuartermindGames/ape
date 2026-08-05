@@ -20,57 +20,16 @@ PL_EXTERN_C
 // Model Format
 /////////////////////////////////////////////////////////////////////////////////////
 
+#include "io_model/public/io_model.h"
+
 #define APE_FORMAT_MODEL_EXTENSION "mdl" ACM_DEFAULT_EXTENSION_OLD
 #define APE_FORMAT_MODEL_VERSION   3
-
-// much of this is just here for sanity checking -
-// in the long-term, we should really look at making
-// these dynamically allocated instead...
-#define APE_FORMAT_MODEL_MAX_MATERIALS 16
-#define APE_FORMAT_MODEL_MAX_BONES     256
-#define APE_FORMAT_MODEL_MAX_TRIANGLES 8192
-#define APE_FORMAT_MODEL_MAX_VERTICES  ( APE_FORMAT_MODEL_MAX_TRIANGLES * 3 )
-#define APE_FORMAT_MODEL_MAX_BONE_NAME 64
-#define APE_FORMAT_MODEL_MAX_WEIGHTS   4
-
-typedef enum ApeModelAnimationFlag
-{
-	QM_OS_BIT_FLAG( APE_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
-} ApeModelAnimationFlag;
-
-typedef struct ApeFormatWeight
-{
-	float        weight;
-	unsigned int bone;
-} ApeFormatWeight;
-
-typedef struct ApeFormatBone
-{
-	char           name[ APE_FORMAT_MODEL_MAX_BONE_NAME ];
-	int            parent;
-	QmMathVector3f rotation;
-	QmMathVector3f position;
-} ApeFormatBone;
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Material Format
 /////////////////////////////////////////////////////////////////////////////////////
 
 #define APE_FORMAT_MATERIAL_EXTENSION "mat" ACM_DEFAULT_EXTENSION_OLD
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Texture Format
-/////////////////////////////////////////////////////////////////////////////////////
-
-#define APE_FORMAT_TEXTURE_MAGIC     QM_OS_MAGIC_TO_NUM( 'A', 'T', 'E', 'X' )
-#define APE_FORMAT_TEXTURE_VERSION   1
-#define APE_FORMAT_TEXTURE_EXTENSION "tex"
-
-typedef struct ApeFormatTextureIOHeader
-{
-	uint32_t magic;
-	uint32_t version;
-} ApeFormatTextureIOHeader;
 
 /////////////////////////////////////////////////////////////////////////////////////
 
