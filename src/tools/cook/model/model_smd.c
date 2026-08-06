@@ -309,10 +309,10 @@ static CookModel *smd_to_ape( const SmdModel *smd, CookModel *out )
 			const SmdTriangle *smdTriangle = &smd->meshes[ i ].triangles[ tri ];
 			for ( unsigned int vtx = 0; vtx < 3; ++vtx, ++out->numVertices )
 			{
-				CookModelVertex *vertex = &out->vertices[ out->numVertices ];
-				vertex->position        = smdTriangle->vertices[ vtx ].position;
-				vertex->normal          = smdTriangle->vertices[ vtx ].normal;
-				vertex->uv              = smdTriangle->vertices[ vtx ].uv;
+				IOModelVertex *vertex = &out->vertices[ out->numVertices ];
+				vertex->position      = smdTriangle->vertices[ vtx ].position;
+				vertex->normal        = smdTriangle->vertices[ vtx ].normal;
+				vertex->uv            = smdTriangle->vertices[ vtx ].uv;
 
 				vertex->numWeights = smdTriangle->vertices[ vtx ].numWeights;
 				for ( unsigned int wei = 0; wei < smdTriangle->vertices[ vtx ].numWeights; ++wei )

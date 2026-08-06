@@ -16,7 +16,7 @@ PL_EXTERN_C
 
 typedef struct SmdFrame
 {
-	int       bone;
+	int            bone;
 	QmMathVector3f position;
 	QmMathVector3f rotation;
 } SmdFrame;
@@ -74,27 +74,12 @@ void      model_smd_destroy( SmdModel *model );
 
 /////////////////////////////////////////////////////////////
 
-typedef struct CookModelVertex
-{
-	QmMathVector3f position;
-	QmMathVector3f normal;
-	QmMathVector2f uv;
-
-	IOModelVertexWeight weights[ IO_MODEL_MAX_WEIGHTS ];
-	unsigned int    numWeights;
-} CookModelVertex;
-
-typedef struct CookModelTriangle
-{
-	unsigned int indices[ 3 ];
-} CookModelTriangle;
-
 typedef struct CookModelMesh
 {
 	PLPath material;
 
-	CookModelTriangle triangles[ IO_MODEL_MAX_TRIANGLES ];
-	unsigned int      numTriangles;
+	IOModelTriangle triangles[ IO_MODEL_MAX_TRIANGLES ];
+	unsigned int    numTriangles;
 } CookModelMesh;
 
 typedef struct CookModel
@@ -103,11 +88,11 @@ typedef struct CookModel
 
 	PLPath materialPath;
 
-	CookModelVertex vertices[ IO_MODEL_MAX_VERTICES ];
-	unsigned int    numVertices;
+	IOModelVertex vertices[ IO_MODEL_MAX_VERTICES ];
+	unsigned int  numVertices;
 
-	IOModelBone bones[ IO_MODEL_MAX_BONES ];
-	unsigned int  numBones;
+	IOModelBone  bones[ IO_MODEL_MAX_BONES ];
+	unsigned int numBones;
 
 	CookModelMesh meshes[ IO_MODEL_MAX_MATERIALS ];
 	unsigned int  numMeshes;

@@ -7,6 +7,31 @@
 #include "qmmath/public/qm_math.h"
 #include "qmmath/public/qm_math_vector.h"
 
+typedef enum IOModelResultCode : int8_t
+{
+	IO_MODEL_RESULT_CODE_HEAD = INT8_MIN,
+	IO_MODEL_RESULT_CODE_IO_ERROR,
+	IO_MODEL_RESULT_CODE_VERSION_ERROR,
+	IO_MODEL_RESULT_CODE_UNSUPPORTED_ERROR,
+	IO_MODEL_RESULT_CODE_SUCCESS = 0,
+} IOModelResultCode;
+
+typedef struct IOModelResult
+{
+	const char *str;
+	int8_t      code;
+} IOModelResult;
+
+#define IO_MODEL_RESULT( R, STR, CODE ) \
+	{                                   \
+		if ( ( R ) != nullptr )         \
+		{                               \
+			( R )->str  = ( STR );      \
+			( R )->code = ( CODE );     \
+		}                               \
+	}
+#define IO_MODEL_RESULT_SUCCESS( R ) IO_MODEL_RESULT( R, "success", IO_MODEL_RESULT_CODE_SUCCESS )
+
 static constexpr char         IO_MODEL_EXTENSION[] = "mdl";
 static constexpr unsigned int IO_MODEL_VERSION     = 4;
 
@@ -36,7 +61,7 @@ typedef enum IOModelType
 /////////////////////////////////////////////////////////////////////////////////////
 // Animation
 
-typedef enum IOModelAnimationFlag
+typedef enum IOModelAnimationFlag : uint8_t
 {
 	QM_OS_BIT_FLAG( IO_MODEL_ANIMATION_FLAG_LOOPING, 0U ),
 } IOModelAnimationFlag;
@@ -61,9 +86,21 @@ typedef struct IOModelAnimation
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Used for skeletal animation types, of course.
+ */
 typedef struct IOModelSkeletal
 {
 } IOModelSkeletal;
+
+/**
+ * This is basically for per-vertex animation.
+ * I've called it morph just to avoid getting muddled.
+ */
+typedef struct IOModelMorph
+{
+	unsigned int numFrames;
+} IOModelMorph;
 
 typedef struct IOModelBone
 {
@@ -89,6 +126,17 @@ typedef struct IOModelVertex
 	unsigned int        numWeights;
 } IOModelVertex;
 
+typedef struct IOModelTriangle
+{
+	//TODO: change to uint16
+	uint32_t indices[ 3 ];
+} IOModelTriangle;
+
+typedef enum IOModelFlag : uint8_t
+{
+	QM_OS_BIT_FLAG( IO_MODEL_FLAG_ANIMATED, 0U ),// if the model doesn't have this, it's assumed static
+} IOModelFlag;
+
 typedef struct IOModelMesh
 {
 	uint8_t  materialIndex;
@@ -96,31 +144,48 @@ typedef struct IOModelMesh
 	uint16_t endTri;
 } IOModelMesh;
 
-typedef enum IOModelFlag
-{
-	QM_OS_BIT_FLAG( IO_MODEL_FLAG_ANIMATED, 0 ),// if the model doesn't have this, it's assumed static
-} IOModelFlag;
-
 typedef struct IOModel
 {
-	char  name[ IO_MODEL_MAX_NAME ];
-	char *materialPath;
+	char name[ IO_MODEL_MAX_NAME ];
+
+	char   *materialPaths[ IO_MODEL_MAX_MATERIALS ];
+	uint8_t numMaterials;
+
+	IOModelVertex *vertices;
+	unsigned int   numVertices;
+
+	IOModelTriangle *triangles;
+	unsigned int     numTriangles;
+
+	IOModelMesh *meshes;
+	unsigned int numMeshes;
 
 	IOModelType type;
-
 	union
 	{
 		IOModelSkeletal skeletal;
+
+		struct
+		{
+			unsigned int  numMorphs;
+			IOModelMorph *morphs;
+		} morph;
 	} typeData;
 } IOModel;
 
-typedef enum IOModelFileFormat
+typedef enum IOModelFileFormat : uint8_t
 {
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_CYCLONE, 0 ),
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_HDV, 1 ),// into the shadows
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_U3D, 2 ),// outcast
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_OBJ, 3 ),// autodesk obj
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_CPJ, 4 ),
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_PLY, 5 ),
-	QM_OS_BIT_FLAG( IO_MODEL_FILE_FORMAT_SMD, 6 ),// valve smd
+	IO_MODEL_FILE_FORMAT_ANY = ( uint8_t ) -1,
+
+	//IO_MODEL_FILE_FORMAT_CYCLONE = 0,
+	//IO_MODEL_FILE_FORMAT_HDV,// into the shadows
+	//IO_MODEL_FILE_FORMAT_U3D,// outcast
+	//IO_MODEL_FILE_FORMAT_OBJ,// autodesk obj
+	//IO_MODEL_FILE_FORMAT_CPJ,
+	//IO_MODEL_FILE_FORMAT_PLY,
+	IO_MODEL_FILE_FORMAT_SMD = 0,// valve smd
+
+	IO_MODEL_FILE_FORMAT_MAX,
 } IOModelFileFormat;
+
+[[nodiscard]] IOModel *io_model_load( const char *path, IOModelFileFormat format, IOModelResult *result );

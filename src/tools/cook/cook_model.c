@@ -144,7 +144,7 @@ static unsigned int get_vector_index( const QmMathVector3f *v, PLHashTable *vect
 }
 #endif
 
-static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const CookModelVertex *vertices )
+static void serialize_mesh( AcmBranch *root, const CookModelMesh *mesh, const IOModelVertex *vertices )
 {
 	const char *c = strrchr( mesh->material, '/' );
 	printf( "\tSerialising mesh (%s)\n", c != nullptr ? c + 1 : mesh->material );
@@ -196,7 +196,7 @@ static AcmBranch *serialize_ape_format_model( const CookModel *model )
 	branch = acm_push_array_f32( root, "vertices", nullptr, 0 );
 	for ( unsigned int i = 0; i < model->numVertices; ++i )
 	{
-		const CookModelVertex *vertexIndex = &model->vertices[ i ];
+		const IOModelVertex *vertexIndex = &model->vertices[ i ];
 		acm_push_f32( branch, nullptr, vertexIndex->position.x );
 		acm_push_f32( branch, nullptr, vertexIndex->position.y );
 		acm_push_f32( branch, nullptr, vertexIndex->position.z );

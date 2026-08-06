@@ -1,4 +1,4 @@
-add_library(io_model OBJECT
+add_library(io_model STATIC
         private/io_model.c
         private/io_model_smd.c
 )
