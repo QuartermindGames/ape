@@ -284,6 +284,12 @@ static void smd_destroy( SmdModel *self )
 
 IOModel *io_model_smd_load_( IOModel *model, QmFsFile *file, IOModelResult *result )
 {
+	if ( PlCacheFile( file ) == nullptr )
+	{
+		IO_MODEL_RESULT( result, "failed to cache file", IO_MODEL_RESULT_CODE_IO_ERROR );
+		return nullptr;
+	}
+
 	const char *p = ( char * ) qm_fs_file_get_data( file );
 	if ( *p == '\0' )
 	{

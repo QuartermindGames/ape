@@ -93,3 +93,8 @@ IOModel *io_model_load( const char *path, IOModelFileFormat format, IOModelResul
 
 	return model;
 }
+
+void io_model_destroy( IOModel *self )
+{
+
+}
