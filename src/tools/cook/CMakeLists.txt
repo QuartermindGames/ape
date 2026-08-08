@@ -4,9 +4,7 @@ add_executable(cook
         cook_world.c
         cook_world_qmap.c
 
-        model/model_md2.c
         model/model_obj.c
-        model/model_psk.c
         model/model_smd.c
 )
 set_target_properties(cook PROPERTIES FOLDER "Tools")

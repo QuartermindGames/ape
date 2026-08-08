@@ -282,6 +282,29 @@ static void smd_destroy( SmdModel *self )
 	qm_os_memory_free( self );
 }
 
+static IOModel *smd_convert( SmdModel *self, IOModel *model, IOModelResult *result )
+{
+	model->type = self->numBones > 1 ? IO_MODEL_TYPE_SKELETAL : IO_MODEL_TYPE_STATIC;
+
+	// setup the materials list
+	model->numMaterials = self->numMeshes;
+	assert( model->numMaterials < IO_MODEL_MAX_MATERIALS );
+	for ( unsigned int i = 0; i < model->numMaterials; ++i )
+	{
+		const SmdMesh *srcMesh    = &self->meshes[ i ];
+		const size_t   length     = strlen( srcMesh->material );
+		model->materialPaths[ i ] = QM_OS_MEMORY_NEW_( char, length + 1 );
+		strcpy( model->materialPaths[ i ], srcMesh->material );
+	}
+
+	for ( unsigned int i = 0; i < model->numMeshes; ++i )
+	{
+		const SmdMesh *srcMesh = &self->meshes[ i ];
+		IOModelMesh   *dstMesh = &model->meshes[ i ];
+		dstMesh->materialIndex = srcMesh->
+	}
+}
+
 IOModel *io_model_smd_load_( IOModel *model, QmFsFile *file, IOModelResult *result )
 {
 	if ( PlCacheFile( file ) == nullptr )
@@ -300,30 +323,11 @@ IOModel *io_model_smd_load_( IOModel *model, QmFsFile *file, IOModelResult *resu
 	SmdModel *smdModel = QM_OS_MEMORY_NEW( SmdModel );
 	if ( parse_smd( smdModel, p, result ) == nullptr )
 	{
-		smd_destroy( smdModel );
-		return nullptr;
+		model = nullptr;
 	}
 
-	// now we need to convert smd model to our iomodel
+	smd_convert( smdModel, model, result );
+	smd_destroy( smdModel );
 
-	model->type = smdModel->numBones > 1 ? IO_MODEL_TYPE_SKELETAL : IO_MODEL_TYPE_STATIC;
-
-	// setup the materials list
-	model->numMaterials = smdModel->numMeshes;
-	assert( model->numMaterials < IO_MODEL_MAX_MATERIALS );
-	for ( unsigned int i = 0; i < model->numMaterials; ++i )
-	{
-		const SmdMesh *srcMesh    = &smdModel->meshes[ i ];
-		const size_t   length     = strlen( srcMesh->material );
-		model->materialPaths[ i ] = QM_OS_MEMORY_NEW_( char, length + 1 );
-		strcpy( model->materialPaths[ i ], srcMesh->material );
-	}
-
-	for ( unsigned int i = 0; i < model->numMaterials; ++i )
-	{
-		const SmdMesh *srcMesh = &smdModel->meshes[ i ];
-		IOModelMesh   *dstMesh;
-	}
-
-	return nullptr;
+	return model;
 }

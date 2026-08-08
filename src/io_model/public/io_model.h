@@ -11,6 +11,7 @@ typedef enum IOModelResultCode : int8_t
 {
 	IO_MODEL_RESULT_CODE_HEAD = INT8_MIN,
 	IO_MODEL_RESULT_CODE_IO_ERROR,
+	IO_MODEL_RESULT_CODE_ALLOC_ERROR,
 	IO_MODEL_RESULT_CODE_VERSION_ERROR,
 	IO_MODEL_RESULT_CODE_UNSUPPORTED_ERROR,
 	IO_MODEL_RESULT_CODE_SUCCESS = 0,
@@ -32,8 +33,15 @@ typedef struct IOModelResult
 	}
 #define IO_MODEL_RESULT_SUCCESS( R ) IO_MODEL_RESULT( R, "success", IO_MODEL_RESULT_CODE_SUCCESS )
 
-static constexpr char         IO_MODEL_EXTENSION[] = "mdl";
-static constexpr unsigned int IO_MODEL_VERSION     = 4;
+/////////////////////////////////////////////////////////////////////////////////////
+// IMF (Internal / IO Model Format)
+// This is basically a new format, but a lot of it will be built off the existing
+// format we created before, hence why version is 4...
+
+static constexpr char         IO_MODEL_IMF_EXTENSION[] = "imf";
+static constexpr unsigned int IO_MODEL_IMF_VERSION     = 4;
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 // much of this is just here for sanity checking -
 // in the long-term, we should really look at making
@@ -52,7 +60,7 @@ static constexpr unsigned int IO_MODEL_MAX_VERTICES  = IO_MODEL_MAX_TRIANGLES * 
 typedef enum IOModelType
 {
 	IO_MODEL_TYPE_STATIC,
-	IO_MODEL_TYPE_VERTEX,
+	IO_MODEL_TYPE_MORPH,
 	IO_MODEL_TYPE_SKELETAL,
 
 	IO_MODEL_NUM_TYPES
@@ -77,21 +85,13 @@ typedef struct IOModelAnimation
 	char                 name[ 64 ];
 	IOModelAnimationFlag flags;
 
-	unsigned int numFrames;
-
 	float speed;
 
-	unsigned int numBones;
+	IOModelAnimationFrame *frames;
+	unsigned int           numFrames;
 } IOModelAnimation;
 
 /////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Used for skeletal animation types, of course.
- */
-typedef struct IOModelSkeletal
-{
-} IOModelSkeletal;
 
 /**
  * This is basically for per-vertex animation.
@@ -99,7 +99,9 @@ typedef struct IOModelSkeletal
  */
 typedef struct IOModelMorph
 {
-	unsigned int numFrames;
+	float          radius;
+	QmMathVector3f mins;
+	QmMathVector3f maxs;
 } IOModelMorph;
 
 typedef struct IOModelBone
@@ -160,11 +162,12 @@ typedef struct IOModel
 	IOModelMesh *meshes;
 	unsigned int numMeshes;
 
+	IOModelAnimation *animations;
+	unsigned int      numAnimations;
+
 	IOModelType type;
 	union
 	{
-		IOModelSkeletal skeletal;
-
 		struct
 		{
 			unsigned int  numMorphs;
@@ -175,17 +178,17 @@ typedef struct IOModel
 
 typedef enum IOModelFileFormat : uint8_t
 {
-	IO_MODEL_FILE_FORMAT_ANY = ( uint8_t ) -1,
-
-	//IO_MODEL_FILE_FORMAT_CYCLONE = 0,
+	IO_MODEL_FILE_FORMAT_IMF,// our own format
+	IO_MODEL_FILE_FORMAT_SMD,// valve smd
+	//IO_MODEL_FILE_FORMAT_CYCLONE,
 	//IO_MODEL_FILE_FORMAT_HDV,// into the shadows
 	//IO_MODEL_FILE_FORMAT_U3D,// outcast
 	//IO_MODEL_FILE_FORMAT_OBJ,// autodesk obj
 	//IO_MODEL_FILE_FORMAT_CPJ,
 	//IO_MODEL_FILE_FORMAT_PLY,
-	IO_MODEL_FILE_FORMAT_SMD = 0,// valve smd
 
 	IO_MODEL_FILE_FORMAT_MAX,
+	IO_MODEL_FILE_FORMAT_ANY = IO_MODEL_FILE_FORMAT_MAX,
 } IOModelFileFormat;
 
 /**

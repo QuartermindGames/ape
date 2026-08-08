@@ -1,10 +1,11 @@
 add_library(io_model STATIC
         private/io_model.c
+        private/io_model_imf.c
         private/io_model_smd.c
 )
 
 target_include_directories(io_model PRIVATE private)
-target_link_libraries(io_model qm-os plcore)
+target_link_libraries(io_model qm-os plcore acm)
 
 set_target_properties(io_model PROPERTIES FOLDER "Engine")
 
