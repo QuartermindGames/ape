@@ -15,7 +15,7 @@
 #include "components/component_camera.h"
 
 #include "entities/entity_player_spawn.h"
-#include "entities/qm1/qm1_entity_player.h"
+#include "entities/nih_entity_player.h"
 
 NihServerState nih_serverState_;
 
@@ -124,13 +124,13 @@ static void camera_restore_pos_command( unsigned int argc, const char *const *ar
 	qm_os_memory_free( path );
 }
 
+extern ApeEntityClassDefinition ss1_pawnEntityClass;
+extern ApeEntityClassDefinition nih_playerEntityClass;
+
 static void register_entities()
 {
-	extern ApeEntityClassDefinition ss1_pawnEntityClass;
-	extern ApeEntityClassDefinition ss1_playerEntityClass;
-
 	ape_register_entity_class( &ss1_pawnEntityClass );
-	ape_register_entity_class( &ss1_playerEntityClass );
+	ape_register_entity_class( &nih_playerEntityClass );
 }
 
 static bool nih_initialize()
@@ -170,7 +170,7 @@ static void serialize_config()
 	com_write_config( nih_serverState_.config, NIH_GAME_CONFIG );
 }
 
-static void ss1_shutdown()
+static void nih_shutdown()
 {
 	//TODO: need mechanism for removing components
 
@@ -206,7 +206,7 @@ static void world_tick( const double delta )
 	}
 }
 
-static void ss1_tick( double delta )
+static void nih_server_tick( double delta )
 {
 	delta = game_get_delta_mod_( delta );
 
@@ -274,8 +274,8 @@ static void spawn_player( GamePlayer *player )
 		return;
 	}
 
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
-	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
+	const QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( entity ) );
+	const QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( entity ) );
 
 	player->entity = ape_entity_create( APE_WORLD_NODE( room ), NIH_PLAYER_CLASS_NAME, "local_player", nullptr, &pos, &ang );
 	if ( player->entity == nullptr )
@@ -325,7 +325,7 @@ void nih_client_tick_( double delta );
 void nih_client_draw_( const ApeViewport *viewport );
 void nih_client_draw_ui_( const ApeViewport *viewport );
 
-const ApeGameInterfaceImport *ape_game_get_interface( void )
+const ApeGameInterfaceImport *ape_game_get_interface()
 {
 	static ApeGameInterfaceImport gameMode = {
 	        .version         = APE_GAME_INTERFACE_VERSION,
@@ -333,7 +333,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .identifier      = "nih",
 
 	        .initialize = nih_initialize,
-	        .shutdown   = ss1_shutdown,
+	        .shutdown   = nih_shutdown,
 	        .draw       = nih_client_draw_,
 	        .drawUI     = nih_client_draw_ui_,
 
@@ -345,7 +345,7 @@ const ApeGameInterfaceImport *ape_game_get_interface( void )
 	        .serverClientConnected    = server_client_connected,
 	        .serverClientDisconnected = server_client_disconnected,
 	        .serverProcessMessage     = server_process_message,
-	        .serverTick               = ss1_tick,
+	        .serverTick               = nih_server_tick,
 
 	        .clientConnected      = nih_client_connected_,
 	        .clientProcessMessage = client_process_message,

@@ -66,7 +66,7 @@ static GameMenu confirmQuitMenu = {
 };
 
 static GameMenuOption startMenuOptions[] = {
-        {"TL1\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/tl1/tl1_root.rom.n" }},
+        {"TL1\n",            nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/tl1/tl1_root.rom.n" }       },
         GAME_MENU_OPTION_SEPERATOR(),
         {"test_materials\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room rooms/test/test_materials.rom.n" }},
         {"test_collision\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "game_load_room test/test_collision" }            },
@@ -166,7 +166,7 @@ static const char *generate_name( char *buffer, size_t size )
 	return buffer;
 }
 
-void nih_menu_initialize_( void )
+void nih_menu_initialize_()
 {
 	nih_menu_hud_initialize_();
 

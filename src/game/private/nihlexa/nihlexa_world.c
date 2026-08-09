@@ -4,11 +4,6 @@
 
 #include "nihlexa.h"
 
-#include "entities/entity_player_spawn.h"
-#include "entities/qm1/qm1_entity_player.h"
-
-#include "integrations/integrations.h"
-
 void nih_world_spawn_( ApeRoom *room )
 {
 	// for now, do nothing!

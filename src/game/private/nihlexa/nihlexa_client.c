@@ -8,6 +8,8 @@
 #include "components/component_camera.h"
 #include "components/component_movement.h"
 
+#include "entities/nih_entity_player.h"
+
 #include "integrations/integrations.h"
 
 NihClientState nih_clientState_;
@@ -32,11 +34,7 @@ void nih_client_connected_()
 			ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( player->entity ) );
 			ape_world_node_attach( APE_WORLD_NODE( player->camera ), APE_WORLD_NODE( room ) );
 
-			GameCameraComponent *cameraComponent = ape_entity_get_component( player->entity, GAME_CAMERA_COMPONENT_NAME );
-			if ( cameraComponent != nullptr )
-			{
-				game_component_camera_set_state_( cameraComponent, GAME_CAMERA_STATE_FIRST_PERSON );
-			}
+			nih_entity_player_set_camera_state( player->entity, GAME_CAMERA_STATE_FIRST_PERSON );
 		}
 	}
 }

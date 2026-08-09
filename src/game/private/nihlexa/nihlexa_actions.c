@@ -7,7 +7,7 @@
 #include "nihlexa.h"
 #include "components/component_camera.h"
 
-#include "entities/qm1/qm1_entity_player.h"
+#include "entities/nih_entity_player.h"
 
 static void fire_decal( ApeInputState state, const char * )
 {
@@ -69,33 +69,7 @@ static void toggle_camera( ApeInputState state, [[maybe_unused]] const char *id 
 		return;
 	}
 
-	GameCameraComponent *component = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
-	if ( component == nullptr )
-	{
-		return;
-	}
-
-	game_component_camera_cycle_state_( component );
-
-#if 0
-	// attempt to hide the player model
-
-	Qm1PlayerEntity *playerEntity = QM1_PLAYER_ENTITY( entity );
-	if ( playerEntity == nullptr || playerEntity->model == nullptr )
-	{
-		return;
-	}
-
-	ApeWorldNode *worldNode = APE_WORLD_NODE( playerEntity->model );
-	if ( nih_serverState_.cameraState == GAME_CAMERA_STATE_FIRST_PERSON )
-	{
-		worldNode->flags |= APE_WORLD_NODE_FLAG_HIDDEN;
-	}
-	else
-	{
-		worldNode->flags &= ~APE_WORLD_NODE_FLAG_HIDDEN;
-	}
-#endif
+	nih_entity_player_toggle_camera_state( entity );
 }
 
 static void spawn_portal_action( ApeInputState state, const char *id )

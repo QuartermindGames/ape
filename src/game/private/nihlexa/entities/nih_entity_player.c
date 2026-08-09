@@ -2,13 +2,11 @@
 // Purpose: Players - we play as 'em!
 // Author:  Mark E. Sowden
 
-#include "qmos/public/qm_os_random.h"
-
 #include "nihlexa/nihlexa.h"
 
 #include "core/public/ape/ape_public_model.h"
 
-#include "qm1_entity_player.h"
+#include "nih_entity_player.h"
 
 #include "components/component_health.h"
 #include "components/component_collision.h"
@@ -16,8 +14,6 @@
 #include "components/component_camera.h"
 
 #include "physics/physics.h"
-
-#include "game_entity.h"
 
 static constexpr float NIH_PLAYER_BASE_HEIGHT = 72.0f;
 static constexpr float NIH_PLAYER_BASE_RADIUS = 16.0f;
@@ -31,7 +27,7 @@ static constexpr float NIH_PLAYER_JUMP_SPEED = 100.0f;
 
 static void *create_player_entity( ApeEntity *self )
 {
-	Qm1PlayerEntity *player = QM_OS_MEMORY_NEW( Qm1PlayerEntity );
+	NihPlayerEntity *player = QM_OS_MEMORY_NEW( NihPlayerEntity );
 
 	GameMovementComponent *movement = ape_entity_add_component( self, "movement" );
 	assert( movement != nullptr );
@@ -72,11 +68,11 @@ static void *create_player_entity( ApeEntity *self )
 
 static void spawn_player_entity( ApeEntity *self )
 {
-	Qm1PlayerEntity *player = QM1_PLAYER_ENTITY( self );
+	NihPlayerEntity *player = NIH_PLAYER_ENTITY( self );
 	assert( player != nullptr );
 
 	QmMathVector3f pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
-	for ( unsigned int i = 0; i < SS1_PLAYER_MAX_AUDIO_CHANNELS; ++i )
+	for ( unsigned int i = 0; i < NIH_PLAYER_MAX_AUDIO_CHANNELS; ++i )
 	{
 		player->audioSources[ i ] = ape_audio_source_create( &pos, &QM_MATH_VECTOR3F_ZERO, APE_AUDIO_SOURCE_GROUP_GENERIC );
 	}
@@ -86,7 +82,7 @@ static void tick_player_entity( ApeEntity *self, double delta )
 {
 	delta = game_get_delta_mod_( delta );
 
-	Qm1PlayerEntity *playerEntity = QM1_PLAYER_ENTITY( self );
+	NihPlayerEntity *playerEntity = NIH_PLAYER_ENTITY( self );
 	assert( playerEntity != nullptr );
 
 	GameCameraComponent *cameraComponent = playerEntity->cameraComponent;
@@ -100,7 +96,49 @@ static void tick_player_entity( ApeEntity *self, double delta )
 	game_component_movement_tick_( playerEntity->movementComponent, playerEntity->collisionComponent, self, delta );
 }
 
-ApeEntityClassDefinition ss1_playerEntityClass = {
+void nih_entity_player_set_camera_state( const ApeEntity *self, GameCameraState state )
+{
+	const NihPlayerEntity *player = NIH_PLAYER_ENTITY( self );
+	assert( player != nullptr );
+
+	game_component_camera_set_state_( player->cameraComponent, state );
+
+	ApeWorldNode *modelNode = APE_WORLD_NODE( player->model );
+	if ( modelNode == nullptr )
+	{
+		return;
+	}
+
+	if ( state == GAME_CAMERA_STATE_FIRST_PERSON )
+	{
+		modelNode->flags |= APE_WORLD_NODE_FLAG_HIDDEN;
+	}
+	else
+	{
+		modelNode->flags &= ~APE_WORLD_NODE_FLAG_HIDDEN;
+	}
+}
+
+void nih_entity_player_toggle_camera_state( const ApeEntity *self )
+{
+	const NihPlayerEntity *player = NIH_PLAYER_ENTITY( self );
+	assert( player != nullptr );
+
+	GameCameraState            newState;
+	const GameCameraComponent *cameraComponent = player->cameraComponent;
+	if ( cameraComponent->state == GAME_CAMERA_STATE_FIRST_PERSON )
+	{
+		newState = GAME_CAMERA_STATE_THIRD_PERSON;
+	}
+	else
+	{
+		newState = GAME_CAMERA_STATE_FIRST_PERSON;
+	}
+
+	nih_entity_player_set_camera_state( self, newState );
+}
+
+ApeEntityClassDefinition nih_playerEntityClass = {
         .name        = NIH_PLAYER_CLASS_NAME,
         .description = "Player entity. This shouldn't be placed directly!",
 

@@ -19,7 +19,6 @@ set(GAME_SHARED_FILES
         private/components/component_movement.c
 
         private/entities/qm1/qm1_entity_pawn.c
-        private/entities/qm1/qm1_entity_player.c
 
         private/entities/entity_ambience_manager.c
         private/entities/entity_decal.c
@@ -76,6 +75,8 @@ endif ()
 #############################################
 set(NIH_SOURCES
         ${GAME_SHARED_FILES}
+
+        private/nihlexa/entities/nih_entity_player.c
 
         private/nihlexa/nihlexa.c
         private/nihlexa/nihlexa_actions.c
