@@ -60,6 +60,9 @@ static void *create_player_entity( ApeEntity *self )
 	player->cameraComponent = ape_entity_add_component( self, "camera" );
 	assert( player->cameraComponent != nullptr );
 
+	player->model = ape_model_node_create( APE_WORLD_NODE( self ), "playerModel", "models/editor/cylinder.mdl.n" );
+	ape_world_node_set_scale( APE_WORLD_NODE( player->model ), &QM_MATH_VECTOR3F( 16.0f, 32.0f, 16.0f ) );
+
 	// reset camera to direction entity is facing
 	QmMathVector3f forward          = ape_world_node_get_forward( APE_WORLD_NODE( self ) );
 	player->cameraComponent->angles = qm_math_vector3f( 0.0f, QM_MATH_RAD2DEG( atan2f( forward.x, forward.z ) ), 0.0f );

@@ -2,6 +2,8 @@
 
 #pragma once
 
+typedef struct ApeModelNode ApeModelNode;
+
 static constexpr char NIH_PLAYER_CLASS_NAME[] = "qm1_player";
 
 typedef enum SS1PlayerAudioChannel
@@ -20,6 +22,8 @@ typedef struct Qm1PlayerEntity
 	struct GameMovementComponent  *movementComponent;
 	struct GameCollisionComponent *collisionComponent;
 	struct GameCameraComponent    *cameraComponent;
+
+	ApeModelNode *model;
 
 	struct ApeAudioSource *audioSources[ SS1_PLAYER_MAX_AUDIO_CHANNELS ];
 } Qm1PlayerEntity;
