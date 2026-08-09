@@ -21,6 +21,8 @@ For instance, the project logic is all under common because it's used by other A
 
 Some functions are prefixed with older conventions or aren't prefixed at all, and these cases should be amended as they're found.
 
+Do not use `auto` in any C code whatsoever.
+
 ## Variables
 
 Variables use the [Camel case](https://en.wikipedia.org/wiki/Camel_case) naming style, so `myVar`.
@@ -39,6 +41,22 @@ class MyClass
         int myVar_{};
 }
 ```
+
+## Enums
+
+Enums should be declared like so.
+
+```c
+typedef enum GameThingType : uint8_t
+{
+    GAME_THING_TYPE_A,
+    GAME_THING_TYPE_B,
+    
+    GAME_THING_TYPE_MAX
+} GameThingType;
+```
+
+If you want to provide a declaration for the size, end it with `*_MAX` when possible as seen in the example above.
 
 ## Console Commands and Variables
 
