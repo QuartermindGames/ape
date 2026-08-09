@@ -365,12 +365,8 @@ static bool validate_material_variable( ApeMaterialVariable *variable, QmGfxShad
  */
 static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *materialPass, AcmBranch *root )
 {
-	AcmBranch *node = acm_get_first_child( root );
-	while ( node != NULL )
+	ACM_ITERATE_BRANCH( root, node )
 	{
-		/* fetch the next node, so we can roll onto the next element early */
-		AcmBranch *next = acm_get_next_child( node );
-
 		ApeMaterialVariable *materialVariable = &materialPass->variables[ materialPass->numVariables ];
 
 		/* validate that the property actually exists or is at least exposed by the shader.
@@ -382,7 +378,6 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		if ( materialVariable->programSlot == -1 )
 		{
 			ape_console_warning_( "Failed to fetch uniform slot for variable \"%s\"!\n", propertyName );
-			node = next;
 			continue;
 		}
 
@@ -390,13 +385,10 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		if ( materialVariable->numElements == 0 )
 		{
 			ape_console_warning_( "Failed to fetch number of uniform elements for variable (%s/%u)!\n", propertyName, materialVariable->programSlot );
-			node = next;
 			continue;
 		}
 
 		snprintf( materialVariable->name, sizeof( materialVariable->name ), "%s", propertyName );
-
-		QmGfxShaderUniformType uniformType = qm_gfx_shader_program_get_uniform_type( materialPass->program->internal, materialVariable->programSlot );
 
 		/* if it's a string, it *could* be a built-in type */
 		if ( acm_branch_get_type( node ) == ACM_PROPERTY_TYPE_STRING )
@@ -426,7 +418,6 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					if ( materialBuiltinVar == APE_MATERIAL_BUILTIN_INVALID )
 					{
 						ape_console_warning_( "Invalid built-in variable, \"%s\", specified!\n", value );
-						node = next;
 						continue;
 					}
 
@@ -436,6 +427,8 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				}
 			}
 		}
+
+		QmGfxShaderUniformType uniformType = qm_gfx_shader_program_get_uniform_type( materialPass->program->internal, materialVariable->programSlot );
 
 		/* otherwise, we need to handle it as a traditional var */
 		if ( materialVariable->type == SS_ARL_MATERIAL_VAR_INVALID )
@@ -674,7 +667,6 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 			if ( materialVariable->type == SS_ARL_MATERIAL_VAR_INVALID )
 			{
 				ape_console_warning_( "Invalid property type for shader variable \"%s\"!\n", propertyName );
-				node = next;
 				continue;
 			}
 		}
@@ -682,7 +674,6 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		if ( !validate_material_variable( materialVariable, uniformType ) )
 		{
 			ape_console_warning_( "Mismatch between material variable type and uniform type!\n" );
-			node = next;
 			continue;
 		}
 
@@ -693,7 +684,10 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		{
 			if ( strcmp( propertyName, materialPass->variables[ i ].name ) == 0 )
 			{
-				material_var_free( &materialPass->variables[ i ] );
+				//material_var_free( &materialPass->variables[ i ] );
+				// commented out the above; I'm not sure what my intention was here?
+				// we pull the variables initially from the shader default pass which
+				// we wouldn't want to free yet??
 				materialPass->variables[ i ] = *materialVariable;
 				*materialVariable            = ( ApeMaterialVariable ) {};
 				break;
@@ -704,8 +698,6 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 		{
 			materialPass->numVariables++;
 		}
-
-		node = next;
 	}
 }
 
