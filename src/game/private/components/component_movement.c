@@ -77,7 +77,9 @@ static void game_component_movement_footstep( GameMovementComponent *self, GameC
 		ApeAudioSample *sample = footstepSounds[ surfaceType * MAX_FOOTSTEP_SOUNDS_PER_TYPE + r ];
 		if ( sample != nullptr )
 		{
-			ape_audio_sample_emit( sample, &result.intersection, 100.0f, 0.5f + qm_os_random_float( &seed, 0.5f ) );
+			ape_audio_sample_emit( sample, &result.intersection,
+			                       20.f + qm_os_random_float( &seed, 10.f ),
+			                       0.5f + qm_os_random_float( &seed, 0.5f ) );
 		}
 
 		self->hasPlayedStep = true;
