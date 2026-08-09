@@ -19,7 +19,7 @@ typedef struct ApeLightmapPixel ApeLightmapPixel;
 typedef struct ApeLightmap      ApeLightmap;
 
 //TODO: this'll get removed and we'll move over to flexible pages in future :)
-static constexpr unsigned int APE_ROOM_MAX_LIGHTMAPS = 4;
+static constexpr unsigned int APE_ROOM_MAX_LIGHTMAPS = 16;
 
 typedef struct ApeRoom
 {
@@ -62,7 +62,7 @@ void ape_world_tick_entities_( ApeWorld *self, double delta );
  */
 ApeRoom *ape_world_get_first_room_( ApeWorld *world );
 
-void ape_register_world_console_variables_( void );
+void ape_register_world_console_variables_();
 
 void ape_world_node_compute_bounds_( ApeWorldNode *self );
 
