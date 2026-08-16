@@ -325,8 +325,7 @@ void ape_lightmap_upload_( ApeLightmap *self, unsigned int edgeLength )
 	}
 
 	//TODO: remove this!!! ITS A BOTCH - this should be updated by the material draw method, probably
-	self->texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
-	qm_gfx_texture_set_wrap_mode( self->texture->internal, self->texture->wrapMode );
+	qm_gfx_texture_set_wrap_mode( self->texture->internal, PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE );
 }
 
 void ape_lightmap_serialize_( const ApeLightmap *self, unsigned int edgeLength, AcmBranch *root )

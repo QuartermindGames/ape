@@ -3,6 +3,8 @@
 #include "plcore/pl_hashtable.h"
 #include "qmos/public/qm_os_string.h"
 
+#include "yin/core_fs.h"
+
 #include "ape_private.h"
 #include "ape_image.h"
 
@@ -31,14 +33,14 @@ static void destroy_texture( void *userData )
 	qm_os_memory_free( texture );
 }
 
-static void compute_average_colour( ApeTexture *texture )
+static void compute_average_colour( ApeTexture *texture, QmImage *image )
 {
 	if ( !ape_editor_is_active() )
 	{
 		return;
 	}
 
-	PLImageFormat format = PlGetImageFormat( texture->image );
+	const PLImageFormat format = PlGetImageFormat( image );
 	if ( format != PL_IMAGEFORMAT_RGB8 && format != PL_IMAGEFORMAT_RGBA8 )
 	{
 		return;
@@ -48,11 +50,11 @@ static void compute_average_colour( ApeTexture *texture )
 	// we're only going over parts of the image rather than the entire thing.
 	// this obviously isn't accurate but it's good enough for our needs.
 
-	unsigned int w     = qm_image_get_width( texture->image );
-	unsigned int h     = qm_image_get_height( texture->image );
-	unsigned int hw    = w / 2;
-	unsigned int hh    = h / 2;
-	unsigned int hsize = hw * hh;
+	const unsigned int w     = qm_image_get_width( image );
+	const unsigned int h     = qm_image_get_height( image );
+	const unsigned int hw    = w / 2;
+	const unsigned int hh    = h / 2;
+	const unsigned int hsize = hw * hh;
 	if ( hsize == 0 )
 	{
 		ape_console_warning_( "Suspicious image size, skipping computation of average colour!\n" );
@@ -69,19 +71,19 @@ static void compute_average_colour( ApeTexture *texture )
 		unsigned int a;
 	} out = {};
 
-	uint8_t *p = PlGetImageData( texture->image, 0, 0 );
+	uint8_t *p = PlGetImageData( image, 0, 0 );
 	for ( unsigned int i = 0; i < hsize; ++i, p += stride )
 	{
 		if ( format == PL_IMAGEFORMAT_RGB8 )
 		{
-			QmMathColour3ub *pixel = ( QmMathColour3ub * ) p;
+			const QmMathColour3ub *pixel = ( QmMathColour3ub * ) p;
 			out.r += pixel->r;
 			out.g += pixel->g;
 			out.b += pixel->b;
 		}
 		else
 		{
-			QmMathColour4ub *pixel = ( QmMathColour4ub * ) p;
+			const QmMathColour4ub *pixel = ( QmMathColour4ub * ) p;
 			out.r += pixel->r;
 			out.g += pixel->g;
 			out.b += pixel->b;
@@ -137,8 +139,8 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 			break;
 	}
 
-	QmImage *imageData = PlCreateImage( data, w, h, 0, cFormat, iFormat );
-	if ( imageData == nullptr )
+	QmImage *image = PlCreateImage( data, w, h, 0, cFormat, iFormat );
+	if ( image == nullptr )
 	{
 		ape_console_warning_( "Failed to generate image (%s) data: %s\n", id, PlGetError() );
 	}
@@ -146,7 +148,7 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 #if 0
     char outName[ 64 ];
 	snprintf( outName, sizeof( outName ), "test_%dx%d-%d.png", w, h, numChannels );
-	plWriteImage( imageData, outName );
+	plWriteImage( image, outName );
 #endif
 
 	QmGfxTexture *internalTexture = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
@@ -158,33 +160,31 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 
 	internalTexture->filter = filter;
 
-	if ( !qm_gfx_texture_upload( internalTexture, imageData ) )
+	if ( !qm_gfx_texture_upload( internalTexture, image ) )
 	{
 		ape_console_error_( true, "Failed to generate texture from image (%s): %s\n", id, PlGetError() );
 	}
 
 	ApeTexture *texture = QM_OS_MEMORY_NEW( ApeTexture );
-	texture->filterMode = internalTexture->filter;
 	texture->internal   = internalTexture;
-	texture->image      = imageData;
 
-	compute_average_colour( texture );
+	compute_average_colour( texture, image );
 
-	if ( !ape_editor_is_active() )
-	{
-		PlDestroyImage( texture->image );
-		texture->image = nullptr;
-	}
+	// no point retaining this for generated images
+	PlDestroyImage( image );
 
 	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
 
 	return texture;
 }
 
-static void fetch_texture_config( ApeTexture *texture )
+static void fetch_texture_config( const char *path,
+                                  // if this is ever expanded, revise this
+                                  QmGfxTextureWrapMode *dstWrap,
+                                  QmGfxTextureFilter   *dstFilter )
 {
 	PLPath configPath;
-	PlSetupPath( configPath, "%s", texture->path );
+	PlSetupPath( configPath, "%s", path );
 	char *c = strrchr( configPath, '/' );
 	if ( c == NULL )
 	{
@@ -216,37 +216,37 @@ static void fetch_texture_config( ApeTexture *texture )
 	const char *wrapMode = acm_get_string( root, "wrapMode", "repeat" );
 	if ( strcmp( wrapMode, "repeat" ) == 0 )
 	{
-		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_REPEAT;
+		*dstWrap = PLG_TEXTURE_WRAP_MODE_REPEAT;
 	}
 	else if ( strcmp( wrapMode, "mirrored_repeat" ) == 0 )
 	{
-		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_MIRRORED_REPEAT;
+		*dstWrap = PLG_TEXTURE_WRAP_MODE_MIRRORED_REPEAT;
 	}
 	else if ( strcmp( wrapMode, "clamp" ) == 0 )
 	{
-		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
+		*dstWrap = PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE;
 	}
 	else if ( strcmp( wrapMode, "clamp_border" ) == 0 )
 	{
-		texture->wrapMode = PLG_TEXTURE_WRAP_MODE_CLAMP_BORDER;
+		*dstWrap = PLG_TEXTURE_WRAP_MODE_CLAMP_BORDER;
 	}
 
 	const char *filterMode = acm_get_string( root, "filterMode", "linear" );
 	if ( strcmp( filterMode, "mipmap_linear" ) == 0 )
 	{
-		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
+		*dstFilter = PLG_TEXTURE_FILTER_MIPMAP_LINEAR;
 	}
 	else if ( strcmp( filterMode, "linear" ) == 0 )
 	{
-		texture->filterMode = PLG_TEXTURE_FILTER_LINEAR;
+		*dstFilter = PLG_TEXTURE_FILTER_LINEAR;
 	}
 	else if ( strcmp( filterMode, "mipmap_nearest" ) == 0 )
 	{
-		texture->filterMode = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
+		*dstFilter = PLG_TEXTURE_FILTER_MIPMAP_NEAREST;
 	}
 	else if ( strcmp( filterMode, "nearest" ) == 0 )
 	{
-		texture->filterMode = PLG_TEXTURE_FILTER_NEAREST;
+		*dstFilter = PLG_TEXTURE_FILTER_NEAREST;
 	}
 
 	acm_branch_destroy( root );
@@ -284,6 +284,32 @@ void ape_initialize_textures_( void )
 	defaultTextures[ APE_TEXTURE_BLACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
 }
 
+static QmGfxTexture *create_internal_texture( const QmGfxTextureType type, QmGfxTextureFilter filter, const char *path, const QmImage *image )
+{
+	QmGfxTexture *texture = qm_gfx_texture_create( type );
+	if ( texture == nullptr )
+	{
+		ape_console_warning_( "Failed to allocate internal texture (%s): %s\n", path, PlGetError() );
+		return nullptr;
+	}
+
+	QmGfxTextureWrapMode wrap = PLG_TEXTURE_WRAP_MODE_REPEAT;
+	fetch_texture_config( path, &wrap, &filter );
+
+	qm_gfx_texture_set_wrap_mode( texture, wrap );
+	qm_gfx_texture_set_filter( texture, filter );
+
+	// upload it
+	if ( !qm_gfx_texture_upload( texture, image ) )
+	{
+		ape_console_warning_( "Failed to upload texture (%s): %s\n", path, PlGetError() );
+		qm_os_memory_free( texture );
+		texture = nullptr;
+	}
+
+	return texture;
+}
+
 ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, bool useFallback )
 {
 	ApeTexture *texture = PlLookupHashTableUserData( textureTable, path, strlen( path ) );
@@ -293,48 +319,37 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 		return texture;
 	}
 
-	texture             = QM_OS_MEMORY_NEW( ApeTexture );
-	texture->path       = qm_os_string_alloc( "%s", path );
-	texture->filterMode = filter;
-	texture->wrapMode   = PLG_TEXTURE_WRAP_MODE_REPEAT;
-
-	fetch_texture_config( texture );
-
-	texture->image = qm_image_load( path );
-	if ( texture->image == nullptr )
+	QmGfxTexture *internal = nullptr;
+	QmImage      *image    = qm_image_load( path );
+	if ( image == nullptr )
 	{
 		ape_console_warning_( "Failed to load image (%s): %s\n", path, PlGetError() );
 		goto cleanup;
 	}
 
-	// upload it
-
-	texture->internal = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
-	if ( texture->internal == nullptr )
+	if ( ( internal = create_internal_texture( QM_GFX_TEXTURE_TYPE_2D, filter, path, image ) ) == nullptr )
 	{
 		ape_console_warning_( "Failed to allocate internal texture (%s): %s\n", path, PlGetError() );
 		goto cleanup;
 	}
 
-	//TODO: wat?
-	texture->internal->filter = texture->filterMode;
+	texture           = QM_OS_MEMORY_NEW( ApeTexture );
+	texture->internal = internal;
+	texture->path     = qm_os_string_alloc( "%s", path );
+#ifdef APE_SUPPORT_EDITOR
+	texture->modifiedTime = ape_fs_get_timestamp( path );
+#endif
 
-	if ( !qm_gfx_texture_upload( texture->internal, texture->image ) )
+	compute_average_colour( texture, image );
+
+	if ( ape_editor_is_active() )
 	{
-		ape_console_warning_( "Failed to upload texture (%s): %s\n", path, PlGetError() );
-		goto cleanup;
+		texture->image = image;
 	}
-
-	compute_average_colour( texture );
-
-	if ( !ape_editor_is_active() )
+	else
 	{
-		PlDestroyImage( texture->image );
-		texture->image = nullptr;
+		PlDestroyImage( image );
 	}
-
-	qm_gfx_texture_set_wrap_mode( texture->internal, texture->wrapMode );
-	qm_gfx_texture_set_filter( texture->internal, texture->filterMode );
 
 	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, nullptr );
 	ape_memory_reference_add( &texture->reference );
@@ -342,7 +357,8 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 	return texture;
 
 cleanup:
-	destroy_texture( texture );
+	PlDestroyImage( image );
+	qm_os_memory_free( internal );
 
 	return useFallback ? defaultTextures[ APE_TEXTURE_FALLBACK ] : nullptr;
 }
@@ -423,6 +439,67 @@ cleanup:
 
 	return nullptr;
 }
+
+#ifdef APE_SUPPORT_EDITOR
+
+void ape_texture_reload_( ApeTexture *self )
+{
+	//TODO: this isn't going to work for cubemaps
+	//		for now, we'll deal with that later
+
+	if ( self->path == nullptr )
+	{
+		return;
+	}
+
+	const time_t now = ape_fs_get_timestamp( self->path );
+	if ( now == self->modifiedTime )
+	{
+		return;
+	}
+
+	// update the timestamp anyway, even if it fails, I guess
+	// in theory this'll stop us from failing over and over -
+	// as the odds are if it failed to load this time, it'll
+	// still fail the next time :(
+	self->modifiedTime = ape_fs_get_timestamp( self->path );
+
+	QmImage *image = qm_image_load( self->path );
+	if ( image == nullptr )
+	{
+		ape_console_warning_( "Failed to load image (%s): %s\n", self->path, PlGetError() );
+		return;
+	}
+
+	QmGfxTexture *internal;
+	if ( ( internal = create_internal_texture( self->internal->type,
+	                                           self->internal->filter,
+	                                           self->path,
+	                                           image ) ) == nullptr )
+	{
+		PlDestroyImage( image );
+		return;
+	}
+
+	// swap out to the new one
+	qm_os_memory_free( self->internal );
+	self->internal = internal;
+
+	compute_average_colour( self, image );
+
+	if ( ape_editor_is_active() )
+	{
+		self->image = image;
+	}
+	else
+	{
+		PlDestroyImage( image );
+	}
+
+	ape_console_print_( "Reloaded texture: %s\n", self->path );
+}
+
+#endif
 
 ApeTexture *ape_get_default_texture_( ApeDefaultTexture defaultTexture )
 {

@@ -40,4 +40,6 @@ PLMatrix3 ss_acl_fs_parse_mat3( QmFsFile *file );
 QmMathVector3f ss_acl_fs_parse_vector( QmFsFile *file );
 float ss_acl_fs_parse_float( QmFsFile *file );
 
+time_t ape_fs_get_timestamp( const char *path );
+
 PL_EXTERN_C_END

@@ -1,6 +1,6 @@
-// Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
-
-#include <float.h>
+// Copyright © 2017-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
+// Purpose: Material system
+// Author:  Mark E. Sowden
 
 #include <plcore/pl_linkedlist.h>
 
@@ -8,15 +8,10 @@
 
 #include "ape_private.h"
 
-#include "renderer/renderer.h"
 #include "renderer/renderer_render_target.h"
 #include "renderer/renderer_texture.h"
 
 #include "material.h"
-
-#include "world/world.h"
-#include "game/game_public.h"
-#include "gui/gui_private.h"
 
 static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
 
@@ -85,6 +80,49 @@ ApeTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 	return nullptr;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+// Reload
+
+#ifdef APE_SUPPORT_EDITOR
+
+static void material_reload_textures( const ApeMaterial *self )
+{
+	for ( unsigned int i = 0; i < self->numPasses; ++i )
+	{
+		const ApeMaterialPass *pass = &self->passes[ i ];
+		for ( unsigned int j = 0; j < pass->numVariables; ++j )
+		{
+			const ApeMaterialVariable *var = &pass->variables[ j ];
+			if ( var->type != APE_MATERIAL_VAR_TEXTURE )
+			{
+				continue;
+			}
+
+			ApeTexture *texture = var->data.ptr;
+			ape_texture_reload_( texture );
+		}
+	}
+}
+
+static void reload_textures_command( [[maybe_unused]] unsigned int       argc,
+                                     [[maybe_unused]] const char *const *argv )
+{
+	// free up all the textures first, to try and flush them
+	// mind that if something else is referencing a texture, this won't work
+	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	{
+		ApeMaterial *material;
+		COM_ITERATE_LINKED_LIST( material, materials[ i ], itr )
+		{
+			material_reload_textures( material );
+		}
+	}
+}
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 void ape_material_register_console_variables_()
 {
 	ape_console_var_register( "material.forceTextureFilter", "Force a specific texture filtering mode.", "", PL_VAR_STRING, materialTextureFilter, nullptr, 0 );
@@ -94,9 +132,15 @@ void ape_material_register_console_variables_()
 	ape_console_var_register( "material.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, &materialSkipNormal, nullptr, 0 );
 	ape_console_var_register( "material.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, &materialSkipSpecular, nullptr, 0 );
 	ape_console_var_register( "material.skipLightmap", "Skip lightmap.", "0", PL_VAR_BOOL, &materialSkipLightmap, nullptr, 0 );
+
+#ifdef APE_SUPPORT_EDITOR
+	ape_console_cmd_register( "material_reload_textures",
+	                          "Reload all textures loaded by the material system.",
+	                          0, reload_textures_command );
+#endif
 }
 
-void ape_initialize_materials_( void )
+void ape_initialize_materials_()
 {
 	ape_console_print_( "Initializing material system\n" );
 
@@ -1109,8 +1153,8 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 		PlScaleMatrix( qm_math_vector3f( scaleX, scaleY, 1.0f ) );
 
 		qm_gfx_shader_program_set_uniform( program->internal,
-		                                          program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
-		                                          PlGetMatrix( PL_TEXTURE_MATRIX ), false );
+		                                   program->globalUniforms[ APE_SHADER_UNIFORM_TEXTURE_MATRIX ],
+		                                   PlGetMatrix( PL_TEXTURE_MATRIX ), false );
 
 		PlPopMatrix();
 
@@ -1119,8 +1163,8 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 	if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
 	{
 		qm_gfx_shader_program_set_uniform( program->internal,
-		                                          program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
-		                                          PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
+		                                   program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
+		                                   PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
 	}
 }
 

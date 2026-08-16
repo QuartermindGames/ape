@@ -253,3 +253,17 @@ QmMathColour4ub ss_acl_fs_parse_colour( QmFsFile *file )
 	assert( status );
 	return c;
 }
+
+time_t ape_fs_get_timestamp( const char *path )
+{
+	time_t r = 0;
+
+	QmFsFile *file = qm_fs_file_open( path, false );
+	if ( file != nullptr )
+	{
+		r = qm_fs_file_get_timestamp( file );
+		PlCloseFile( file );
+	}
+
+	return r;
+}
