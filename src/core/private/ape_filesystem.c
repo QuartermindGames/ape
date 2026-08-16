@@ -51,7 +51,7 @@ static PLPath configPath;
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-const char *ape_fs_get_user_config_location( void )
+const char *ape_fs_get_user_config_location()
 {
 	if ( *configPath == '\0' )
 	{
@@ -120,7 +120,7 @@ void *ape_fs_load_file_buffer( const char *path, size_t *outSize )
 	return buf;
 }
 
-void ape_fs_mount_base_locations( void )
+void ape_fs_mount_base_locations()
 {
 	PLPath exePath;
 	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == NULL )
@@ -130,128 +130,6 @@ void ape_fs_mount_base_locations( void )
 	}
 
 	qm_fs_mount_local_location( exePath );
-}
-
-char *ape_fs_parse_string( QmFsFile *file, uint16_t *size )
-{
-	bool status;
-	*size = PL_READUINT16( file, false, &status );
-	assert( status );
-	if ( *size == 0 || !status )
-		return nullptr;
-
-	char  *buf = QM_OS_MEMORY_NEW_( char, ( *size ) + 1 );
-	size_t rb  = qm_file_read( file, buf, sizeof( char ), *size );
-	assert( rb == *size );
-	return buf;
-}
-
-char *ape_fs_parse_string_ex( QmFsFile *file, uint16_t *size, unsigned int version, unsigned int minVersion, unsigned int maxVersion )
-{
-	if ( version < minVersion || version > maxVersion )
-		return nullptr;
-
-	return ape_fs_parse_string( file, size );
-}
-
-uint8_t ape_fs_parse_byte( QmFsFile *file )
-{
-	bool    status;
-	uint8_t i = PL_READUINT8( file, &status );
-	assert( status );
-	return i;
-}
-
-uint8_t ss_acl_fs_parse_byte_ex( QmFsFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, uint8_t fallback )
-{
-	if ( version < minVersion || version > maxVersion )
-		return fallback;
-
-	return ape_fs_parse_byte( file );
-}
-
-int ss_acl_fs_parse_int( QmFsFile *file )
-{
-	bool status;
-	int  i = qm_fs_file_read_int32( file, false, &status );
-	assert( status );
-	return i;
-}
-
-int ss_acl_fs_parse_int_ex( QmFsFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, int fallback )
-{
-	if ( version < minVersion || version > maxVersion )
-		return fallback;
-
-	return ss_acl_fs_parse_int( file );
-}
-
-float ss_acl_fs_parse_float( QmFsFile *file )
-{
-	bool  status;
-	float f = qm_fs_file_read_float( file, false, &status );
-	assert( status && !isnan( f ) );
-	return f;
-}
-
-float acl_fs_parse_float_ex( QmFsFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, float fallback )
-{
-	if ( version < minVersion || version > maxVersion )
-		return fallback;
-
-	return ss_acl_fs_parse_float( file );
-}
-
-QmMathVector3f ss_acl_fs_parse_vector( QmFsFile *file )
-{
-	return qm_math_vector3f( ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ) );
-}
-
-QmMathVector3f acl_fs_parse_vector_ex( QmFsFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const QmMathVector3f *fallback )
-{
-	if ( version < minVersion || version > maxVersion )
-		return *fallback;
-
-	return ss_acl_fs_parse_vector( file );
-}
-
-QmMathVector4f ss_acl_fs_parse_vector4( QmFsFile *file )
-{
-	return qm_math_vector4f( ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ), ss_acl_fs_parse_float( file ) );
-}
-
-QmMathVector4f ss_acl_fs_parse_vector4_ex( QmFsFile *file, unsigned int version, unsigned int minVersion, unsigned int maxVersion, const QmMathVector4f *fallback )
-{
-	if ( version < minVersion || version > maxVersion )
-		return *fallback;
-
-	return ss_acl_fs_parse_vector4( file );
-}
-
-PLMatrix3 ss_acl_fs_parse_mat3( QmFsFile *file )
-{
-	return ( PLMatrix3 ) {
-	        // forward
-	        .m[ 0 ] = ss_acl_fs_parse_float( file ),
-	        .m[ 1 ] = ss_acl_fs_parse_float( file ),
-	        .m[ 2 ] = ss_acl_fs_parse_float( file ),
-	        // right
-	        .m[ 3 ] = ss_acl_fs_parse_float( file ),
-	        .m[ 4 ] = ss_acl_fs_parse_float( file ),
-	        .m[ 5 ] = ss_acl_fs_parse_float( file ),
-	        // up
-	        .m[ 6 ] = ss_acl_fs_parse_float( file ),
-	        .m[ 7 ] = ss_acl_fs_parse_float( file ),
-	        .m[ 8 ] = ss_acl_fs_parse_float( file ),
-	};
-}
-
-QmMathColour4ub ss_acl_fs_parse_colour( QmFsFile *file )
-{
-	bool            status;
-	QmMathColour4ub c = qm_math_colour4ub( PL_READUINT8( file, &status ), PL_READUINT8( file, &status ), PL_READUINT8( file, &status ), PL_READUINT8( file, &status ) );
-	assert( status );
-	return c;
 }
 
 time_t ape_fs_get_timestamp( const char *path )
