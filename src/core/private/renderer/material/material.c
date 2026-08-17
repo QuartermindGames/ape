@@ -81,47 +81,6 @@ ApeTexture *ape_material_get_texture_( ApeMaterial *self, unsigned int pass, con
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Reload
-
-#ifdef APE_SUPPORT_EDITOR
-
-static void material_reload_textures( const ApeMaterial *self )
-{
-	for ( unsigned int i = 0; i < self->numPasses; ++i )
-	{
-		const ApeMaterialPass *pass = &self->passes[ i ];
-		for ( unsigned int j = 0; j < pass->numVariables; ++j )
-		{
-			const ApeMaterialVariable *var = &pass->variables[ j ];
-			if ( var->type != APE_MATERIAL_VAR_TEXTURE )
-			{
-				continue;
-			}
-
-			ApeTexture *texture = var->data.ptr;
-			ape_texture_reload_( texture );
-		}
-	}
-}
-
-static void reload_textures_command( [[maybe_unused]] unsigned int       argc,
-                                     [[maybe_unused]] const char *const *argv )
-{
-	// free up all the textures first, to try and flush them
-	// mind that if something else is referencing a texture, this won't work
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
-	{
-		ApeMaterial *material;
-		COM_ITERATE_LINKED_LIST( material, materials[ i ], itr )
-		{
-			material_reload_textures( material );
-		}
-	}
-}
-
-#endif
-
-/////////////////////////////////////////////////////////////////////////////////////
 
 void ape_material_register_console_variables_()
 {
@@ -132,12 +91,6 @@ void ape_material_register_console_variables_()
 	ape_console_var_register( "material.skipNormal", "Skip normal map.", "0", PL_VAR_BOOL, &materialSkipNormal, nullptr, 0 );
 	ape_console_var_register( "material.skipSpecular", "Skip specular map.", "0", PL_VAR_BOOL, &materialSkipSpecular, nullptr, 0 );
 	ape_console_var_register( "material.skipLightmap", "Skip lightmap.", "0", PL_VAR_BOOL, &materialSkipLightmap, nullptr, 0 );
-
-#ifdef APE_SUPPORT_EDITOR
-	ape_console_cmd_register( "material_reload_textures",
-	                          "Reload all textures loaded by the material system.",
-	                          0, reload_textures_command );
-#endif
 }
 
 void ape_initialize_materials_()
@@ -180,7 +133,7 @@ void ape_initialize_materials_()
 	}
 }
 
-void ape_shutdown_materials_( void )
+void ape_shutdown_materials_()
 {
 	// release defaults
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
@@ -1517,8 +1470,6 @@ static void ape_material_pass_tick_( ApeMaterialPass *self, const ApeMaterial *m
 
 void ape_tick_materials_( double delta )
 {
-	ape_material_shaders_check_hot_reload_();
-
 	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
 	{
 		ApeMaterial *material;

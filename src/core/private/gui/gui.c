@@ -308,9 +308,9 @@ static void draw_debug_overlay( ApeViewport *viewport )
 	gui_font_draw_string( font, tx, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	for ( unsigned int i = 0; i < numTasks; ++i )
 	{
-		double      taskDelay;
+		uint64_t    taskDelay;
 		const char *taskDescription = ape_scheduler_get_task_desc_( i, &taskDelay );
-		snprintf( buf, sizeof( buf ), "%u %s\n", i, taskDescription );
+		snprintf( buf, sizeof( buf ), "%u %lu %s\n", i, taskDelay, taskDescription );
 		gui_font_draw_string( font, tx + 8.0f, y, nullptr, &y, 1.0f, &PL_COLOUR_MAGENTA, buf, strlen( buf ), false );
 	}
 

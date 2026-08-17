@@ -17,7 +17,6 @@ static bool              isEnumeratingShaders;
 #define HOT_RELOAD_TICKS_DEFAULT 60
 static bool         hotReload         = false;
 static unsigned int incHotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
-static unsigned int hotReloadTicks    = HOT_RELOAD_TICKS_DEFAULT;
 
 static const char *GLOBAL_UNIFORM_NAMES[ APE_SHADER_MAX_UNIFORMS ] = {
         [APE_SHADER_UNIFORM_NUM_TICKS] = "u_numTicks",
@@ -324,7 +323,7 @@ static void reload_shader_program( ApeShaderProgram *program )
 	program->timestamp = qm_fs_get_local_file_timestamp( program->path );
 }
 
-static void reload_shader_program_command( unsigned int argc, const char * const *argv )
+static void reload_shader_program_command( unsigned int argc, const char *const *argv )
 {
 	if ( argc > 1 )
 	{
@@ -356,7 +355,7 @@ static void reload_shader_program_command( unsigned int argc, const char * const
 
 ApeShaderProgram *ape_get_shader_by_name( const char *name, ApeDefaultShaderProgram fallback )
 {
-	ApeShaderProgram *program = ( ApeShaderProgram * ) PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
+	ApeShaderProgram *program = PlLookupHashTableUserData( shaderProgramTable, name, strlen( name ) );
 	if ( program != nullptr )
 	{
 		return program;
@@ -385,25 +384,12 @@ ApeShaderProgram *ape_get_default_shader( ApeDefaultShaderProgram defaultShaderP
 	return defaultShaders[ defaultShaderProgram ];
 }
 
-void ape_register_shader_console_variables_()
+static unsigned int material_shaders_hot_reload_callback( [[maybe_unused]] void  *user,
+                                                          [[maybe_unused]] double delta )
 {
-	ape_console_var_register( "shaders.autoHotReload", "Enable automatic reload of shaders.",
-#if !defined( NDEBUG )
-	                          "true",
-#else
-	                          "false",
-#endif
-	                          PL_VAR_BOOL, &hotReload, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
-	ape_console_var_register( "shaders.hotReloadDelay", "Delay before attempting to reload shaders.", QM_OS_TO_STRING( HOT_RELOAD_TICKS_DEFAULT ), PL_VAR_I32, &incHotReloadTicks, nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
-
-	ape_console_cmd_register( "reload_shaders", "Reload shader programs.", -1, reload_shader_program_command );
-}
-
-void ape_material_shaders_check_hot_reload_()
-{
-	if ( !hotReload || hotReloadTicks > ape_get_num_ticks() )
+	if ( !hotReload )
 	{
-		return;
+		return incHotReloadTicks;
 	}
 
 	isEnumeratingShaders = true;
@@ -453,13 +439,30 @@ void ape_material_shaders_check_hot_reload_()
 		node = PlGetNextHashTableNode( node );
 	}
 
-	hotReloadTicks = ape_get_num_ticks() + incHotReloadTicks;
-
 	isEnumeratingShaders = false;
+
+	return incHotReloadTicks;
 }
 
-void ape_initialize_shaders_( void )
+void ape_initialize_shaders_()
 {
+	ape_console_var_register( "shaders.autoHotReload", "Enable automatic reload of shaders.",
+#if !defined( NDEBUG )
+	                          "true",
+#else
+	                          "false",
+#endif
+	                          PL_VAR_BOOL, &hotReload,
+	                          nullptr,
+	                          APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "shaders.hotReloadDelay",
+	                          "Delay before attempting to reload shaders.",
+	                          QM_OS_TO_STRING( HOT_RELOAD_TICKS_DEFAULT ),
+	                          PL_VAR_I32, &incHotReloadTicks,
+	                          nullptr,
+	                          APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_cmd_register( "shaders_reload", "Reload shader programs.", -1, reload_shader_program_command );
+
 	shaderProgramTable = PlCreateHashTable();
 	if ( shaderProgramTable == NULL )
 	{
@@ -494,6 +497,8 @@ void ape_initialize_shaders_( void )
 
 		defaultShaders[ i ] = program;
 	}
+
+	ape_scheduler_push_task_( "reload_shaders", material_shaders_hot_reload_callback, nullptr, incHotReloadTicks );
 }
 
 void ape_shutdown_shaders_()

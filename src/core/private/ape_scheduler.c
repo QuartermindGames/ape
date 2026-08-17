@@ -3,18 +3,20 @@
 #include "ape_private.h"
 #include "ape_scheduler.h"
 
+//TODO: this hasn't received a lot of TLC; delay should be measured in ms, rather than ticks
+
 static QmOsLinkedList *scheduleList;
 
-typedef struct SchTask
+typedef struct ApeSchedulerTask
 {
-	double               delay;
 	char                 desc[ 32 ];
+	uint64_t             nextTick;
 	void                *userData;
 	ApeSchedulerCallback callback;
 	QmOsLinkedListNode  *node;
-} SchTask;
+} ApeSchedulerTask;
 
-void ape_scheduler_initialize_( void )
+void ape_scheduler_initialize_()
 {
 	ape_console_print_( "Initializing scheduler\n" );
 
@@ -25,7 +27,7 @@ void ape_scheduler_initialize_( void )
 	}
 }
 
-void ape_scheduler_shutdown_( void )
+void ape_scheduler_shutdown_()
 {
 	ape_console_print_( "Shutting down scheduler\n" );
 
@@ -34,15 +36,17 @@ void ape_scheduler_shutdown_( void )
 	qm_os_memory_free( scheduleList );
 }
 
-unsigned int ape_scheduler_get_num_tasks_( void )
+unsigned int ape_scheduler_get_num_tasks_()
 {
 	return qm_os_linked_list_get_size( scheduleList );
 }
 
-const char *ape_scheduler_get_task_desc_( unsigned int index, double *delay )
+const char *ape_scheduler_get_task_desc_( unsigned int index, uint64_t *dstNextTick )
 {
 	if ( scheduleList == nullptr )
+	{
 		return nullptr;
+	}
 
 	QmOsLinkedListNode *node = qm_os_linked_list_get_front( scheduleList );
 	if ( node != nullptr )
@@ -58,48 +62,58 @@ const char *ape_scheduler_get_task_desc_( unsigned int index, double *delay )
 	if ( node == nullptr )
 		return nullptr;
 
-	const SchTask *task = qm_os_linked_list_node_get_data( node );
-
-	if ( delay != nullptr )
-		*delay = task->delay;
+	const ApeSchedulerTask *task = qm_os_linked_list_node_get_data( node );
+	if ( dstNextTick != nullptr )
+	{
+		*dstNextTick = task->nextTick;
+	}
 
 	return task->desc;
 }
 
-void ape_scheduler_push_task_( const char *desc, const ApeSchedulerCallback callback, void *userData, double delay )
+void ape_scheduler_push_task_( const char *desc, const ApeSchedulerCallback callback, void *userData, uint64_t delay )
 {
-	SchTask *task = QM_OS_MEMORY_NEW( SchTask );
+	ApeSchedulerTask *task = QM_OS_MEMORY_NEW( ApeSchedulerTask );
 	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
-	task->delay    = delay + ape_get_num_ticks();
+	task->nextTick = delay + ape_get_num_ticks();
 	task->callback = callback;
 	task->userData = userData;
 	task->node     = qm_os_linked_list_push_back( scheduleList, task );
 }
 
-void ape_scheduler_tick_( void )
+void ape_scheduler_tick_()
 {
 	if ( scheduleList == nullptr )
+	{
 		return;
+	}
 
-	SchTask *task;
+	ApeSchedulerTask *task;
 	QM_OS_LINKED_LIST_ITERATE( task, scheduleList, i )
 	{
-		if ( task->delay < ape_get_num_ticks() )
+		if ( task->nextTick > ape_get_num_ticks() )
 		{
-			task->callback( task->userData, task->delay - ape_get_num_ticks() + 1 );
-			task->delay = 0.0;
+			continue;
+		}
 
+		const unsigned int nextTick = task->callback( task->userData, task->nextTick - ape_get_num_ticks() + 1 );
+		if ( nextTick == 0 )
+		{
+			ape_console_print_( "Task %s was automatically terminated\n", task->desc );
 			qm_os_memory_free( task->node );
 			qm_os_memory_free( task );
+			continue;
 		}
+
+		task->nextTick = nextTick + ape_get_num_ticks();
 	}
 }
 
-void ape_scheduler_flush_( void )
+void ape_scheduler_flush_()
 {
-	unsigned int numTasks = qm_os_linked_list_get_size( scheduleList );
+	const unsigned int numTasks = qm_os_linked_list_get_size( scheduleList );
 
-	SchTask *task;
+	ApeSchedulerTask *task;
 	QM_OS_LINKED_LIST_ITERATE( task, scheduleList, i )
 	{
 		qm_os_memory_free( task->node );

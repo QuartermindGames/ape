@@ -1,6 +1,8 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
 #include "plcore/pl_hashtable.h"
+#include "plcore/pl_linkedlist.h"
+
 #include "qmos/public/qm_os_string.h"
 
 #include "yin/core_fs.h"
@@ -11,10 +13,12 @@
 #include "renderer.h"
 #include "renderer_texture.h"
 
-#include "editor/editor.h"
-
 static PLHashTable *textureTable;
 static ApeTexture  *defaultTextures[ APE_MAX_DEFAULT_TEXTURES ];
+
+#define HOT_RELOAD_TICKS_DEFAULT 60
+static bool         hotReload         = false;
+static unsigned int incHotReloadTicks = HOT_RELOAD_TICKS_DEFAULT;
 
 APE_MEMORY_IMPLEMENT_INTERFACE( ape_texture, ApeTexture, reference )
 
@@ -173,7 +177,8 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 	// no point retaining this for generated images
 	PlDestroyImage( image );
 
-	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, NULL );
+	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, texture );
+	ape_memory_reference_add( &texture->reference );
 
 	return texture;
 }
@@ -252,11 +257,49 @@ static void fetch_texture_config( const char *path,
 	acm_branch_destroy( root );
 }
 
-/////////////////////////////////////////////////////////////////
-// Public
+#ifdef APE_SUPPORT_EDITOR
 
-void ape_initialize_textures_( void )
+static unsigned int textures_hot_reload_callback( [[maybe_unused]] void  *user,
+                                                  [[maybe_unused]] double delta )
 {
+	if ( !hotReload )
+	{
+		return incHotReloadTicks;
+	}
+
+	PLLinkedList *textures = ape_memory_get_pool_list_( APE_CACHE_POOL_TEXTURES );
+
+	ApeMemoryCacheHeader *header;
+	COM_ITERATE_LINKED_LIST( header, textures, i )
+	{
+		ape_texture_reload_( header->userData );
+	}
+
+	return incHotReloadTicks;
+}
+
+#endif
+
+void ape_initialize_textures_()
+{
+#ifdef APE_SUPPORT_EDITOR
+	ape_console_var_register( "textures.autoHotReload", "Enable automatic reload of textures.",
+#	if !defined( NDEBUG )
+	                          "true",
+#	else
+	                          "false",
+#	endif
+	                          PL_VAR_BOOL, &hotReload,
+	                          nullptr,
+	                          APE_CONSOLE_VAR_FLAG_ARCHIVE );
+	ape_console_var_register( "textures.hotReloadDelay",
+	                          "Delay before attempting to reload textures.",
+	                          QM_OS_TO_STRING( HOT_RELOAD_TICKS_DEFAULT ),
+	                          PL_VAR_I32, &incHotReloadTicks,
+	                          nullptr,
+	                          APE_CONSOLE_VAR_FLAG_ARCHIVE );
+#endif
+
 	// register the standard image loaders, and our package image loader
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
@@ -282,6 +325,10 @@ void ape_initialize_textures_( void )
 
 	defaultTextures[ APE_TEXTURE_BLACK ] = ape_texture_cache_( "materials/shaders/textures/black.png", PLG_TEXTURE_FILTER_NEAREST, true );
 	defaultTextures[ APE_TEXTURE_BLACK ]->flags |= APE_TEXTURE_FLAG_PRESERVE;
+
+#ifdef APE_SUPPORT_EDITOR
+	ape_scheduler_push_task_( "reload_textures", textures_hot_reload_callback, nullptr, incHotReloadTicks );
+#endif
 }
 
 static QmGfxTexture *create_internal_texture( const QmGfxTextureType type, QmGfxTextureFilter filter, const char *path, const QmImage *image )
@@ -351,7 +398,7 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 		PlDestroyImage( image );
 	}
 
-	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, nullptr );
+	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, texture );
 	ape_memory_reference_add( &texture->reference );
 
 	return texture;

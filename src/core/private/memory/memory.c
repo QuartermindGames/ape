@@ -114,7 +114,7 @@ static void remove_from_cache( uint32_t id, uint8_t pool )
 
 static PLLinkedList *mmReferenceList;
 
-#define MEM_CLEANUP_DELAY 200.0
+#define MEM_CLEANUP_DELAY 200
 
 //#define DEBUG_MEMORY
 
@@ -178,14 +178,13 @@ static void cleanup_unreferenced_resources( bool force )
 
 #define MEM_CLEANUP_TASK_NAME "mem_cleanup"
 
-static void cleanup_callback( [[maybe_unused]] void *unused0, [[maybe_unused]] double unused1 )
+static unsigned int cleanup_callback( [[maybe_unused]] void *user, [[maybe_unused]] double delta )
 {
 	cleanup_unreferenced_resources( false );
-
-	ape_scheduler_push_task_( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
+	return MEM_CLEANUP_DELAY;
 }
 
-void ape_memory_initialize_( void )
+void ape_memory_initialize_()
 {
 	ape_console_print_( "Initializing memory manager\n" );
 

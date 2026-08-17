@@ -288,7 +288,6 @@ void ape_shutdown_render_targets_( void );
 // renderer_shader.c
 void ape_initialize_shaders_( void );
 void ape_shutdown_shaders_();
-void ape_register_shader_console_variables_();
 
 void ape_renderer_batch_initialize_();
 void ape_renderer_batch_shutdown_();
@@ -351,8 +350,6 @@ void ape_register_renderer_console_variables_( void )
 	ape_console_var_register( "renderer.showPortalVolumes", "Shows the screen-space volume that's produced from a visible portal.", "false", PL_VAR_BOOL, nullptr, nullptr, 0 );
 
 	ape_material_register_console_variables_();
-
-	ape_register_shader_console_variables_();
 	ape_register_flare_console_variables_();
 
 	// Register variables which we'll use for post-processing. Uh, this also inits... Sorry!
