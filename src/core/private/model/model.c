@@ -46,33 +46,25 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 
 	mesh->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
 
+	mesh->startIndex = model->cache->num_indices;
+
 	AcmBranch *branch;
 	if ( ( branch = acm_get_child_by_name( root, "triangles" ) ) != NULL )
 	{
-		unsigned int i = 0;
-		branch         = acm_get_first_child( branch );
-		while ( branch != nullptr )
+		ACM_ITERATE_BRANCH( branch, i )
 		{
 			unsigned int vertexIndices[ 3 ] = {};
 
 			AcmBranch *childBranch;
-			if ( ( childBranch = acm_get_child_by_name( branch, "vertex" ) ) != nullptr )
+			if ( ( childBranch = acm_get_child_by_name( i, "vertex" ) ) != nullptr )
 			{
 				acm_branch_get_uint32_array( childBranch, vertexIndices, 3 );
 			}
 
-			unsigned int tri = PlgAddMeshTriangle( model->cache, vertexIndices[ 0 ], vertexIndices[ 1 ], vertexIndices[ 2 ] );
-			if ( i == 0 )
-			{
-				mesh->startIndex = tri;
-			}
-
-			i = tri;
-
-			branch = acm_get_next_child( branch );
+			PlgAddMeshTriangle( model->cache, vertexIndices[ 0 ], vertexIndices[ 1 ], vertexIndices[ 2 ] );
 		}
 
-		mesh->endIndex = i;
+		mesh->endIndex = model->cache->num_indices;
 	}
 	else
 	{
@@ -278,7 +270,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		{
 			const PLMatrix4 *mat = PlGetMatrix( PL_MODELVIEW_MATRIX );
 
-			const IOModelBone *a  = &model->bones[ i ];
+			const IOModelBone   *a  = &model->bones[ i ];
 			const QmMathVector3f pa = get_transformed_bone_position( model, a, mat );
 			ape_draw_debug_sphere( pa, PL_COLOUR_CYAN, 1.0f );
 
@@ -287,7 +279,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 				continue;
 			}
 
-			const IOModelBone *b  = &model->bones[ model->bones[ i ].parent ];
+			const IOModelBone   *b  = &model->bones[ model->bones[ i ].parent ];
 			const QmMathVector3f pb = get_transformed_bone_position( model, b, mat );
 			ape_draw_debug_arrow( pa, pb, PL_COLOUR_WHITE, 2.0f );
 		}
