@@ -539,6 +539,12 @@ const char *ape_world_node_get_name( const ApeWorldNode *self )
 
 void ape_world_node_set_name( ApeWorldNode *self, const char *name )
 {
+	if ( name == nullptr )
+	{
+		*self->name = '\0';
+		return;
+	}
+
 	qm_os_string_copy( self->name, name, sizeof( self->name ) );
 }
 

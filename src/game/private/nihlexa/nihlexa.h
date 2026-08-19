@@ -5,7 +5,6 @@
 #include "game_private.h"
 #include "game_server.h"
 #include "game_client.h"
-#include "game_world_simulation.h"
 
 static constexpr char NIH_GAME_TITLE[]  = "Nihlexa";
 static constexpr char NIH_GAME_CONFIG[] = "nihlexa";

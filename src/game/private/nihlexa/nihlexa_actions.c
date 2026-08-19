@@ -9,15 +9,32 @@
 
 #include "entities/nih_entity_player.h"
 
+static void toggle_camera( ApeInputState state, [[maybe_unused]] const char *id )
+{
+	if ( !( state & APE_INPUT_STATE_PRESSED ) )
+	{
+		return;
+	}
+
+	ApeEntity *entity = game_server_get_local_entity_();
+	if ( entity == nullptr )
+	{
+		return;
+	}
+
+	nih_entity_player_toggle_camera_state( entity );
+}
+
+#if !defined( NDEBUG )
 static void fire_decal( ApeInputState state, const char * )
 {
-	GamePlayer *player = game_server_get_local_player_();
+	const GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr || player->camera == nullptr )
 	{
 		return;
 	}
 
-	static int64_t nextFire = 0;
+	static uint64_t nextFire = 0;
 	if ( nextFire > ape_get_num_ticks() )
 	{
 		return;
@@ -55,23 +72,9 @@ static void fire_decal( ApeInputState state, const char * )
 
 	nextFire = ape_get_num_ticks() + 8;
 }
+#endif
 
-static void toggle_camera( ApeInputState state, [[maybe_unused]] const char *id )
-{
-	if ( !( state & APE_INPUT_STATE_PRESSED ) )
-	{
-		return;
-	}
-
-	ApeEntity *entity = game_server_get_local_entity_();
-	if ( entity == nullptr )
-	{
-		return;
-	}
-
-	nih_entity_player_toggle_camera_state( entity );
-}
-
+#if !defined( NDEBUG )
 static void spawn_portal_action( ApeInputState state, const char *id )
 {
 	if ( !( state & APE_INPUT_STATE_PRESSED ) )
@@ -105,6 +108,7 @@ static void spawn_portal_action( ApeInputState state, const char *id )
 		game_debug_( "Spawned portal entity at %s\n", tmp );
 	}
 }
+#endif
 
 #if 0
 static void camera_input( ApeInputState state, const char *id )
@@ -184,6 +188,9 @@ static void camera_input( ApeInputState state, const char *id )
 void nih_actions_register_()
 {
 	ape_client_input_register_action( "nih_toggle_camera", ( ApeInputButton[] ) { INPUT_BACK }, 1, ( ApeInputKey[] ) { KEY_TAB }, 1, toggle_camera, 0 );
+
+#if !defined( NDEBUG )
 	ape_client_input_register_action( "nih_fire_decal", ( ApeInputButton[] ) { INPUT_Y }, 1, ( ApeInputKey[] ) { 'v' }, 1, fire_decal, 0 );
 	ape_client_input_register_action( "nih_spawn_portal", ( ApeInputButton[] ) { INPUT_X }, 1, ( ApeInputKey[] ) { 'x' }, 1, spawn_portal_action, 0 );
+#endif
 }
