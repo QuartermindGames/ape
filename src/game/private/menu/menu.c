@@ -275,7 +275,7 @@ void game_menu_draw_( const ApeViewport *viewport )
 		}
 		else
 		{
-			snprintf( tmp, sizeof( tmp ), "%s", menu->options[ i ].string );
+			qm_os_string_copy( tmp, menu->options[ i ].string, sizeof( tmp ) );
 		}
 
 		size_t len = strlen( tmp );

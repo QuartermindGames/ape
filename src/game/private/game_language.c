@@ -103,8 +103,8 @@ void game_language_initialize_()
 		parse_language_entry( id, stringsBranch );
 
 		GameLanguage *language = QM_OS_MEMORY_NEW( GameLanguage );
-		snprintf( language->id, sizeof( language->id ), "%s", id );
-		snprintf( language->description, sizeof( language->description ), "%s", description );
+		qm_os_string_copy( language->id, id, sizeof( language->id ) );
+		qm_os_string_copy( language->description, description, sizeof( language->description ) );
 		PlPushBackVectorArrayElement( languages, language );
 
 		child = acm_get_next_child( child );

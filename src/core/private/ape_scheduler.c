@@ -74,7 +74,7 @@ const char *ape_scheduler_get_task_desc_( unsigned int index, uint64_t *dstNextT
 void ape_scheduler_push_task_( const char *desc, const ApeSchedulerCallback callback, void *userData, uint64_t delay )
 {
 	ApeSchedulerTask *task = QM_OS_MEMORY_NEW( ApeSchedulerTask );
-	snprintf( task->desc, sizeof( task->desc ), "%s", desc );
+	qm_os_string_copy( task->desc, desc, sizeof( task->desc ) );
 	task->nextTick = delay + ape_get_num_ticks();
 	task->callback = callback;
 	task->userData = userData;

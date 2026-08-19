@@ -12,10 +12,10 @@ typedef struct ApeRenderTarget
 {
 	char id[ 16 ];// 'rt_menu_0'
 
-	QmGfxFramebuffer *frameBuffer;
-	QmGfxTexture       *attachments[ APE_RENDER_TARGET_MAX_ATTACHMENT_TYPES ];
-	unsigned int      desiredAttachments;
-	QmGfxTextureFilter  attachmentFilter;
+	QmGfxFramebuffer  *frameBuffer;
+	QmGfxTexture      *attachments[ APE_RENDER_TARGET_MAX_ATTACHMENT_TYPES ];
+	unsigned int       desiredAttachments;
+	QmGfxTextureFilter attachmentFilter;
 
 	ApeMemoryReference reference;
 } ApeRenderTarget;
@@ -185,7 +185,7 @@ ApeRenderTarget *ape_render_target_create_( const char *key, unsigned int width,
 		setup_texture_attachments( renderTarget );
 	}
 
-	snprintf( renderTarget->id, sizeof( renderTarget->id ), "%s", key );
+	qm_os_string_copy( renderTarget->id, key, sizeof( renderTarget->id ) );
 
 	ape_memory_setup_reference( renderTarget->id, APE_CACHE_POOL_RENDER_TARGETS, &renderTarget->reference, destroy_render_target, renderTarget );
 	ape_memory_reference_add( &renderTarget->reference );

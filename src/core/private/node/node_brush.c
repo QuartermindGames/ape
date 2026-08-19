@@ -532,7 +532,7 @@ bool ape_brush_face_set_tag( ApeBrushFace *self, const char *tag )
 		ape_room_remove_tagged_surface( room, self );
 	}
 
-	snprintf( self->tag, sizeof( self->tag ), "%s", tag );
+	qm_os_string_copy( self->tag, tag, sizeof( self->tag ) );
 	if ( *self->tag != '\0' )
 	{
 		ape_room_add_tagged_surface( room, self );
@@ -1074,8 +1074,8 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 				return nullptr;
 			}
 
-			snprintf( brush->faces[ i ].tag, sizeof( brush->faces[ i ].tag ), "%s", acm_get_string( branch, "id", "" ) );
-			snprintf( brush->faces[ i ].destinationTag, sizeof( brush->faces[ i ].destinationTag ), "%s", acm_get_string( branch, "destination", "" ) );
+			qm_os_string_copy( brush->faces[ i ].tag, acm_get_string( branch, "id", "" ), sizeof( brush->faces[ i ].tag ) );
+			qm_os_string_copy( brush->faces[ i ].destinationTag, acm_get_string( branch, "destination", "" ), sizeof( brush->faces[ i ].destinationTag ) );
 
 			// material
 			const char *str;

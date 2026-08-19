@@ -37,7 +37,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		}
 
 		char commandBuf[ 1024 ];
-		snprintf( commandBuf, sizeof( commandBuf ), "%s", argv[ i ] + 1 );
+		qm_os_string_copy( commandBuf, argv[ i ] + 1, sizeof( commandBuf ) );
 
 		ape_console_parse( commandBuf );
 	}

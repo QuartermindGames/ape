@@ -136,7 +136,7 @@ static void validate_client( const ApeProtocolValidationMessage *message, ApeSer
 		return;
 	}
 
-	snprintf( client->name, sizeof( client->name ), "%s", message->clientName );
+	qm_os_string_copy( client->name, message->clientName, sizeof( client->name ) );
 	ape_console_print_( "Client (%s) validated successfully\n", client->name );
 
 	client->state = APE_SERVER_CLIENT_STATE_ACCEPTED;

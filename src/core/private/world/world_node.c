@@ -214,7 +214,7 @@ ApeWorldNode *ape_world_node_setup_( ApeWorldNode *self, ApeWorldNode *parent, A
 		name = self->name;
 	}
 
-	snprintf( self->name, sizeof( self->name ), "%s", name );
+	qm_os_string_copy( self->name, name, sizeof( self->name ) );
 
 	self->children = PlCreateLinkedList();
 
@@ -539,7 +539,7 @@ const char *ape_world_node_get_name( const ApeWorldNode *self )
 
 void ape_world_node_set_name( ApeWorldNode *self, const char *name )
 {
-	snprintf( self->name, sizeof( self->name ), "%s", name );
+	qm_os_string_copy( self->name, name, sizeof( self->name ) );
 }
 
 PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode *self )
@@ -693,7 +693,7 @@ static ApeWorldNode *ape_world_node_deserialize( AcmBranch *root, const char *pa
 		{
 			const char *mountPath = qm_fs_mount_get_path( mount );
 			assert( mountPath != nullptr );
-			snprintf( self->path, sizeof( self->path ), "%s", &path[ strlen( mountPath ) + 1 ] );
+			qm_os_string_copy( self->path, &path[ strlen( mountPath ) + 1 ], sizeof( self->path ) );
 		}
 		else
 		{
@@ -703,7 +703,7 @@ static ApeWorldNode *ape_world_node_deserialize( AcmBranch *root, const char *pa
 
 	const unsigned int version = acm_get_int( root, "version", 0 );
 
-	snprintf( self->name, sizeof( self->name ), "%s", acm_get_string( root, "name", "" ) );
+	qm_os_string_copy( self->name, acm_get_string( root, "name", "" ), sizeof( self->name ) );
 
 	self->position = com_acm_get_vector3( root, "position", &QM_MATH_VECTOR3F_ZERO );
 	self->angles   = com_acm_get_vector3( root, "angles", &QM_MATH_VECTOR3F_ZERO );

@@ -135,7 +135,7 @@ void ape_console_push_notification_( const char *buffer, QmMathColour4ub colour 
 
 	// and now add the new result to the head
 	ConsoleNotification *notification = &consoleNotifications[ 0 ];
-	snprintf( notification->buffer, sizeof( notification->buffer ), "%s", buffer );
+	qm_os_string_copy( notification->buffer, buffer, sizeof( notification->buffer ) );
 	notification->colour = colour;
 	notification->time   = 0.0;
 
@@ -332,7 +332,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 				if ( numHistoryItems > 0 )
 				{
 					historySelection = ( historySelection + 1 ) % numHistoryItems;
-					snprintf( inputBuffer, sizeof( inputBuffer ), "%s", history[ historySelection ] );
+					qm_os_string_copy( inputBuffer, history[ historySelection ], sizeof( inputBuffer ) );
 					inputBufferLength = strlen( inputBuffer );
 				}
 				break;
@@ -355,7 +355,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 				if ( numHistoryItems > 0 )
 				{
 					historySelection = ( historySelection - 1 ) % numHistoryItems;
-					snprintf( inputBuffer, sizeof( inputBuffer ), "%s", history[ historySelection ] );
+					qm_os_string_copy( inputBuffer, history[ historySelection ], sizeof( inputBuffer ) );
 					inputBufferLength = strlen( inputBuffer );
 				}
 				break;
@@ -376,7 +376,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 		{
 			if ( autoComplete[ 0 ] != NULL && autoCompleteSelection > 0 )
 			{
-				snprintf( inputBuffer, sizeof( inputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
+				qm_os_string_copy( inputBuffer, autoComplete[ autoCompleteSelection ], sizeof( inputBuffer ) );
 				inputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
 				update_auto_complete_result( inputBuffer );
 				break;
@@ -394,7 +394,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 					strcpy( history[ i ], history[ i - 1 ] );
 				}
 				// and now add the new result to the head
-				snprintf( history[ 0 ], sizeof( history[ 0 ] ), "%s", inputBuffer );
+				qm_os_string_copy( history[ 0 ], inputBuffer, sizeof( history[ 0 ] ) );
 				numHistoryItems = QM_MATH_CLAMP( 0, numHistoryItems + 1, MAX_HISTORY_RESULTS );
 
 				clear_input_buffer();
@@ -418,7 +418,7 @@ bool ape_console_handle_key_event_( int key, unsigned int keyState )
 				break;
 
 			/* update to match the first result */
-			snprintf( inputBuffer, sizeof( inputBuffer ), "%s", autoComplete[ autoCompleteSelection ] );
+			qm_os_string_copy( inputBuffer, autoComplete[ autoCompleteSelection ], sizeof( inputBuffer ) );
 			inputBufferLength = strlen( autoComplete[ autoCompleteSelection ] );
 
 			update_auto_complete_result( inputBuffer );

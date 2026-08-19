@@ -103,7 +103,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 
 	if ( *program->internalName == '\0' )
 	{
-		snprintf( program->internalName, sizeof( program->internalName ), "%s", internalName );
+		qm_os_string_copy( program->internalName, internalName, sizeof( program->internalName ) );
 		if ( ape_get_shader_by_name( program->internalName, APE_SHADER_DEFAULT_NULL ) != nullptr )
 		{
 			ape_console_warning_( "Shader program (%s) already registered!\n", program->internalName );

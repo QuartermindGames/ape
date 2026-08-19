@@ -40,7 +40,7 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 	}
 
 	ApeMemoryCacheHeader *header = QM_OS_MEMORY_NEW( ApeMemoryCacheHeader );
-	snprintf( header->description, sizeof( header->description ), "%s", id );
+	qm_os_string_copy( header->description, id, sizeof( header->description ) );
 	header->id       = PlGenerateHashSDBM( id );
 	header->pool     = pool;
 	header->userData = data;

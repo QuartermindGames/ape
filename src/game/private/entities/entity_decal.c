@@ -48,7 +48,7 @@ static void *decal_entity_create( [[maybe_unused]] ApeEntity *self )
 		decalEntity->scale = 100.0f;
 
 		static const char *defaultMaterial = "decal_sheet_default";
-		snprintf( decalEntity->materialName, sizeof( decalEntity->materialName ), "%s", defaultMaterial );
+		qm_os_string_copy( decalEntity->materialName, defaultMaterial, sizeof( decalEntity->materialName ) );
 
 		decal_entity_set_material( decalEntity );
 	}

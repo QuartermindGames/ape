@@ -152,8 +152,7 @@ ApeConsoleVar *ape_console_var_register_( const char *name, const char *descript
 			strncpy( out->description, description, s );
 		}
 
-		snprintf( out->default_value, sizeof( out->default_value ), "%s", defaultValue );
-
+		qm_os_string_copy( out->default_value, defaultValue, sizeof( out->default_value ) );
 		ape_console_var_set_( out, out->default_value );
 
 		// Ensure the callback is only called afterwards
@@ -247,7 +246,7 @@ void ape_console_var_set_( ApeConsoleVar *var, const char *value )
 			var->s_value = &var->value[ 0 ];
 			if ( var->ptrValue != nullptr )
 			{
-				snprintf( var->ptrValue, APE_CONSOLE_VAR_MAX_STRING, "%s", value );
+				qm_os_string_copy( var->ptrValue, value, APE_CONSOLE_VAR_MAX_STRING );
 			}
 			break;
 
@@ -282,7 +281,7 @@ void ape_console_var_set_( ApeConsoleVar *var, const char *value )
 			break;
 	}
 
-	snprintf( var->value, sizeof( var->value ), "%s", value );
+	qm_os_string_copy( var->value, value, sizeof( var->value ) );
 
 	if ( var->CallbackFunction != nullptr )
 	{

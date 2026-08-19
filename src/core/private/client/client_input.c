@@ -727,7 +727,7 @@ ApeInputAction *ape_client_input_register_action( const char    *id,
 
 	inputAction->flags = flags;
 
-	snprintf( inputAction->id, sizeof( inputAction->id ), "%s", id );
+	qm_os_string_copy( inputAction->id, id, sizeof( inputAction->id ) );
 	inputAction->callback = actionCallback;
 
 	memcpy( inputAction->buttons, buttons, sizeof( ApeInputButton ) * numDefaultButtons );

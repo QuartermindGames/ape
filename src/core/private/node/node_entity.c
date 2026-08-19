@@ -15,7 +15,7 @@ static PLHashTable   *entityComponentDefinitions;
 static PLHashTable   *entityClassLookup;
 static PLVectorArray *entityClasses;
 
-static void list_entity_classes_command( unsigned int argc, const char * const *argv )
+static void list_entity_classes_command( unsigned int argc, const char *const *argv )
 {
 	if ( entityClassLookup == NULL )
 	{
@@ -423,7 +423,7 @@ static void deserialize_properties( AcmBranch *root, const ApeProperty *properti
 			case APE_PROPERTY_TYPE_PATH:
 			{
 				const char *str = acm_get_string( root, property->internalName, ptr );
-				snprintf( ptr, property->stringType.maxSize, "%s", str );
+				qm_os_string_copy( ptr, str, property->stringType.maxSize );
 				break;
 			}
 			case APE_PROPERTY_TYPE_BOOLEAN:

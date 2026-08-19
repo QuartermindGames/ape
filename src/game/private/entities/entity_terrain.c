@@ -438,8 +438,8 @@ static void *terrain_create( ApeEntity *self )
 
 	terrain->heightmapMultiplier = 500.0f;
 
-	snprintf( terrain->heightmapName, sizeof( terrain->heightmapName ), "%s", TERRAIN_HEIGHTMAP_DEFAULT );
-	snprintf( terrain->materialName, sizeof( terrain->materialName ), "%s", TERRAIN_MATERIAL_DEFAULT );
+	qm_os_string_copy( terrain->heightmapName, TERRAIN_HEIGHTMAP_DEFAULT, sizeof( terrain->heightmapName ) );
+	qm_os_string_copy( terrain->materialName, TERRAIN_MATERIAL_DEFAULT, sizeof( terrain->materialName ) );
 
 	build_terrain( self, terrain );
 

@@ -283,7 +283,7 @@ GamePieMenuOption *menu_pie_add_option( GamePieMenu *menu, const char *label, st
 	option->callback          = callback;
 	option->icon              = icon;
 	option->parent            = menu;
-	snprintf( option->label, sizeof( option->label ), "%s", label );
+	qm_os_string_copy( option->label, label, sizeof( option->label ) );
 
 	menu->w += 32;
 	menu->h += 32;

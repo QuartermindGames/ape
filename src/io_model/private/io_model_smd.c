@@ -202,7 +202,7 @@ static SmdModel *parse_smd( SmdModel *self, const char *p, IOModelResult *result
 				}
 
 				char material[ SMD_MAX_TOKEN ];
-				snprintf( material, sizeof( material ), "%s", token );
+				qm_os_string_copy( material, token, sizeof( material ) );
 
 				qm_parse_skip_line( &p );
 
@@ -215,7 +215,7 @@ static SmdModel *parse_smd( SmdModel *self, const char *p, IOModelResult *result
 					{
 						// setup a new slot
 						smdMesh = &self->meshes[ i ];
-						snprintf( smdMesh->material, sizeof( smdMesh->material ), "%s", material );
+						qm_os_string_copy( smdMesh->material, material, sizeof( smdMesh->material ) );
 						qm_os_string_to_lower( smdMesh->material, sizeof( smdMesh->material ) );
 						self->numMeshes++;
 						break;

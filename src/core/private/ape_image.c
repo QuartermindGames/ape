@@ -41,10 +41,10 @@ QmImage *Image_LoadPackedImage( QmFsFile *filePtr )
 		return nullptr;
 	}
 
-	bool status;
-	uint8_t flags = qm_fs_file_read_int8( filePtr, &status );
-	uint16_t width = qm_fs_file_read_int16( filePtr, false, &status );
-	uint16_t height = qm_fs_file_read_int16( filePtr, false, &status );
+	bool     status;
+	uint8_t  flags     = qm_fs_file_read_int8( filePtr, &status );
+	uint16_t width     = qm_fs_file_read_int16( filePtr, false, &status );
+	uint16_t height    = qm_fs_file_read_int16( filePtr, false, &status );
 	uint16_t numBlocks = qm_fs_file_read_int16( filePtr, false, &status );
 	if ( !status )
 	{
@@ -52,16 +52,16 @@ QmImage *Image_LoadPackedImage( QmFsFile *filePtr )
 		return nullptr;
 	}
 
-	PLImageFormat imageFormat;
+	PLImageFormat  imageFormat;
 	PLColourFormat colourFormat;
 	if ( flags & CHANNEL_ALPHA )
 	{
-		imageFormat = PL_IMAGEFORMAT_RGBA8;
+		imageFormat  = PL_IMAGEFORMAT_RGBA8;
 		colourFormat = PL_COLOURFORMAT_RGBA;
 	}
 	else
 	{
-		imageFormat = PL_IMAGEFORMAT_RGB8;
+		imageFormat  = PL_IMAGEFORMAT_RGB8;
 		colourFormat = PL_COLOURFORMAT_RGB;
 	}
 
@@ -149,7 +149,7 @@ QmImage *Image_LoadPackedImage( QmFsFile *filePtr )
 		}
 	}
 
-	snprintf( image->path, sizeof( image->path ), "%s", path );
+	qm_os_string_copy( image->path, path, sizeof( image->path ) );
 
 	return image;
 }

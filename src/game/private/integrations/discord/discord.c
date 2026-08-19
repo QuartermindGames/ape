@@ -144,11 +144,11 @@ void game_integrations_discord_update_activity_( const char *details, const char
 	                       },
 	};
 
-	snprintf( activity.details, sizeof( activity.details ), "%s", details );
-	if ( state != nullptr ) snprintf( activity.state, sizeof( activity.state ), "%s", state );
+	qm_os_string_copy( activity.details, details, sizeof( activity.details ) );
+	if ( state != nullptr ) qm_os_string_copy( activity.state, state, sizeof( activity.state ) );
 
-	snprintf( activity.assets.large_image, sizeof( activity.assets.large_image ), "%s", image );
-	if ( imageText != nullptr ) snprintf( activity.assets.large_text, sizeof( activity.assets.large_text ), "%s", imageText );
+	qm_os_string_copy( activity.assets.large_image, image, sizeof( activity.assets.large_image ) );
+	if ( imageText != nullptr ) qm_os_string_copy( activity.assets.large_text, imageText, sizeof( activity.assets.large_text ) );
 
 	discordAppData.activityManager->update_activity( discordAppData.activityManager, &activity, nullptr, activity_callback );
 }

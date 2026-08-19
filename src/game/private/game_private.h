@@ -5,6 +5,7 @@
 #include "qmos/public/qm_os.h"
 #include "qmos/public/qm_os_memory.h"
 #include "qmos/public/qm_os_linked_list.h"
+#include "qmos/public/qm_os_string.h"
 
 #include <plcore/pl_physics.h>
 #include <plcore/pl_hashtable.h>

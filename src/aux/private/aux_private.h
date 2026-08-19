@@ -4,6 +4,7 @@
 #pragma once
 
 #include "qmos/public/qm_os_memory.h"
+#include "qmos/public/qm_os_string.h"
 
 #include "aux/public/aux.h"
 
@@ -23,4 +24,4 @@ void com_print_( const char *m, ... );
 void com_warning_( const char *m, ... );
 void com_error_( const char *m, ... );
 
-void com_pack_pkg_register_( void );
+void com_pack_pkg_register_();

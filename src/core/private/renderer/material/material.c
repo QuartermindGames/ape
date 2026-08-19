@@ -385,7 +385,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 			continue;
 		}
 
-		snprintf( materialVariable->name, sizeof( materialVariable->name ), "%s", propertyName );
+		qm_os_string_copy( materialVariable->name, propertyName, sizeof( materialVariable->name ) );
 
 		/* if it's a string, it *could* be a built-in type */
 		if ( acm_branch_get_type( node ) == ACM_PROPERTY_TYPE_STRING )
@@ -1142,7 +1142,7 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	}
 
 	material = QM_OS_MEMORY_NEW( ApeMaterial );
-	snprintf( material->path, sizeof( material->path ), "%s", path );
+	qm_os_string_copy( material->path, path, sizeof( material->path ) );
 
 	parse_material( material, root );
 
