@@ -1,4 +1,4 @@
-// Copyright © 2017-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
+// Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 // Purpose: Material system
 // Author:  Mark E. Sowden
 

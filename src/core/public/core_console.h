@@ -53,8 +53,6 @@ typedef struct ApeConsoleVar
 
 void ape_console_var_register( const char *name, const char *desc, const char *value, PLVariableType type, void *ptr, ApeConsoleCallback callback, unsigned int flags );
 
-void PlGetConsoleVariables( ApeConsoleVar ***vars, size_t *num_vars );
-
 ApeConsoleVar *PlGetConsoleVariable( const char *name );
 
 const char *ape_console_var_get( const char *name );

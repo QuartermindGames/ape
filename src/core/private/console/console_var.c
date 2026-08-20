@@ -87,7 +87,7 @@ void ape_console_var_find_( const char *term )
 
 bool ape_console_var_help_( const char *name )
 {
-	ApeConsoleVar *var = PlGetConsoleVariable( name );
+	const ApeConsoleVar *var = PlGetConsoleVariable( name );
 	if ( var == nullptr )
 	{
 		return false;
@@ -167,12 +167,6 @@ ApeConsoleVar *ape_console_var_register_( const char *name, const char *descript
 	return out;
 }
 
-void PlGetConsoleVariables( ApeConsoleVar ***vars, size_t *num_vars )
-{
-	*vars     = variables;
-	*num_vars = numVariables;
-}
-
 ApeConsoleVar *PlGetConsoleVariable( const char *name )
 {
 	if ( variableHashes == nullptr )
@@ -198,7 +192,7 @@ ApeConsoleVar *PlGetConsoleVariable( const char *name )
 
 const char *ape_console_var_get( const char *name )
 {
-	ApeConsoleVar *var = PlGetConsoleVariable( name );
+	const ApeConsoleVar *var = PlGetConsoleVariable( name );
 	if ( var == nullptr )
 	{
 		return nullptr;
@@ -209,7 +203,7 @@ const char *ape_console_var_get( const char *name )
 
 const char *ape_console_var_get_default( const char *name )
 {
-	ApeConsoleVar *var = PlGetConsoleVariable( name );
+	const ApeConsoleVar *var = PlGetConsoleVariable( name );
 	if ( var == nullptr )
 	{
 		return nullptr;
