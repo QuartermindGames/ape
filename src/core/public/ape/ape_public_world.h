@@ -709,10 +709,23 @@ ApeLightShadowType ape_light_get_shadow_type( const ApeLight *light );
 
 bool ape_light_is_active( const ApeLight *light );
 
+/**
+ * Test if the plane will be hit by the light.
+ */
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane );
+
 bool ape_light_test_sphere( const ApeLight *self, const PLCollisionSphere *sphere );
 bool ape_light_test_bounds( const ApeLight *self, QmMathVector3f origin, QmMathVector3f mins, QmMathVector3f maxs );
 bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face );
+
+/**
+ * Test if the plane will be shadowed by the light.
+ */
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane );
+
+/**
+ * Returns the appropriate falloff based on the type for the given light.
+ */
+float ape_light_compute_falloff( const ApeLight *self, float distance );
 
 PL_EXTERN_C_END

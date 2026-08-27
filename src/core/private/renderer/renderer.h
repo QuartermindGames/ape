@@ -89,12 +89,21 @@ void         ape_lightmap_upload_( ApeLightmap *self, unsigned int edgeLength );
 void         ape_lightmap_serialize_( const ApeLightmap *self, unsigned int edgeLength, AcmBranch *root );
 ApeLightmap *ape_lightmap_deserialize_( unsigned int edgeLength, AcmBranch *root );
 
+typedef enum ApeLightFalloffType : uint8_t
+{
+	APE_LIGHT_FALLOFF_TYPE_LINEAR,
+	APE_LIGHT_FALLOFF_TYPE_INV_SQUARE,
+
+	APE_LIGHT_FALLOFF_TYPE_MAX
+} ApeLightFalloffType;
+
 typedef struct ApeLight
 {
 	// This should always come first!
 	ApeWorldNode base;
 
-	ApeLightType type;
+	ApeLightType        type;
+	ApeLightFalloffType falloff;
 
 	ApeColour4fProperty colour;
 	ApeFloatProperty    radius;// per omni + spotlight

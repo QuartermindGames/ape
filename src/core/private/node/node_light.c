@@ -138,9 +138,6 @@ bool ape_light_is_active( const ApeLight *light )
 	return true;
 }
 
-/**
- * Test if the plane will be hit by the light.
- */
 bool ape_light_test_plane( const ApeLight *self, const PLCollisionPlane *plane )
 {
 	if ( self->type == APE_LIGHT_TYPE_SUN )
@@ -213,9 +210,6 @@ bool ape_light_test_face( const ApeLight *self, const ApeBrushFace *face )
 	return dot < 0;
 }
 
-/**
- * Test if the plane will be shadowed by the light.
- */
 bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *material, const PLCollisionPlane *plane )
 {
 	if ( ape_light_get_shadow_type( self ) != APE_LIGHT_SHADOW_TYPE_DYNAMIC )
@@ -223,15 +217,26 @@ bool ape_light_test_plane_shadow( const ApeLight *self, const ApeMaterial *mater
 		return false;
 	}
 
-	unsigned int flags = ape_material_get_flags_( material );
+	const unsigned int flags = ape_material_get_flags_( material );
 
 	return flags & APE_MATERIAL_FLAG_CAST_SHADOWS && !ape_light_test_plane( self, plane );
 }
 
+float ape_light_compute_falloff( const ApeLight *self, const float distance )
+{
+	if ( self->falloff == APE_LIGHT_FALLOFF_TYPE_INV_SQUARE )
+	{
+		return self->radius / ( distance * distance );
+	}
+
+	return QM_MATH_CLAMP( 0.0f, 1.0f - distance / self->radius, 1.0f );
+}
+
 static AcmBranch *serialize_light( void *self, AcmBranch *root )
 {
-	ApeLight *light = self;
+	const ApeLight *light = self;
 	acm_push_ui32( root, "type", light->type );
+	acm_push_ui8( root, "falloff", light->falloff );
 	com_acm_push_colour4f( root, "colour", &light->colour, true );
 	acm_push_f32( root, "radius", light->radius );
 	acm_push_f32( root, "angle", light->angle );
@@ -245,11 +250,12 @@ static AcmBranch *serialize_light( void *self, AcmBranch *root )
 static ApeWorldNode *deserialize_light( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeLight *light      = ( ApeLight * ) self;
-	light->type          = acm_get_uint( root, "type", light->type );
+	light->type          = ACM_GET_UINT( light->type, root, "type", light->type );
+	light->falloff       = ACM_GET_UINT( light->falloff, root, "falloff", light->falloff );
 	light->colour        = com_acm_get_colour_f32( root, "colour", &light->colour );
 	light->radius        = acm_get_f32( root, "radius", light->radius );
 	light->angle         = acm_get_f32( root, "angle", light->angle );
-	light->flags         = acm_get_uint( root, "flags", light->flags );
+	light->flags         = ACM_GET_UINT( light->flags, root, "flags", light->flags );
 	light->state         = acm_get_int( root, "state", light->state );
 	light->flareDeclType = acm_get_int( root, "flareDeclType", light->flareDeclType );
 
@@ -258,7 +264,7 @@ static ApeWorldNode *deserialize_light( ApeWorldNode *self, AcmBranch *root )
 
 static void light_on_draw_editor( void *self, const bool isSelected )
 {
-	ApeLight *light = self;
+	const ApeLight *light = self;
 
 	// this sucks, need to convert the colour due to inconsistency
 	QmMathColour4ub colour = QM_MATH_COLOUR4F_TO_4UB( light->colour );
@@ -292,13 +298,19 @@ static void light_on_draw_editor( void *self, const bool isSelected )
 }
 
 static ApePropertyEnum lightTypesEnum[] = {
-        {"Omni", 0},
-        {"Spot", 1},
-        {"Sun",  2},
+        {"Omni", APE_LIGHT_TYPE_OMNI},
+        {"Spot", APE_LIGHT_TYPE_SPOT},
+        {"Sun",  APE_LIGHT_TYPE_SUN },
+};
+
+static ApePropertyEnum lightFalloffTypesEnum[] = {
+        {"Linear",     APE_LIGHT_FALLOFF_TYPE_LINEAR    },
+        {"Inv Square", APE_LIGHT_FALLOFF_TYPE_INV_SQUARE},
 };
 
 static ApeProperty properties[] = {
         APE_PROPERTY_ENUM( "Type", "The type of light.", ApeLight, type, lightTypesEnum ),
+        APE_PROPERTY_ENUM( "Falloff", "Type of falloff the light should use.", ApeLight, falloff, lightFalloffTypesEnum ),
         APE_PROPERTY_BASIC( "Radius", "Radius of the light.", ApeLight, radius, FLOAT ),
         APE_PROPERTY_BASIC( "Angle", "Angle of the light (spotlight only).", ApeLight, angle, FLOAT ),
         APE_PROPERTY_BASIC( "Colour", "Colour of the light.", ApeLight, colour, COLOUR ),

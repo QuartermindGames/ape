@@ -191,12 +191,8 @@ void ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **ligh
 					else if ( light->type == APE_LIGHT_TYPE_OMNI )// assumed omni
 					{
 						float d = qm_math_vector3f_distance( lightPos, worldPos );
-#ifdef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
-						float r = light->radius * 10.0f / ( d * d );
-#else
-						float r = QM_MATH_CLAMP( 0.0f, 1.0f - d / light->radius, 1.0f );
-#endif
-						c = qm_math_vector3f_scale_float( c, r );
+						float r = ape_light_compute_falloff( light, d );
+						c       = qm_math_vector3f_scale_float( c, r );
 					}
 
 					cell->totalLight.r += c.x;
@@ -625,17 +621,10 @@ static void compute_face_vertex( ApeRoom *room, ApeBrushFace *face, ApeLight *li
 		else// assumed omni
 		{
 			float d = qm_math_vector3f_distance( lightPos, vertexPos );
-#ifdef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
-			float r = light->radius * 10.0f / ( d * d );
-			float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
-			c       = qm_math_vector3f_scale_float( qm_math_vector3f( lightColour.r, lightColour.g, lightColour.b ), l );
-#else
-			float r = QM_MATH_CLAMP( 0.0f, 1.0f - d / light->radius, 1.0f );
+			float r = ape_light_compute_falloff( light, d );
 			float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
 			c       = qm_math_vector3f_scale_float( qm_math_vector3f( lightColour.r, lightColour.g, lightColour.b ), l * lightColour.a );
-#endif
-
-			c = qm_math_vector3f_scale_float( c, r );
+			c       = qm_math_vector3f_scale_float( c, r );
 		}
 
 		vertex->colour.r += c.x;
@@ -838,17 +827,10 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 			else// assumed omni
 			{
 				float d = qm_math_vector3f_distance( lightPos, luxelPos );
-#ifdef APE_ENABLE_LIGHT_INV_SQUARE_FALLOFF
-				float r = light->radius * 10.0f / ( d * d );
-				float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
-				c       = qm_math_vector3f_scale_float( qm_math_vector3f( lightColour.r, lightColour.g, lightColour.b ), l );
-#else
-				float r = QM_MATH_CLAMP( 0.0f, 1.0f - d / light->radius, 1.0f );
+				float r = ape_light_compute_falloff( light, d );
 				float l = QM_OS_MAX( qm_math_vector3f_dot_product( face->normal, lightDir ), 1.0f );
 				c       = qm_math_vector3f_scale_float( qm_math_vector3f( lightColour.r, lightColour.g, lightColour.b ), l * lightColour.a );
-#endif
-
-				c = qm_math_vector3f_scale_float( c, r );
+				c       = qm_math_vector3f_scale_float( c, r );
 			}
 
 			ApeLightmap *lightmap = room->lightmaps[ face->lightmapIndex ];
