@@ -15,15 +15,14 @@ ApeTech is a 3D game engine written in C23, being developed by
 > This game engine is still in a highly experimental and work-in-progress state!
 > Expect things to break, or be unfinished.
 
-ApeTech is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
+*Ape* is an acronym for *"Another Portal Engine"*; meaning it uses a [portal-based renderer](https://en.wikipedia.org/wiki/Portal_rendering) in the same vein as some other engines, such as Red Faction, in which areas of the world are split into sectors (or rooms) which are then joined together by a portal plane, which is used to determine visibility.
 
-What makes ApeTech a little different in this regard is that it's attempting to go a step further with this, aiming to replicate something similar to what 3D Realms' Prey from 1998 was attempting to do; joining rooms don't necessarily have to be connected physically but can be travelled between via portals that can be added and moved around dynamically.
+What makes ApeTech a little different in this regard is that aiming to replicate something similar to what 3D Realms' Prey from 1998 was attempting to do; joining rooms don't necessarily have to be connected physically but can be travelled between via portals that can be added and moved around dynamically, and the world is structured into a hierarchy.
 
-It's available here with absolutely no support whatsoever. Additionally, it is not intended as anything close to a professional grade engine but instead just 
-something that's easy to throw things at and modify. 
+It's available here with absolutely no support whatsoever. Additionally, it is not intended as anything close to a professional grade engine but instead just something that's easy to throw things at and modify. 
 It's being developed primarily for **fun**.
 
-Some semblance of documentation can be found [here](docs).
+Some semblance of documentation can be found [here](docs) and a guide on contributing is [here](CONTRIBUTING.md).
 
 ## Features
 
@@ -38,7 +37,7 @@ Some semblance of documentation can be found [here](docs).
 - Simple post-processing pipeline with support for FXAA, bloom, [depth-of-field](https://hogsy.me/media/ape/2025-10/2025-10-17%2009-57-42.png) and more
 - Memory manager with garbage collection and usage tracking
 - [ACM (Another Config Markup)](https://github.com/QuartermindGames/acm) for serialisation/deserialisation; can be stored as either binary or text
-- Editor frontend, dubbed _Forge_, using [FOX Toolkit](http://www.fox-toolkit.org/)
+- Editor frontend, dubbed _Forge_ (eventually to be succeeded by [_Craft_](src/craft))
 
 ## Screenshots
 
@@ -55,8 +54,9 @@ More screenshots can be found [here](https://hogsy.me/media/ape/).
 
 ## Games
 
-Below is a list of released games that have used this engine.
+Below is a list of games that are using this engine.
 
+- Nihlexa (TBA)
 - [Space Ranger: Asteroid Attack](https://hogsy.itch.io/space-ranger-asteroid-attack)
 - [Buddy's Adventure](https://hogsy.itch.io/buddy)
 

@@ -1,1 +1,0 @@
-For code shared between any of the shells.

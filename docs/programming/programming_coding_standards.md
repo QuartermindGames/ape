@@ -23,6 +23,16 @@ Some functions are prefixed with older conventions or aren't prefixed at all, an
 
 Do not use `auto` in any C code whatsoever.
 
+Source files should start with the following.
+
+```c
+// Copyright © 2020-2026 Quartermind Games & Contributors
+// Purpose: <purpose>
+// Author:  <name>
+```
+
+Where `<purpose>` is replaced by a brief description of the purpose the source file servers and `<author>` a list of contributors. In headers, you can ommit the Purpose and Author lines, leaving just the copyright.
+
 ## Variables
 
 Variables use the [Camel case](https://en.wikipedia.org/wiki/Camel_case) naming style, so `myVar`.
