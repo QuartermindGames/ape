@@ -199,6 +199,7 @@ if (APE_OPTION_TOOLS)
     add_subdirectory(src/tools/cook)
     add_subdirectory(src/tools/fonttool)
     add_subdirectory(src/tools/matgen)
+    add_subdirectory(src/tools/starbox)
 endif ()
 add_subdirectory(src/game) # includes shells
 

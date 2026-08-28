@@ -83,8 +83,8 @@ cmake-build-release/
 /src/editor/enc_temp_folder
 
 # Release
-/release/user.node
-/release/runtime/**/*/*
+release/legal
+release/runtime
 
 /CMakeSettings.json
 
