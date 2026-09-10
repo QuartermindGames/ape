@@ -1,35 +1,33 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include <plcore/pl_filesystem.h>
-
-#include "plgraphics/plg.h"
-
-#include "qmparse/public/qm_parse.h"
-
 #include <float.h>
 
-#include "../cook.h"
-#include "model.h"
+#include "plcore/pl_filesystem.h"
 
-#include "model_obj.h"
+#include "qmos/public/qm_os_memory.h"
+#include "qmparse/public/qm_parse.h"
 
-static void parse_material_template_library( ObjModel *obj, const char *path )
+#include "io_model/public/io_model.h"
+#include "io_model/public/io_model_obj.h"
+
+static void parse_material_template_library( IOModelObj *obj, const char *path, IOModelResult *result )
 {
 	QmFsFile *file = qm_fs_file_open( path, true );
 	if ( file == NULL )
 	{
-		ERROR( "Failed to open OBJ material library: %s\n", PlGetError() );
+		IO_MODEL_RESULT( result, "failed to open OBJ material library", IO_MODEL_RESULT_CODE_IO_ERROR );
+		return;
 	}
 
 	// Copy it into a buffer we can parse
-	size_t      fileBufSize = qm_fs_file_get_size( file );
-	const char *fileBuf     = qm_fs_file_get_data( file );
-	char       *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
+	const size_t fileBufSize = qm_fs_file_get_size( file );
+	const char  *fileBuf     = qm_fs_file_get_data( file );
+	char        *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
 	PlCloseFile( file );
 
-	ObjMaterial *material = NULL;
+	IOModelObjMaterial *material = NULL;
 
 	const char *c = txtBuf;
 	while ( *c != '\0' )
@@ -44,10 +42,11 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 		qm_parse_token( &c, token, sizeof( token ) );
 		if ( strcmp( token, "newmtl" ) == 0 )
 		{
-			assert( obj->numMaterials < OBJ_MAX_MATERIALS );
-			if ( obj->numMaterials >= OBJ_MAX_MATERIALS )
+			assert( obj->numMaterials < IO_MODEL_OBJ_MAX_MATERIALS );
+			if ( obj->numMaterials >= IO_MODEL_OBJ_MAX_MATERIALS )
 			{
-				ERROR( "Unexpected number of materials (%u >= %u)!\n", obj->numMaterials, OBJ_MAX_MATERIALS );
+				IO_MODEL_RESULT( result, "unexpected number of materials", IO_MODEL_RESULT_CODE_IO_ERROR );
+				break;
 			}
 
 			material = &obj->materials[ obj->numMaterials++ ];
@@ -57,16 +56,19 @@ static void parse_material_template_library( ObjModel *obj, const char *path )
 		{
 			if ( material == NULL )
 			{
-				ERROR( "Invalid MTL file encountered!\n" );
+				IO_MODEL_RESULT( result, "invalid MTL file encountered", IO_MODEL_RESULT_CODE_IO_ERROR );
+				break;
 			}
 			qm_parse_enclosed( &c, material->diffuseMap, sizeof( material->diffuseMap ) );
 		}
 
 		qm_parse_skip_line( &c );
 	}
+
+	qm_os_memory_free( txtBuf );
 }
 
-static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject )
+static void determine_sub_object_bounds( const IOModelObj *obj, IOModelObjSubObject *subObject, IOModelResult *result )
 {
 	static constexpr QmMathVector3f MAX_VECTOR = QM_MATH_VECTOR3F( FLT_MAX, FLT_MAX, FLT_MAX );
 	static constexpr QmMathVector3f MIN_VECTOR = QM_MATH_VECTOR3F( FLT_MIN, FLT_MIN, FLT_MIN );
@@ -74,16 +76,17 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 	subObject->mins = MAX_VECTOR;
 	subObject->maxs = MIN_VECTOR;
 
-	unsigned int numFaces;
-	ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
+	unsigned int     numFaces;
+	IOModelObjFace **faces = ( IOModelObjFace ** ) PlGetVectorArrayDataEx( subObject->faces, &numFaces );
 	for ( unsigned int i = 0; i < numFaces; ++i )
 	{
 		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
 		{
-			ObjVertex *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ OBJ_INDEX_VERTEX ] );
+			IOModelObjVertex *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ IO_MODEL_OBJ_INDEX_VERTEX ] );
 			if ( vertex == NULL )
 			{
-				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
+				IO_MODEL_RESULT( result, "attempted to retrieve an invalid vertex", IO_MODEL_RESULT_CODE_IO_ERROR );
+				return;
 			}
 
 			if ( vertex->position.x < subObject->mins.x ) subObject->mins.x = vertex->position.x;
@@ -96,24 +99,42 @@ static void determine_sub_object_bounds( ObjModel *obj, ObjSubObject *subObject 
 	}
 }
 
-ObjModel *model_obj_load( const char *path )
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
+void obj_destroy( void *ptr )
+{
+	const IOModelObj *self = ptr;
+
+	PlDestroyVectorArrayEx( self->vertices, qm_os_memory_free );
+	PlDestroyVectorArrayEx( self->normals, qm_os_memory_free );
+	PlDestroyVectorArrayEx( self->textureCoords, qm_os_memory_free );
+
+	for ( unsigned int i = 0; i < self->numSubObjects; ++i )
+	{
+		PlDestroyVectorArrayEx( self->subObjects[ i ].faces, qm_os_memory_free );
+	}
+}
+
+IOModelObj *io_model_obj_load( const char *path, IOModelResult *result )
 {
 	QmFsFile *file = qm_fs_file_open( path, true );
 	if ( file == NULL )
-		ERROR( "Failed to open OBJ: %s\n", PlGetError() );
+	{
+		IO_MODEL_RESULT( result, "failed to open file", IO_MODEL_RESULT_CODE_IO_ERROR );
+		return nullptr;
+	}
 
 	// Copy it into a buffer we can parse
-	size_t      fileBufSize = qm_fs_file_get_size( file );
-	const char *fileBuf     = qm_fs_file_get_data( file );
-	char       *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
+	const size_t fileBufSize = qm_fs_file_get_size( file );
+	const char  *fileBuf     = qm_fs_file_get_data( file );
+	char        *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
 
 	PlCloseFile( file );
 
-	ObjModel     *obj            = QM_OS_MEMORY_NEW( ObjModel );
-	ObjSubObject *subObject      = nullptr;
-	unsigned int  materialIndex  = 0;
-	unsigned int  smoothingIndex = 0;
+	IOModelObj          *obj            = QM_OS_MEMORY_NEW_D( IOModelObj, obj_destroy );
+	IOModelObjSubObject *subObject      = nullptr;
+	unsigned int         materialIndex  = 0;
+	unsigned int         smoothingIndex = 0;
 
 	const char *c = txtBuf;
 	while ( *c != '\0' )
@@ -134,11 +155,11 @@ ObjModel *model_obj_load( const char *path )
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
 		{
 			c += 2;
-			char      *end;
-			ObjVertex *vertex  = QM_OS_MEMORY_NEW( ObjVertex );
-			vertex->position.x = strtof( c, &end );
-			vertex->position.y = strtof( end, &end );
-			vertex->position.z = strtof( end, &end );
+			char             *end;
+			IOModelObjVertex *vertex = QM_OS_MEMORY_NEW( IOModelObjVertex );
+			vertex->position.x       = strtof( c, &end );
+			vertex->position.y       = strtof( end, &end );
+			vertex->position.z       = strtof( end, &end );
 
 			if ( !qm_parse_is_end_of_line( end ) )
 			{
@@ -205,9 +226,9 @@ ObjModel *model_obj_load( const char *path )
 
 			assert( subObject->faces != NULL );
 
-			ObjFace *face = QM_OS_MEMORY_NEW( ObjFace );
+			IOModelObjFace *face = QM_OS_MEMORY_NEW( IOModelObjFace );
 			PlPushBackVectorArrayElement( subObject->faces, face );
-			for ( ; face->numEdges < OBJ_MAX_EDGES; face->numEdges++ )
+			for ( ; face->numEdges < IO_MODEL_OBJ_MAX_EDGES; face->numEdges++ )
 			{
 				if ( qm_parse_is_end_of_line( c ) )
 				{
@@ -215,12 +236,12 @@ ObjModel *model_obj_load( const char *path )
 				}
 
 				char *end;
-				face->indices[ face->numEdges ][ OBJ_INDEX_VERTEX ] = ( strtoul( c, &end, 10 ) - 1 );
+				face->indices[ face->numEdges ][ IO_MODEL_OBJ_INDEX_VERTEX ] = ( strtoul( c, &end, 10 ) - 1 );
 				end++;
-				face->indices[ face->numEdges ][ OBJ_INDEX_TEXTURE ] = ( strtoul( end, &end, 10 ) - 1 );
+				face->indices[ face->numEdges ][ IO_MODEL_OBJ_INDEX_TEXTURE ] = ( strtoul( end, &end, 10 ) - 1 );
 				end++;
-				face->indices[ face->numEdges ][ OBJ_INDEX_NORMAL ] = ( strtoul( end, &end, 10 ) - 1 );
-				c                                                   = end;
+				face->indices[ face->numEdges ][ IO_MODEL_OBJ_INDEX_NORMAL ] = ( strtoul( end, &end, 10 ) - 1 );
+				c                                                            = end;
 			}
 
 #if 0// Life wasn't this simple, sadly
@@ -230,7 +251,7 @@ ObjModel *model_obj_load( const char *path )
 			const QmMathVector3f **vn = ( const QmMathVector3f ** ) PlGetVectorArrayDataEx( obj->normals, &numNormals );
 			for ( unsigned int i = 0; i < face->numEdges; ++i )
 			{
-				const QmMathVector3f *n = vn[ face->indices[ i ][ OBJ_INDEX_NORMAL ] ];
+				const QmMathVector3f *n = vn[ face->indices[ i ][ IO_MODEL_OBJ_INDEX_NORMAL ] ];
 				face->normal = qm_math_vector3f_add( face->normal, *n );
 			}
 			face->normal = qm_math_vector3f_normalize( face->normal );
@@ -248,7 +269,7 @@ ObjModel *model_obj_load( const char *path )
 			}
 			if ( numTriangles > 0 )
 			{
-				unsigned int indices[ OBJ_MAX_EDGES * 3 ];
+				unsigned int indices[ IO_MODEL_OBJ_MAX_EDGES * 3 ];
 				QM_OS_ZERO_( indices );
 				unsigned int *index = indices;
 				for ( unsigned int i = 1; i + 1 < face->numEdges; ++i )
@@ -259,20 +280,20 @@ ObjModel *model_obj_load( const char *path )
 					index += 3;
 				}
 
-				unsigned int      numVertices;
-				const ObjVertex **v = ( const ObjVertex ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
+				unsigned int             numVertices;
+				const IOModelObjVertex **v = ( const IOModelObjVertex ** ) PlGetVectorArrayDataEx( obj->vertices, &numVertices );
 
-				QmMathVector3f normals[ OBJ_MAX_EDGES ];
+				QmMathVector3f normals[ IO_MODEL_OBJ_MAX_EDGES ];
 				QM_OS_ZERO_( normals );
 				for ( unsigned int i = 0, idx = 0; i < numTriangles; ++i, idx += 3 )
 				{
-					unsigned int x = indices[ idx ];
-					unsigned int y = indices[ idx + 1 ];
-					unsigned int z = indices[ idx + 2 ];
+					const unsigned int x = indices[ idx ];
+					const unsigned int y = indices[ idx + 1 ];
+					const unsigned int z = indices[ idx + 2 ];
 
-					QmMathVector3f n = PlgGenerateVertexNormal( v[ face->indices[ x ][ OBJ_INDEX_VERTEX ] ]->position,
-					                                            v[ face->indices[ y ][ OBJ_INDEX_VERTEX ] ]->position,
-					                                            v[ face->indices[ z ][ OBJ_INDEX_VERTEX ] ]->position );
+					const QmMathVector3f n = qm_math_compute_triangle_normal( v[ face->indices[ x ][ IO_MODEL_OBJ_INDEX_VERTEX ] ]->position,
+					                                                          v[ face->indices[ y ][ IO_MODEL_OBJ_INDEX_VERTEX ] ]->position,
+					                                                          v[ face->indices[ z ][ IO_MODEL_OBJ_INDEX_VERTEX ] ]->position );
 
 					normals[ x ] = qm_math_vector3f_add( normals[ x ], n );
 					normals[ y ] = qm_math_vector3f_add( normals[ y ], n );
@@ -306,7 +327,7 @@ ObjModel *model_obj_load( const char *path )
 			*s      = '\0';
 			PlAppendPath( libPath, token, true );
 
-			parse_material_template_library( obj, libPath );
+			parse_material_template_library( obj, libPath, result );
 		}
 		else if ( strncmp( c, "usemtl ", 7 ) == 0 )
 		{
@@ -338,58 +359,8 @@ ObjModel *model_obj_load( const char *path )
 
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
 	{
-		determine_sub_object_bounds( obj, &obj->subObjects[ i ] );
+		determine_sub_object_bounds( obj, &obj->subObjects[ i ], result );
 	}
 
 	return obj;
 }
-
-void model_obj_destroy( ObjModel *obj )
-{
-	if ( obj == NULL )
-	{
-		return;
-	}
-
-	PlDestroyVectorArrayEx( obj->vertices, qm_os_memory_free );
-	PlDestroyVectorArrayEx( obj->normals, qm_os_memory_free );
-	PlDestroyVectorArrayEx( obj->textureCoords, qm_os_memory_free );
-
-	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
-	{
-		PlDestroyVectorArrayEx( obj->subObjects[ i ].faces, qm_os_memory_free );
-	}
-
-	qm_os_memory_free( obj );
-}
-
-CookModel *model_obj_to_ape( const ObjModel *obj, CookModel *out )
-{
-	out->numMeshes = obj->numSubObjects;
-	if ( out->numMeshes >= IO_MODEL_MAX_MATERIALS )
-	{
-		WARN( "Hit maximum mesh limit (%u >= %u)!\n", out->numMeshes, IO_MODEL_MAX_MATERIALS );
-		out->numMeshes = IO_MODEL_MAX_MATERIALS - 1;
-	}
-
-	for ( unsigned int i = 0; i < out->numMeshes; ++i )
-	{
-		CookModelMesh *mesh = &out->meshes[ i ];
-
-		unsigned int numFaces;
-		ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( obj->subObjects[ i ].faces, &numFaces );
-		for ( unsigned int j = 0; j < numFaces; ++j )
-		{
-			// We'll need to convert it into triangles here...
-			unsigned int numTriangles = faces[ j ]->numEdges < 3 ? 0 : ( faces[ j ]->numEdges - 3 );
-		}
-	}
-
-	return nullptr;
-}
-
-static CookModel *load_obj( const char *path ) { return ( CookModel * ) model_obj_load( path ); }
-static CookModel *conv_obj( const CookModel *model, CookModel *out ) { return model_obj_to_ape( ( const ObjModel * ) model, out ); }
-static void       destroy_obj( CookModel *model ) { model_obj_destroy( ( ObjModel * ) model ); }
-
-const CookModelFormatInterface cook_modelObjInterface = { "obj", load_obj, conv_obj, destroy_obj };

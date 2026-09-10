@@ -1,0 +1,75 @@
+// Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
+
+#pragma once
+
+#include <plcore/pl_array_vector.h>
+
+QM_OS_EXTERN_C
+
+static constexpr unsigned int IO_MODEL_OBJ_MAX_SUB_OBJECTS = 32;
+static constexpr unsigned int IO_MODEL_OBJ_MAX_EDGES       = 16;
+static constexpr unsigned int IO_MODEL_OBJ_MAX_MATERIALS   = 64;
+
+typedef struct IOModelObjVertex
+{
+	QmMathVector3f position;
+	QmMathVector3f colour;
+} IOModelObjVertex;
+
+typedef struct IOModelObjMaterial
+{
+	char name[ 64 ];
+
+	PLPath diffuseMap;
+	PLPath specularMap;
+	PLPath ambienceMap;
+	PLPath normalMap;
+} IOModelObjMaterial;
+
+typedef enum IOModelObjIndex
+{
+	IO_MODEL_OBJ_INDEX_VERTEX,
+	IO_MODEL_OBJ_INDEX_TEXTURE,
+	IO_MODEL_OBJ_INDEX_NORMAL,
+	IO_MODEL_OBJ_MAX_INDEXES
+} IOModelObjIndex;
+
+typedef struct IOModelObjFace
+{
+	unsigned int material;
+	unsigned int smoothingGroup;
+
+	// these are all explicit indices into the vertices, normals etc.
+	unsigned int indices[ IO_MODEL_OBJ_MAX_EDGES ][ IO_MODEL_OBJ_MAX_INDEXES ];
+
+	unsigned int   numEdges;
+	QmMathVector3f normal;
+} IOModelObjFace;
+
+typedef struct IOModelObjSubObject
+{
+	char name[ 64 ];
+
+	PLVectorArray *faces;// ObjFace
+
+	QmMathVector3f mins, maxs;// bounds
+} IOModelObjSubObject;
+
+typedef struct IOModelObj
+{
+	bool storesColour;
+
+	PLVectorArray *vertices;     // ObjVertex
+	PLVectorArray *normals;      // QmMathVector3f
+	PLVectorArray *textureCoords;// QmMathVector2f
+
+	IOModelObjMaterial materials[ IO_MODEL_OBJ_MAX_MATERIALS ];
+	unsigned int       numMaterials;
+
+	IOModelObjSubObject subObjects[ IO_MODEL_OBJ_MAX_SUB_OBJECTS ];
+	unsigned int        numSubObjects;
+} IOModelObj;
+
+IOModelObj *io_model_obj_load( const char *path, IOModelResult *result );
+
+QM_OS_EXTERN_C_END
