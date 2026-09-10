@@ -196,5 +196,3 @@ typedef enum IOModelFileFormat : uint8_t
  * Format arg will speed up the model fetch; if you know what you're loading, use it.
  */
 [[nodiscard]] IOModel *io_model_load( const char *path, IOModelFileFormat format, IOModelResult *result );
-
-void io_model_destroy( IOModel *self );

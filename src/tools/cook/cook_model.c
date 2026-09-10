@@ -106,7 +106,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 		if ( dst->numBones > 0 )
 		{
 			AcmBranch *child;
-			if ( ( child = acm_get_child_by_name( root, "animations" ) ) != nullptr )
+			if ( ( child = acm_get_child( root, "animations" ) ) != nullptr )
 			{
 				deserialize_model_animations( child, dst, folder );
 			}
@@ -118,7 +118,7 @@ static void parse_model_config( AcmBranch *root, CookModel *dst, const char *fol
 	}
 
 	AcmBranch *child;
-	if ( ( child = acm_get_child_by_name( root, "attachments" ) ) != nullptr )
+	if ( ( child = acm_get_child( root, "attachments" ) ) != nullptr )
 	{
 	}
 

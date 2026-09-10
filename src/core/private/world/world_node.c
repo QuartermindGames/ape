@@ -675,7 +675,7 @@ static ApeWorldNode *ape_world_node_deserialize( AcmBranch *root, const char *pa
 		return nullptr;
 	}
 
-	AcmBranch *classBranch = acm_get_child_by_name( root, "class" );
+	AcmBranch *classBranch = acm_get_child( root, "class" );
 	if ( classBranch == nullptr )
 	{
 		ape_console_warning_( "Class data not specified for node!\n" );
@@ -738,7 +738,7 @@ static ApeWorldNode *ape_world_node_deserialize( AcmBranch *root, const char *pa
 	}
 
 	// deal with the children
-	AcmBranch *childrenBranch = acm_get_child_by_name( root, "children" );
+	AcmBranch *childrenBranch = acm_get_child( root, "children" );
 	if ( childrenBranch != nullptr )
 	{
 		AcmBranch *childBranch = acm_get_first_child( childrenBranch );

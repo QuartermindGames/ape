@@ -154,7 +154,7 @@ static bool LoadSurfacesConfig( const char *path )
 		snprintf( surface->description, sizeof( surface->description ),
 		          "%s", acm_get_string( child, "description", "none" ) );
 
-		AcmBranch *aliases = acm_get_child_by_name( child, "aliases" );
+		AcmBranch *aliases = acm_get_child( child, "aliases" );
 		if ( aliases != NULL )
 		{
 			surface->numAliases = acm_get_num_of_children( aliases );

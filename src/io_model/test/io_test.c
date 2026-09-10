@@ -2,6 +2,7 @@
 // Purpose: Tests for IO model API.
 // Author:  Mark E. Sowden
 
+#include "qmos/public/qm_os_memory.h"
 #include "qmtest/public/qm_test.h"
 
 #include "aux/public/aux.h"
@@ -16,7 +17,7 @@ QM_TEST_FUNC( io_model_test_smd )
 	QM_TEST_ASSERT( model != nullptr );
 	QM_TEST_ASSERT( result.code == IO_MODEL_RESULT_CODE_SUCCESS );
 
-	io_model_destroy( model );
+	qm_os_memory_free( model );
 }
 QM_TEST_FUNC_END()
 

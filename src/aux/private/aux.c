@@ -176,14 +176,14 @@ void com_error_( const char *m, ... )
 
 QmMathVector2f com_acm_get_vector2( AcmBranch *root, const char *name, const QmMathVector2f *fallback )
 {
-	AcmBranch *child = acm_get_child_by_name( root, name );
+	AcmBranch *child = acm_get_child( root, name );
 	if ( child == NULL )
 	{
 		return *fallback;
 	}
 
 	QmMathVector2f v;
-	if ( acm_branch_get_float32_array( child, ( float * ) &v, 2 ) != ND_ERROR_SUCCESS )
+	if ( acm_branch_get_float32_array( child, ( float * ) &v, 2 ) != ACM_ERROR_SUCCESS )
 	{
 		return *fallback;
 	}
@@ -193,14 +193,14 @@ QmMathVector2f com_acm_get_vector2( AcmBranch *root, const char *name, const QmM
 
 QmMathVector3f com_acm_get_vector3( AcmBranch *root, const char *name, const QmMathVector3f *fallback )
 {
-	AcmBranch *child = acm_get_child_by_name( root, name );
+	AcmBranch *child = acm_get_child( root, name );
 	if ( child == NULL )
 	{
 		return *fallback;
 	}
 
 	QmMathVector3f v;
-	if ( acm_branch_get_float32_array( child, ( float * ) &v, 3 ) != ND_ERROR_SUCCESS )
+	if ( acm_branch_get_float32_array( child, ( float * ) &v, 3 ) != ACM_ERROR_SUCCESS )
 	{
 		return *fallback;
 	}
@@ -210,14 +210,14 @@ QmMathVector3f com_acm_get_vector3( AcmBranch *root, const char *name, const QmM
 
 QmMathVector4f com_acm_get_vector4( AcmBranch *root, const char *name, const QmMathVector4f *fallback )
 {
-	AcmBranch *child = acm_get_child_by_name( root, name );
+	AcmBranch *child = acm_get_child( root, name );
 	if ( child == NULL )
 	{
 		return *fallback;
 	}
 
 	QmMathVector4f v;
-	if ( acm_branch_get_float32_array( child, ( float * ) &v, 4 ) != ND_ERROR_SUCCESS )
+	if ( acm_branch_get_float32_array( child, ( float * ) &v, 4 ) != ACM_ERROR_SUCCESS )
 	{
 		return *fallback;
 	}

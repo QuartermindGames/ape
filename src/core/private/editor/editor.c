@@ -461,7 +461,7 @@ void ape_initialize_editor_( void )
 {
 	AcmBranch *root = com_project_get_config();
 	assert( root != NULL );
-	editorConfigRoot = acm_get_child_by_name( root, "editor" );
+	editorConfigRoot = acm_get_child( root, "editor" );
 	if ( editorConfigRoot == nullptr )
 	{
 		editorConfigRoot = acm_push_object( root, "editor" );
@@ -968,7 +968,7 @@ static QmImage *get_material_preview_image( const char *path )
 		}
 
 		PLPath buf;
-		if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) != ND_ERROR_SUCCESS )
+		if ( acm_branch_get_string( diffuseNode, buf, sizeof( buf ) ) != ACM_ERROR_SUCCESS )
 		{
 			ape_console_warning_( "Diffuse texture under material (%s) was not a valid string!\n", path );
 			return nullptr;

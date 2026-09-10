@@ -22,7 +22,7 @@ static IOModel *imf_parse( IOModel *model, AcmBranch *root, IOModelResult *resul
 
 	AcmBranch   *branch;
 	unsigned int numFloatElements;
-	if ( ( branch = acm_get_child_by_name( root, "vertexFormatDescriptor" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "vertexFormatDescriptor" ) ) != nullptr )
 	{
 		numFloatElements = acm_get_uint( branch, "numFloatElements", 0 );
 		if ( numFloatElements == 0 )
@@ -37,7 +37,7 @@ static IOModel *imf_parse( IOModel *model, AcmBranch *root, IOModelResult *resul
 		return nullptr;
 	}
 
-	AcmBranch *meshArray = acm_get_child_by_name( root, "meshes" );
+	const AcmBranch *meshArray = acm_get_child( root, "meshes" );
 	if ( meshArray == NULL || ( model->numMaterials = acm_get_num_of_children( meshArray ) ) == 0 )
 	{
 		IO_MODEL_RESULT( result, "no meshes for model", IO_MODEL_RESULT_CODE_UNSUPPORTED_ERROR );
@@ -51,9 +51,9 @@ static IOModel *imf_parse( IOModel *model, AcmBranch *root, IOModelResult *resul
 
 	float       *vertices    = nullptr;
 	unsigned int numVertices = 0;
-	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "vertices" ) ) != nullptr )
 	{
-		unsigned int numIndices = acm_get_num_of_children( branch );
+		const unsigned int numIndices = acm_get_num_of_children( branch );
 		if ( numIndices >= 3 )
 		{
 			vertices    = QM_OS_MEMORY_NEW_( float, numIndices );
@@ -114,6 +114,7 @@ IOModel *io_model_imf_load_( IOModel *model, QmFsFile *file, IOModelResult *resu
 
 static void serialize_mesh( AcmBranch *root, const IOModelMesh *mesh, const IOModelVertex *vertices )
 {
+#if 0//TODO
 	const char *c = strrchr( mesh->material, '/' );
 
 	AcmBranch *meshBranch = acm_push_object( root, nullptr );
@@ -127,6 +128,7 @@ static void serialize_mesh( AcmBranch *root, const IOModelMesh *mesh, const IOMo
 		AcmBranch *triangleBranch = acm_push_object( trianglesBranch, nullptr );
 		acm_push_array_ui32( triangleBranch, "vertex", mesh->triangles[ i ].indices, 3 );
 	}
+#endif
 }
 
 AcmBranch *io_model_imf_serialize( const IOModel *model )

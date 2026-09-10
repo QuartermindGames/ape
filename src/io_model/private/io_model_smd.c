@@ -297,12 +297,16 @@ static IOModel *smd_convert( SmdModel *self, IOModel *model, IOModelResult *resu
 		strcpy( model->materialPaths[ i ], srcMesh->material );
 	}
 
+#if 0//TODO
 	for ( unsigned int i = 0; i < model->numMeshes; ++i )
 	{
 		const SmdMesh *srcMesh = &self->meshes[ i ];
 		IOModelMesh   *dstMesh = &model->meshes[ i ];
 		dstMesh->materialIndex = srcMesh->
 	}
+#endif
+
+	return model;
 }
 
 IOModel *io_model_smd_load_( IOModel *model, QmFsFile *file, IOModelResult *result )

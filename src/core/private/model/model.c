@@ -49,14 +49,14 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 	mesh->startIndex = model->cache->num_indices;
 
 	AcmBranch *branch;
-	if ( ( branch = acm_get_child_by_name( root, "triangles" ) ) != NULL )
+	if ( ( branch = acm_get_child( root, "triangles" ) ) != NULL )
 	{
 		ACM_ITERATE_BRANCH( branch, i )
 		{
 			unsigned int vertexIndices[ 3 ] = {};
 
 			AcmBranch *childBranch;
-			if ( ( childBranch = acm_get_child_by_name( i, "vertex" ) ) != nullptr )
+			if ( ( childBranch = acm_get_child( i, "vertex" ) ) != nullptr )
 			{
 				acm_branch_get_uint32_array( childBranch, vertexIndices, 3 );
 			}
@@ -86,7 +86,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 	AcmBranch *branch;
 
 	unsigned int numFloatElements;
-	if ( ( branch = acm_get_child_by_name( root, "vertexFormatDescriptor" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "vertexFormatDescriptor" ) ) != nullptr )
 	{
 		numFloatElements = acm_get_uint( branch, "numFloatElements", 0 );
 		if ( numFloatElements == 0 )
@@ -103,7 +103,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 	float       *vertices    = nullptr;
 	unsigned int numVertices = 0;
-	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "vertices" ) ) != nullptr )
 	{
 		unsigned int numIndices = acm_get_num_of_children( branch );
 		if ( numIndices >= 3 )
@@ -141,7 +141,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		                  ( const QmMathVector2f * ) &v[ 6 ] );
 	}
 
-	AcmBranch *meshArray = acm_get_child_by_name( root, "meshes" );
+	AcmBranch *meshArray = acm_get_child( root, "meshes" );
 	if ( meshArray == NULL || ( ( model->numMaterials = acm_get_num_of_children( meshArray ) ) == 0 ) )
 	{
 		ape_console_warning_( "No meshes for model!\n" );
@@ -169,7 +169,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 		}
 	}
 
-	AcmBranch *bonesList = acm_get_child_by_name( root, "bones" );
+	AcmBranch *bonesList = acm_get_child( root, "bones" );
 	if ( bonesList != NULL )
 	{
 		model->numBones = acm_get_num_of_children( bonesList );

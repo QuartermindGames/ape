@@ -349,7 +349,7 @@ ApeLightmap *ape_lightmap_deserialize_( unsigned int edgeLength, AcmBranch *root
 
 	unsigned int lightmapSize = edgeLength * edgeLength;
 
-	AcmBranch *pixelsBranch = acm_get_child_by_name( root, "pixels" );
+	AcmBranch *pixelsBranch = acm_get_child( root, "pixels" );
 	if ( pixelsBranch != nullptr )
 	{
 		AcmBranch *child = acm_get_first_child( pixelsBranch );

@@ -13,7 +13,7 @@ static void process_collection( AcmBranch *root, const char *tag, void ( *callba
 	assert( tag != nullptr );
 	assert( callback != nullptr );
 
-	AcmBranch *child = acm_get_child_by_name( root, tag );
+	AcmBranch *child = acm_get_child( root, tag );
 	if ( child == nullptr )
 	{
 		printf( "No \"%s\" collection, skipping\n", tag );
@@ -45,7 +45,7 @@ static void cook_project( AcmBranch *root )
 	        "Cooking \"%s\" project...\n",
 	        projectName );
 
-	AcmBranch *cookBranch = acm_get_child_by_name( root, "cook" );
+	AcmBranch *cookBranch = acm_get_child( root, "cook" );
 	if ( cookBranch == NULL )
 	{
 		ERROR( "No cook configuration specified for project, aborting!\n" );

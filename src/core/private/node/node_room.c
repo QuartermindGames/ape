@@ -248,7 +248,7 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, AcmBranch *root 
 	room->lightmapEdgeLength = acm_get_uint( root, "lightmapEdgeLength", ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH );
 
 	AcmBranch *lightmapArray;
-	if ( ( lightmapArray = acm_get_child_by_name( root, "lightmaps" ) ) != nullptr )
+	if ( ( lightmapArray = acm_get_child( root, "lightmaps" ) ) != nullptr )
 	{
 		// new multi lightmap solution
 		room->numLightmaps = acm_get_num_of_children( lightmapArray );

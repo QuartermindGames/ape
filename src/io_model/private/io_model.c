@@ -34,9 +34,10 @@ static const IOModelLoaderInterface modelLoaders[ IO_MODEL_FILE_FORMAT_MAX ] = {
                                       },
 };
 
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
 static void model_destroy( void *ptr )
 {
-	IOModel *self = ptr;
+	const IOModel *self = ptr;
 	for ( unsigned int i = 0; i < self->numMaterials; ++i )
 	{
 		qm_os_memory_free( self->materialPaths[ i ] );

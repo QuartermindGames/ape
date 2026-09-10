@@ -7,6 +7,8 @@
 // Log
 /////////////////////////////////////////////////////////////////////////////////////
 
+QM_OS_EXTERN_C
+
 typedef void ( *AuxLogCallback )( const char *msg, QmMathColour4ub colour );
 
 /**
@@ -31,3 +33,5 @@ void aux_log_source_status( int id, bool status );
  * Pushes a message for one of the log sources.
  */
 void aux_log_push_message( int id, const char *msg, ... );
+
+QM_OS_EXTERN_C_END
