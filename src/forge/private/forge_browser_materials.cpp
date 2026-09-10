@@ -70,7 +70,7 @@ forge::MaterialBrowser::MaterialBrowser( FXWindow *parent )
 
 	// do a scan for all the available materials
 	AcmBranch *root = ape_editor_get_config();
-	if ( AcmBranch *child = acm_get_child_by_name( root, "materialPaths" ); child != nullptr )
+	if ( AcmBranch *child = acm_get_child( root, "materialPaths" ); child != nullptr )
 	{
 		child = acm_get_first_child( child );
 		while ( child != nullptr )

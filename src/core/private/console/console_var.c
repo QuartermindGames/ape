@@ -326,7 +326,7 @@ void ape_console_var_register( const char *name, const char *desc, const char *v
 	AcmBranch *configBranch = com_project_get_config();
 	if ( configBranch != nullptr )
 	{
-		AcmBranch *child = acm_get_child_by_name( configBranch, "defaultConfig" );
+		AcmBranch *child = acm_get_child( configBranch, "defaultConfig" );
 		if ( child != nullptr )
 		{
 			value = acm_get_string( child, name, value );
@@ -347,7 +347,7 @@ void ape_console_var_register( const char *name, const char *desc, const char *v
 	}
 
 	AcmBranch *child;
-	if ( ( child = acm_get_child_by_name( configBranch, name ) ) == nullptr )
+	if ( ( child = acm_get_child( configBranch, name ) ) == nullptr )
 	{
 		return;
 	}

@@ -452,7 +452,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						status = acm_branch_get_bool( node, materialVariable->data.ptr );
 					}
 
-					if ( status != ND_ERROR_SUCCESS )
+					if ( status != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -475,7 +475,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						status = acm_branch_get_float32( node, materialVariable->data.ptr );
 					}
 
-					if ( status != ND_ERROR_SUCCESS )
+					if ( status != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -497,7 +497,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						status = acm_branch_get_float64( node, materialVariable->data.ptr );
 					}
 
-					if ( status != ND_ERROR_SUCCESS )
+					if ( status != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -520,7 +520,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						status = acm_branch_get_uint32( node, materialVariable->data.ptr );
 					}
 
-					if ( status != ND_ERROR_SUCCESS )
+					if ( status != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -542,7 +542,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 						status = acm_branch_get_int32( node, materialVariable->data.ptr );
 					}
 
-					if ( status != ND_ERROR_SUCCESS )
+					if ( status != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -554,7 +554,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				case QM_GFX_SHADER_UNIFORM_TYPE_VEC2:
 				{
 					materialVariable->data.ptr = QM_OS_MEMORY_NEW_( QmMathVector2f, materialVariable->numElements );
-					if ( acm_branch_get_float32_array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ND_ERROR_SUCCESS )
+					if ( acm_branch_get_float32_array( node, materialVariable->data.ptr, 2 * materialVariable->numElements ) != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -572,7 +572,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 					}
 
 					char *paths[ QM_GFX_TEXTURE_MAX_CUBEMAP_FACES ] = {};
-					if ( acm_branch_get_string_array( node, paths, QM_GFX_TEXTURE_MAX_CUBEMAP_FACES ) != ND_ERROR_SUCCESS )
+					if ( acm_branch_get_string_array( node, paths, QM_GFX_TEXTURE_MAX_CUBEMAP_FACES ) != ACM_ERROR_SUCCESS )
 					{
 						ape_console_warning_( "Invalid cubemap variable setup!\n" );
 						break;
@@ -602,7 +602,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 
 					for ( unsigned int i = 0; i < QM_GFX_TEXTURE_MAX_CUBEMAP_FACES; ++i )
 					{
-						ACM_DELETE( paths[ i ] );
+						acm_free( paths[ i ] );
 					}
 
 					break;
@@ -615,7 +615,7 @@ static void parse_shader_parameters( ApeMaterial *material, ApeMaterialPass *mat
 				case QM_GFX_SHADER_UNIFORM_TYPE_SAMPLER2DSHADOW:
 				{
 					PLPath texturePath;
-					if ( acm_branch_get_string( node, texturePath, sizeof( PLPath ) ) != ND_ERROR_SUCCESS )
+					if ( acm_branch_get_string( node, texturePath, sizeof( PLPath ) ) != ACM_ERROR_SUCCESS )
 					{
 						break;
 					}
@@ -738,15 +738,15 @@ void ape_parse_material_pass_( ApeMaterial *material, AcmBranch *root, ApeMateri
 {
 	/* fetch the blend mode we'll use for the pass */
 	AcmBranch *subNode;
-	if ( ( subNode = acm_get_child_by_name( root, "blendMode" ) ) != NULL )
+	if ( ( subNode = acm_get_child( root, "blendMode" ) ) != NULL )
 	{
 		char *blendModesArray[ 2 ];
-		if ( acm_branch_get_string_array( subNode, blendModesArray, 2 ) == ND_ERROR_SUCCESS )
+		if ( acm_branch_get_string_array( subNode, blendModesArray, 2 ) == ACM_ERROR_SUCCESS )
 		{
 			materialPass->blendMode[ 0 ] = get_blend_mode_by_tag( blendModesArray[ 0 ] );
-			ACM_DELETE( blendModesArray[ 0 ] );
+			acm_free( blendModesArray[ 0 ] );
 			materialPass->blendMode[ 1 ] = get_blend_mode_by_tag( blendModesArray[ 1 ] );
-			ACM_DELETE( blendModesArray[ 1 ] );
+			acm_free( blendModesArray[ 1 ] );
 		}
 		else
 		{
@@ -782,7 +782,7 @@ void ape_parse_material_pass_( ApeMaterial *material, AcmBranch *root, ApeMateri
 	materialPass->textureOffset = com_acm_get_vector2( root, "textureOffset", &QM_MATH_VECTOR2F( 0.0f, 0.0f ) );
 	materialPass->textureScale  = com_acm_get_vector2( root, "textureScale", &QM_MATH_VECTOR2F( 1.0f, 1.0f ) );
 
-	if ( ( subNode = acm_get_child_by_name( root, "shaderParameters" ) ) != NULL )
+	if ( ( subNode = acm_get_child( root, "shaderParameters" ) ) != NULL )
 	{
 		/* there's some extra complexity when parsing in parameters, so we'll defer that
 		 * to another function */
@@ -791,7 +791,7 @@ void ape_parse_material_pass_( ApeMaterial *material, AcmBranch *root, ApeMateri
 
 	// this should follow after the above, as it initialises the list of
 	// material variables, which we might want to look up after
-	if ( ( subNode = acm_get_child_by_name( root, "animators" ) ) != nullptr )
+	if ( ( subNode = acm_get_child( root, "animators" ) ) != nullptr )
 	{
 		ape_material_animator_parse_array_( subNode, materialPass );
 	}
@@ -805,7 +805,7 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 	/* each pass specifies how the object should be drawn before
 	 * drawing it again and again for each child */
 	AcmBranch *node;
-	if ( ( node = acm_get_child_by_name( root, "passes" ) ) != NULL )
+	if ( ( node = acm_get_child( root, "passes" ) ) != NULL )
 	{
 		node = acm_get_first_child( node );
 		while ( node != NULL )

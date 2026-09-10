@@ -47,7 +47,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 		return;
 	}
 
-	AcmBranch *branch = acm_get_child_by_name( engineConfig, "launchCommands" );
+	AcmBranch *branch = acm_get_child( engineConfig, "launchCommands" );
 	if ( branch == NULL )
 	{
 		return;
@@ -66,7 +66,7 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	}
 
 	char *commands[ MAX_COMMANDS ];
-	if ( acm_branch_get_string_array( branch, commands, numCommands ) != ND_ERROR_SUCCESS )
+	if ( acm_branch_get_string_array( branch, commands, numCommands ) != ACM_ERROR_SUCCESS )
 	{
 		return;
 	}

@@ -17,8 +17,6 @@
 
 typedef struct ComProject
 {
-	bool isActive;
-
 	char baseName[ COM_MAX_PROJECT_BASENAME ];
 	char name[ COM_MAX_PROJECT_NAME ];
 	char developer[ 64 ];
@@ -27,8 +25,8 @@ typedef struct ComProject
 	QmFsMount *mountLocation;// x/projects/blah
 
 #define MAX_FILESYSTEM_MOUNTS 255
-	QmFsMount *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
-	unsigned int       numSubMountLocations;
+	QmFsMount   *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
+	unsigned int numSubMountLocations;
 
 	struct ComProject *parent;
 	struct ComProject *dependencies[ COM_MAX_DEPENDENCIES ];
@@ -91,21 +89,21 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 	snprintf( out->developer, sizeof( out->developer ), "%s", acm_get_string( root, "developer", "none" ) );
 
 	AcmBranch *child;
-	if ( ( child = acm_get_child_by_name( root, "version" ) ) != NULL )
+	if ( ( child = acm_get_child( root, "version" ) ) != NULL )
 	{
 		acm_branch_get_int32_array( child, out->version, 3 );
 	}
-	if ( ( child = acm_get_child_by_name( root, "mountLocations" ) ) != NULL )
+	if ( ( child = acm_get_child( root, "mountLocations" ) ) != NULL )
 	{
 		parse_mount_config( child, out );
 	}
-	if ( ( child = acm_get_child_by_name( root, "dependencies" ) ) != NULL )
+	if ( ( child = acm_get_child( root, "dependencies" ) ) != NULL )
 	{
 		child = acm_get_first_child( child );
 		while ( child != NULL )
 		{
 			char baseName[ COM_MAX_PROJECT_BASENAME ];
-			if ( acm_branch_get_string( child, baseName, sizeof( baseName ) ) != ND_ERROR_SUCCESS )
+			if ( acm_branch_get_string( child, baseName, sizeof( baseName ) ) != ACM_ERROR_SUCCESS )
 			{
 				com_warning_( "Failed to load dependency due to invalid dependency listing!\n" );
 				return NULL;
@@ -200,8 +198,7 @@ static void free_project( ComProject *out )
 
 AcmBranch *com_project_mount( const char *name )
 {
-	assert( !project.isActive );
-	if ( project.isActive )
+	if ( project.config != nullptr )
 	{
 		com_warning_( "A project is already active! Unmount current project first.\n" );
 		return nullptr;
@@ -240,4 +237,9 @@ const char *com_project_get_name( void ) { return project.name; }
 AcmBranch *com_project_get_config()
 {
 	return project.config;
+}
+
+bool aux_project_is_mounted()
+{
+	return project.config != nullptr;
 }

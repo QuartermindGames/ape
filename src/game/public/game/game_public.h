@@ -27,8 +27,12 @@ typedef enum GameConnectionType
 } GameConnectionType;
 GameConnectionType gameGetConnectionType( void );
 
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Avoid changing this if possible, as all materials depend on this order
+ * (we don't use named types, to keep things flexible)
+ */
 typedef enum GameMaterialSurfaceType
 {
 	GAME_MATERIAL_SURFACE_TYPE_NONE,

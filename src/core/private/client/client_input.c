@@ -369,7 +369,7 @@ void ape_input_initialize_( void )
 
 	// attempt to fetch and then init config
 	AcmBranch *userConfig = ape_get_user_config_();
-	inputConfig           = acm_get_child_by_name( userConfig, SERIALISATION_NODE_NAME );
+	inputConfig           = acm_get_child( userConfig, SERIALISATION_NODE_NAME );
 	if ( inputConfig == NULL )
 	{
 		inputConfig = acm_push_object( userConfig, SERIALISATION_NODE_NAME );
@@ -413,7 +413,7 @@ void ape_serialize_input_config_( AcmBranch *root )
 
 void ape_deserialize_input_config_( AcmBranch *root )
 {
-	AcmBranch *inputNode = acm_get_child_by_name( root, SERIALISATION_NODE_NAME );
+	AcmBranch *inputNode = acm_get_child( root, SERIALISATION_NODE_NAME );
 	if ( inputNode == NULL )
 	{
 		return;

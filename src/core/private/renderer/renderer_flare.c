@@ -84,7 +84,7 @@ void ape_initialize_flares_( void )
 
 		flareDecl->material = ape_material_cache( materialPath, APE_CACHE_GROUP_GLOBAL, true );
 
-		AcmBranch *elements = acm_get_child_by_name( child, "elements" );
+		AcmBranch *elements = acm_get_child( child, "elements" );
 		ACM_ITERATE_BRANCH( elements, element )
 		{
 			if ( flareDecl->numElements >= MAX_FLARE_ELEMENTS )

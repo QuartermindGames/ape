@@ -502,7 +502,7 @@ static ApeWorldNode *deserialize_entity( ApeWorldNode *self, AcmBranch *root )
 	// for deserialization, it's going to be wiser to do this before we start
 	// deserializing the class as it'll probably want to look these up!
 	AcmBranch *branch;
-	if ( ( branch = acm_get_child_by_name( root, "components" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "components" ) ) != nullptr )
 	{
 		ACM_ITERATE_BRANCH( branch, i )
 		{

@@ -90,12 +90,14 @@ void ape_fs_setup_config( AcmBranch *root )
 {
 	PlClearFileAliases();
 
-	fileSystemConfig = acm_get_child_by_name( root, "fileSystem" );
+	fileSystemConfig = acm_get_child( root, "fileSystem" );
 	if ( fileSystemConfig != NULL )
 	{
 		AcmBranch *child;
-		if ( ( child = acm_get_child_by_name( fileSystemConfig, "aliases" ) ) != NULL )
+		if ( ( child = acm_get_child( fileSystemConfig, "aliases" ) ) != NULL )
+		{
 			parse_aliases( child );
+		}
 	}
 
 	// TODO: move this into the project handler

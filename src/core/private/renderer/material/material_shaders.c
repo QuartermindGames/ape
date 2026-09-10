@@ -154,11 +154,11 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	unsigned int numDefinitions[ QM_GFX_MAX_SHADER_STAGE_TYPES ];
 	QM_OS_ZERO( numDefinitions, sizeof( unsigned int ) * QM_GFX_MAX_SHADER_STAGE_TYPES );
 
-	AcmBranch *child = acm_get_child_by_name( root, "definitions" );
+	AcmBranch *child = acm_get_child( root, "definitions" );
 	if ( child != NULL )
 	{
 		AcmBranch *subChild;
-		if ( ( subChild = acm_get_child_by_name( child, "fragment" ) ) != NULL )
+		if ( ( subChild = acm_get_child( child, "fragment" ) ) != NULL )
 		{
 			numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] = acm_get_num_of_children( subChild );
 			if ( numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_FRAGMENT ] > PLG_MAX_DEFINITIONS )
@@ -182,7 +182,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 				subChild = acm_get_next_child( subChild );
 			}
 		}
-		if ( ( subChild = acm_get_child_by_name( child, "vertex" ) ) != NULL )
+		if ( ( subChild = acm_get_child( child, "vertex" ) ) != NULL )
 		{
 			numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] = acm_get_num_of_children( subChild );
 			if ( numDefinitions[ QM_GFX_SHADER_STAGE_TYPE_VERTEX ] > PLG_MAX_DEFINITIONS )
@@ -228,7 +228,7 @@ static ApeShaderProgram *parse_shader_program( ApeShaderProgram *program, AcmBra
 	/* the default pass is an optional field that can outline
 	 * the initial properties that should be used during a draw.
 	 * a material can, of course, overwrite these. */
-	child = acm_get_child_by_name( root, "defaultPass" );
+	child = acm_get_child( root, "defaultPass" );
 	if ( child != NULL )
 	{
 		// zero in-case we're reloading...

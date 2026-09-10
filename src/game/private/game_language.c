@@ -92,7 +92,7 @@ void game_language_initialize_()
 
 		const char *description = acm_get_string( child, "description", id );
 
-		AcmBranch *stringsBranch = acm_get_child_by_name( child, "strings" );
+		AcmBranch *stringsBranch = acm_get_child( child, "strings" );
 		if ( stringsBranch == nullptr )
 		{
 			game_warning_( "Encountered a language (%s) without any strings!\n", id );

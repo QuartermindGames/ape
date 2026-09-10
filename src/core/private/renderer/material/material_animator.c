@@ -38,7 +38,7 @@ static bool ape_material_animator_parse_texture_sequence_( ApeMaterialAnimatorTe
 		return false;
 	}
 
-	AcmBranch *child = acm_get_child_by_name( root, "frames" );
+	AcmBranch *child = acm_get_child( root, "frames" );
 	if ( child == nullptr )
 	{
 		ape_console_warning_( "No frames specified for texture sequence!\n" );
@@ -97,7 +97,7 @@ static bool ape_material_animator_parse_( ApeMaterialAnimator *self, ApeMaterial
 		return false;
 	}
 
-	AcmBranch *typeObject = acm_get_child_by_name( root, value );
+	AcmBranch *typeObject = acm_get_child( root, value );
 	if ( typeObject == nullptr )
 	{
 		ape_console_warning_( "No object for type!\n" );

@@ -1018,7 +1018,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 	brush->lightingType = ACM_GET_UINT( brush->lightingType, root, "lightingType", APE_BRUSH_LIGHTING_TYPE_LIGHTMAP );
 
 	AcmBranch *branch;
-	if ( ( branch = acm_get_child_by_name( root, "vertices" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "vertices" ) ) != nullptr )
 	{
 		brush->numVertices = acm_get_num_of_children( branch ) / 3;
 		brush->vertices    = QM_OS_MEMORY_NEW_( QmMathVector3f, brush->numVertices );
@@ -1031,7 +1031,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 		return nullptr;
 	}
 
-	if ( ( branch = acm_get_child_by_name( root, "faces" ) ) != nullptr )
+	if ( ( branch = acm_get_child( root, "faces" ) ) != nullptr )
 	{
 		brush->numFaces = acm_get_num_of_children( branch );
 		brush->faces    = QM_OS_MEMORY_NEW_( ApeBrushFace, brush->numFaces );
@@ -1043,7 +1043,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 
 			brush->faces[ i ].parent = brush;
 
-			AcmBranch *vertexBranch = acm_get_child_by_name( branch, "vertices" );
+			AcmBranch *vertexBranch = acm_get_child( branch, "vertices" );
 			if ( vertexBranch != nullptr )
 			{
 				brush->faces[ i ].numVertices = acm_get_num_of_children( vertexBranch );
