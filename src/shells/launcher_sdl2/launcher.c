@@ -22,6 +22,10 @@
 #include "core/public/yin/core.h"
 #include "core/public/core_console.h"
 
+#ifdef CRAFT_EDITOR
+#	include "craft/public/craft.h"
+#endif
+
 #include "shells/sdl3/shell_sdl3.c"
 
 static AcmBranch *shellConfig;
@@ -233,7 +237,13 @@ int launcherLog;
 
 static bool initialize_display( void )
 {
-	PlgInitializeGraphics();
+	if ( !SDL_Init( SDL_INIT_VIDEO ) )
+	{
+		PrintWarn( "Failed to initialize SDL: %s\n", SDL_GetError() );
+		return false;
+	}
+
+	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
 	// attempt to fetch the driver directly from the executable location if possible
 	PLPath exePath;
@@ -345,12 +355,59 @@ int qm_os_main( const int argc, char **argv )
 	prctl( PR_SET_DUMPABLE, 1 );
 #endif
 
-	if ( !shell_initialize( argc, argv ) )
+	aux_initialize( argc, argv );
+
+	const char *appDir = com_get_app_data_directory();
+	qm_fs_mount_local_location( appDir );
+	const char *localDir = com_get_local_data_directory();
+	qm_fs_mount_local_location( localDir );
+
+	shellConfig = com_get_config( "shell" );
+
+	if ( PlHasCommandLineArgument( "/editor" ) )
 	{
+		if ( !craft_initialize( argc, argv ) )
+		{
+			return EXIT_FAILURE;
+		}
+
+		for ( ;; ) craft_process_events();
+
+		return EXIT_SUCCESS;
+	}
+
+	const char *projectName;
+	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
+	{
+		projectName = acm_get_string( shellConfig, "defaultProject", "base" );
+	}
+
+	if ( com_project_mount( projectName ) == nullptr )
+	{
+		fprintf( stderr, "Failed to mount project (%s)!\n", projectName );
 		return EXIT_FAILURE;
 	}
 
+#if !defined( _WIN32 )
+	// allow us to cook everything before launching, if desired
+	if ( PlHasCommandLineArgument( "/cook" ) )
+	{
+		PLPath exePath;
+		PlGetExecutableDirectory( exePath, sizeof( exePath ) );
+
+		char tmp[ sizeof( exePath ) + 64 ];
+		snprintf( tmp, sizeof( tmp ), "%s/cook %s", exePath, projectName );
+		if ( system( tmp ) == -1 )
+		{
+			fprintf( stderr, "Failed to execute cook command!\n" );
+			return EXIT_FAILURE;
+		}
+	}
+#endif
+
 	Print( "Log output initialized!\n" );
+
+	PlgInitializeGraphics();
 
 	if ( !initialize_display() )
 	{

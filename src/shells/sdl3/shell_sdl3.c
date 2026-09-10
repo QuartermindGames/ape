@@ -72,57 +72,6 @@ void shell_display_message( SS_Shell_MessageBoxType messageType, const char *mes
 	qm_os_memory_free( buf );
 }
 
-bool shell_initialize( unsigned int argc, char **argv )
-{
-	if ( !SDL_Init( SDL_INIT_EVENTS | SDL_INIT_VIDEO ) )
-	{
-		fprintf( stderr, "Failed to initialize SDL: %s\n", SDL_GetError() );
-		return false;
-	}
-
-	aux_initialize( argc, argv );
-
-	const char *appDir = com_get_app_data_directory();
-	qm_fs_mount_local_location( appDir );
-	const char *localDir = com_get_local_data_directory();
-	qm_fs_mount_local_location( localDir );
-
-	shellConfig = com_get_config( "shell" );
-
-	const char *projectName;
-	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
-	{
-		projectName = acm_get_string( shellConfig, "defaultProject", "base" );
-	}
-
-	if ( com_project_mount( projectName ) == nullptr )
-	{
-		fprintf( stderr, "Failed to mount project (%s)!\n", projectName );
-		return false;
-	}
-
-#if !defined( _WIN32 )
-	// allow us to cook everything before launching, if desired
-	if ( PlHasCommandLineArgument( "/cook" ) )
-	{
-		PLPath exePath;
-		PlGetExecutableDirectory( exePath, sizeof( exePath ) );
-
-		char tmp[ sizeof( exePath ) + 64 ];
-		snprintf( tmp, sizeof( tmp ), "%s/cook %s", exePath, projectName );
-		if ( system( tmp ) == -1 )
-		{
-			fprintf( stderr, "Failed to execute cook command!\n" );
-			return false;
-		}
-	}
-#endif
-
-	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
-
-	return true;
-}
-
 bool shell_setup_tick_timer()
 {
 	unsigned int tickFrequency = ape_get_tick_frequency();

@@ -9,9 +9,6 @@
 
 // Hei Library
 #include <plcore/pl.h>
-#include <plcore/pl_filesystem.h>
-#include <plcore/pl_package.h>
-#include <plcore/pl_hashtable.h>
 #include <plcore/pl_linkedlist.h>
 
 #include "qmos/public/qm_os_memory.h"
@@ -19,7 +16,6 @@
 
 #include <acm/acm.h>
 
-#include "aux/public/aux.h"
 #include "aux/public/aux_math.h"
 
 // Yin
@@ -29,12 +25,6 @@
 // FOX Toolkit
 #include <fx.h>
 #include <fxkeys.h>
-
-#if defined( USE_GTK )
-
-#	include <adwaita.h>
-
-#endif
 
 #define FORGE_APP_VERSION "v0.1.0"
 
@@ -155,9 +145,7 @@ namespace forge
 	{
 		PATH_EXE,      // where the exe is located
 		PATH_RESOURCES,// general resources
-		PATH_CONFIG,   // location of our config
 		PATH_PROJECTS, // location where *all* projects are stored
-		PATH_COOK,     // cooking tool
 
 		MAX_CACHED_PATHS
 	};

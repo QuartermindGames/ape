@@ -70,6 +70,11 @@ else ()
     )
 endif ()
 
+if (APE_OPTION_EDITOR)
+    set(GAME_LINK_LIBS ${GAME_LINK_LIBS} ape-craft)
+    set(GAME_DEFINITIONS CRAFT_EDITOR)
+endif ()
+
 #############################################
 # Nihlexa
 #############################################
@@ -88,7 +93,7 @@ set(NIH_SOURCES
 
 add_executable(Nihlexa WIN32 ${NIH_SOURCES} ../shells/launcher_sdl2/launcher.c)
 target_link_libraries(Nihlexa ${GAME_LINK_LIBS})
-target_compile_definitions(Nihlexa PRIVATE -DGAME_SS1 GAME_QM2)
+target_compile_definitions(Nihlexa PRIVATE ${GAME_DEFINITIONS} -DGAME_SS1 GAME_QM2)
 target_include_directories(Nihlexa PRIVATE private)
 set_target_properties(Nihlexa PROPERTIES FOLDER "Games")
 
@@ -97,11 +102,3 @@ target_link_libraries(NEditor ${GAME_LINK_LIBS} ape-editor)
 target_compile_definitions(NEditor PRIVATE -DGAME_SS1 GAME_QM2)
 target_include_directories(NEditor PRIVATE private)
 set_target_properties(NEditor PROPERTIES FOLDER "Games")
-
-add_library(ape-game OBJECT
-        ${NIH_SOURCES}
-)
-target_compile_definitions(ape-game PRIVATE -DGAME_SS1 GAME_QM2)
-target_include_directories(ape-game PRIVATE private)
-target_link_libraries(ape-game ${GAME_LINK_LIBS})
-set_target_properties(ape-game PROPERTIES FOLDER "Engine")

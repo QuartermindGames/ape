@@ -106,100 +106,8 @@ char *forge_dialog_save( void *self, const char *title, const char *extension, c
 	return filename;
 }
 
-#if USE_GTK
-
-typedef struct ForgeDialog
-{
-	char      *filename;
-	gboolean   isCompleted;
-	GMainLoop *loop;
-} ForgeDialog;
-
-static void on_dialog_response( GtkDialog *dialog, const gint responseId, const gpointer userData )
-{
-	ForgeDialog *forgeDialog = ( ForgeDialog * ) userData;
-	if ( responseId == GTK_RESPONSE_ACCEPT )
-	{
-		forgeDialog->isCompleted = TRUE;
-	}
-
-	gtk_window_destroy( GTK_WINDOW( dialog ) );
-}
-
-#endif
-
 char *forge_dialog_open( void *self, const char *title, const char *extension, const char *origin )
 {
-#if USE_GTK
-
-	GtkWidget *dialog = gtk_file_chooser_dialog_new( title,
-	                                                 NULL,
-	                                                 GTK_FILE_CHOOSER_ACTION_OPEN,
-	                                                 "_Cancel", GTK_RESPONSE_CANCEL,
-	                                                 "_Open", GTK_RESPONSE_ACCEPT,
-	                                                 NULL );
-
-	if ( origin != nullptr )
-	{
-		g_autoptr( GFile ) folder = g_file_new_for_path( origin );
-		if ( folder != nullptr )
-		{
-			gtk_file_chooser_set_current_folder( GTK_FILE_CHOOSER( dialog ), folder, nullptr );
-		}
-	}
-
-	GtkFileFilter *filter;
-	if ( extension != nullptr )
-	{
-		char pattern[ strlen( extension ) + 3 ];
-		snprintf( pattern, sizeof( pattern ), "*%s", extension );
-
-		filter = gtk_file_filter_new();
-		gtk_file_filter_set_name( filter, "Supported Files" );
-		gtk_file_filter_add_pattern( filter, pattern );
-		gtk_file_chooser_add_filter( GTK_FILE_CHOOSER( dialog ), filter );
-		gtk_file_chooser_set_filter( GTK_FILE_CHOOSER( dialog ), filter );
-	}
-
-	filter = gtk_file_filter_new();
-	gtk_file_filter_set_name( filter, "All Files" );
-	gtk_file_filter_add_pattern( filter, "*" );
-	gtk_file_chooser_add_filter( GTK_FILE_CHOOSER( dialog ), filter );
-
-	ForgeDialog data = {};
-	data.loop        = g_main_loop_new( nullptr, FALSE );
-
-	g_signal_connect( dialog, "response", G_CALLBACK( on_dialog_response ), &data );
-	g_signal_connect( dialog, "destroy", G_CALLBACK( gtk_window_destroy ), &data );
-
-	gtk_widget_show( dialog );
-
-	while ( !data.isCompleted )
-	{
-		g_main_context_iteration( nullptr, TRUE );
-	}
-
-	g_main_loop_unref( data.loop );
-
-	if ( data.filename == nullptr )
-	{
-		return nullptr;
-	}
-
-	if ( extension != nullptr )
-	{
-		char *filename;
-		if ( strlen( data.filename ) >= strlen( extension ) &&
-		     strcmp( &data.filename[ strlen( data.filename ) - strlen( extension ) ], extension ) != 0 )
-		{
-			filename = qm_os_string_alloc( "%s%s", data.filename, extension );
-		}
-
-		g_free( data.filename );
-	}
-
-#else
-
 	char pattern[ strlen( extension ) + 2 ];
 	snprintf( pattern, sizeof( pattern ), "*%s", extension );
 
@@ -210,8 +118,6 @@ char *forge_dialog_open( void *self, const char *title, const char *extension, c
 	}
 
 	return qm_os_string_alloc( "%s", openName.text() );
-
-#endif
 }
 
 ApeRoom *forge_new_room_( const char *path )
@@ -340,37 +246,6 @@ static void setup_paths( const char *exePath )
 	PlSetupPath( forge::cachedPaths[ forge::PATH_EXE ], true, "%s", exePath );
 	PlSetupPath( forge::cachedPaths[ forge::PATH_RESOURCES ], true, "%s/../../resources", forge::cachedPaths[ forge::PATH_EXE ] );
 	PlSetupPath( forge::cachedPaths[ forge::PATH_PROJECTS ], true, "%s/../../projects", forge::cachedPaths[ forge::PATH_EXE ] );
-	PlSetupPath( forge::cachedPaths[ forge::PATH_COOK ], true, "%s/cook" QM_OS_SYSTEM_EXE_EXT, forge::cachedPaths[ forge::PATH_EXE ] );
-
-	if ( !qm_fs_check_file_exists( forge::cachedPaths[ forge::PATH_CONFIG ] ) )
-	{
-		forge::isCookAvailable = false;
-		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to find cook (%s); content import may fail!",
-		                       forge::cachedPaths[ forge::PATH_COOK ] );
-	}
-
-	PLPath tmp;
-	if ( PlGetApplicationDataDirectory( "ape", tmp, sizeof( tmp ) ) != nullptr )
-	{
-		if ( PlCreateDirectory( tmp ) )
-		{
-			PlSetupPath( forge::cachedPaths[ forge::PATH_CONFIG ], true, "%s", tmp );
-		}
-		else
-		{
-			FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to create config location (%s)!", PlGetError() );
-		}
-	}
-	else
-	{
-		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to get config location (%s)!", PlGetError() );
-	}
-
-	// fallback to local location if it failed...
-	if ( *forge::cachedPaths[ forge::PATH_CONFIG ] == '\0' )
-	{
-		forge::cachedPaths[ forge::PATH_CONFIG ][ 0 ] = '.';
-	}
 }
 
 FXIcon *forge::load_fx_icon( FXApp *app, const char *path )
@@ -449,7 +324,7 @@ static void cache_icons( FXApp &app )
 	forge_cachedIcons[ FORGE_ICON_TYPE_CLOSE ] = forge::load_fx_icon( &app, "resources/close.gif" );
 }
 
-int main( int argc, char **argv )
+int qm_os_main( const int argc, char **argv )
 {
 	// now init common library and fetch the editor config
 	aux_initialize( argc, argv );
@@ -493,7 +368,7 @@ int main( int argc, char **argv )
 	}
 
 	FXApp app( FORGE_APP_NAME, FXString::null );
-	app.init( argc, argv );
+	app.init( const_cast< int & >( argc ), argv );
 
 	setup_colours( app );
 	cache_icons( app );
@@ -579,6 +454,8 @@ int main( int argc, char **argv )
 
 	return r;
 }
+
+QM_OS_SYSTEM_IMPLEMENT_MAIN()
 
 extern "C"
 {

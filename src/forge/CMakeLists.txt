@@ -1,5 +1,3 @@
-find_package(Qt6 REQUIRED COMPONENTS Core)
-
 if (WIN32 AND MSVC)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
 endif ()
@@ -59,8 +57,6 @@ target_link_libraries(ape-editor
 
         FOX-1.6
         acm
-
-        Qt6::Core
 )
 target_include_directories(ape-editor PRIVATE
         ../kernel/plcore/include

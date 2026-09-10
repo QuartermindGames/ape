@@ -22,7 +22,8 @@ message("Compiler detected as ${APE_COMPILER}")
 
 option(APE_OPTION_OPENAL "Use OpenAL for audio." ON)
 option(APE_OPTION_TOOLS "Build tools" ON)
-if (APE_OPTION_TOOLS)
+option(APE_OPTION_EDITOR "Include the editor" ON)
+if (APE_OPTION_EDITOR)
     add_compile_definitions(-DAPE_SUPPORT_EDITOR)
 endif ()
 
@@ -89,8 +90,8 @@ add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 
 FetchContent_Declare(
         openal-soft
-        GIT_REPOSITORY https://github.com/kcat/openal-soft.git
-        GIT_TAG        latest
+        GIT_REPOSITORY  https://github.com/kcat/openal-soft.git
+        GIT_TAG         latest
 )
 
 if(APE_OPTION_OPENAL)
@@ -162,6 +163,8 @@ set_target_properties(qm-fs PROPERTIES FOLDER "Foundation")
 
 add_subdirectory(src/kernel/plcore/)
 set_target_properties(plcore PROPERTIES FOLDER "Kernel")
+file(COPY src/kernel/docs/plcore/ DESTINATION ${CMAKE_HOME_DIRECTORY}/release/legal/)
+
 add_subdirectory(src/kernel/plgraphics/)
 set_target_properties(plgraphics PROPERTIES FOLDER "Kernel")
 add_subdirectory(src/kernel/plugins/driver_opengl/)
@@ -171,6 +174,7 @@ set(HEI_LIBRARIES qm-os qm-math plcore plgraphics)
 
 add_subdirectory(src/acm)
 set_target_properties(acm PROPERTIES FOLDER "Kernel")
+set_target_properties(acm-tests PROPERTIES FOLDER "Tests")
 
 if (MSVC)
     if (${APE_SYSTEM_ARCH} MATCHES x86_64)
@@ -194,14 +198,19 @@ set(CMAKE_C_STANDARD 23)
 add_subdirectory(src/aux)
 add_subdirectory(src/core)
 
-if (APE_OPTION_TOOLS)
+if (APE_OPTION_EDITOR)
+    add_subdirectory(src/craft)
     add_subdirectory(src/forge)
+endif ()
+
+add_subdirectory(src/game) # includes shells
+
+if (APE_OPTION_TOOLS)
     add_subdirectory(src/tools/cook)
     add_subdirectory(src/tools/fonttool)
     add_subdirectory(src/tools/matgen)
     add_subdirectory(src/tools/starbox)
 endif ()
-add_subdirectory(src/game) # includes shells
 
 ####################################################################
 ####################################################################
