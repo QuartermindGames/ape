@@ -181,7 +181,7 @@ long forge::MainWindow::on_new_room( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::on_open_room( FXObject *, FXSelector, void * )
 {
-	const char *path     = com_project_get_local_path();
+	const char *path     = aux_project_get_local_path();
 	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a room", FXString( path ) + "/dev/rooms/", "*." APE_WORLD_ROOM_EXTENSION );
 	if ( filename.empty() )
 	{
@@ -221,7 +221,7 @@ long forge::MainWindow::on_save_room( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 {
-	const char *path     = com_project_get_local_path();
+	const char *path     = aux_project_get_local_path();
 	FXString    filename = FXFileDialog::getOpenFilename( this, "Select a model", FXString( path ) + "/", "*.mdl.n" );
 	if ( filename.empty() )
 	{
@@ -246,7 +246,7 @@ long forge::MainWindow::open_model( FXObject *, FXSelector, void * )
 
 long forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 {
-	const char *path     = com_project_get_local_path();
+	const char *path     = aux_project_get_local_path();
 	FXString    filename = FXFileDialog::getOpenFilename( this, "Select an existing material", FXString( path ) + "/", "*.mat.n" );
 	if ( filename.empty() )
 	{

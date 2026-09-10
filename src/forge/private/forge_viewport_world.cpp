@@ -1041,7 +1041,7 @@ long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	std::string origin = std::string( com_project_get_local_path() ) + "/dev/<export>";
+	std::string origin = std::string( aux_project_get_local_path() ) + "/dev/<export>";
 
 	char *filename = forge_dialog_save( this, "Save Export", ".node", origin.c_str() );
 	if ( filename == nullptr )
@@ -1074,7 +1074,7 @@ long forge::WorldViewport::on_export( FXObject *, FXSelector, void * )
 
 long forge::WorldViewport::on_import( FXObject *, FXSelector, void * )
 {
-	std::string origin = std::string( com_project_get_local_path() ) + "/dev/<export>";
+	std::string origin = std::string( aux_project_get_local_path() ) + "/dev/<export>";
 
 	char *filename = forge_dialog_open( this, "Open Export", ".node", origin.c_str() );
 	if ( filename == nullptr )
@@ -1152,7 +1152,7 @@ long forge::WorldViewport::on_create_node( FXObject *, FXSelector sel, void * )
 		}
 		case ID_CREATE_NODE + APE_WORLD_NODE_TYPE_MODEL:
 		{
-			const char *path     = com_project_get_local_path();
+			const char *path     = aux_project_get_local_path();
 			FXString    filename = FXFileDialog::getOpenFilename( this, "Select a model", FXString( path ) + "/ship/models/", "*." APE_FORMAT_MODEL_EXTENSION );
 			if ( filename.empty() )
 			{

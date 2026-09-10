@@ -48,7 +48,7 @@ void CraftMainWindow::show_about()
 
 void CraftMainWindow::open_room()
 {
-	const QString projectPath = com_project_get_local_path();
+	const QString projectPath = aux_project_get_local_path();
 	const QString filename    = QFileDialog::getOpenFileName( this, "Open Room", projectPath + "/dev/rooms/", "Room Files (*." APE_WORLD_ROOM_EXTENSION ")" );
 	if ( filename.isEmpty() )
 	{

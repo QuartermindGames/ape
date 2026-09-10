@@ -26,8 +26,7 @@ int main( int argc, char **argv )
 	TEST_RUN_INIT
 
 	aux_initialize( argc, argv );
-
-	com_project_mount( "base" );
+	aux_project_mount( "base" );
 
 	CALL_FUNC_TEST( io_model_test_smd )
 	TEST_RUN_END

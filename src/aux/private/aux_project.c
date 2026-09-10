@@ -5,20 +5,19 @@
 #include <acm/acm.h>
 
 #include "aux_private.h"
-
 #include "aux/public/aux_project.h"
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-#define COM_MAX_PROJECT_BASENAME 64
-#define COM_MAX_PROJECT_NAME     64
-#define COM_MAX_DEPENDENCIES     8
+static constexpr uint8_t MAX_PROJECT_BASENAME = 64;
+static constexpr uint8_t MAX_PROJECT_NAME     = 64;
+static constexpr uint8_t MAX_DEPENDENCIES     = 8;
 
-typedef struct ComProject
+typedef struct Project
 {
-	char baseName[ COM_MAX_PROJECT_BASENAME ];
-	char name[ COM_MAX_PROJECT_NAME ];
+	char baseName[ MAX_PROJECT_BASENAME ];
+	char name[ MAX_PROJECT_NAME ];
 	char developer[ 64 ];
 	int  version[ 3 ];
 
@@ -28,18 +27,18 @@ typedef struct ComProject
 	QmFsMount   *subMountLocations[ MAX_FILESYSTEM_MOUNTS ];
 	unsigned int numSubMountLocations;
 
-	struct ComProject *parent;
-	struct ComProject *dependencies[ COM_MAX_DEPENDENCIES ];
-	unsigned int       numDependencies;
+	struct Project *parent;
+	struct Project *dependencies[ MAX_DEPENDENCIES ];
+	unsigned int    numDependencies;
 
 	AcmBranch *config;
 
 	PLPath localPath;
-} ComProject;
+} Project;
 
-static ComProject project;
+static Project project;
 
-static void parse_mount_config( AcmBranch *root, ComProject *out )
+static void parse_mount_config( AcmBranch *root, Project *out )
 {
 	unsigned int numChildren = acm_get_num_of_children( root );
 	if ( numChildren == 0 )
@@ -71,7 +70,7 @@ static void parse_mount_config( AcmBranch *root, ComProject *out )
 	}
 }
 
-static ComProject *deserialize_project( AcmBranch *root, const char *name, ComProject *out )
+static Project *deserialize_project( AcmBranch *root, const char *name, Project *out )
 {
 	PLPath path;
 	PlSetupPath( path, true, "%s/projects/%s", com_get_local_data_directory(), name );
@@ -102,7 +101,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 		child = acm_get_first_child( child );
 		while ( child != NULL )
 		{
-			char baseName[ COM_MAX_PROJECT_BASENAME ];
+			char baseName[ MAX_PROJECT_BASENAME ];
 			if ( acm_branch_get_string( child, baseName, sizeof( baseName ) ) != ACM_ERROR_SUCCESS )
 			{
 				com_warning_( "Failed to load dependency due to invalid dependency listing!\n" );
@@ -123,7 +122,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 			// if we ever make any sort of public SDK, but for now I'm quickly throwing this together
 			// to meet a deadline... aaaahhhh
 
-			ComProject *head = ( out->parent == NULL ) ? out : out->parent;
+			Project *head = ( out->parent == NULL ) ? out : out->parent;
 			if ( strcmp( head->baseName, baseName ) == 0 )
 			{
 				com_warning_( "Project is including self as dependency, bailing!\n" );
@@ -131,7 +130,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 			}
 
 			unsigned int index                  = head->numDependencies;
-			head->dependencies[ index ]         = QM_OS_MEMORY_NEW( ComProject );
+			head->dependencies[ index ]         = QM_OS_MEMORY_NEW( Project );
 			head->dependencies[ index ]->parent = out;
 			head->numDependencies++;
 
@@ -143,9 +142,9 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 
 			acm_branch_destroy( croot );
 
-			if ( head->numDependencies >= COM_MAX_DEPENDENCIES )
+			if ( head->numDependencies >= MAX_DEPENDENCIES )
 			{
-				com_warning_( "Hit dependency limit (%u), bailing on others (this might mean content will be missing!)\n", COM_MAX_DEPENDENCIES );
+				com_warning_( "Hit dependency limit (%u), bailing on others (this might mean content will be missing!)\n", MAX_DEPENDENCIES );
 				break;
 			}
 
@@ -156,7 +155,7 @@ static ComProject *deserialize_project( AcmBranch *root, const char *name, ComPr
 	return out;
 }
 
-static void free_project( ComProject *out )
+static void free_project( Project *out )
 {
 	if ( out->config != NULL )
 	{
@@ -196,7 +195,7 @@ static void free_project( ComProject *out )
 /////////////////////////////////////////////////////////////////////////////////////
 // Public
 
-AcmBranch *com_project_mount( const char *name )
+AcmBranch *aux_project_mount( const char *name )
 {
 	if ( project.config != nullptr )
 	{
@@ -216,25 +215,25 @@ AcmBranch *com_project_mount( const char *name )
 
 	if ( deserialize_project( root, name, &project ) == NULL )
 	{
-		com_project_unmount();// call unmount to cleanup
+		aux_project_unmount();// call unmount to cleanup
 	}
 
 	project.config = root;
 	return project.config;
 }
 
-void com_project_unmount( void )
+void aux_project_unmount( void )
 {
 	free_project( &project );
 
-	project = ( ComProject ) {};
+	project = ( Project ) {};
 }
 
-const char *com_project_get_local_path( void ) { return project.localPath; }
-const char *com_project_get_base_name( void ) { return project.baseName; }
-const char *com_project_get_name( void ) { return project.name; }
+const char *aux_project_get_local_path( void ) { return project.localPath; }
+const char *aux_project_get_base_name( void ) { return project.baseName; }
+const char *aux_project_get_name( void ) { return project.name; }
 
-AcmBranch *com_project_get_config()
+AcmBranch *aux_project_get_config()
 {
 	return project.config;
 }

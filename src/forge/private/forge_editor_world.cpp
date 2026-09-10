@@ -137,7 +137,7 @@ forge::WorldEditor::~WorldEditor()
 std::string forge::WorldEditor::show_save_dialog()
 {
 	PLPath origin;
-	PlSetupPath( origin, true, "%s/dev/rooms/<room>", com_project_get_local_path() );
+	PlSetupPath( origin, true, "%s/dev/rooms/<room>", aux_project_get_local_path() );
 
 	FXString saveFilename = FXFileDialog::getSaveFilename( this, "Save Room", origin, "*." APE_WORLD_ROOM_EXTENSION );
 	if ( saveFilename.empty() )
@@ -361,7 +361,7 @@ long forge::WorldEditor::on_new_room( FXObject *, FXSelector, void * )
 
 long forge::WorldEditor::on_add_room( FXObject *, FXSelector, void * )
 {
-	const char *projectPath = com_project_get_local_path();
+	const char *projectPath = aux_project_get_local_path();
 	FXString    filename    = FXFileDialog::getOpenFilename( this, "Select a room", FXString( projectPath ) + "/dev/rooms/", "*." APE_WORLD_ROOM_EXTENSION );
 	if ( filename.empty() )
 	{
@@ -482,7 +482,7 @@ long forge::WorldEditor::on_play( FXObject *object, FXSelector selector, void *p
 		return false;
 	}
 
-	const char *projectName = com_project_get_base_name();
+	const char *projectName = aux_project_get_base_name();
 
 	PLPath exeDir;
 	PlGetExecutableDirectory( exeDir, sizeof( exeDir ) );
@@ -655,7 +655,7 @@ void forge::WorldEditor::autosave()
 	}
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/dev/rooms/autosave." APE_WORLD_ROOM_EXTENSION, com_project_get_local_path() );
+	PlSetupPath( path, true, "%s/dev/rooms/autosave." APE_WORLD_ROOM_EXTENSION, aux_project_get_local_path() );
 
 	AcmBranch *root = ape_world_node_serialize( APE_WORLD_NODE( room ), nullptr );
 	if ( root == nullptr )

@@ -3,13 +3,13 @@
 #include <plcore/pl_filesystem.h>
 
 #include "cook.h"
-#include "model/model_obj.h"
+#include "../../io_model/public/io_model_obj.h"
 
 #include "ape/ape_public_world.h"
 
 static void import_obj_geometry( const char *path, const char *worldName )
 {
-	ObjModel *model = model_obj_load( path );
+	IOModelObj *model = io_model_obj_load( path, TODO );
 	if ( model == nullptr )
 	{
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
@@ -24,7 +24,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		child = acm_push_array_f32( root, "vertices", nullptr, 0 );
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
-			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
+			IOModelObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
 			if ( v == NULL )
 			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
@@ -43,7 +43,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 
 		child = acm_push_array_object( root, "faces" );
 		unsigned int numFaces;
-		ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
+		IOModelObjFace    **faces = ( IOModelObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
 		for ( unsigned int j = 0; j < numFaces; ++j )
 		{
 			AcmBranch *faceBranch = acm_push_object( child, nullptr );
@@ -55,9 +55,9 @@ static void import_obj_geometry( const char *path, const char *worldName )
 			QmMathVector3f r;
 			for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 			{
-				ObjVertex *va = PlGetVectorArrayElementAt( model->vertices, ( k + 1 ) % faces[ j ]->numEdges );
-				ObjVertex *vb = PlGetVectorArrayElementAt( model->vertices, k );
-				ObjVertex *vc = PlGetVectorArrayElementAt( model->vertices, ( k + 2 ) % faces[ j ]->numEdges );
+				IOModelObjVertex *va = PlGetVectorArrayElementAt( model->vertices, ( k + 1 ) % faces[ j ]->numEdges );
+				IOModelObjVertex *vb = PlGetVectorArrayElementAt( model->vertices, k );
+				IOModelObjVertex *vc = PlGetVectorArrayElementAt( model->vertices, ( k + 2 ) % faces[ j ]->numEdges );
 
 				QmMathVector3f n = qm_math_vector3f_cross_product( qm_math_vector3f_sub( va->position, vb->position ),
 				                                     qm_math_vector3f_sub( vb->position, vc->position ) );
@@ -79,14 +79,14 @@ static void import_obj_geometry( const char *path, const char *worldName )
 			for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 			{
 				AcmBranch *edgeBranch = acm_push_object( verticesBranch, nullptr );
-				acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
+				acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ IO_MODEL_OBJ_INDEX_VERTEX ] );
 
-				QmMathVector3f *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
+				QmMathVector3f *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ IO_MODEL_OBJ_INDEX_NORMAL ] );
 				if ( normal != NULL )
 				{
 					acm_push_array_f32( edgeBranch, "normal", ( float * ) normal, 3 );
 				}
-				QmMathVector2f *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
+				QmMathVector2f *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ IO_MODEL_OBJ_INDEX_TEXTURE ] );
 				if ( uv != NULL )
 				{
 					acm_push_array_f32( edgeBranch, "uv", ( float * ) &( QmMathVector3f ) { uv->x, -uv->y }, 2 );
@@ -95,7 +95,7 @@ static void import_obj_geometry( const char *path, const char *worldName )
 		}
 
 		PLPath path;
-		PlSetupPath( path, true, "%s/ship/worlds/%s/brushes", com_project_get_local_path(), worldName );
+		PlSetupPath( path, true, "%s/ship/worlds/%s/brushes", aux_project_get_local_path(), worldName );
 		if ( !PlCreatePath( path ) )
 		{
 			ERROR( "Failed to create output path (%s): %s\n", path, PlGetError() );
@@ -113,7 +113,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 {
 	PLPath path;
 	PlSetupPath( path, true, "worlds/%s/%s.obj", worldName, worldName );
-	ObjModel *model = model_obj_load( path );
+	IOModelObj *model = io_model_obj_load( path, TODO );
 	if ( model == NULL )
 	{
 		ERROR( "Failed to open OBJ model (%s)!\n", path );
@@ -168,7 +168,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		child = acm_push_array_f32( root, "vertices", nullptr, 0 );
 		for ( unsigned int j = 0; j < PlGetNumVectorArrayElements( model->vertices ); ++j )
 		{
-			ObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
+			IOModelObjVertex *v = PlGetVectorArrayElementAt( model->vertices, j );
 			if ( v == NULL )
 			{
 				ERROR( "Attempted to retrieve an invalid vertex (%u): %s\n", j, PlGetError() );
@@ -189,7 +189,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 		for ( unsigned int i = 0; i < model->numSubObjects; ++i )
 		{
 			unsigned int numFaces;
-			ObjFace    **faces = ( ObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
+			IOModelObjFace    **faces = ( IOModelObjFace ** ) PlGetVectorArrayDataEx( model->subObjects[ i ].faces, &numFaces );
 			for ( unsigned int j = 0; j < numFaces; ++j )
 			{
 				if ( strncmp( model->materials[ faces[ j ]->material ].name, "tools/skip", 10 ) == 0 )
@@ -206,19 +206,19 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 				for ( unsigned int k = 0; k < faces[ j ]->numEdges; ++k )
 				{
 					AcmBranch *edgeBranch = acm_push_object( verticesBranch, nullptr );
-					acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_VERTEX ] );
+					acm_push_ui32( edgeBranch, "vertexIndex", faces[ j ]->indices[ k ][ IO_MODEL_OBJ_INDEX_VERTEX ] );
 					//ndPushBackUI32( edgeBranch, "normalIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
 					//ndPushBackUI32( edgeBranch, "uvIndex", faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
 
 					// For now, because we've already got the deserialiser written out like it, let's bundle them as explicit values,
 					// but in the longer term we should probably consider the above instead
 
-					QmMathVector3f *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ OBJ_INDEX_NORMAL ] );
+					QmMathVector3f *normal = PlGetVectorArrayElementAt( model->normals, faces[ j ]->indices[ k ][ IO_MODEL_OBJ_INDEX_NORMAL ] );
 					if ( normal != NULL )
 					{
 						acm_push_array_f32( edgeBranch, "normal", ( float * ) normal, 3 );
 					}
-					QmMathVector2f *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ OBJ_INDEX_TEXTURE ] );
+					QmMathVector2f *uv = PlGetVectorArrayElementAt( model->textureCoords, faces[ j ]->indices[ k ][ IO_MODEL_OBJ_INDEX_TEXTURE ] );
 					if ( uv != NULL )
 					{
 						acm_push_array_f32( edgeBranch, "uv", ( float * ) &( QmMathVector3f ) { uv->x, -uv->y }, 2 );
@@ -250,7 +250,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 			acm_push_string( nodeBranch, "path", path, false );
 		}
 
-		PlSetupPath( path, true, "%s/ship/worlds/%s/rooms", com_project_get_local_path(), worldName );
+		PlSetupPath( path, true, "%s/ship/worlds/%s/rooms", aux_project_get_local_path(), worldName );
 		if ( !PlCreatePath( path ) )
 		{
 			ERROR( "Failed to create output path (%s): %s\n", path, PlGetError() );
@@ -267,7 +267,7 @@ static void process_geometry( const char *worldName, AcmBranch *root )
 #endif
 	}
 
-	model_obj_destroy( model );
+	io_model_obj_destroy( model );
 }
 
 void cook_world_process( const char *worldName )
@@ -280,7 +280,7 @@ void cook_world_process( const char *worldName )
 	process_geometry( worldName, root );
 
 	PLPath path;
-	PlSetupPath( path, true, "%s/ship/worlds/%s/%s." APE_WORLD_EXTENSION, com_project_get_local_path(), worldName, worldName );
+	PlSetupPath( path, true, "%s/ship/worlds/%s/%s." APE_WORLD_EXTENSION, aux_project_get_local_path(), worldName, worldName );
 	if ( !acm_write_file( path, root, ACM_FILE_TYPE_BINARY ) )
 	{
 		ERROR( "Failed to write world: %s\n", acm_get_error_message() );

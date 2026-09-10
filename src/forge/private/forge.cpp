@@ -238,7 +238,7 @@ forge::Project *forge::create_project( const std::string &name, const std::strin
 
 bool forge::open_project( const char *path )
 {
-	return com_project_mount( path );
+	return aux_project_mount( path );
 }
 
 static void setup_paths( const char *exePath )
@@ -399,7 +399,7 @@ int qm_os_main( const int argc, char **argv )
 	if ( projectName != nullptr )
 	{
 		AcmBranch *branch;
-		if ( ( branch = com_project_mount( projectName ) ) == nullptr )
+		if ( ( branch = aux_project_mount( projectName ) ) == nullptr )
 		{
 			shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Invalid project specified (%s), aborting!", projectName );
 			return EXIT_FAILURE;

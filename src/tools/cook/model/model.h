@@ -4,8 +4,6 @@
 
 #include "ape/ape_formats.h"
 
-#include "model_obj.h"
-
 PL_EXTERN_C
 
 #define SMD_MAX_MESHES    IO_MODEL_MAX_MATERIALS

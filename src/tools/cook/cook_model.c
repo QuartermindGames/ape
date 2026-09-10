@@ -17,9 +17,7 @@
 // Private
 
 extern const CookModelFormatInterface  cook_modelSmdInterface;
-extern const CookModelFormatInterface  cook_modelObjInterface;
 static const CookModelFormatInterface *modelCookFormats[] = {
-        &cook_modelObjInterface,
         &cook_modelSmdInterface,
         nullptr,
 };

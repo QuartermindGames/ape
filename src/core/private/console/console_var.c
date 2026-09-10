@@ -323,7 +323,7 @@ void ape_console_var_register( const char *name, const char *desc, const char *v
 	// unlike the original api, the defaults are fetched from the project config
 	// why? so that individual projects can define their own appropriate defaults
 
-	AcmBranch *configBranch = com_project_get_config();
+	AcmBranch *configBranch = aux_project_get_config();
 	if ( configBranch != nullptr )
 	{
 		AcmBranch *child = acm_get_child( configBranch, "defaultConfig" );

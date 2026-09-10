@@ -313,7 +313,7 @@ static bool initialize_display( void )
 		height = ( int ) strtol( arg, nullptr, 10 );
 	}
 
-	if ( ( sdlWindow = create_window( com_project_get_name(), width, height, fullscreen, driverMode ) ) == NULL )
+	if ( ( sdlWindow = create_window( aux_project_get_name(), width, height, fullscreen, driverMode ) ) == NULL )
 	{
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
@@ -382,7 +382,7 @@ int qm_os_main( const int argc, char **argv )
 		projectName = acm_get_string( shellConfig, "defaultProject", "base" );
 	}
 
-	if ( com_project_mount( projectName ) == nullptr )
+	if ( aux_project_mount( projectName ) == nullptr )
 	{
 		fprintf( stderr, "Failed to mount project (%s)!\n", projectName );
 		return EXIT_FAILURE;

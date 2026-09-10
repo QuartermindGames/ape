@@ -12,23 +12,20 @@
 
 QM_TEST_FUNC( project )
 {
-	AcmBranch *branch = com_project_mount( "base" );
+	AcmBranch *branch = aux_project_mount( "base" );
 	if ( branch == nullptr )
 	{
 		QM_TEST_FAIL( "Failed on project mount.\n" );
 	}
 
-	QM_TEST_ASSERT( com_project_get_local_path() != nullptr );
-	QM_TEST_ASSERT( com_project_get_base_name() != nullptr );
-	QM_TEST_ASSERT( com_project_get_name() != nullptr );
+	QM_TEST_ASSERT( aux_project_get_local_path() != nullptr );
+	QM_TEST_ASSERT( aux_project_get_base_name() != nullptr );
+	QM_TEST_ASSERT( aux_project_get_name() != nullptr );
 
-	com_project_unmount();
+	aux_project_unmount();
 
-	branch = com_project_get_config();
-	if ( branch != nullptr )
-	{
-		QM_TEST_FAIL( "Failed on project unmount.\n" );
-	}
+	// confirm the project is unmounted
+	QM_TEST_ASSERT( aux_project_get_config() == nullptr );
 }
 QM_TEST_FUNC_END()
 

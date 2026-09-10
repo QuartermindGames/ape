@@ -40,7 +40,7 @@ static void process_collection( AcmBranch *root, const char *tag, void ( *callba
 
 static void cook_project( AcmBranch *root )
 {
-	const char *projectName = com_project_get_name();
+	const char *projectName = aux_project_get_name();
 	printf( "------------------------------------------------------\n"
 	        "Cooking \"%s\" project...\n",
 	        projectName );
@@ -51,7 +51,7 @@ static void cook_project( AcmBranch *root )
 		ERROR( "No cook configuration specified for project, aborting!\n" );
 	}
 
-	process_collection( cookBranch, "worlds", cook_world_process );
+	//process_collection( cookBranch, "worlds", cook_world_process );
 	process_collection( cookBranch, "models", cook_model_process );
 }
 
@@ -75,7 +75,7 @@ int main( int argc, char **argv )
 
 	AcmBranch  *config;
 	const char *projectName = argv[ 1 ];
-	if ( ( config = com_project_mount( projectName ) ) == NULL )
+	if ( ( config = aux_project_mount( projectName ) ) == NULL )
 	{
 		ERROR( "Failed to mount project (%s)!\n", projectName );
 	}
@@ -90,7 +90,7 @@ int main( int argc, char **argv )
 
 		if ( pl_strcasecmp( argv[ i ], "/world" ) == 0 )
 		{
-			cook_world_process( argv[ ++i ] );
+			//cook_world_process( argv[ ++i ] );
 			numCommands++;
 		}
 		else if ( pl_strcasecmp( argv[ i ], "/model" ) == 0 )

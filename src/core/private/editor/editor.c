@@ -459,7 +459,7 @@ static void load_command( unsigned int argc, const char *const *argv )
 
 void ape_initialize_editor_( void )
 {
-	AcmBranch *root = com_project_get_config();
+	AcmBranch *root = aux_project_get_config();
 	assert( root != NULL );
 	editorConfigRoot = acm_get_child( root, "editor" );
 	if ( editorConfigRoot == nullptr )

@@ -176,11 +176,11 @@ void nih_menu_initialize_()
 	game_menu_initialize();
 
 	// use the name from the project conf. for the title, so mods etc. can set their own thing
-	const char *title = acm_get_string( com_project_get_config(), "name", NIH_GAME_TITLE );
+	const char *title = acm_get_string( aux_project_get_config(), "name", NIH_GAME_TITLE );
 	game_menu_set_title( title );
 
 	const char *subtitle;
-	if ( ( subtitle = acm_get_string( com_project_get_config(), "subtitle", nullptr ) ) != nullptr )
+	if ( ( subtitle = acm_get_string( aux_project_get_config(), "subtitle", nullptr ) ) != nullptr )
 	{
 		game_menu_set_subtitle( subtitle );
 	}

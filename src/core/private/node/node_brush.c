@@ -3,6 +3,7 @@
 // Author:  Mark E. Sowden
 
 #include "plcore/pl_hashtable.h"
+
 #include "qmos/public/qm_os_shared_ptr.h"
 
 #include "ape_private.h"
@@ -948,7 +949,7 @@ void ape_brush_smooth_faces( const QmOsLinkedList *faces )
 					const QmMathVector3f *b = &adjBrush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ l + 1 ] ].posIndex ];
 					const QmMathVector3f *c = &adjBrush->vertices[ adjFace->vertices[ adjFace->edgeLoopOrder[ ( l + 2 ) % adjFace->numVertices ] ].posIndex ];
 
-					QmMathVector3f n = PlgGenerateVertexNormal( *a, *b, *c );
+					QmMathVector3f n = qm_math_compute_triangle_normal( *a, *b, *c );
 
 					normal = qm_math_vector3f_add( normal, n );
 				}
