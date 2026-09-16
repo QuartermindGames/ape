@@ -392,6 +392,11 @@ void ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles
 	update_transform( self );
 }
 
+QmMathVector3f ape_world_node_get_scale( const ApeWorldNode *self )
+{
+	return self->scale;
+}
+
 void ape_world_node_set_scale( ApeWorldNode *self, const QmMathVector3f *scale )
 {
 	self->scale = *scale;

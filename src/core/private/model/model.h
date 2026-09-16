@@ -26,11 +26,17 @@ typedef struct ApeModel
 	IOModelBone *rootBone;
 	unsigned int numBones;
 
+	// mind that origin is NOT valid for these,
+	// honestly maybe the origin should be dropped from the AABB struct altogether, bleh...
+	PLCollisionAABB bounds;// non-rotated bounds, based on the original mesh
+	//TODO: rather than bounds, use a sphere for this
+	PLCollisionAABB rotatedBounds;// and bounds that account for the rotation
+
 	unsigned int flags;
 
 	QmGfxMesh *cache;
 
-	PLLinkedList *sceneNodes;
+	QmOsLinkedList *sceneNodes;
 
 	ApeMemoryReference reference;
 } ApeModel;
@@ -45,7 +51,7 @@ typedef struct ApeModelNode
 
 	ApeRendererLightGridSample light;
 
-	struct PLLinkedListNode *modelSceneNode;
+	QmOsLinkedListNode *sceneNode;
 } ApeModelNode;
 
 PL_EXTERN_C_END

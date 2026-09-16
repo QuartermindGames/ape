@@ -227,6 +227,11 @@ const ApeLightGridCell *ape_light_grid_sample_cell_( const ApeLightGrid *self, c
 	return cell;
 }
 
+QmMathVector3f ape_light_grid_get_cell_size_( const ApeLightGrid *self )
+{
+	return self->cellSize;
+}
+
 void ape_light_grid_draw_( const ApeLightGrid *self )
 {
 	PLCollisionAABB bounds = {};

@@ -28,10 +28,9 @@ static void model_cleanup_callback_( void *userData )
 		ape_material_release_reference( model->meshes[ i ].material );
 	}
 
-	PlDestroyLinkedList( model->sceneNodes );
-
 	qm_gfx_mesh_destroy( model->cache );
 
+	qm_os_memory_free( model->sceneNodes );
 	qm_os_memory_free( model );
 }
 
@@ -72,6 +71,32 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 	}
 
 	return mesh;
+}
+
+static void compute_model_bounds( ApeModel *model )
+{
+	model->bounds = ( PLCollisionAABB ) {};
+
+	assert( model->cache->num_verts > 0 );
+	float max = model->cache->vertices[ 0 ].position.x;
+	float min = model->cache->vertices[ 0 ].position.x;
+	for ( unsigned int i = 0; i < model->cache->num_verts; ++i )
+	{
+		for ( unsigned int j = 0; j < 3; ++j )
+		{
+			const float v = model->cache->vertices[ i ].position.v[ j ];
+
+			if ( v > max ) max = v;
+			if ( v < min ) min = v;
+
+			if ( v > model->bounds.maxs.v[ j ] ) model->bounds.maxs.v[ j ] = v;
+			if ( v < model->bounds.mins.v[ j ] ) model->bounds.mins.v[ j ] = v;
+		}
+	}
+
+	if ( min * -1 > max ) max = min * -1;
+	model->rotatedBounds.mins = qm_math_vector3f( -max, -max, -max );
+	model->rotatedBounds.maxs = qm_math_vector3f( max, max, max );
 }
 
 static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
@@ -205,7 +230,9 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 	qm_os_memory_free( vertices );
 
-	model->sceneNodes = PlCreateLinkedList();
+	model->sceneNodes = qm_os_linked_list_create();
+
+	compute_model_bounds( model );
 
 	return model;
 }
@@ -314,30 +341,7 @@ bool ape_model_is_static( const ApeModel *model )
 	return !( model->flags & IO_MODEL_FLAG_ANIMATED );
 }
 
-static PLCollisionAABB compute_model_bounds( const ApeModel *model )
-{
-	PLCollisionAABB bounds = {};
-	assert( model->cache->num_verts > 0 );
-	float max = model->cache->vertices[ 0 ].position.x;
-	float min = model->cache->vertices[ 0 ].position.x;
-	for ( unsigned int i = 0; i < model->cache->num_verts; ++i )
-	{
-		if ( model->cache->vertices[ i ].position.x > max ) max = model->cache->vertices[ i ].position.x;
-		if ( model->cache->vertices[ i ].position.y > max ) max = model->cache->vertices[ i ].position.y;
-		if ( model->cache->vertices[ i ].position.z > max ) max = model->cache->vertices[ i ].position.z;
-		if ( model->cache->vertices[ i ].position.x < min ) min = model->cache->vertices[ i ].position.x;
-		if ( model->cache->vertices[ i ].position.y < min ) min = model->cache->vertices[ i ].position.y;
-		if ( model->cache->vertices[ i ].position.z < min ) min = model->cache->vertices[ i ].position.z;
-	}
-
-	if ( min * -1 > max ) max = min * -1;
-	bounds.mins = qm_math_vector3f( -max, -max, -max );
-	bounds.maxs = qm_math_vector3f( max, max, max );
-
-	return bounds;
-}
-
-static void ape_model_compute_lighting( ApeModelNode *sceneNode, double delta )
+static void compute_model_lighting( ApeModelNode *sceneNode, const ApeModel *model, const double delta )
 {
 	ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( sceneNode ) );
 	if ( room == nullptr || APE_WORLD_NODE( sceneNode )->flags == APE_WORLD_NODE_FLAG_HIDDEN )
@@ -345,31 +349,53 @@ static void ape_model_compute_lighting( ApeModelNode *sceneNode, double delta )
 		return;
 	}
 
-	QmMathVector3f spos = ape_world_node_get_bounds_center( APE_WORLD_NODE( sceneNode ) );
+	sceneNode->light.ambience = QM_MATH_COLOUR4F_TO_3F( ape_room_get_ambience( room ) );
+
+	// try to fetch the cell size, just to check if we've even got a light grid yet
+	// originally there was some other code using this to do some outrageous stuff
+	// to sample multiple cells, but it was slow and not as reliable as I'd hoped :(
+	QmMathVector3f cellSize;
+	if ( !ape_room_get_light_cell_size( room, &cellSize ) )
+	{
+		return;
+	}
+
+	// grab the center of the model bounds (not the origin, as that'll likely be in the ground!)
+	QmMathVector3f spos = PlGetAabbAbsOrigin( &model->bounds, QM_MATH_VECTOR3F_ZERO );
+
+	// and transform it, so it's correct relative to the rotation, scale and so on
+	const PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( sceneNode ) );
+	spos                      = PlTransformVector3( &spos, &transform );
 
 	ApeRendererLightGridSample sample = {};
 	ape_room_get_light_sample( room, spos, &sample.colour, &sample.dir );
 
 	aux_math_interpolate_angles( &sceneNode->light.dir, &sample.dir, 7.0f * delta, &sceneNode->light.dir );
 	aux_math_interpolate_colour_3f16( &sceneNode->light.colour, &sample.colour, 7.0f * delta, &sceneNode->light.colour );
-
-	sceneNode->light.ambience = QM_MATH_COLOUR4F_TO_3F( ape_room_get_ambience( room ) );
 }
 
+//TODO: this should only do visible models
+//		and when a model is created in the scene
 void ape_model_compute_models_lighting( const double delta )
 {
+	COM_PROFILE_FUNCTION_START();
+
 	// fetch all the models currently cached in the scene
 	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
 
 	ApeMemoryCacheHeader *header;
 	COM_ITERATE_LINKED_LIST( header, models, i )
 	{
+		ApeModel *model = header->userData;
+
 		ApeModelNode *sceneNode;
-		COM_ITERATE_LINKED_LIST( sceneNode, ( ( ApeModel * ) header->userData )->sceneNodes, j )
+		QM_OS_LINKED_LIST_ITERATE( sceneNode, model->sceneNodes, j )
 		{
-			ape_model_compute_lighting( sceneNode, delta );
+			compute_model_lighting( sceneNode, model, delta );
 		}
 	}
+
+	COM_PROFILE_FUNCTION_END();
 }
 
 void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRendererPassState *state )
@@ -388,7 +414,7 @@ void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRen
 		ApeModel *model = header->userData;
 
 		ApeModelNode *sceneNode;
-		COM_ITERATE_LINKED_LIST( sceneNode, model->sceneNodes, j )
+		QM_OS_LINKED_LIST_ITERATE( sceneNode, model->sceneNodes, j )
 		{
 			if ( APE_WORLD_NODE( sceneNode )->room != room || APE_WORLD_NODE( sceneNode )->flags == APE_WORLD_NODE_FLAG_HIDDEN )
 			{
@@ -425,10 +451,10 @@ static void assign_model_to_model_node( ApeModelNode *self, ApeModel *model, con
 	PlSetupPath( self->modelPath, true, "%s", path );
 
 	//TODO: these should be reversed!
-	self->base.bounds      = compute_model_bounds( self->model );
+	self->base.bounds      = self->model->rotatedBounds;
 	self->base.localBounds = self->base.bounds;
 
-	self->modelSceneNode = PlInsertLinkedListNode( model->sceneNodes, self );
+	self->sceneNode = qm_os_linked_list_push_back( model->sceneNodes, self );
 }
 
 ApeModelNode *ape_model_node_create( ApeWorldNode *parent, const char *name, const char *path )
@@ -453,10 +479,9 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 {
 	ApeModelNode *self = data;
 
-	PlDestroyLinkedListNode( self->modelSceneNode );
-
 	ape_model_release_reference( self->model );
 
+	qm_os_memory_free( self->sceneNode );
 	qm_os_memory_free( self );
 }
 
@@ -470,10 +495,10 @@ static ApeWorldNode *clone_model_node( ApeWorldNode *src )
 		return nullptr;
 	}
 
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( srcModelNode ) );
+	const QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( srcModelNode ) );
 	ape_world_node_set_position( APE_WORLD_NODE( dstModelNode ), &pos );
 
-	QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( srcModelNode ) );
+	const QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( srcModelNode ) );
 	ape_world_node_set_angles( APE_WORLD_NODE( dstModelNode ), &ang );
 
 	return APE_WORLD_NODE( dstModelNode );

@@ -63,6 +63,11 @@ void                    ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *ro
 const ApeLightGridCell *ape_light_grid_sample_cell_( const ApeLightGrid *self, QmMathVector3f position, QmMathColour3f16 *dstColour, QmMathVector3f *dstDir );
 
 /**
+ * Returns the size of a cell in the grid.
+ */
+QmMathVector3f ape_light_grid_get_cell_size_( const ApeLightGrid *self );
+
+/**
  * Attempts to draw the given light grid.
  * Mind this method is *very* expensive, especially if you've got a high density
  * grid.

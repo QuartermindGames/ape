@@ -10,11 +10,6 @@ if (APE_OPTION_TOOLS)
             private/editor/editor_selection.c
             private/editor/editor_ui.c
     )
-
-    # This is sort of gross - just use the fallback per ISPC
-    add_library(ispc_texcomp OBJECT ../3rdparty/ispc_texcomp/ispc_fallback.cpp)
-    target_compile_definitions(ispc_texcomp PRIVATE ISPC_FALLBACK_MODE)
-    target_include_directories(ispc_texcomp PUBLIC ../3rdparty/ispc_texcomp)
 endif ()
 
 add_library(ape-core STATIC

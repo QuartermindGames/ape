@@ -205,7 +205,8 @@ void           ape_world_node_set_position( ApeWorldNode *self, const QmMathVect
 QmMathVector3f ape_world_node_get_angles( const ApeWorldNode *self );
 void           ape_world_node_set_angles( ApeWorldNode *self, const QmMathVector3f *angles );
 
-void ape_world_node_set_scale( ApeWorldNode *self, const QmMathVector3f *scale );
+QmMathVector3f ape_world_node_get_scale( const ApeWorldNode *self );
+void           ape_world_node_set_scale( ApeWorldNode *self, const QmMathVector3f *scale );
 
 void ape_world_node_set_local_bounds( ApeWorldNode *self, const QmMathVector3f *mins, const QmMathVector3f *maxs );
 
@@ -533,7 +534,7 @@ ApeBrushFace **ape_world_get_tagged_surfaces( ApeWorld *self, unsigned int *numD
  */
 void ape_world_attach_light( ApeWorld *world, ApeLight *light );
 
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 // Room
 
 /**
@@ -559,6 +560,13 @@ ApeAudioReverbPreset ape_room_get_reverb_preset( const ApeRoom *self );
 
 bool ape_room_get_light_sample( ApeRoom *self, QmMathVector3f position, QmMathColour3f16 *dstLight, QmMathVector3f *dstDir );
 
+/**
+ * Returns the light cell size for the given room.
+ * If the light grid hasn't yet been computed, it returns false and dstSize is left
+ * as-is.
+ */
+bool ape_room_get_light_cell_size( const ApeRoom *self, QmMathVector3f *dstSize );
+
 void         ape_room_set_lightmap_edge_length( ApeRoom *self, unsigned int edgeLength );
 unsigned int ape_room_get_lightmap_edge_length( const ApeRoom *self );
 
@@ -569,7 +577,7 @@ ApeBrushFace *ape_room_get_tagged_surface( const ApeRoom *self, const char *tag 
 
 const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *face );
 
-////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 // Collisions
 
 typedef struct ComCollisionCylinder ComCollisionCylinder;

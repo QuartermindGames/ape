@@ -134,16 +134,29 @@ const char *ape_room_set_unique_surface_tag( const ApeRoom *self, ApeBrushFace *
 
 bool ape_room_get_light_sample( ApeRoom *self, const QmMathVector3f position, QmMathColour3f16 *dstLight, QmMathVector3f *dstDir )
 {
-	if ( self->lightGrid == nullptr )
+	const ApeLightGrid *grid = self->lightGrid;
+	if ( grid == nullptr )
 	{
 		return false;
 	}
 
-	if ( ape_light_grid_sample_cell_( self->lightGrid, position, dstLight, dstDir ) == nullptr )
+	if ( ape_light_grid_sample_cell_( grid, position, dstLight, dstDir ) == nullptr )
 	{
 		return false;
 	}
 
+	return true;
+}
+
+bool ape_room_get_light_cell_size( const ApeRoom *self, QmMathVector3f *dstSize )
+{
+	const ApeLightGrid *grid = self->lightGrid;
+	if ( grid == nullptr )
+	{
+		return false;
+	}
+
+	*dstSize = ape_light_grid_get_cell_size_( grid );
 	return true;
 }
 
