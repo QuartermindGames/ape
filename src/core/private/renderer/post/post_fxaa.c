@@ -29,7 +29,11 @@ static bool setup_fxaa_effect( void )
 
 static void cleanup_fxaa_effect( void )
 {
-	ape_material_release_reference( fxaaMaterial );
+	if ( fxaaMaterial != nullptr )
+	{
+		ape_material_release_reference( fxaaMaterial );
+		fxaaMaterial = nullptr;
+	}
 }
 
 static void draw_fxaa_effect( const ApeViewport *viewport, [[maybe_unused]] const ApeCamera *camera )

@@ -63,8 +63,11 @@ void ape_editor_ui_initialize_()
 
 void ape_editor_ui_shutdown_()
 {
-	ape_material_release_reference( uiMaterial );
-	uiMaterial = nullptr;
+	if ( uiMaterial != nullptr )
+	{
+		ape_material_release_reference( uiMaterial );
+		uiMaterial = nullptr;
+	}
 }
 
 void ape_editor_ui_draw_( const ApeViewport *viewport )

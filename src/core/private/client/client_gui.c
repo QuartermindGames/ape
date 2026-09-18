@@ -36,7 +36,11 @@ void ape_shutdown_gui_( void )
 {
 	ape_gui_shutdown_();
 
-	ape_material_release_reference( baseGuiMat );
+	if ( baseGuiMat != nullptr )
+	{
+		ape_material_release_reference( baseGuiMat );
+		baseGuiMat = nullptr;
+	}
 }
 
 void ape_setup_2d_viewport_( int w, int h )
