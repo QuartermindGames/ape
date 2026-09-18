@@ -625,12 +625,15 @@ void ape_input_tick_( void )
 		inputControllers[ i ].stickRDelta = qm_math_vector2f_sub( inputControllers[ i ].stickROld, inputControllers[ i ].stickR );
 	}
 
-	Button *key;
-	QM_OS_LINKED_LIST_ITERATE( key, inputKeyboard.activeKeyList, i )
+	if ( inputKeyboard.activeKeyList != nullptr )
 	{
-		key->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
-		qm_os_memory_free( key->activeNode );
-		key->activeNode = nullptr;
+		Button *key;
+		QM_OS_LINKED_LIST_ITERATE( key, inputKeyboard.activeKeyList, i )
+		{
+			key->state &= ~( APE_INPUT_STATE_PRESSED | APE_INPUT_STATE_RELEASED );
+			qm_os_memory_free( key->activeNode );
+			key->activeNode = nullptr;
+		}
 	}
 
 	// poll for new devices

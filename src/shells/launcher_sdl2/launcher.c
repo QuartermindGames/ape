@@ -541,7 +541,10 @@ int qm_os_main( const int argc, char **argv )
 			if ( profilerFrequency != nullptr )
 			{
 				const char *c = ape_console_var_get( "debug/profilerFrequency" );
-				freq          = strtol( c, nullptr, 10 );
+				if ( c != nullptr )
+				{
+					freq = strtol( c, nullptr, 10 );
+				}
 			}
 
 			com_profiler_update_samples( freq );

@@ -382,6 +382,11 @@ void ape_model_compute_models_lighting( const double delta )
 
 	// fetch all the models currently cached in the scene
 	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
+	if ( models == nullptr )
+	{
+		COM_PROFILE_FUNCTION_END();
+		return;
+	}
 
 	ApeMemoryCacheHeader *header;
 	COM_ITERATE_LINKED_LIST( header, models, i )
