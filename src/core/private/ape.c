@@ -24,7 +24,8 @@ static AcmBranch *engineConfig;
 static AcmBranch *userConfig;
 
 static bool engineTerminalMode;
-static bool engineInitialized;
+static bool isInitialized;
+static bool isShuttingDown;
 
 static void execute_launch_commands( unsigned int argc, char **argv )
 {
@@ -183,7 +184,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 	lastTime = qm_os_time_get_seconds();
 
-	engineInitialized = true;
+	isInitialized = true;
 
 	execute_launch_commands( argc, argv );
 
@@ -192,8 +193,14 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 
 void ape_shutdown( void )
 {
-	ape_console_print_( "Shutting down...\n" );
+	if ( !isInitialized || isShuttingDown )
+	{
+		return;
+	}
 
+	isShuttingDown = true;
+
+	ape_console_print_( "Shutting down...\n" );
 	ape_shutdown_editor_();
 	ape_shutdown_game_();
 	ape_shutdown_client_();
@@ -210,9 +217,13 @@ void ape_shutdown( void )
 	com_write_config( userConfig, "user" );
 	acm_branch_destroy( userConfig );
 
-	ss_shell_shutdown();
+	isShuttingDown = false;
+	isInitialized  = false;
+}
 
-	engineInitialized = false;
+bool ape_is_shutting_down()
+{
+	return isShuttingDown;
 }
 
 uint64_t ape_get_num_ticks( void )
@@ -222,7 +233,7 @@ uint64_t ape_get_num_ticks( void )
 
 void ape_tick_frame()
 {
-	if ( !engineInitialized )
+	if ( !ape_is_running() )
 	{
 		return;
 	}
@@ -268,17 +279,17 @@ void ape_tick_frame()
 bool ape_is_running( void )
 {
 	/* always running */
-	return engineInitialized;
+	return isInitialized && !isShuttingDown;
 }
 
 void ape_render_frame( ApeViewport *viewport )
 {
-	assert( viewport != nullptr );
-
-	if ( !engineInitialized )
+	if ( !ape_is_running() )
 	{
 		return;
 	}
+
+	assert( viewport != nullptr );
 
 	// If we're capturing, ignore the request from the
 	// caller to render the frame because we'll lock it

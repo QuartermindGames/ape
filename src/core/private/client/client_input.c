@@ -477,10 +477,7 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 		key->activeNode = qm_os_linked_list_push_back( inputKeyboard.activeKeyList, key );
 	}
 
-	if ( ape_console_handle_key_event_( keyIndex, isPressed ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE ) )
-	{
-		return;
-	}
+	ape_console_handle_key_event_( keyIndex, isPressed ? APE_INPUT_STATE_DOWN : APE_INPUT_STATE_NONE );
 }
 
 void ape_client_input_handle_mouse_button_event_( int button, ApeInputState buttonState )

@@ -17,6 +17,8 @@ unsigned int ape_get_tick_frequency();
 bool ape_initialize( unsigned int argc, char **argv, const char *config );
 void ape_shutdown( void );
 
+bool ape_is_shutting_down();
+
 void ape_render_frame( ApeViewport *viewport );
 void ape_tick_frame();
 

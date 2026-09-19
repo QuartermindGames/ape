@@ -95,8 +95,10 @@ ApeGuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 void ape_gui_font_destroy( ApeGuiFont *font )
 {
 	PlDestroyHashTable( font->glyphTable );
-	qm_os_memory_free( font->texture );
+
 	qm_gfx_mesh_destroy( font->mesh );
+
+	qm_os_memory_free( font->texture );
 	qm_os_memory_free( font->glyphs );
 	qm_os_memory_free( font );
 }

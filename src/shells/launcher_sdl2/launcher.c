@@ -218,6 +218,8 @@ void ss_shell_shutdown( void )
 {
 	com_write_config( shellConfig, "shell" );
 
+	shell_shutdown();
+
 	if ( sdlGLContext != nullptr )
 	{
 		SDL_GL_DestroyContext( sdlGLContext );
@@ -229,8 +231,6 @@ void ss_shell_shutdown( void )
 		SDL_DestroyWindow( sdlWindow );
 		sdlWindow = nullptr;
 	}
-
-	shell_shutdown();
 }
 
 int launcherLog;
@@ -447,7 +447,7 @@ int qm_os_main( const int argc, char **argv )
 		static bool updateProfiler;
 
 		SDL_Event event;
-		while ( SDL_PollEvent( &event ) )
+		while ( ape_is_running() && SDL_PollEvent( &event ) )
 		{
 			switch ( event.type )
 			{
@@ -455,14 +455,18 @@ int qm_os_main( const int argc, char **argv )
 					break;
 
 				case SDL_EVENT_USER:
+				{
 					ape_tick_frame();
 					shouldDraw     = true;
 					updateProfiler = true;
 					break;
+				}
 
 				case SDL_EVENT_TEXT_INPUT:
+				{
 					ape_input_handle_text_event( event.text.text );
 					break;
+				}
 
 				case SDL_EVENT_MOUSE_WHEEL:
 				{
@@ -507,7 +511,14 @@ int qm_os_main( const int argc, char **argv )
 					ape_viewport_set_size( windowViewport, drawW, drawH );
 					break;
 				}
+
+				case SDL_EVENT_WINDOW_CLOSE_REQUESTED: goto QUIT;
 			}
+		}
+
+		if ( !ape_is_running() )
+		{
+			break;
 		}
 
 		if ( !renderTimeLockVar->b_value || ( renderTimeLockVar->b_value && shouldDraw ) )
@@ -552,11 +563,13 @@ int qm_os_main( const int argc, char **argv )
 		}
 	}
 
+QUIT:
 	SDL_StopTextInput( sdlWindow );
 
 	ape_shutdown();
-
 	aux_shutdown();
+
+	ss_shell_shutdown();
 
 	return EXIT_SUCCESS;
 }
