@@ -356,7 +356,7 @@ void ape_input_initialize_( void )
 	unsigned char *buf = ape_fs_load_file_buffer( "mappings/gamecontrollerdb.txt", &bufSize );
 	if ( buf != nullptr )
 	{
-		SDL_IOStream *rw = SDL_IOFromMem( buf, ( int ) ( bufSize + 1 ) );
+		SDL_IOStream *rw = SDL_IOFromMem( buf, bufSize );
 		if ( SDL_AddGamepadMappingsFromIO( rw, true ) == -1 )
 		{
 			ape_console_warning_( "Failed to parse game controller mappings: %s\n", SDL_GetError() );
