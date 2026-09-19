@@ -14,6 +14,8 @@
 
 static AcmBranch *inputConfig;
 
+static bool isInitialized;
+
 static constexpr float DEFAULT_DEADZONE = 0.2f;
 
 #define SERIALISATION_NODE_NAME "input"
@@ -115,8 +117,6 @@ static void iterate_action( const ApeInputAction *action )
 		trigger_action( action, inputKeyboard.keys[ action->keys[ i ] ].state );
 	}
 }
-
-static bool sdlInputInitialized = false;
 
 /**
  * Checks for any new controllers. Would use PollEvents, but don't want
@@ -333,14 +333,16 @@ static void register_console_commands()
 
 void ape_input_initialize_( void )
 {
+	if ( PlHasCommandLineArgument( "/noinput" ) || isInitialized )
+	{
+		return;
+	}
+
 	inputKeyboard.activeKeyList = qm_os_linked_list_create();
 	if ( inputKeyboard.activeKeyList == NULL )
 	{
 		ape_console_error_( true, "Failed to create active key list: %s\n", PlGetError() );
 	}
-
-	// initialize the controller structure
-	ape_clear_input_devices();
 
 	if ( !SDL_Init( SDL_INIT_GAMEPAD ) )
 	{
@@ -377,19 +379,28 @@ void ape_input_initialize_( void )
 
 	check_for_controllers();
 
-	sdlInputInitialized = true;
-
 	ape_serialize_input_config_( inputConfig );
 
 	register_console_commands();
+
+	isInitialized = true;
+
+	ape_console_setup_input();
 }
 
 void ape_shutdown_input_( void )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	ape_clear_input_devices();
 
 	qm_os_memory_free( inputKeyboard.activeKeyList );
 	inputKeyboard.activeKeyList = nullptr;
+
+	isInitialized = false;
 }
 
 void ape_serialize_input_config_( AcmBranch *root )
@@ -422,6 +433,11 @@ void ape_deserialize_input_config_( AcmBranch *root )
 
 void ape_clear_input_devices( void )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	for ( unsigned int i = 0; i < CLIENT_INPUT_MAX_CONTROLLERS; ++i )
 	{
 		unregister_controller( i );
@@ -435,6 +451,11 @@ void ape_clear_input_devices( void )
 
 unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 {
+	if ( !isInitialized )
+	{
+		return -1;
+	}
+
 	unsigned int id;
 	unsigned int slot = get_empty_controller( &id );
 	if ( slot == ( unsigned int ) -1 )
@@ -454,6 +475,11 @@ unsigned int ape_input_register_device( SS_Acl_InputDeviceType type )
 bool ape_console_handle_key_event_( int key, unsigned int keyState );
 void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	// update the key state
 	if ( keyIndex >= APE_MAX_KEY_INPUTS )
 	{
@@ -482,6 +508,11 @@ void ape_client_input_handle_key_event_( int keyIndex, bool isPressed )
 
 void ape_client_input_handle_mouse_button_event_( int button, ApeInputState buttonState )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	guiUpdateMouseButton( button, ( buttonState == APE_INPUT_STATE_DOWN ) );
 
 	if ( buttonState != APE_INPUT_STATE_RELEASED && ( inputMouse.buttons[ button ] == APE_INPUT_STATE_PRESSED || inputMouse.buttons[ button ] == APE_INPUT_STATE_DOWN ) )
@@ -495,6 +526,11 @@ void ape_client_input_handle_mouse_button_event_( int button, ApeInputState butt
 bool ape_console_handle_mouse_wheel_event_( float x, float y );
 void ape_client_input_handle_mouse_wheel_event( float x, float y )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	inputMouse.oldWheel = inputMouse.wheel;
 	inputMouse.wheel.x  = x;
 	inputMouse.wheel.y  = y;
@@ -509,6 +545,11 @@ void ape_client_input_handle_mouse_wheel_event( float x, float y )
 
 void Client_Input_HandleMouseMotionEvent( int x, int y )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	inputMouse.ox = inputMouse.x;
 	inputMouse.oy = inputMouse.y;
 	inputMouse.x  = x;
@@ -531,6 +572,11 @@ void ape_client_input_get_mouse_delta( int *x, int *y )
 
 void ape_begin_input_frame_( void )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	// Ensure we store the old x/y
 	//int ox = inputMouse.x;
 	//int oy = inputMouse.y;
@@ -548,7 +594,7 @@ void ape_begin_input_frame_( void )
 
 void ape_input_tick_( void )
 {
-	if ( !sdlInputInitialized )
+	if ( !isInitialized )
 	{
 		return;
 	}
@@ -642,6 +688,11 @@ void ape_input_tick_( void )
 
 void ape_input_center_mouse( void )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	int w, h;
 	shell_get_window_size( &w, &h );
 
@@ -656,6 +707,11 @@ void ape_input_center_mouse( void )
 
 void ape_end_input_frame_( void )
 {
+	if ( !isInitialized )
+	{
+		return;
+	}
+
 	PL_GET_CVAR( "input/mlook", mouseLook );
 	if ( !mouseLook->b_value )
 	{
@@ -669,24 +725,44 @@ unsigned int apeGetNumControllers( void ) { return numControllers; }
 
 ApeInputState ape_client_input_get_button_state( unsigned int slot, ApeInputButton button )
 {
+	if ( !isInitialized )
+	{
+		return APE_INPUT_STATE_NONE;
+	}
+
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	return inputControllers[ slot ].buttons[ button ].state;
 }
 
 QmMathVector2f ape_client_input_get_controller_axis_state( unsigned int slot, unsigned int stickNum )
 {
+	if ( !isInitialized )
+	{
+		return QM_MATH_VECTOR2F_ZERO;
+	}
+
 	assert( slot < CLIENT_INPUT_MAX_CONTROLLERS );
 	return ( stickNum == 0 ) ? inputControllers[ slot ].stickL : inputControllers[ slot ].stickR;
 }
 
 ApeInputKey *ape_input_action_get_keys( ApeInputAction *self, unsigned int *numDst )
 {
+	if ( !isInitialized )
+	{
+		return nullptr;
+	}
+
 	*numDst = self->numKeyBinds;
 	return self->keys;
 }
 
 ApeInputButton *ape_input_action_get_buttons( ApeInputAction *self, unsigned int *numDst )
 {
+	if ( !isInitialized )
+	{
+		return nullptr;
+	}
+
 	*numDst = self->numButtonBinds;
 	return self->buttons;
 }
@@ -696,6 +772,11 @@ ApeInputAction *ape_client_input_register_action( const char    *id,
                                                   ApeInputKey keys[], unsigned int numDefaultKeys,
                                                   ApeInputActionCallback actionCallback, unsigned int flags )
 {
+	if ( !isInitialized )
+	{
+		return nullptr;
+	}
+
 	/* if the list has not been allocated yet, do the deed */
 	if ( actionableList == NULL )
 	{

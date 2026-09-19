@@ -11,6 +11,8 @@ void ape_console_draw_( const ApeViewport *viewport );
 void ape_console_register_cl_commands_( void );
 void ape_console_register_cl_variables_( void );
 
+void ape_console_setup_input();
+
 void ape_console_print_( const char *message, ... );
 void ape_console_verbose_( const char *message, ... );
 void ape_console_warning_( const char *message, ... );

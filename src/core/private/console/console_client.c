@@ -713,5 +713,9 @@ void ape_console_register_cl_variables_( void )
 	ape_register_world_console_variables_();
 	ape_editor_register_console_();
 
+}
+
+void ape_console_setup_input()
+{
 	consoleToggleAction = ape_client_input_register_action( "console", nullptr, 0, ( ApeInputKey[] ) { '`', '~' }, 2, toggle_console_action, APE_INPUT_ACTION_FLAG_GLOBAL );
 }
