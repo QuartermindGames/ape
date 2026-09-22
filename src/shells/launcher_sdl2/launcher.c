@@ -364,6 +364,7 @@ int qm_os_main( const int argc, char **argv )
 
 	shellConfig = com_get_config( "shell" );
 
+#ifdef CRAFT_EDITOR
 	if ( PlHasCommandLineArgument( "/editor" ) )
 	{
 		if ( !craft_initialize( argc, argv ) )
@@ -375,6 +376,7 @@ int qm_os_main( const int argc, char **argv )
 
 		return EXIT_SUCCESS;
 	}
+#endif
 
 	const char *projectName;
 	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
