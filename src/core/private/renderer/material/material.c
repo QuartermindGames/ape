@@ -1115,7 +1115,7 @@ ApeMaterial *ape_material_cache( const char *path, bool useFallback )
 
 	acm_branch_destroy( root );
 
-	ape_memory_setup_reference( material->path, APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
+	ape_memory_setup_reference( material->path, APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material, 0 );
 	ape_memory_reference_add( &material->mem );
 
 	return material;

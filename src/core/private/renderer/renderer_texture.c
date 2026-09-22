@@ -174,10 +174,12 @@ ApeTexture *ape_texture_generate_( const char *id, void *data, unsigned int w, u
 
 	compute_average_colour( texture, image );
 
+	const size_t imageSize = PlGetImageSize( image->format, image->width, image->height );
+
 	// no point retaining this for generated images
 	PlDestroyImage( image );
 
-	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, texture );
+	ape_memory_setup_reference( id, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, texture, imageSize );
 	ape_memory_reference_add( &texture->reference );
 
 	return texture;
@@ -389,6 +391,8 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 
 	compute_average_colour( texture, image );
 
+	const size_t imageSize = PlGetImageSize( image->format, image->width, image->height );
+
 	if ( ape_editor_is_active() )
 	{
 		texture->image = image;
@@ -398,7 +402,7 @@ ApeTexture *ape_texture_cache_( const char *path, QmGfxTextureFilter filter, boo
 		PlDestroyImage( image );
 	}
 
-	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, texture );
+	ape_memory_setup_reference( texture->path, APE_CACHE_POOL_TEXTURES, &texture->reference, destroy_texture, texture, imageSize );
 	ape_memory_reference_add( &texture->reference );
 
 	return texture;

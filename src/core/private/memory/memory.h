@@ -24,7 +24,7 @@ typedef enum ApeMemoryCachePool
 	APE_CACHE_POOL_WORLDS,
 	APE_CACHE_POOL_WORLD_MESHES,
 
-	APE_MAX_CACHE_POOLS
+	APE_CACHE_POOL_MAX
 } ApeMemoryCachePool;
 
 /**
@@ -32,9 +32,10 @@ typedef enum ApeMemoryCachePool
  */
 typedef struct ApeMemoryCacheHeader
 {
-	uint32_t                 id;                /* identifier (hashed string) */
-	char                     description[ 256 ];//
-	uint8_t                  pool;              /* pool we're cached into */
+	uint32_t                 id; /* identifier (hashed string) */
+	char                     description[ 256 ];
+	uint8_t                  pool; /* pool we're cached into */
+	size_t                   size;// size of the asset
 	void                    *userData; /* pointer to user allocated data */
 	struct PLLinkedListNode *node;     /* index in pool */
 } ApeMemoryCacheHeader;
@@ -59,7 +60,7 @@ typedef struct ApeMemoryReference
 	struct PLLinkedListNode *node;           // Index into the memory reference list
 } ApeMemoryReference;
 
-ApeMemoryReference *ape_memory_setup_reference( const char *id, ApeMemoryCachePool pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData );
+ApeMemoryReference *ape_memory_setup_reference( const char *id, ApeMemoryCachePool pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData, size_t size );
 
 int          ape_memory_get_num_references( const ApeMemoryReference *m );
 unsigned int ape_memory_flush_unreferenced_resources( void );

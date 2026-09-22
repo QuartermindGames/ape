@@ -12,7 +12,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-static PLLinkedList *cachePoolsList[ APE_MAX_CACHE_POOLS ];
+static PLLinkedList *cachePoolsList[ APE_CACHE_POOL_MAX ];
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Resource Cache
@@ -20,7 +20,7 @@ static PLLinkedList *cachePoolsList[ APE_MAX_CACHE_POOLS ];
 
 static void initialize_cache_pools( void )
 {
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
+	for ( unsigned int i = 0; i < APE_CACHE_POOL_MAX; ++i )
 	{
 		cachePoolsList[ i ] = PlCreateLinkedList();
 		if ( cachePoolsList[ i ] == NULL )
@@ -30,10 +30,10 @@ static void initialize_cache_pools( void )
 	}
 }
 
-static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCachePool pool, void *data )
+static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCachePool pool, void *data, size_t size )
 {
 	/* ensure the data hasn't been cached already */
-	void *cachedData = ape_memory_cache_get_from_pool_( id, pool );
+	const void *cachedData = ape_memory_cache_get_from_pool_( id, pool );
 	if ( cachedData != NULL )
 	{
 		ape_console_error_( true, "Attempted to cache duplicate data: %s\n", id );
@@ -41,10 +41,13 @@ static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCacheP
 
 	ApeMemoryCacheHeader *header = QM_OS_MEMORY_NEW( ApeMemoryCacheHeader );
 	qm_os_string_copy( header->description, id, sizeof( header->description ) );
+
 	header->id       = PlGenerateHashSDBM( id );
 	header->pool     = pool;
 	header->userData = data;
-	header->node     = PlInsertLinkedListNode( cachePoolsList[ pool ], header );
+	header->size     = size;
+
+	header->node = PlInsertLinkedListNode( cachePoolsList[ pool ], header );
 	if ( header->node == NULL )
 	{
 		ape_console_error_( true, "Failed to insert node for cache pool!\n" );
@@ -184,6 +187,35 @@ static unsigned int cleanup_callback( [[maybe_unused]] void *user, [[maybe_unuse
 	return MEM_CLEANUP_DELAY;
 }
 
+static void report_command( unsigned int argc, const char *const *argv )
+{
+	for ( unsigned int i = 0; i < APE_CACHE_POOL_MAX; ++i )
+	{
+		size_t totalSize = 0;
+
+		const unsigned int numItems = PlGetNumLinkedListNodes( cachePoolsList[ i ] );
+		if ( numItems == 0 )
+		{
+			continue;
+		}
+
+		ape_console_print_( "Cache Pool %u : %u items\n", i, numItems );
+
+		ApeMemoryCacheHeader *header;
+		COM_ITERATE_LINKED_LIST( header, cachePoolsList[ i ], j )
+		{
+			ape_console_print_( "\t%u %s %lfKB\n",
+			                    header->id,
+			                    header->description,
+			                    PlBytesToKilobytes( header->size ) );
+
+			totalSize += header->size;
+		}
+
+		ape_console_print_( "Total Size: %lfMB\n\n", i, PlBytesToMegabytes( totalSize ) );
+	}
+}
+
 void ape_memory_initialize_()
 {
 	ape_console_print_( "Initializing memory manager\n" );
@@ -197,6 +229,8 @@ void ape_memory_initialize_()
 	}
 
 	ape_scheduler_push_task_( MEM_CLEANUP_TASK_NAME, cleanup_callback, NULL, MEM_CLEANUP_DELAY );
+
+	ape_console_cmd_register( "memory_report", "Prints out a report on memory usage; both assets and in general.", 0, report_command );
 }
 
 void ape_memory_shutdown_( void )
@@ -209,7 +243,7 @@ void ape_memory_shutdown_( void )
 		ape_console_warning_( "Shutting down memory manager with %u dangling references!\n", danglingReferences );
 	}
 
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_POOLS; ++i )
+	for ( unsigned int i = 0; i < APE_CACHE_POOL_MAX; ++i )
 	{
 		PlDestroyLinkedList( cachePoolsList[ i ] );
 		cachePoolsList[ i ] = nullptr;
@@ -239,12 +273,12 @@ unsigned int ape_memory_flush_unreferenced_resources( void )
 	return references;
 }
 
-ApeMemoryReference *ape_memory_setup_reference( const char *id, ApeMemoryCachePool pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData )
+ApeMemoryReference *ape_memory_setup_reference( const char *id, ApeMemoryCachePool pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData, size_t size )
 {
 	m->cache = ape_memory_cache_get_from_pool_( id, pool );
 	if ( m->cache == nullptr )
 	{
-		m->cache = add_to_cache_pool_( id, pool, userData );
+		m->cache = add_to_cache_pool_( id, pool, userData, size );
 	}
 
 	m->userData        = userData;
@@ -326,7 +360,7 @@ static void cleanup_temp_alloc_callback( void *userData )
 void *ape_memory_temp_alloc( ApeMemoryReference *m, size_t size )
 {
 	void *buf = QM_OS_MEMORY_MALLOC_( size );
-	ape_memory_setup_reference( "temp", 0, m, cleanup_temp_alloc_callback, buf );
+	ape_memory_setup_reference( "temp", 0, m, cleanup_temp_alloc_callback, buf, 0 );
 	return buf;
 }
 

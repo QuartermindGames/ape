@@ -256,7 +256,7 @@ ApeModel *ape_model_load( const char *path )
 	model = QM_OS_MEMORY_NEW( ApeModel );
 	if ( deserialize_model( model, root ) != nullptr )
 	{
-		ape_memory_setup_reference( path, APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model );
+		ape_memory_setup_reference( path, APE_CACHE_POOL_MODELS, &model->reference, model_cleanup_callback_, model, 0 );
 		ape_memory_reference_add( &model->reference );
 	}
 	else

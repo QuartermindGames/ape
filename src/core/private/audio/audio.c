@@ -243,6 +243,9 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 		sample = ape_audio_format_vorbis_load_( file );
 	}
 
+	// probably not accurate at all, but whatever
+	const size_t size = qm_fs_file_get_size( file );
+
 	PlCloseFile( file );
 
 	if ( sample == nullptr )
@@ -262,10 +265,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 		}
 	}
 
-	//todo: there's an issue with this at the moment...
-	//ape_memory_manager_add_to_pool_( path, APE_CACHE_POOL_SAMPLES, sample );
-
-	ape_memory_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
+	ape_memory_setup_reference( path, APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample, size );
 	ape_memory_reference_add( &sample->reference );
 
 	return sample;
@@ -292,7 +292,7 @@ ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigne
 		}
 	}
 
-	ape_memory_setup_reference( "sound_proc", APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample );
+	ape_memory_setup_reference( "sound_proc", APE_CACHE_POOL_SAMPLES, &sample->reference, destroy_sample, sample, bufferSize );
 	ape_memory_reference_add( &sample->reference );
 
 	return sample;

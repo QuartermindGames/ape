@@ -72,7 +72,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 	emitter->startColourVar = com_acm_get_colour_f32( root, "startColourVar", &emitter->startColourVar );
 	emitter->endColourVar   = com_acm_get_colour_f32( root, "endColourVar", &emitter->endColourVar );
 
-	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, DestroyEmitterTemplateCallback, emitter );
+	ape_memory_setup_reference( path, APE_CACHE_POOL_PARTICLES, &emitter->mem, DestroyEmitterTemplateCallback, emitter, 0 );
 	ape_memory_reference_add( &emitter->mem );
 }
 
