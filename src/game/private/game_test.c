@@ -120,7 +120,7 @@ bool game_test_fire_decal_( ApeRoom *room, const QmMathVector3f *pos, const QmMa
 	static ApeMaterial *material = nullptr;
 	if ( material == nullptr )
 	{
-		material = ape_material_cache( "materials/decals/decal_sheet_default.mat.n", APE_CACHE_GROUP_WORLD, false );
+		material = ape_material_cache( "materials/decals/decal_sheet_default.mat.n", false );
 		if ( material == nullptr )
 		{
 			return false;

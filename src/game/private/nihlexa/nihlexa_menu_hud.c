@@ -17,7 +17,7 @@ void nih_menu_hud_initialize_()
 	                           PL_VAR_F32, &hudScale,
 	                           nullptr, APE_CONSOLE_VAR_FLAG_ARCHIVE );
 
-	hudHealthBodyMaterial = ape_material_cache( HUD_HEALTH_BODY, APE_CACHE_GROUP_GLOBAL, true );
+	hudHealthBodyMaterial = ape_material_cache( HUD_HEALTH_BODY, true );
 }
 
 void nih_menu_hud_shutdown_()

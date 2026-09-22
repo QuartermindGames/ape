@@ -1132,7 +1132,7 @@ void ape_editor_light_display_lightmap_overlay_( const ApeEditorInstance *instan
 		return;
 	}
 
-	ApeMaterial *debugLightmapMaterial = ape_material_cache( "materials/debug/debug_lightmap.mat.n", APE_CACHE_GROUP_GLOBAL, false );
+	ApeMaterial *debugLightmapMaterial = ape_material_cache( "materials/debug/debug_lightmap.mat.n", false );
 	if ( debugLightmapMaterial == nullptr )
 	{
 		return;

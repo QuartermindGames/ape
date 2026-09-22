@@ -42,7 +42,7 @@ AcmBranch *PS_SerializeEmitter( const ApeParticleEmitter *emitter )
 
 void ss_arl_cache_particle_emitter_template( const char *path )
 {
-	ApeParticleEmitter *emitter = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
+	ApeParticleEmitter *emitter = ape_memory_cache_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitter != NULL )
 		return;
 
@@ -78,7 +78,7 @@ void ss_arl_cache_particle_emitter_template( const char *path )
 
 ApeParticleEmitter *PS_SpawnEmitterTemplateInstance( const char *path )
 {
-	ApeParticleEmitter *emitterTemplate = ape_memory_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
+	ApeParticleEmitter *emitterTemplate = ape_memory_cache_get_from_pool_( path, APE_CACHE_POOL_PARTICLES );
 	if ( emitterTemplate == NULL )
 	{
 		ape_console_warning_( "Emitter type was not cached: %s\n", path );

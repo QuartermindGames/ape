@@ -54,7 +54,7 @@ bool ape_gui_initialize_( void )
 
 #endif
 
-	postMaterial = ape_material_cache( POST_MATERIAL_PATH, APE_CACHE_GROUP_GLOBAL, false );
+	postMaterial = ape_material_cache( POST_MATERIAL_PATH, false );
 	if ( postMaterial == nullptr )
 	{
 		ape_console_warning_( "Failed to find viewport material (%s); post-processing effects will not work!\n", POST_MATERIAL_PATH );

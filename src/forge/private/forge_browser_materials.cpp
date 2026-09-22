@@ -213,7 +213,7 @@ long forge::MaterialBrowser::on_material_select( FXObject *, FXSelector, void * 
 			continue;
 		}
 
-		ApeMaterial *material = ape_material_cache( currentPath, APE_CACHE_GROUP_WORLD, false );
+		ApeMaterial *material = ape_material_cache( currentPath, false );
 		if ( material == nullptr )
 		{
 			continue;
@@ -345,7 +345,7 @@ long forge::MaterialBrowser::on_material_apply( FXObject *, FXSelector, void * )
 					continue;
 				}
 
-				ApeMaterial *material = ape_material_cache( currentPath, APE_CACHE_GROUP_WORLD, false );
+				ApeMaterial *material = ape_material_cache( currentPath, false );
 				if ( material == nullptr )
 				{
 					continue;
@@ -367,7 +367,7 @@ long forge::MaterialBrowser::on_material_apply( FXObject *, FXSelector, void * )
 				continue;
 			}
 
-			ApeMaterial *material = ape_material_cache( currentPath, APE_CACHE_GROUP_WORLD, false );
+			ApeMaterial *material = ape_material_cache( currentPath, false );
 			if ( material == nullptr )
 			{
 				continue;

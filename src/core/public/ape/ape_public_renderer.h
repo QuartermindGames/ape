@@ -7,16 +7,6 @@
 
 #include "core/public/core_memory.h"
 
-// TODO: retire this...
-typedef enum ApeCacheGroup
-{
-	APE_CACHE_GROUP_GLOBAL,// everything here is retained globally, and won't be unloaded
-	APE_CACHE_GROUP_EDITOR,// these are cached when the editor is enabled, and free'd up when it's disabled
-	APE_CACHE_GROUP_WORLD, // will be cached on world load and free'd up when world is unloaded
-
-	APE_MAX_CACHE_GROUPS
-} ApeCacheGroup;
-
 PL_EXTERN_C
 
 typedef struct QmOsSharedPtr QmOsSharedPtr;
@@ -168,7 +158,7 @@ const char *ape_material_get_path( const ApeMaterial *material );
  * returns an existing material from the cache and adds a reference -
  * reference will need to be released once finished with.
  */
-ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback );
+ApeMaterial *ape_material_cache( const char *path, bool useFallback );
 
 /**
  * Returns the surface type for the material.

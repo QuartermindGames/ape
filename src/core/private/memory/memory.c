@@ -33,7 +33,7 @@ static void initialize_cache_pools( void )
 static ApeMemoryCacheHeader *add_to_cache_pool_( const char *id, ApeMemoryCachePool pool, void *data )
 {
 	/* ensure the data hasn't been cached already */
-	void *cachedData = ape_memory_get_from_pool_( id, pool );
+	void *cachedData = ape_memory_cache_get_from_pool_( id, pool );
 	if ( cachedData != NULL )
 	{
 		ape_console_error_( true, "Attempted to cache duplicate data: %s\n", id );
@@ -72,7 +72,7 @@ static ApeMemoryCacheHeader *get_cache( uint32_t id, uint8_t pool )
 	return nullptr;
 }
 
-void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool )
+void *ape_memory_cache_get_from_pool_( const char *id, ApeMemoryCachePool pool )
 {
 	uint32_t              hashedName = PlGenerateHashSDBM( id );
 	ApeMemoryCacheHeader *header     = get_cache( hashedName, pool );
@@ -84,7 +84,7 @@ void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool )
 	return NULL;
 }
 
-PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool )
+PLLinkedList *ape_memory_cache_get_pool_list_( ApeMemoryCachePool pool )
 {
 	return cachePoolsList[ pool ];
 }
@@ -239,9 +239,9 @@ unsigned int ape_memory_flush_unreferenced_resources( void )
 	return references;
 }
 
-ApeMemoryReference *ape_memory_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData )
+ApeMemoryReference *ape_memory_setup_reference( const char *id, ApeMemoryCachePool pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData )
 {
-	m->cache = ape_memory_get_from_pool_( id, pool );
+	m->cache = ape_memory_cache_get_from_pool_( id, pool );
 	if ( m->cache == nullptr )
 	{
 		m->cache = add_to_cache_pool_( id, pool, userData );

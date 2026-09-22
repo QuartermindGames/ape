@@ -36,7 +36,7 @@ static void decal_entity_set_material( GameDecalEntity *decalEntity )
 
 	char path[ 256 ];
 	snprintf( path, sizeof( path ), "materials/decals/%s.mat.n", decalEntity->materialName );
-	decalEntity->material = ape_material_cache( path, APE_CACHE_GROUP_WORLD, true );
+	decalEntity->material = ape_material_cache( path, true );
 }
 
 static void  decal_entity_on_update_property( ApeEntity *self, [[maybe_unused]] const ApeProperty *property );

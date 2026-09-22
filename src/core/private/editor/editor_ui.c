@@ -58,7 +58,7 @@ static void ui_toolbar_draw( const ApeViewport *viewport )
 
 void ape_editor_ui_initialize_()
 {
-	uiMaterial = ape_material_cache( "materials/editor/editor_ui.mat.n", APE_CACHE_GROUP_EDITOR, true );
+	uiMaterial = ape_material_cache( "materials/editor/editor_ui.mat.n", true );
 }
 
 void ape_editor_ui_shutdown_()

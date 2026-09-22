@@ -267,7 +267,7 @@ static unsigned int textures_hot_reload_callback( [[maybe_unused]] void  *user,
 		return incHotReloadTicks;
 	}
 
-	PLLinkedList *textures = ape_memory_get_pool_list_( APE_CACHE_POOL_TEXTURES );
+	PLLinkedList *textures = ape_memory_cache_get_pool_list_( APE_CACHE_POOL_TEXTURES );
 
 	ApeMemoryCacheHeader *header;
 	COM_ITERATE_LINKED_LIST( header, textures, i )

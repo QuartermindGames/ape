@@ -1082,7 +1082,7 @@ static ApeWorldNode *deserialize_brush( ApeWorldNode *self, AcmBranch *root )
 			const char *str;
 			if ( ( str = acm_get_string( branch, "material", nullptr ) ) != nullptr )
 			{
-				brush->faces[ i ].material = ape_material_cache( str, APE_CACHE_GROUP_WORLD, true );
+				brush->faces[ i ].material = ape_material_cache( str, true );
 			}
 			else
 			{

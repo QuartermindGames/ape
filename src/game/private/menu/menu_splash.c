@@ -60,7 +60,7 @@ void game_menu_splash_setup_queue_( const GameMenuSplash *splashes, const unsign
 
 		if ( splash->type == GAME_MENU_SPLASH_TYPE_IMAGE )
 		{
-			splash->image.p.material = ape_material_cache( splash->image.materialPath, APE_CACHE_GROUP_GLOBAL, false );
+			splash->image.p.material = ape_material_cache( splash->image.materialPath, false );
 			if ( splash->image.p.material == nullptr )
 			{
 				game_warning_( "Failed to load splash screen material (%s)!\n", splash->image.materialPath );

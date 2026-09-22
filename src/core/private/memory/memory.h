@@ -35,13 +35,13 @@ typedef struct ApeMemoryCacheHeader
 	uint32_t                 id;                /* identifier (hashed string) */
 	char                     description[ 256 ];//
 	uint8_t                  pool;              /* pool we're cached into */
-	void                    *userData;          /* pointer to user allocated data */
-	struct PLLinkedListNode *node;              /* index in pool */
+	void                    *userData; /* pointer to user allocated data */
+	struct PLLinkedListNode *node;     /* index in pool */
 } ApeMemoryCacheHeader;
 
-void *ape_memory_get_from_pool_( const char *id, ApeMemoryCachePool pool );
+void *ape_memory_cache_get_from_pool_( const char *id, ApeMemoryCachePool pool );
 
-PLLinkedList *ape_memory_get_pool_list_( ApeMemoryCachePool pool );
+struct PLLinkedList *ape_memory_cache_get_pool_list_( ApeMemoryCachePool pool );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Reference Counting and Garbage Collection
@@ -59,7 +59,7 @@ typedef struct ApeMemoryReference
 	struct PLLinkedListNode *node;           // Index into the memory reference list
 } ApeMemoryReference;
 
-ApeMemoryReference *ape_memory_setup_reference( const char *id, uint8_t pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData );
+ApeMemoryReference *ape_memory_setup_reference( const char *id, ApeMemoryCachePool pool, ApeMemoryReference *m, ApeMemoryCleanupCallback cleanupFunction, void *userData );
 
 int          ape_memory_get_num_references( const ApeMemoryReference *m );
 unsigned int ape_memory_flush_unreferenced_resources( void );

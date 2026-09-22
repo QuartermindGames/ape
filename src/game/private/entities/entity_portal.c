@@ -54,7 +54,7 @@ static void *create_portal( [[maybe_unused]] ApeEntity *self )
 {
 	if ( portalMaterial == nullptr )
 	{
-		portalMaterial = ape_material_cache( "materials/world/test/portal.mat.n", APE_CACHE_GROUP_WORLD, true );
+		portalMaterial = ape_material_cache( "materials/world/test/portal.mat.n", true );
 	}
 
 	GamePortalEntity *portal = QM_OS_MEMORY_NEW( GamePortalEntity );

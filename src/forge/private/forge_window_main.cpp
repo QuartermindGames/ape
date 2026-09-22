@@ -253,7 +253,7 @@ long forge::MainWindow::open_material( FXObject *, FXSelector, void * )
 		return false;
 	}
 
-	ApeMaterial *material = ape_material_cache( filename.text(), APE_CACHE_GROUP_EDITOR, false );
+	ApeMaterial *material = ape_material_cache( filename.text(), false );
 	if ( material == nullptr )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Warning", "Failed to load material (%s)!", filename.text() );

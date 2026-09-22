@@ -82,7 +82,7 @@ void ape_initialize_flares_( void )
 
 		FlareDecl *flareDecl = &flareDecls[ numFlareDecls ];
 
-		flareDecl->material = ape_material_cache( materialPath, APE_CACHE_GROUP_GLOBAL, true );
+		flareDecl->material = ape_material_cache( materialPath, true );
 
 		AcmBranch *elements = acm_get_child( child, "elements" );
 		ACM_ITERATE_BRANCH( elements, element )

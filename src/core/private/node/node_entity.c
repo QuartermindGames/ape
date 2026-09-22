@@ -146,7 +146,7 @@ static bool setup_entity_class( ApeEntity *self, const char *className )
 	const char *editorSpritePath = classDefinition->editorSpritePath;
 	if ( editorSpritePath != nullptr )
 	{
-		self->editorSprite = ape_material_cache( editorSpritePath, APE_CACHE_GROUP_EDITOR, true );
+		self->editorSprite = ape_material_cache( editorSpritePath, true );
 	}
 #endif
 

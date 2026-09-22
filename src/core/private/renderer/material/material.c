@@ -13,8 +13,6 @@
 
 #include "material.h"
 
-static PLLinkedList *materials[ APE_MAX_CACHE_GROUPS ];
-
 static ApeTexture *normalFallbackTexture;
 
 static ApeConsoleVarString materialTextureFilter;
@@ -26,10 +24,9 @@ static bool                materialSkipLightmap;
 
 typedef struct ApeMaterial
 {
-	char              path[ PL_SYSTEM_MAX_PATH ];
-	ApeMaterialPass   passes[ SS_ARL_MAX_MATERIAL_PASSES ];
-	uint8_t           numPasses;
-	PLLinkedListNode *node;
+	char            path[ PL_SYSTEM_MAX_PATH ];
+	ApeMaterialPass passes[ SS_ARL_MAX_MATERIAL_PASSES ];
+	uint8_t         numPasses;
 
 	uint16_t width;
 	uint16_t height;
@@ -97,15 +94,6 @@ void ape_initialize_materials_()
 {
 	ape_console_print_( "Initializing material system\n" );
 
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
-	{
-		materials[ i ] = PlCreateLinkedList();
-		if ( materials[ i ] == NULL )
-		{
-			ape_console_error_( true, "Failed to create materials list: %s\n", PlGetError() );
-		}
-	}
-
 	normalFallbackTexture = ape_texture_cache_( "materials/shaders/textures/normal.tga", PLG_TEXTURE_FILTER_LINEAR, true );
 
 	// cache default materials we need
@@ -125,7 +113,7 @@ void ape_initialize_materials_()
 	for ( unsigned int i = 0; i < APE_MAX_DEFAULT_MATERIALS; ++i )
 	{
 		assert( *defaultMaterialPaths[ i ] != '\0' );
-		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], APE_CACHE_GROUP_WORLD, false );
+		defaultMaterials[ i ] = ape_material_cache( defaultMaterialPaths[ i ], false );
 		if ( defaultMaterials[ i ] == NULL )
 		{
 			ape_console_error_( true, "Failed to cache default material: %s\n", defaultMaterialPaths[ i ] );
@@ -145,6 +133,7 @@ void ape_shutdown_materials_()
 	/* Flush any objects pending deletion in case they are holding a material handle. */
 	ape_memory_flush_unreferenced_resources();
 
+#if 0//TODO: this flushing mechanism should be moved into our unified API
 	unsigned int totalCachedMaterials = 0;
 	unsigned int orphanedCaches       = 0;
 
@@ -170,6 +159,7 @@ void ape_shutdown_materials_()
 		ape_console_warning_( "Shutting down material system with %u active materials, orphaned %u caches!\n",
 		                      totalCachedMaterials, orphanedCaches );
 	}
+#endif
 }
 
 const char *ape_material_get_path( const ApeMaterial *material )
@@ -867,23 +857,6 @@ static ApeMaterial *parse_material( ApeMaterial *material, AcmBranch *root )
 	return material;
 }
 
-static ApeMaterial *get_material( const char *path, ApeCacheGroup group )
-{
-	PLLinkedListNode *node = PlGetFirstNode( materials[ group ] );
-	while ( node != NULL )
-	{
-		ApeMaterial *material = PlGetLinkedListNodeUserData( node );
-		if ( strcmp( material->path, path ) == 0 )
-		{
-			return material;
-		}
-
-		node = PlGetNextLinkedListNode( node );
-	}
-
-	return nullptr;
-}
-
 static void material_var_free( ApeMaterialVariable *var )
 {
 	switch ( var->type )
@@ -934,12 +907,6 @@ static void destroy_material( ApeMaterial *material )
 	for ( unsigned int i = 0; i < material->numPasses; ++i )
 	{
 		ape_material_pass_free_( &material->passes[ i ] );
-	}
-
-	PLLinkedList *container = PlGetLinkedListNodeContainer( material->node );
-	if ( container != NULL )
-	{
-		PlDestroyLinkedListNode( material->node );
 	}
 
 	qm_os_memory_free( material );
@@ -1121,10 +1088,10 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 	}
 }
 
-ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool useFallback )
+ApeMaterial *ape_material_cache( const char *path, bool useFallback )
 {
 	/* check if it's already cached */
-	ApeMaterial *material = get_material( path, group );
+	ApeMaterial *material = ape_memory_cache_get_from_pool_( path, APE_CACHE_POOL_MATERIALS );
 	if ( material != NULL )
 	{
 		ape_memory_reference_add( &material->mem );
@@ -1147,8 +1114,6 @@ ApeMaterial *ape_material_cache( const char *path, ApeCacheGroup group, bool use
 	parse_material( material, root );
 
 	acm_branch_destroy( root );
-
-	material->node = PlInsertLinkedListNode( materials[ group ], material );
 
 	ape_memory_setup_reference( material->path, APE_CACHE_POOL_MATERIALS, &material->mem, destroy_material_callback, material );
 	ape_memory_reference_add( &material->mem );
@@ -1470,22 +1435,21 @@ static void ape_material_pass_tick_( ApeMaterialPass *self, const ApeMaterial *m
 
 void ape_tick_materials_( double delta )
 {
-	for ( unsigned int i = 0; i < APE_MAX_CACHE_GROUPS; ++i )
+	PLLinkedList *materialList = ape_memory_cache_get_pool_list_( APE_CACHE_POOL_MATERIALS );
+	if ( materialList == nullptr )
 	{
-		ApeMaterial *material;
-		COM_ITERATE_LINKED_LIST( material, materials[ i ], itr )
+		return;
+	}
+
+	ApeMemoryCacheHeader *header;
+	COM_ITERATE_LINKED_LIST( header, materialList, itr )
+	{
+		ApeMaterial *material = header->userData;
+		for ( unsigned int j = 0; j < material->numPasses; ++j )
 		{
-			for ( unsigned int j = 0; j < material->numPasses; ++j )
-			{
-				ape_material_pass_tick_( &material->passes[ j ], material, delta );
-			}
+			ape_material_pass_tick_( &material->passes[ j ], material, delta );
 		}
 	}
-}
-
-PLLinkedList *ape_material_get_group_( ApeCacheGroup group )
-{
-	return materials[ group ];
 }
 
 unsigned int ape_material_get_width( const ApeMaterial *self )

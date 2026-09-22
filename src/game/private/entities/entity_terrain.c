@@ -333,7 +333,7 @@ static void terrain_load_material( GameTerrainEntity *terrain )
 
 	if ( terrain->material == nullptr )
 	{
-		terrain->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+		terrain->material = ape_material_cache( materialPath, true );
 	}
 
 	qm_os_memory_free( materialPath );

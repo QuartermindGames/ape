@@ -36,7 +36,7 @@ static bool setup_dof_effect()
 		dofEnabled = false;
 		return false;
 	}
-	if ( ( dofMaterial = ape_material_cache( "materials/engine/post/post_dof.mat.n", APE_CACHE_GROUP_GLOBAL, false ) ) == nullptr )
+	if ( ( dofMaterial = ape_material_cache( "materials/engine/post/post_dof.mat.n", false ) ) == nullptr )
 	{
 		dofEnabled = false;
 		return false;

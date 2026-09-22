@@ -213,7 +213,7 @@ ApeAudioSample *ape_audio_sample_cache( const char *path )
 		return nullptr;
 	}
 
-	ApeAudioSample *sample = ape_memory_get_from_pool_( path, APE_CACHE_POOL_SAMPLES );
+	ApeAudioSample *sample = ape_memory_cache_get_from_pool_( path, APE_CACHE_POOL_SAMPLES );
 	if ( sample != nullptr )
 	{
 		ape_memory_reference_add( &sample->reference );

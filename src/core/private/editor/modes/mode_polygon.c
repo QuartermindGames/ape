@@ -160,7 +160,7 @@ ApeBrush *ape_editor_mode_polygon_create( ApeEditorInstance *self, const char *m
 	ApeMaterial *material;
 	if ( materialPath != nullptr )
 	{
-		material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+		material = ape_material_cache( materialPath, true );
 	}
 	else
 	{

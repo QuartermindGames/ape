@@ -14,7 +14,7 @@ void game_hud_compass_initialize_( ApeGuiFont *font )
 	compassAngles = QM_MATH_VECTOR3F_ZERO;
 	compassFont   = font;
 
-	compassBackground = ape_material_cache( "materials/ui/ui_circle.mat.n", APE_CACHE_GROUP_GLOBAL, true );
+	compassBackground = ape_material_cache( "materials/ui/ui_circle.mat.n", true );
 }
 
 void game_menu_compass_shutdown_()

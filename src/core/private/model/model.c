@@ -43,7 +43,7 @@ static ApeModelMesh *deserialize_mesh( ApeModel *model, ApeModelMesh *mesh, AcmB
 		return nullptr;
 	}
 
-	mesh->material = ape_material_cache( materialPath, APE_CACHE_GROUP_WORLD, true );
+	mesh->material = ape_material_cache( materialPath, true );
 
 	mesh->startIndex = model->cache->num_indices;
 
@@ -239,7 +239,7 @@ static ApeModel *deserialize_model( ApeModel *model, AcmBranch *root )
 
 ApeModel *ape_model_load( const char *path )
 {
-	ApeModel *model = ape_memory_get_from_pool_( path, APE_CACHE_POOL_MODELS );
+	ApeModel *model = ape_memory_cache_get_from_pool_( path, APE_CACHE_POOL_MODELS );
 	if ( model != NULL )
 	{
 		ape_memory_reference_add( &model->reference );
@@ -381,7 +381,7 @@ void ape_model_compute_models_lighting( const double delta )
 	COM_PROFILE_FUNCTION_START();
 
 	// fetch all the models currently cached in the scene
-	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
+	PLLinkedList *models = ape_memory_cache_get_pool_list_( APE_CACHE_POOL_MODELS );
 	if ( models == nullptr )
 	{
 		COM_PROFILE_FUNCTION_END();
@@ -410,7 +410,7 @@ void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRen
 	qm_gfx_debug_push_group_marker( "Draw Models" );
 
 	// fetch all the models currently cached in the scene
-	PLLinkedList *models = ape_memory_get_pool_list_( APE_CACHE_POOL_MODELS );
+	PLLinkedList *models = ape_memory_cache_get_pool_list_( APE_CACHE_POOL_MODELS );
 
 	// now iterate over those, and then all the nodes that reference them
 	ApeMemoryCacheHeader *header;
