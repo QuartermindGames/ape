@@ -20,7 +20,6 @@ typedef struct GameSoundEntity
 {
 	ApeStringProperty samplePath[ PL_SYSTEM_MAX_PATH ];
 
-	ApeFloatProperty radius;
 	ApeFloatProperty volume;
 	ApeFloatProperty pitch;
 
@@ -41,12 +40,15 @@ static void *sound_entity_create( [[maybe_unused]] ApeEntity *self )
 	}
 
 	GameSoundEntity *soundEntity = QM_OS_MEMORY_NEW( GameSoundEntity );
-	if ( soundEntity != nullptr )
+	if ( soundEntity == nullptr )
 	{
-		soundEntity->source = source;
-		soundEntity->volume = 100.0f;
-		soundEntity->pitch  = 1.0f;
+		ape_audio_source_destroy( source );
+		return nullptr;
 	}
+
+	soundEntity->source = source;
+	soundEntity->volume = 100.0f;
+	soundEntity->pitch  = 1.0f;
 
 	return soundEntity;
 }
@@ -87,16 +89,15 @@ static void sound_entity_spawn( ApeEntity *self )
 
 static void sound_entity_tick( ApeEntity *self, double delta )
 {
-	GameSoundEntity *soundEntity = GAME_SOUND_ENTITY( self );
+	const GameSoundEntity *soundEntity = GAME_SOUND_ENTITY( self );
 	assert( soundEntity != nullptr );
 
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	const QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 	ape_audio_source_set_position( soundEntity->source, &pos );
 }
 
 static ApeProperty properties[] = {
         APE_PROPERTY_STRING( "Sample Path", "Sample to load for emitting.", GameSoundEntity, samplePath ),
-        APE_PROPERTY_BASIC( "Radius", "Maximum radius of the sound.", GameSoundEntity, radius, FLOAT ),
         APE_PROPERTY_BASIC( "Volume", "Volume of the sound.", GameSoundEntity, volume, FLOAT ),
         APE_PROPERTY_BASIC( "Pitch", "Pitch of the sound.", GameSoundEntity, pitch, FLOAT ),
 
