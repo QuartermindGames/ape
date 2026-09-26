@@ -18,7 +18,9 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
-static uint64_t numTicks = 0;
+static constexpr int APE_DEFAULT_TICK_RATE = 1000 / 60;// ms
+static int           tickFrequency         = APE_DEFAULT_TICK_RATE;
+static uint64_t      numTicks              = 0;
 
 static AcmBranch *engineConfig;
 static AcmBranch *userConfig;
@@ -106,7 +108,6 @@ bool ape_is_dedicated()
 
 static double lastTime;
 
-static int  tickFrequency;
 static void validate_tick_frequency( ApeConsoleVar *variable )
 {
 	if ( variable->i_value > 0 )
@@ -124,6 +125,11 @@ static void validate_tick_frequency( ApeConsoleVar *variable )
 unsigned int ape_get_tick_frequency()
 {
 	return tickFrequency;
+}
+
+uint64_t ape_get_tick_ms()
+{
+	return numTicks * tickFrequency;
 }
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config )
@@ -164,7 +170,7 @@ bool ape_initialize( unsigned int argc, char **argv, const char *config )
 	ape_console_register_commands_( engineTerminalMode );
 
 	char tmp[ 64 ];
-	snprintf( tmp, sizeof( tmp ), "%u", APE_DEFAULT_TICK_RATE );
+	snprintf( tmp, sizeof( tmp ), "%d", APE_DEFAULT_TICK_RATE );
 	ape_console_var_register( "tickFrequency", "Frequency of the tick rate in ms.", tmp, PL_VAR_I32, &tickFrequency, validate_tick_frequency, 0 );
 
 	ape_fs_setup_config( engineConfig );

@@ -97,7 +97,8 @@ forge::MainWindow::MainWindow( FXApp *app )
 	console = new ConsoleFrame( verticalSplitter );
 	console->hide();
 
-	getApp()->addTimeout( this, ID_TICK, APE_DEFAULT_TICK_RATE );
+	const unsigned int tickFreq = ape_get_tick_frequency();
+	getApp()->addTimeout( this, ID_TICK, tickFreq );
 
 	autosaveTimeout = AUTOSAVE_DELAY;
 }
@@ -151,7 +152,8 @@ long forge::MainWindow::on_tick( FXObject *, FXSelector, void * )
 		autosaveTimeout--;
 	}
 
-	getApp()->addTimeout( this, ID_TICK, APE_DEFAULT_TICK_RATE );
+	const unsigned int tickFreq = ape_get_tick_frequency();
+	getApp()->addTimeout( this, ID_TICK, tickFreq );
 	return 0;
 }
 

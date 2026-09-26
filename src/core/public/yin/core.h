@@ -10,9 +10,8 @@
 
 PL_EXTERN_C
 
-#define APE_DEFAULT_TICK_RATE ( 1000 / 60 )// ms
-
 unsigned int ape_get_tick_frequency();
+uint64_t     ape_get_tick_ms();
 
 bool ape_initialize( unsigned int argc, char **argv, const char *config );
 void ape_shutdown( void );

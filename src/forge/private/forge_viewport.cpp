@@ -136,7 +136,8 @@ void Viewport::create()
 		displayList_->makeCurrent();
 	}
 
-	getApp()->addTimeout( this, ID_DRAW, APE_DEFAULT_TICK_RATE );
+	const unsigned int tickFreq = ape_get_tick_frequency();
+	getApp()->addTimeout( this, ID_DRAW, tickFreq );
 }
 
 void Viewport::draw()
@@ -258,7 +259,8 @@ long Viewport::on_timer( FXObject *, FXSelector, void * )
 		canvas_->swapBuffers();
 	}
 
-	getApp()->addTimeout( this, ID_DRAW, APE_DEFAULT_TICK_RATE );
+	const unsigned int tickFreq = ape_get_tick_frequency();
+	getApp()->addTimeout( this, ID_DRAW, tickFreq );
 	return TRUE;
 }
 
