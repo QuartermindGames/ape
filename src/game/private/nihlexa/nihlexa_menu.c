@@ -201,7 +201,6 @@ void nih_menu_initialize_()
 	const GameMenuSplash splashes[] = {
 	        GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_qm.mat.n", nullptr, 2.0f, 2.0f ),
 	        GAME_MENU_SPLASH_IMAGE( "materials/ui/logos/logo_ape.mat.n", nullptr, 2.0f, 2.0f ),
-	        GAME_MENU_SPLASH_VIDEO( "videos/CRE8LOGO.SMK" ),
 	};
 	game_menu_splash_setup_queue_( splashes, QM_OS_ARRAY_ELEMENTS( splashes ) );
 

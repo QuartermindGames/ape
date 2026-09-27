@@ -27,11 +27,11 @@ static void list_entity_classes_command( unsigned int argc, const char *const *a
 	PLHashTableNode *node = PlGetFirstHashTableNode( entityClassLookup );
 	while ( node != NULL )
 	{
-		ApeEntityClassDefinition *classDefinition = PlGetHashTableNodeUserData( node );
+		const ApeEntityClassDefinition *classDefinition = PlGetHashTableNodeUserData( node );
 		ape_console_print_( "-------------------------------------------------\n" );
 		ape_console_print_( "%s : %s\n", classDefinition->name, classDefinition->description != NULL ? classDefinition->description : "none" );
 		ape_console_print_( " num properties       = %u\n", classDefinition->numProperties );
-		ape_console_print_( " cache callback       = %p\n", classDefinition->cacheFunction );
+		ape_console_print_( " cache callback       = %p\n", classDefinition->onRegister );
 		ape_console_print_( " create callback      = %p\n", classDefinition->createFunction );
 		ape_console_print_( " destroy callback     = %p\n", classDefinition->destroyFunction );
 		ape_console_print_( " spawn callback       = %p\n", classDefinition->spawnFunction );
@@ -48,7 +48,7 @@ static void list_entity_classes_command( unsigned int argc, const char *const *a
 	node = PlGetFirstHashTableNode( entityComponentDefinitions );
 	while ( node != NULL )
 	{
-		ApeEntityComponentDefinition *componentDefinition = PlGetHashTableNodeUserData( node );
+		const ApeEntityComponentDefinition *componentDefinition = PlGetHashTableNodeUserData( node );
 		ape_console_print_( "-------------------------------------------------\n" );
 		ape_console_print_( "%s\n", componentDefinition->name );
 
@@ -90,9 +90,9 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 	PlPushBackVectorArrayElement( entityClasses, ( void * ) definition );
 
 	// call the cache function, so we can load resources into memory
-	if ( definition->cacheFunction != NULL )
+	if ( definition->onRegister != NULL )
 	{
-		definition->cacheFunction();
+		definition->onRegister();
 	}
 }
 

@@ -25,7 +25,7 @@ typedef struct RopeEntity
 
 static bool showRopeDebug;
 
-static void cache_rope()
+static void register_rope()
 {
 	ape_console_var_register( "game_debug_rope", "Toggle the display of wireframe ropes.", "false", PL_VAR_BOOL, &showRopeDebug, nullptr, 0 );
 }
@@ -147,7 +147,7 @@ ApeEntityClassDefinition game_ropeEntityClass_ = {
         .name           = ROPE_CLASS_NAME,
         .description    = "Physics-driven rope handler."
                           "Rope can have a start attachment and end attachment.",
-        .cacheFunction  = cache_rope,
+        .onRegister     = register_rope,
         .createFunction = create_rope,
         .spawnFunction  = spawn_rope,
         .tickFunction   = tick_rope,
