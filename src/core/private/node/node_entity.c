@@ -560,6 +560,69 @@ static void ape_entity_draw_editor_( void *self, const bool isSelected )
 	classDefinition->onDrawEditor( entity, isSelected );
 }
 
+static ApeWorldNode *clone_entity( ApeWorldNode *src )
+{
+	const ApeEntity                *srcEntity = ( ApeEntity * ) src;
+	const ApeEntityClassDefinition *classDef  = srcEntity->classDefinition;
+
+	ApeEntity *dstEntity = ape_entity_create( src->parent,
+	                                          classDef->name,
+	                                          src->name, nullptr,
+	                                          &src->position, &src->angles );
+	if ( dstEntity == nullptr )
+	{
+		ape_console_warning_( "Failed to create entity for duplication!\n" );
+		return nullptr;
+	}
+
+	// this might eventually be useful elsewhere but we'll just plop it here for now
+	static constexpr size_t PROPERTY_SIZE_TABLE[ APE_PROPERTY_MAX_TYPES ] = {
+	        [APE_PROPERTY_TYPE_FLOAT]   = sizeof( ApeFloatProperty ),
+	        [APE_PROPERTY_TYPE_VEC2]    = sizeof( ApeVec2Property ),
+	        [APE_PROPERTY_TYPE_VEC3]    = sizeof( ApeVec3Property ),
+	        [APE_PROPERTY_TYPE_VEC4]    = sizeof( ApeVec4Property ),
+	        [APE_PROPERTY_TYPE_ENUM]    = sizeof( ApeEnumProperty ),
+	        [APE_PROPERTY_TYPE_COLOUR]  = sizeof( ApeColour4fProperty ),
+	        [APE_PROPERTY_TYPE_INTEGER] = sizeof( ApeIntegerProperty ),
+	        // APE_PROPERTY_TYPE_STRING
+	        // APE_PROPERTY_TYPE_PATH
+	        [APE_PROPERTY_TYPE_BOOLEAN] = sizeof( ApeBooleanProperty ),
+	        [APE_PROPERTY_TYPE_BITFLAG] = sizeof( ApeIntegerProperty ),
+	};
+
+	// i might be overcomplicating this, but now we've got to copy the properties across
+	const unsigned int numProperties = classDef->numProperties;
+	const ApeProperty *properties    = classDef->properties;
+	for ( unsigned int i = 0; i < numProperties; ++i )
+	{
+		const void *srcPtr = ( char * ) srcEntity->classData + properties[ i ].offset;
+		void       *dstPtr = ( char * ) dstEntity->classData + properties[ i ].offset;
+
+		if ( properties[ i ].type == APE_PROPERTY_TYPE_STRING || properties[ i ].type == APE_PROPERTY_TYPE_PATH )
+		{
+			qm_os_string_copy( dstPtr, srcPtr, properties[ i ].stringType.maxSize );
+		}
+		else
+		{
+			const size_t propertySize = PROPERTY_SIZE_TABLE[ properties[ i ].type ];
+			if ( propertySize == 0 )
+			{
+				ape_console_warning_( "Unhandled property type on clone (%u)!\n", properties[ i ].type );
+				continue;
+			}
+
+			memcpy( dstPtr, srcPtr, propertySize );
+		}
+
+		if ( classDef->onUpdateProperty != nullptr )
+		{
+			classDef->onUpdateProperty( dstEntity, &properties[ i ] );
+		}
+	}
+
+	return APE_WORLD_NODE( dstEntity );
+}
+
 const ApeWorldNodeClass ape_entityClass = {
         .identifier = "entity",
         .magic      = QM_OS_MAGIC_TO_NUM( 'E', 'N', 'T', ' ' ),
@@ -568,6 +631,7 @@ const ApeWorldNodeClass ape_entityClass = {
         .destroy     = ape_entity_destroy_,
         .serialize   = serialize_entity,
         .deserialize = deserialize_entity,
+        .clone       = clone_entity,
 
 #if defined( APE_SUPPORT_EDITOR )
 
