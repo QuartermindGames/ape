@@ -462,12 +462,11 @@ long forge::WorldEditor::on_properties( FXObject *, FXSelector, void * )
 	return TRUE;
 }
 
-long forge::WorldEditor::on_play( FXObject *object, FXSelector selector, void *ptr )
+long forge::WorldEditor::on_play(
+        [[maybe_unused]] FXObject  *object,
+        [[maybe_unused]] FXSelector selector,
+        [[maybe_unused]] void      *ptr )
 {
-	PL_UNUSEDVAR( object );
-	PL_UNUSEDVAR( selector );
-	PL_UNUSEDVAR( ptr );
-
 	ApeRoom *room = get_active_room();
 	if ( room == nullptr )
 	{
@@ -482,13 +481,14 @@ long forge::WorldEditor::on_play( FXObject *object, FXSelector selector, void *p
 		return false;
 	}
 
-	const char *projectName = aux_project_get_base_name();
-
 	PLPath exeDir;
 	PlGetExecutableDirectory( exeDir, sizeof( exeDir ) );
 
 	char tmp[ sizeof( exeDir ) + 64 ];
-	snprintf( tmp, sizeof( tmp ), "%s/SS1 /window /project %s \"+game_load_room %s\"", exeDir, projectName, path );
+	snprintf( tmp, sizeof( tmp ), "%s/%s" QM_OS_SYSTEM_EXE_EXT " /window /project %s \"+game_load_room %s\"", exeDir,
+	          aux_project_get_name(),
+	          aux_project_get_base_name(),
+	          path );
 
 #if !defined( _WIN32 )
 	if ( system( tmp ) == -1 )
