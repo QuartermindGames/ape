@@ -7,21 +7,15 @@ Fundamentally, the style to be followed is the same as GTK, which can be found [
 
 Below are various points in addition.
 
-- For private methods, we should postfix with underscore rather than prefix; given the prefix is considered reserved.
-  - Example: `ape_my_function_`
-- Functions under 'core' should be prefixed with `ape_`
-- Under 'common', use `com_`
-- Under 'game', use `game_`
-- Under 'acm', use `acm_`
-- Forge is a little different given it's written in C++—my suggestion there is to just go with what you see...
+- For private methods, we should postfix with underscore rather than prefix; given the prefix is considered reserved (`ape_my_function_`).
+- Functions should be prefixed with the name of the library they relate to (aux uses `aux_` for instance). The exception is 'core' which currently uses `ape_`.
+- When it comes to C++, I'd advise just going with the existing conventions you can already see.
 
-If it's something that could be used everywhere, and isn't specific to the needs of the engine, consider putting it in 'kernel' or 'common' instead.
-Generally, if the method is incredibly generic and may be of benefit to other projects, it should likely go into [kernel](../src/kernel) but otherwise should fall back to [common](../src/common).
-For instance, the project logic is all under common because it's used by other Ape projects but wouldn't be beneficial to anything else.
+If it's something that could be used everywhere, and isn't specific to the needs of the engine, consider putting it in [kernel](../../src/kernel) or [aux](../../src/aux).
 
-Some functions are prefixed with older conventions or aren't prefixed at all, and these cases should be amended as they're found.
+Do not use `auto` in any C code whatsoever. Keep usage in C++ code to the minimum.
 
-Do not use `auto` in any C code whatsoever.
+Prefer C-style casts in C++ when possible.
 
 Source files should start with the following.
 
