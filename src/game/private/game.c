@@ -82,14 +82,15 @@ void game_error_( const char *message, ... )
 // I keep moving the below declarations in and out of the proceeding function...
 // if I do that one more time I'll snap my own fingers off - leave them here!!
 
-extern ApeEntityClassDefinition game_pathEntityClass_;
-extern ApeEntityClassDefinition game_playerSpawnEntityClass_;
-extern ApeEntityClassDefinition game_triggerEntityClass_;
-extern ApeEntityClassDefinition game_ropeEntityClass_;
-extern ApeEntityClassDefinition game_portalEntityClass_;
-extern ApeEntityClassDefinition game_terrainEntityClass_;
-extern ApeEntityClassDefinition game_decalEntityClass_;
-extern ApeEntityClassDefinition game_soundEntityClass_;
+extern ApeEntityClassDefinition       game_pathEntityClass_;
+extern ApeEntityClassDefinition       game_playerSpawnEntityClass_;
+extern ApeEntityClassDefinition       game_triggerEntityClass_;
+extern ApeEntityClassDefinition       game_ropeEntityClass_;
+extern ApeEntityClassDefinition       game_portalEntityClass_;
+extern ApeEntityClassDefinition       game_terrainEntityClass_;
+extern ApeEntityClassDefinition       game_decalEntityClass_;
+extern const ApeEntityClassDefinition game_soundEntityClass_;
+extern const ApeEntityClassDefinition game_soundRandomEntityClass_;
 
 extern ApeEntityComponentDefinition game_cameraComponent_;
 extern ApeEntityComponentDefinition game_collisionComponent_;
@@ -108,6 +109,7 @@ static void register_standard_entity_components()
 	ape_register_entity_class( &game_terrainEntityClass_ );
 	ape_register_entity_class( &game_decalEntityClass_ );
 	ape_register_entity_class( &game_soundEntityClass_ );
+	ape_register_entity_class( &game_soundRandomEntityClass_ );
 
 	// components
 	ape_register_entity_component( &game_cameraComponent_ );

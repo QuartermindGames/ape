@@ -20,13 +20,13 @@ set(GAME_SHARED_FILES
 
         private/entities/qm1/qm1_entity_pawn.c
 
-        private/entities/entity_ambience_manager.c
         private/entities/entity_decal.c
         private/entities/entity_path.c
         private/entities/entity_player_spawn.c
         private/entities/entity_portal.c
         private/entities/entity_rope.c
         private/entities/entity_sound.c
+        private/entities/entity_sound_random.c
         private/entities/entity_terrain.c
         private/entities/entity_trigger.c
 
