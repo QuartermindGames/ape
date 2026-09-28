@@ -13,11 +13,11 @@ Below are probably some of the most important documents to check out if you're l
 - [Coding Standards](docs/programming/programming_coding_standards.md)
 - [Content Standards](docs/content_standards.md)
 
-## AI Usage
+## LLM / Generative AI Usage
 
-**This project doesn't allow any AI generated code or art. Period.**
+**This project doesn't allow any AI generated code, documentation or art. Period.**
 
-It's worth taking a look [here](https://codeberg.org/ethical-foss/open-slopware/src/branch/main/why_not_llms.md) to see some of the reasons why AI is not being accepted.
+It's worth taking a look [here](https://codeberg.org/ethical-foss/open-slopware/src/branch/main/why_not_llms.md) to see some of the reasons why it's not being accepted.
 
 If you open a merge-request or issue, it's expected to be your words and your words alone.
 
