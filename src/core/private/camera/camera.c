@@ -530,9 +530,9 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 		}
 	}
 
+	const ApeRoom *room = ape_camera_get_room( self );
 	if ( ape_config_.renderer.showLights )
 	{
-		ApeRoom *room = ape_camera_get_room( self );
 		if ( room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
 		{
 			ape_draw_debug_sphere( position, QM_MATH_COLOUR4F_TO_4UB( light->colour ), light->radius );
@@ -547,9 +547,7 @@ static bool pvs_test_light( ApeCamera *self, ApeLight *light )
 		}
 	}
 
-	// for now, for simplicity-sake, flares only work so long as the camera is in the same room
-	ApeRoom *room = ape_camera_get_room( self );
-	if ( light->flags & APE_LIGHT_FLAG_FLARE && room == ape_world_node_get_room( APE_WORLD_NODE( light ) ) )
+	if ( !ape_rendererState_.mirror && light->flags & APE_LIGHT_FLAG_FLARE )
 	{
 		//TODO: test the flare is actually visible!!
 		ape_add_flare_to_queue( self, &position, &QM_MATH_COLOUR4F_RGB( light->colour.r, light->colour.g, light->colour.b ), 4.0f, light->colour.a );

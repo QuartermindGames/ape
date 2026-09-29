@@ -312,7 +312,12 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 				}
 
 				const ApeModelNode *modelNode = ( ApeModelNode * ) node;
-				const ApeModel     *model     = modelNode->model;
+				if ( !( modelNode->flags & APE_MODEL_NODE_FLAG_SOLID ) )
+				{
+					break;
+				}
+
+				const ApeModel *model = modelNode->model;
 				if ( model == nullptr )
 				{
 					break;

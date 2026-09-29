@@ -447,6 +447,9 @@ static void *create_model_node( ApeWorldNode *parent )
 {
 	ApeModelNode *modelNode = QM_OS_MEMORY_NEW( ApeModelNode );
 	ape_world_node_setup_( APE_WORLD_NODE( modelNode ), parent, APE_WORLD_NODE_TYPE_MODEL, nullptr, &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO );
+
+	modelNode->flags |= APE_MODEL_NODE_FLAG_SOLID;
+
 	return modelNode;
 }
 
@@ -492,8 +495,8 @@ static void destroy_model_node( void *data, ApeWorldNode *parent )
 
 static ApeWorldNode *clone_model_node( ApeWorldNode *src )
 {
-	ApeModelNode *srcModelNode = ( ApeModelNode * ) src;
-	ApeModelNode *dstModelNode = ape_model_node_create( src->parent, src->name, srcModelNode->modelPath );
+	const ApeModelNode *srcModelNode = ( ApeModelNode * ) src;
+	ApeModelNode       *dstModelNode = ape_model_node_create( src->parent, src->name, srcModelNode->modelPath );
 	if ( dstModelNode == nullptr )
 	{
 		ape_console_warning_( "Failed to create model for duplication!\n" );
@@ -506,6 +509,8 @@ static ApeWorldNode *clone_model_node( ApeWorldNode *src )
 	const QmMathVector3f ang = ape_world_node_get_angles( APE_WORLD_NODE( srcModelNode ) );
 	ape_world_node_set_angles( APE_WORLD_NODE( dstModelNode ), &ang );
 
+	dstModelNode->flags = srcModelNode->flags;
+
 	return APE_WORLD_NODE( dstModelNode );
 }
 
@@ -513,12 +518,17 @@ AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 {
 	const ApeModelNode *self = data;
 	acm_push_string( root, "path", self->modelPath, true );
+	acm_push_ui32( root, "flags", self->flags );
 
 	return root;
 }
 
 ApeWorldNode *deserialize_model_node( ApeWorldNode *self, AcmBranch *root )
 {
+	ApeModelNode *modelNode = ( ApeModelNode * ) self;
+
+	modelNode->flags = ACM_GET_UINT( modelNode->flags, root, "flags", modelNode->flags );
+
 	PLPath modelPath;
 	PlSetupPath( modelPath, true, "%s", acm_get_string( root, "path", "" ) );
 
@@ -534,6 +544,13 @@ ApeWorldNode *deserialize_model_node( ApeWorldNode *self, AcmBranch *root )
 	return self;
 }
 
+static ApeProperty properties[] = {
+        APE_PROPERTY_BITFLAG( "Solid",
+                              "Treated as a solid collidable object.",
+                              ApeModelNode, flags,
+                              APE_MODEL_NODE_FLAG_SOLID ),
+};
+
 const ApeWorldNodeClass ape_modelClass = {
         .identifier = "model",
         .magic      = QM_OS_MAGIC_TO_NUM( 'M', 'O', 'D', 'L' ),
@@ -543,6 +560,9 @@ const ApeWorldNodeClass ape_modelClass = {
         .serialize   = serialize_model_node,
         .deserialize = deserialize_model_node,
         .clone       = clone_model_node,
+
+        .properties    = properties,
+        .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
 
 #if defined( APE_SUPPORT_EDITOR )
 

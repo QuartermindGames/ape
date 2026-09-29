@@ -41,6 +41,11 @@ typedef struct ApeModel
 	ApeMemoryReference reference;
 } ApeModel;
 
+typedef enum ApeModelNodeFlag
+{
+	QM_OS_BIT_FLAG( APE_MODEL_NODE_FLAG_SOLID, 0U ),
+} ApeModelNodeFlag;
+
 typedef struct ApeModelNode
 {
 	// This should always come first!
@@ -50,6 +55,8 @@ typedef struct ApeModelNode
 	ApeModel *model;
 
 	ApeRendererLightGridSample light;
+
+	ApeEnumProperty flags;
 
 	QmOsLinkedListNode *sceneNode;
 } ApeModelNode;
