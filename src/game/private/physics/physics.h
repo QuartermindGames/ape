@@ -37,7 +37,7 @@ static inline bool game_physics_get_ground( ApeRoom *room, const QmMathVector3f 
 	ray.origin         = *position;
 	ray.direction      = qm_math_vector3f( 0.0f, -1.0f, 0.0f );
 
-	ape_room_ray_intersect( room, &ray, result );
+	ape_room_ray_intersect( room, &ray, result, APE_COLLISION_GROUP_BRUSHES );
 
 	return result->face != nullptr;
 }

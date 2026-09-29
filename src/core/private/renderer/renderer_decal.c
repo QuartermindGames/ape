@@ -412,7 +412,7 @@ QmOsSharedPtr *ape_decal_manager_create_projected_decal_( ApeDecalManager *self,
 	ray.direction      = *dir;
 
 	ApeCollisionIntersection result = {};
-	if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
+	if ( !ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES ) || result.face == nullptr )
 	{
 		return nullptr;
 	}

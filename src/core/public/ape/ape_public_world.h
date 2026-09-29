@@ -595,9 +595,10 @@ typedef enum ApeCollisionGroup
 {
 	QM_OS_BIT_FLAG( APE_COLLISION_GROUP_BRUSHES, 0U ),
 	QM_OS_BIT_FLAG( APE_COLLISION_GROUP_ENTITIES, 1U ),
+	QM_OS_BIT_FLAG( APE_COLLISION_GROUP_MODELS, 2U ),
 
 	// games can provide custom flags after this...
-	APE_COLLISION_GROUP_END = APE_COLLISION_GROUP_BRUSHES,
+	APE_COLLISION_GROUP_END,
 } ApeCollisionGroup;
 
 typedef struct ApeCollisionCollider
@@ -631,7 +632,7 @@ typedef struct ApeCollisionIntersection
 ApeCollisionIntersection *ape_room_intersect( ApeRoom *self, const ApeCollisionCollider *collider, unsigned int *numHits );
 
 //TODO: obsolete
-bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result );
+bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result, ApeCollisionGroup groups );
 
 QmMathVector3f ape_room_get_gravity( const ApeRoom *self );
 

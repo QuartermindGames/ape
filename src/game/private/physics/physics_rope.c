@@ -82,7 +82,7 @@ static QmMathVector3f test_particle_collision( const GamePhysicsRope *self, cons
 	float distance = qm_math_vector3f_length( ray.direction );
 
 	ApeCollisionIntersection result;
-	if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= distance )
+	if ( ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES ) && result.distance <= distance )
 	{
 		return result.intersection;
 	}

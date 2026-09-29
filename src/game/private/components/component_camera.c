@@ -102,7 +102,7 @@ static void third_person_tick( const GameCameraComponent *component, ApeCamera *
 		ray.direction      = qm_math_vector3f_sub( npos, trackPos );
 
 		ApeCollisionIntersection result = {};
-		if ( ape_room_ray_intersect( room, &ray, &result ) && result.distance <= component->distance )
+		if ( ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES ) && result.distance <= component->distance )
 		{
 			cpos = result.intersection;
 		}

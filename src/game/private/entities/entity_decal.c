@@ -110,7 +110,7 @@ static QmOsSharedPtr *decal_entity_trace_decal( ApeEntity *self )
 	assert( room != nullptr );
 
 	ApeCollisionIntersection result = {};
-	if ( ape_room_ray_intersect( room, &ray, &result ) && result.face != nullptr )
+	if ( ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES ) && result.face != nullptr )
 	{
 		return ape_room_create_decal( room,
 		                              decalEntity->material,

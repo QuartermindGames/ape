@@ -12,8 +12,6 @@
 
 #include "ape_private.h"
 
-#include "game/game_public.h"
-
 #include "world/world.h"
 
 #include "renderer/renderer.h"
@@ -167,7 +165,7 @@ void ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **ligh
 					ray.direction      = lightDir;
 
 					ApeCollisionIntersection result = {};
-					if ( ape_room_ray_intersect( room, &ray, &result ) )
+					if ( ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES ) )
 					{
 						float lightDistance = qm_math_vector3f_distance( worldPos, lightPos );
 						if ( result.distance < lightDistance )
@@ -214,7 +212,7 @@ void ape_light_grid_compute_( ApeLightGrid *self, ApeRoom *room, ApeLight **ligh
 
 const ApeLightGridCell *ape_light_grid_sample_cell_( const ApeLightGrid *self, const QmMathVector3f position, QmMathColour3f16 *dstColour, QmMathVector3f *dstDir )
 {
-	ApeLightGridCell *cell = light_grid_get_cell_by_position( self, position );
+	const ApeLightGridCell *cell = light_grid_get_cell_by_position( self, position );
 	if ( cell != nullptr )
 	{
 		dstColour->r = cell->totalLight.r / ( cell->numLights + 1 );
@@ -333,10 +331,10 @@ void ape_lightmap_serialize_( const ApeLightmap *self, unsigned int edgeLength, 
 {
 	AcmBranch *pixelsBranch = acm_push_array_f16( root, "pixels", nullptr, 0 );
 
-	unsigned int lightmapSize = edgeLength * edgeLength;
+	const unsigned int lightmapSize = edgeLength * edgeLength;
 	for ( unsigned int i = 0; i < lightmapSize; ++i )
 	{
-		ApeLightmapPixel *pixel = &self->pixels[ i ];
+		const ApeLightmapPixel *pixel = &self->pixels[ i ];
 		for ( unsigned int j = 0; j < 3; ++j )
 		{
 			acm_push_f16( pixelsBranch, nullptr, pixel->colour.v[ j ] );
@@ -352,7 +350,7 @@ ApeLightmap *ape_lightmap_deserialize_( unsigned int edgeLength, AcmBranch *root
 		return nullptr;
 	}
 
-	unsigned int lightmapSize = edgeLength * edgeLength;
+	const unsigned int lightmapSize = edgeLength * edgeLength;
 
 	AcmBranch *pixelsBranch = acm_get_child( root, "pixels" );
 	if ( pixelsBranch != nullptr )
@@ -589,7 +587,7 @@ static void compute_face_vertex( ApeRoom *room, ApeBrushFace *face, ApeLight *li
 			ray.direction      = lightDir;
 
 			ApeCollisionIntersection result = {};
-			if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
+			if ( !ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES | APE_COLLISION_GROUP_MODELS ) || result.face == nullptr )
 			{
 				continue;
 			}
@@ -741,7 +739,7 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 					ray.direction      = sampleDir;
 
 					ApeCollisionIntersection result = {};
-					if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
+					if ( !ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES | APE_COLLISION_GROUP_MODELS ) || result.face == nullptr )
 					{
 						continue;
 					}
@@ -769,7 +767,7 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 				ray.direction      = lightDir;
 
 				ApeCollisionIntersection result = {};
-				if ( !ape_room_ray_intersect( room, &ray, &result ) || result.face == nullptr )
+				if ( !ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES | APE_COLLISION_GROUP_MODELS ) || result.face == nullptr )
 				{
 					//ape_draw_debug_line( lightPos, qm_math_vector3f_add( lightPos, qm_math_vector3f_scale_float( lightDir, 9999.0f ) ), PL_COLOUR_RED );
 					continue;

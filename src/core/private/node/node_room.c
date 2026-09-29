@@ -6,14 +6,18 @@
 #include "qmos/public/qm_os_string.h"
 
 #include "world/world.h"
-#include "ape/ape_public_game.h"
 
 #include "renderer/renderer.h"
 #include "renderer/renderer_texture.h"
 
+#include "ape/ape_public_game.h"
+#include "ape/ape_public_model.h"
+
 #include "yin/core_game.h"
 
 #include "node_room.h"
+
+#include "model/model.h"
 
 static constexpr unsigned int ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH = 256;
 
@@ -286,7 +290,7 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, AcmBranch *root 
 
 static constexpr unsigned int RAY_HIT_INC = 256;
 
-static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits )
+static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits, ApeCollisionGroup groups )
 {
 	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
 	{
@@ -300,8 +304,56 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 		{
 			default:
 				break;
+			case APE_WORLD_NODE_TYPE_MODEL:
+			{
+				if ( !( groups & APE_COLLISION_GROUP_MODELS ) )
+				{
+					break;
+				}
+
+				const ApeModelNode *modelNode = ( ApeModelNode * ) node;
+				const ApeModel     *model     = modelNode->model;
+				if ( model == nullptr )
+				{
+					break;
+				}
+
+				const QmGfxMesh *mesh = model->cache;
+				if ( mesh == nullptr )
+				{
+					break;
+				}
+
+				PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( modelNode ) );
+
+				const unsigned int *indices = mesh->indices;
+				for ( unsigned int i = 0; i < mesh->num_triangles; ++i )
+				{
+					QmMathVector3f vertices[ 3 ];
+					vertices[ 0 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
+					vertices[ 1 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
+					vertices[ 2 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
+
+					if ( !com_collision_ray_intersect_polygon( ray, vertices, 3, &intersection ) )
+					{
+						continue;
+					}
+
+					ApeCollisionIntersection *hit = &hits[ *numHits ];
+					hit->node                     = APE_WORLD_NODE( modelNode );
+					hit->intersection             = intersection;
+					hit->distance                 = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
+					( *numHits )++;
+				}
+				break;
+			}
 			case APE_WORLD_NODE_TYPE_BRUSH:
 			{
+				if ( !( groups & APE_COLLISION_GROUP_BRUSHES ) )
+				{
+					break;
+				}
+
 				ApeBrush *brush = ( ApeBrush * ) node;
 				for ( unsigned int i = 0; i < brush->numFaces; ++i )
 				{
@@ -343,19 +395,19 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		intersect_ray_children( self, child, ray, hits, numHits, maxHits );
+		intersect_ray_children( self, child, ray, hits, numHits, maxHits, groups );
 	}
 
 	return true;
 }
 
-bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result )
+bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result, ApeCollisionGroup groups )
 {
 	unsigned int              maxHits = RAY_HIT_INC;
 	unsigned int              numHits = 0;
 	ApeCollisionIntersection *hits    = APE_MEMORY_NEW_C( ApeCollisionIntersection, maxHits );
 
-	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits ) || numHits == 0 )
+	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits, groups ) || numHits == 0 )
 	{
 		qm_os_memory_free( hits );
 		return false;
