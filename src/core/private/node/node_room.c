@@ -292,102 +292,20 @@ static constexpr unsigned int RAY_HIT_INC = 256;
 
 static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits, ApeCollisionGroup groups )
 {
-	if ( node->type != APE_WORLD_NODE_TYPE_ROOM )
+	QmMathVector3f intersection;
+	if ( !com_collision_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
 	{
-		QmMathVector3f intersection;
-		if ( !com_collision_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
+		return false;
+	}
+
+	if ( ( groups & APE_COLLISION_GROUP_MODELS && node->type == APE_WORLD_NODE_TYPE_MODEL ) ||
+	     ( groups & APE_COLLISION_GROUP_BRUSHES && node->type == APE_WORLD_NODE_TYPE_BRUSH ) )
+	{
+		ApeCollisionIntersection hit;
+		const ApeWorldNodeClass *nodeClass = node->classType;
+		if ( nodeClass->onTrace != nullptr && nodeClass->onTrace( node, ray, &hit ) != nullptr )
 		{
-			return false;
-		}
-
-		switch ( node->type )
-		{
-			default:
-				break;
-			case APE_WORLD_NODE_TYPE_MODEL:
-			{
-				if ( !( groups & APE_COLLISION_GROUP_MODELS ) )
-				{
-					break;
-				}
-
-				const ApeModelNode *modelNode = ( ApeModelNode * ) node;
-				if ( !( modelNode->flags & APE_MODEL_NODE_FLAG_SOLID ) )
-				{
-					break;
-				}
-
-				const ApeModel *model = modelNode->model;
-				if ( model == nullptr )
-				{
-					break;
-				}
-
-				const QmGfxMesh *mesh = model->cache;
-				if ( mesh == nullptr )
-				{
-					break;
-				}
-
-				PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( modelNode ) );
-
-				const unsigned int *indices = mesh->indices;
-				for ( unsigned int i = 0; i < mesh->num_triangles; ++i )
-				{
-					QmMathVector3f vertices[ 3 ];
-					vertices[ 0 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
-					vertices[ 1 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
-					vertices[ 2 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
-
-					if ( !com_collision_ray_intersect_polygon( ray, vertices, 3, &intersection ) )
-					{
-						continue;
-					}
-
-					ApeCollisionIntersection *hit = &hits[ *numHits ];
-					hit->node                     = APE_WORLD_NODE( modelNode );
-					hit->intersection             = intersection;
-					hit->distance                 = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
-					( *numHits )++;
-				}
-				break;
-			}
-			case APE_WORLD_NODE_TYPE_BRUSH:
-			{
-				if ( !( groups & APE_COLLISION_GROUP_BRUSHES ) )
-				{
-					break;
-				}
-
-				ApeBrush *brush = ( ApeBrush * ) node;
-				for ( unsigned int i = 0; i < brush->numFaces; ++i )
-				{
-					ApeBrushFace *face = &brush->faces[ i ];
-					if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
-					{
-						continue;
-					}
-
-					QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
-					for ( unsigned int j = 0; j < face->numVertices; ++j )
-					{
-						vertices[ j ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
-					}
-
-					if ( !com_collision_ray_intersect_polygon( ray, vertices, face->numVertices, &intersection ) )
-					{
-						continue;
-					}
-
-					ApeCollisionIntersection *hit = &hits[ *numHits ];
-					hit->node                     = APE_WORLD_NODE( brush );
-					hit->face                     = face;
-					hit->intersection             = intersection;
-					hit->distance                 = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
-					( *numHits )++;
-				}
-				break;
-			}
+			hits[ ( *numHits )++ ] = hit;
 		}
 
 		if ( *numHits >= *maxHits )

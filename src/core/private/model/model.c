@@ -514,7 +514,7 @@ static ApeWorldNode *clone_model_node( ApeWorldNode *src )
 	return APE_WORLD_NODE( dstModelNode );
 }
 
-AcmBranch *serialize_model_node( void *data, AcmBranch *root )
+static AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 {
 	const ApeModelNode *self = data;
 	acm_push_string( root, "path", self->modelPath, true );
@@ -523,7 +523,7 @@ AcmBranch *serialize_model_node( void *data, AcmBranch *root )
 	return root;
 }
 
-ApeWorldNode *deserialize_model_node( ApeWorldNode *self, AcmBranch *root )
+static ApeWorldNode *deserialize_model_node( ApeWorldNode *self, AcmBranch *root )
 {
 	ApeModelNode *modelNode = ( ApeModelNode * ) self;
 
@@ -544,6 +544,67 @@ ApeWorldNode *deserialize_model_node( ApeWorldNode *self, AcmBranch *root )
 	return self;
 }
 
+static ApeCollisionIntersection *trace_model_node( void *self, const PLCollisionRay *ray, ApeCollisionIntersection *dstResult )
+{
+	const ApeModelNode *modelNode = self;
+	if ( !( modelNode->flags & APE_MODEL_NODE_FLAG_SOLID ) )
+	{
+		return nullptr;
+	}
+
+	const ApeModel *model = modelNode->model;
+	if ( model == nullptr )
+	{
+		return nullptr;
+	}
+
+	const QmGfxMesh *mesh = model->cache;
+	if ( mesh == nullptr )
+	{
+		return nullptr;
+	}
+
+	// for the previous implementation I did, we for some reason returned all the hit faces... this was dumb, so instead the
+	// below just returns the NEAREST face to the ray origin which I think should be fine
+
+	// clear the result
+	*dstResult          = ( ApeCollisionIntersection ) {};
+	dstResult->distance = FLT_MAX;
+
+	const PLMatrix4     transform = ape_world_node_get_transform( APE_WORLD_NODE( modelNode ) );
+	const unsigned int *indices   = mesh->indices;
+	for ( unsigned int i = 0; i < mesh->num_triangles; ++i )
+	{
+		QmMathVector3f vertices[ 3 ];
+		vertices[ 0 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
+		vertices[ 1 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
+		vertices[ 2 ] = PlTransformVector3( &mesh->vertices[ *indices++ ].position, &transform );
+
+		QmMathVector3f intersection;
+		if ( !com_collision_ray_intersect_polygon( ray, vertices, 3, &intersection ) )
+		{
+			continue;
+		}
+
+		const float distance = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
+		if ( distance >= dstResult->distance )
+		{
+			continue;
+		}
+
+		dstResult->node         = APE_WORLD_NODE( modelNode );
+		dstResult->intersection = intersection;
+		dstResult->distance     = distance;
+	}
+
+	if ( dstResult->node == nullptr )
+	{
+		return nullptr;
+	}
+
+	return dstResult;
+}
+
 static ApeProperty properties[] = {
         APE_PROPERTY_BITFLAG( "Solid",
                               "Treated as a solid collidable object.",
@@ -559,6 +620,7 @@ const ApeWorldNodeClass ape_modelClass = {
         .destroy     = destroy_model_node,
         .serialize   = serialize_model_node,
         .deserialize = deserialize_model_node,
+        .onTrace     = trace_model_node,
         .clone       = clone_model_node,
 
         .properties    = properties,

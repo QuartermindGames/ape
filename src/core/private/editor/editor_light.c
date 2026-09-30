@@ -769,11 +769,8 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 				ApeCollisionIntersection result = {};
 				if ( !ape_room_ray_intersect( room, &ray, &result, APE_COLLISION_GROUP_BRUSHES | APE_COLLISION_GROUP_MODELS ) || result.face == nullptr )
 				{
-					//ape_draw_debug_line( lightPos, qm_math_vector3f_add( lightPos, qm_math_vector3f_scale_float( lightDir, 9999.0f ) ), PL_COLOUR_RED );
 					continue;
 				}
-
-				//ape_draw_debug_line( lightPos, result.intersection, PL_COLOUR_GREEN );
 
 				if ( result.face != face )
 				{
@@ -807,9 +804,7 @@ static void compute_face_lightmap( ApeRoom *room, const ApeBrushFace *face, ApeL
 #endif
 			}
 
-
 			// just pulled much of the below from our existing shaders...
-
 			QmMathVector3f c;
 			if ( light->type == APE_LIGHT_TYPE_SUN )
 			{

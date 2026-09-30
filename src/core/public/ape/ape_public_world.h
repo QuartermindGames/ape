@@ -23,6 +23,8 @@ typedef struct ApeBrush    ApeBrush;
 
 typedef struct ApeProperty ApeProperty;
 
+typedef struct ApeCollisionIntersection ApeCollisionIntersection;
+
 /* ======================================================================
  * WORLD INTERFACE
  * ====================================================================*/
@@ -81,6 +83,8 @@ typedef struct ApeWorldNodeClass
 	void ( *onDettachParent )( void *self, ApeWorldNode *parent );// called just after a parent is dettached
 
 	void ( *onChangeRoom )( void *self, ApeRoom *currentRoom, ApeRoom *newRoom );// called when the node moves from one room to another, just before the change is set
+
+	ApeCollisionIntersection *( *onTrace )( void *self, const PLCollisionRay *ray, ApeCollisionIntersection *dstResult );
 
 	ApeWorldNodeClassNetSerializeFunction   netSerializeFunction;
 	ApeWorldNodeClassNetDeserializeFunction netDeserializeFunction;

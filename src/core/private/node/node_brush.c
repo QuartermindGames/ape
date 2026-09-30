@@ -1136,6 +1136,58 @@ static void on_change_room( void *self, ApeRoom *currentRoom, ApeRoom *newRoom )
 	}
 }
 
+static ApeCollisionIntersection *trace_brush( void *self, const PLCollisionRay *ray, ApeCollisionIntersection *dstResult )
+{
+	ApeBrush *brush = self;
+	if ( brush->type == APE_WORLD_BRUSH_TYPE_AIR )
+	{
+		return nullptr;
+	}
+
+	// clear the result
+	*dstResult          = ( ApeCollisionIntersection ) {};
+	dstResult->distance = FLT_MAX;
+
+	for ( unsigned int i = 0; i < brush->numFaces; ++i )
+	{
+		ApeBrushFace *face = &brush->faces[ i ];
+		if ( face->flags & APE_BRUSH_FACE_FLAG_HIDDEN )
+		{
+			continue;
+		}
+
+		QmMathVector3f vertices[ APE_BRUSH_MAX_FACE_VERTICES ];
+		for ( unsigned int j = 0; j < face->numVertices; ++j )
+		{
+			vertices[ j ] = brush->vertices[ face->vertices[ face->edgeLoopOrder[ j ] ].posIndex ];
+		}
+
+		QmMathVector3f intersection;
+		if ( !com_collision_ray_intersect_polygon( ray, vertices, face->numVertices, &intersection ) )
+		{
+			continue;
+		}
+
+		const float distance = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
+		if ( distance >= dstResult->distance )
+		{
+			continue;
+		}
+
+		dstResult->node         = APE_WORLD_NODE( brush );
+		dstResult->face         = face;
+		dstResult->intersection = intersection;
+		dstResult->distance     = distance;
+	}
+
+	if ( dstResult->node == nullptr )
+	{
+		return nullptr;
+	}
+
+	return dstResult;
+}
+
 static ApePropertyEnum brushTypeEnums[] = {
         {"Solid", 0},
         {"Air",   1},
@@ -1155,14 +1207,13 @@ const ApeWorldNodeClass ape_brushClass = {
         .identifier = "brush",
         .magic      = QM_OS_MAGIC_TO_NUM( 'B', 'R', 'S', 'H' ),
 
-        .create      = create_brush,
-        .destroy     = destroy_brush,
-        .serialize   = serialize_brush,
-        .deserialize = deserialize_brush,
-
+        .create       = create_brush,
+        .destroy      = destroy_brush,
+        .serialize    = serialize_brush,
+        .deserialize  = deserialize_brush,
         .onChangeRoom = on_change_room,
-
-        .clone = clone_brush,
+        .onTrace      = trace_brush,
+        .clone        = clone_brush,
 
         .properties    = properties,
         .numProperties = QM_OS_ARRAY_ELEMENTS( properties ),
