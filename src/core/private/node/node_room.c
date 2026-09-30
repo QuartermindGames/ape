@@ -290,7 +290,7 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, AcmBranch *root 
 
 static constexpr unsigned int RAY_HIT_INC = 256;
 
-static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *hits, unsigned int *numHits, unsigned int *maxHits, ApeCollisionGroup groups )
+static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionGroup groups, ApeCollisionIntersection *dstResult )
 {
 	QmMathVector3f intersection;
 	if ( !com_collision_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
@@ -301,53 +301,33 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 	if ( ( groups & APE_COLLISION_GROUP_MODELS && node->type == APE_WORLD_NODE_TYPE_MODEL ) ||
 	     ( groups & APE_COLLISION_GROUP_BRUSHES && node->type == APE_WORLD_NODE_TYPE_BRUSH ) )
 	{
-		ApeCollisionIntersection hit;
+		ApeCollisionIntersection result;
 		const ApeWorldNodeClass *nodeClass = node->classType;
-		if ( nodeClass->onTrace != nullptr && nodeClass->onTrace( node, ray, &hit ) != nullptr )
+		if ( nodeClass->onTrace != nullptr && nodeClass->onTrace( node, ray, &result ) != nullptr && result.distance < dstResult->distance )
 		{
-			hits[ ( *numHits )++ ] = hit;
-		}
-
-		if ( *numHits >= *maxHits )
-		{
-			*maxHits = *maxHits + RAY_HIT_INC;
-			hits     = qm_os_memory_realloc( hits, sizeof( ApeCollisionIntersection ) * *maxHits );
+			*dstResult = result;
 		}
 	}
 
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
-		intersect_ray_children( self, child, ray, hits, numHits, maxHits, groups );
+		intersect_ray_children( self, child, ray, groups, dstResult );
 	}
 
-	return true;
+	return dstResult->node != nullptr;
 }
 
 bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollisionIntersection *result, ApeCollisionGroup groups )
 {
-	unsigned int              maxHits = RAY_HIT_INC;
-	unsigned int              numHits = 0;
-	ApeCollisionIntersection *hits    = APE_MEMORY_NEW_C( ApeCollisionIntersection, maxHits );
-
-	if ( !intersect_ray_children( self, &self->base, ray, hits, &numHits, &maxHits, groups ) || numHits == 0 )
+	ApeCollisionIntersection intersection = {};
+	intersection.distance                 = FLT_MAX;
+	if ( !intersect_ray_children( self, &self->base, ray, groups, &intersection ) )
 	{
-		qm_os_memory_free( hits );
 		return false;
 	}
 
-	// now determine which was the closest hit;
-	*result = hits[ 0 ];
-	for ( unsigned int i = 1; i < numHits; i++ )
-	{
-		if ( hits[ i ].distance < result->distance )
-		{
-			*result = hits[ i ];
-		}
-	}
-
-	qm_os_memory_free( hits );
-
+	*result = intersection;
 	return true;
 }
 
