@@ -340,30 +340,45 @@ void ape_console_var_register( const char *name, const char *desc, const char *v
 		return;
 	}
 
-	if ( ( configBranch = ape_get_config_() ) == nullptr )
+	// check if we're overriding via the command line first, and then check the config if not
+
+	char *tmp = qm_os_string_alloc( "+%s", name );
+	assert( tmp );
+
+	const char *arg = nullptr;
+	if ( ( arg = qm_os_cl_get_argument_value( tmp ) ) == nullptr )
 	{
-		ape_console_warning_( "Failed to fetch project config, you might be registering your console variable (%s) too soon!\n", name );
-		return;
+		if ( ( configBranch = ape_get_config_() ) != nullptr )
+		{
+			AcmBranch *child;
+			if ( ( child = acm_get_child( configBranch, name ) ) != nullptr )
+			{
+				arg = acm_branch_get_value( child, nullptr );
+				assert( arg != nullptr );
+			}
+		}
+		else
+		{
+			ape_console_warning_( "Failed to fetch project config, you might be registering your console variable (%s) too soon!\n", name );
+		}
 	}
 
-	AcmBranch *child;
-	if ( ( child = acm_get_child( configBranch, name ) ) == nullptr )
+	qm_os_memory_free( tmp );
+
+	if ( arg == nullptr )
 	{
 		return;
 	}
-
-	const char *configValue = acm_branch_get_value( child, nullptr );
-	assert( configValue != nullptr );
 
 	// the save and restore of the callback here is a disgusting hack
 	// Duplexity thinks this should keep consistent; register method skips it
 	// I don't know so I'm doing as suggested, unfortunately we've got to do
 	// it in this gross way :(
 
-	ApeConsoleCallback storeCallback = var->CallbackFunction;
-	var->CallbackFunction            = nullptr;
+	const ApeConsoleCallback storeCallback = var->CallbackFunction;
+	var->CallbackFunction                  = nullptr;
 
-	ape_console_var_set_( var, configValue );
+	ape_console_var_set_( var, arg );
 
 	var->CallbackFunction = storeCallback;
 }

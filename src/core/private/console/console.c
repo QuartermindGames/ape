@@ -312,7 +312,7 @@ static void console_find_command( unsigned int argc, const char *const *argv )
 
 	if ( findCommands )
 	{
-		ape_console_cmd_find_( term );
+		ape_console_cmd_find_( term, false, false );
 	}
 }
 

@@ -134,18 +134,36 @@ bool ape_console_cmd_parse_( const char *name, unsigned int argc, const char *co
 	return true;
 }
 
-void ape_console_cmd_find_( const char *term )
+unsigned int ape_console_cmd_find_( const char *term, bool silent, bool exact )
 {
-	ape_console_print_( "Commands that match the term \"%s\"\n", term );
+	if ( !silent )
+	{
+		ape_console_print_( "Commands that match the term \"%s\"\n", term );
+	}
+
+	unsigned int numMatching = 0;
 	for ( ApeConsoleCmd **cmd = commands; cmd < commands + numCommands; ++cmd )
 	{
-		if ( pl_strcasestr( ( *cmd )->name, term ) == nullptr && ( *cmd )->description != nullptr && pl_strcasestr( ( *cmd )->description, term ) == nullptr )
+		if ( ( exact && pl_strcasestr( ( *cmd )->name, term ) == nullptr ) ||
+		     ( !exact && pl_strcasestr( ( *cmd )->name, term ) == nullptr && ( *cmd )->description != nullptr && pl_strcasestr( ( *cmd )->description, term ) == nullptr ) )
 		{
 			continue;
 		}
 
-		console_cmd_print_details( *cmd );
+		if ( !silent )
+		{
+			console_cmd_print_details( *cmd );
+		}
+
+		numMatching++;
+
+		if ( exact )
+		{
+			break;
+		}
 	}
+
+	return numMatching;
 }
 
 bool ape_console_cmd_help_( const char *name )

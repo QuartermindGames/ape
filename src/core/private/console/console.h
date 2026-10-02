@@ -39,5 +39,5 @@ void ape_console_cmd_shutdown_();
 
 bool ape_console_cmd_parse_( const char *name, unsigned int argc, const char *const *argv );
 
-void ape_console_cmd_find_( const char *term );
-bool ape_console_cmd_help_( const char *name );
+unsigned int ape_console_cmd_find_( const char *term, bool silent, bool exact );
+bool         ape_console_cmd_help_( const char *name );

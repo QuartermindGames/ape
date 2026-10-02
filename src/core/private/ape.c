@@ -39,10 +39,22 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 			continue;
 		}
 
-		char commandBuf[ 1024 ];
-		qm_os_string_copy( commandBuf, argv[ i ] + 1, sizeof( commandBuf ) );
+		const char *c = argv[ i ] + 1;
+		if ( *c == '\0' )
+		{
+			continue;
+		}
 
-		ape_console_parse( commandBuf );
+		// check if it's a command, as we're dealing with vars on registration instead
+		size_t size = strlen( c ) + 1;
+		char   cmdName[ size ];
+		qm_os_string_copy_until( cmdName, c, sizeof( cmdName ), ' ' );
+		if ( ape_console_cmd_find_( cmdName, true, true ) == 0 )
+		{
+			continue;
+		}
+
+		ape_console_parse( c );
 	}
 
 	if ( engineConfig == NULL )
@@ -62,7 +74,8 @@ static void execute_launch_commands( unsigned int argc, char **argv )
 	{
 		return;
 	}
-	else if ( numCommands >= MAX_COMMANDS )
+
+	if ( numCommands >= MAX_COMMANDS )
 	{
 		ape_console_warning_( "Excessive number of launch commands (%u >= %u), some commands will be ignored!\n", numCommands, MAX_COMMANDS );
 		numCommands = ( MAX_COMMANDS - 1 );
