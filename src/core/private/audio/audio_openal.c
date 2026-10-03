@@ -367,7 +367,7 @@ static void al_source_set_volume( ApeAudioSource *self, float volume )
 
 static void al_source_set_loop( ApeAudioSource *self, bool loop )
 {
-	XAL_CALL( alSourcei( self->user, AL_LOOPING, AL_TRUE ) );
+	XAL_CALL( alSourcei( self->user, AL_LOOPING, loop ) );
 }
 
 static bool al_source_is_playing( const ApeAudioSource *source )
