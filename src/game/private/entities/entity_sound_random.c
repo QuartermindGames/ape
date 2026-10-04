@@ -191,15 +191,14 @@ static void sound_random_entity_draw_editor( ApeEntity *self, bool isSelected )
 
 static void sound_random_entity_tick( ApeEntity *self, [[maybe_unused]] double delta )
 {
+	const ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
+	if ( room == nullptr )
+	{
+		return;
+	}
+
 	GameRandomSoundEntity *soundEntity = GAME_SOUND_RANDOM_ENTITY( self );
 	assert( soundEntity != nullptr );
-
-#if 0
-	static QmMathVector3f lastSound;
-	ape_draw_debug_sphere( lastSound, PL_COLOUR_RED, 16.0f );
-
-	sound_random_entity_draw_editor( self, true );
-#endif
 
 	const uint64_t now = ape_get_tick_ms();
 	if ( now - soundEntity->lastTime < soundEntity->interval )
@@ -242,11 +241,9 @@ static void sound_random_entity_tick( ApeEntity *self, [[maybe_unused]] double d
 	const float pitch  = soundEntity->minPitch + qm_os_random_float( &seed, soundEntity->maxPitch - soundEntity->minPitch );
 	const float volume = soundEntity->minVolume + qm_os_random_float( &seed, soundEntity->maxVolume - soundEntity->minVolume );
 
-	ape_audio_sample_emit( sample, &pos, volume, pitch );
+	const ApeAudioReverbPreset reverb = ape_room_get_reverb_preset( room );
 
-#if 0
-	lastSound = pos;
-#endif
+	ape_audio_sample_emit( sample, &pos, volume, pitch, reverb );
 
 	soundEntity->lastTime = now;
 }

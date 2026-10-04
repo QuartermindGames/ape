@@ -592,12 +592,12 @@ static ApePropertyEnum reverbPresetsEnum[] = {
         {"Parking Lot",      22},
         {"Sewer Pipe",       23},
         {"Underwater",       24},
-        {"Small Room",       25},
-        {"Medium Room",      26},
-        {"Large Room",       27},
-        {"Medium Hall",      28},
-        {"Large Hall",       29},
-        {"Plate",            30},
+        //{"Small Room",       25},
+        //{"Medium Room",      26},
+        //{"Large Room",       27},
+        //{"Medium Hall",      28},
+        //{"Large Hall",       29},
+        //{"Plate",            30},
 };
 
 static const ApeProperty properties[] = {

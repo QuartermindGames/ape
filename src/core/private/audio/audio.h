@@ -23,10 +23,10 @@ typedef ApeAudioSample *( *ApeAudioSampleLoadCallback )( QmFsFile *file );
 
 typedef struct ApeAudioSource
 {
-	QmMathVector3f  position;
-	QmMathVector3f  velocity;
-	ApeAudioSample *sample;
-	intptr_t        user;
+	QmMathVector3f     position;
+	QmMathVector3f     velocity;
+	ApeAudioSample    *sample;
+	intptr_t           user;
 } ApeAudioSource;
 
 void ape_audio_initialize_( void );
@@ -54,7 +54,7 @@ typedef struct ApeAudioDriverInterface
 
 	bool ( *cacheSample )( ApeAudioSample *audioSample );
 	void ( *freeSample )( ApeAudioSample *audioSample );
-	void ( *emitSample )( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch );
+	void ( *emitSample )( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch, ApeAudioReverbPreset reverb );
 
 	bool ( *createSource )( ApeAudioSource *audioSource );
 	void ( *destroySource )( ApeAudioSource *audioSource );
@@ -63,6 +63,7 @@ typedef struct ApeAudioDriverInterface
 	void ( *setSourcePitch )( ApeAudioSource *audioSource, float pitch );
 	void ( *setSourceVolume )( ApeAudioSource *audioSource, float volume );
 	void ( *setSourceLoop )( ApeAudioSource *audioSource, bool loop );
+	void ( *setSourceReverb )( ApeAudioSource *audioSource, ApeAudioReverbPreset reverb );
 	void ( *emitSource )( ApeAudioSource *audioSource, ApeAudioSample *audioSample );
 
 	bool ( *isSourcePlaying )( const ApeAudioSource *audioSource );

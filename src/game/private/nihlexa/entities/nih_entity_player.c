@@ -68,13 +68,21 @@ static void *create_player_entity( ApeEntity *self )
 
 static void spawn_player_entity( ApeEntity *self )
 {
+	const ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
+	if ( room == nullptr )
+	{
+		return;
+	}
+
 	NihPlayerEntity *player = NIH_PLAYER_ENTITY( self );
 	assert( player != nullptr );
 
-	QmMathVector3f pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
+	const QmMathVector3f pos = ape_world_node_get_local_position( APE_WORLD_NODE( self ) );
 	for ( unsigned int i = 0; i < NIH_PLAYER_MAX_AUDIO_CHANNELS; ++i )
 	{
-		player->audioSources[ i ] = ape_audio_source_create( &pos, &QM_MATH_VECTOR3F_ZERO, APE_AUDIO_SOURCE_GROUP_GENERIC );
+		player->audioSources[ i ] = ape_audio_source_create( &pos );
+		ape_audio_source_set_reverb( player->audioSources[ i ],
+		                             ape_room_get_reverb_preset( room ) );
 	}
 }
 

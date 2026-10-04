@@ -33,7 +33,7 @@ typedef struct GameSoundEntity
 
 static void *sound_entity_create( [[maybe_unused]] ApeEntity *self )
 {
-	ApeAudioSource *source = ape_audio_source_create( &QM_MATH_VECTOR3F_ZERO, &QM_MATH_VECTOR3F_ZERO, APE_AUDIO_SOURCE_GROUP_GENERIC );
+	ApeAudioSource *source = ape_audio_source_create( &QM_MATH_VECTOR3F_ZERO );
 	if ( source == nullptr )
 	{
 		return nullptr;
@@ -65,6 +65,12 @@ static void sound_entity_destroy( ApeEntity *self )
 
 static void sound_entity_spawn( ApeEntity *self )
 {
+	const ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( self ) );
+	if ( room == nullptr )
+	{
+		return;
+	}
+
 	GameSoundEntity *soundEntity = GAME_SOUND_ENTITY( self );
 	assert( soundEntity != nullptr );
 
@@ -75,11 +81,12 @@ static void sound_entity_spawn( ApeEntity *self )
 		return;
 	}
 
-	QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
+	const QmMathVector3f pos = ape_world_node_get_position( APE_WORLD_NODE( self ) );
 	ape_audio_source_set_position( soundEntity->source, &pos );
 	ape_audio_source_set_pitch( soundEntity->source, soundEntity->pitch );
 	ape_audio_source_set_volume( soundEntity->source, soundEntity->volume );
 	ape_audio_source_set_loop( soundEntity->source, soundEntity->flags & GAME_SOUND_ENTITY_FLAG_LOOP );
+	ape_audio_source_set_reverb( soundEntity->source, ape_room_get_reverb_preset( room ) );
 
 	if ( !( soundEntity->flags & GAME_SOUND_ENTITY_FLAG_WAIT ) )
 	{

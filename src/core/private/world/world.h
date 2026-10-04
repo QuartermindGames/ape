@@ -36,8 +36,9 @@ typedef struct ApeRoom
 
 	struct PLHashTable *taggedSurfaceLookup;
 
-	ApeAudioReverbPreset reverbPreset;// default reverb for the room
-	QmMathVector3f       gravity;     // default gravity for the room
+	ApeEnumProperty reverbPreset;// default reverb for the room
+
+	QmMathVector3f gravity;// default gravity for the room
 
 	unsigned int numVisits;
 

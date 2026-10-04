@@ -54,14 +54,20 @@ static void game_component_movement_footstep( GameMovementComponent *self, GameC
 	// like, the movement system should have almost nothing to do with the camera here and all
 	// of this should be defined by the model instead
 
-	GameCameraComponent *camera = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
+	const ApeRoom *room = ape_world_node_get_room( APE_WORLD_NODE( entity ) );
+	if ( room == nullptr )
+	{
+		return;
+	}
+
+	const GameCameraComponent *camera = ape_entity_get_component( entity, GAME_CAMERA_COMPONENT_NAME );
 	if ( camera == nullptr )
 	{
 		return;
 	}
 
 	ApeCollisionIntersection result;
-	ApeBrushFace            *face = ground_check( self, collision, entity, &result );
+	const ApeBrushFace      *face = ground_check( self, collision, entity, &result );
 	if ( face == nullptr || !self->isGrounded )
 	{
 		return;
@@ -73,13 +79,14 @@ static void game_component_movement_footstep( GameMovementComponent *self, GameC
 	if ( !self->hasPlayedStep && camera->viewBob <= -0.5f )
 	{
 		unsigned int    seed   = qm_os_random_seed_initialize();
-		uint8_t         r      = qm_os_random_int( &seed ) % MAX_FOOTSTEP_SOUNDS_PER_TYPE;
+		const uint8_t   r      = qm_os_random_int( &seed ) % MAX_FOOTSTEP_SOUNDS_PER_TYPE;
 		ApeAudioSample *sample = footstepSounds[ surfaceType * MAX_FOOTSTEP_SOUNDS_PER_TYPE + r ];
 		if ( sample != nullptr )
 		{
 			ape_audio_sample_emit( sample, &result.intersection,
 			                       20.f + qm_os_random_float( &seed, 10.f ),
-			                       0.5f + qm_os_random_float( &seed, 0.5f ) );
+			                       0.5f + qm_os_random_float( &seed, 0.5f ),
+			                       ape_room_get_reverb_preset( room ) );
 		}
 
 		self->hasPlayedStep = true;

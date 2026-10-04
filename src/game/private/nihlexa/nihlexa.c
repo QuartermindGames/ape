@@ -189,7 +189,7 @@ static void nih_shutdown()
 
 static void world_tick( const double delta )
 {
-	ApeWorld *world = game_get_current_world();
+	const ApeWorld *world = game_get_current_world();
 	if ( world == nullptr )
 	{
 		return;
@@ -197,12 +197,35 @@ static void world_tick( const double delta )
 
 	ape_audio_clear_listener();
 
-	GamePlayer *player = game_server_get_local_player_();
+	const GamePlayer *player = game_server_get_local_player_();
 	if ( player != nullptr && player->camera != nullptr )
 	{
-		QmMathVector3f cpos = ape_camera_get_position( player->camera );
-		QmMathVector3f cang = ape_camera_get_angles( player->camera );
-		ape_audio_update_listener( &cpos, &cang, nullptr );
+		const QmMathVector3f cpos = ape_camera_get_position( player->camera );
+		const QmMathVector3f cang = ape_camera_get_angles( player->camera );
+		QmMathVector3f       cvel = {};
+
+		ApeEntity *entity = player->entity;
+		if ( entity != nullptr )
+		{
+			const GameMovementComponent *movement;
+			if ( ( movement = ape_entity_get_component( entity, "movement" ) ) != nullptr )
+			{
+				cvel = movement->velocity;
+			}
+		}
+
+		ApeAudioReverbPreset reverb;
+		const ApeRoom       *room = ape_camera_get_room( player->camera );
+		if ( room != nullptr )
+		{
+			reverb = ape_room_get_reverb_preset( room );
+		}
+		else
+		{
+			reverb = APE_AUDIO_REVERB_PRESET_NONE;
+		}
+
+		ape_audio_update_listener( &cpos, &cang, &cvel );
 	}
 }
 

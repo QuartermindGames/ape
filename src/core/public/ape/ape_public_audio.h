@@ -54,14 +54,14 @@ typedef enum ApeAudioReverbPreset
 	APE_AUDIO_REVERB_PRESET_PARKINGLOT,
 	APE_AUDIO_REVERB_PRESET_SEWERPIPE,
 	APE_AUDIO_REVERB_PRESET_UNDERWATER,
-	APE_AUDIO_REVERB_PRESET_SMALLROOM,
-	APE_AUDIO_REVERB_PRESET_MEDIUMROOM,
-	APE_AUDIO_REVERB_PRESET_LARGEROOM,
-	APE_AUDIO_REVERB_PRESET_MEDIUMHALL,
-	APE_AUDIO_REVERB_PRESET_LARGEHALL,
-	APE_AUDIO_REVERB_PRESET_PLATE,
+	//APE_AUDIO_REVERB_PRESET_SMALLROOM,
+	//APE_AUDIO_REVERB_PRESET_MEDIUMROOM,
+	//APE_AUDIO_REVERB_PRESET_LARGEROOM,
+	//APE_AUDIO_REVERB_PRESET_MEDIUMHALL,
+	//APE_AUDIO_REVERB_PRESET_LARGEHALL,
+	//APE_AUDIO_REVERB_PRESET_PLATE,
 
-	APE_AUDIO_MAX_REVERB_PRESETS
+	APE_AUDIO_REVERB_PRESET_MAX
 } ApeAudioReverbPreset;
 
 typedef struct ApeAudioEffectType
@@ -77,10 +77,6 @@ extern const unsigned int       APE_NUM_AUDIO_EFFECT_TYPES;
 
 /**
  * Update the main listener position.
- *
- * @param position 	Position of the listener.
- * @param angles 	Angles of the listener.
- * @param velocity 	Velocity of the listener.
  */
 void ape_audio_update_listener( const QmMathVector3f *position, const QmMathVector3f *angles, const QmMathVector3f *velocity );
 
@@ -126,12 +122,17 @@ APE_MEMORY_IMPLEMENT_INTERFACE_DECL( ape_audio_sample, ApeAudioSample )
 
 ApeAudioSample *ape_audio_sample_cache( const char *path );
 ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigned int bufferSize, ApeAudioSampleFormat format, unsigned int channels, unsigned int sampleRate );
-void            ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch );
+
+/**
+ * Emits a sample via a temporary audio source.
+ * The source will automatically be free'd once the sample stops playing.
+ */
+void ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch, ApeAudioReverbPreset reverb );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Source
 
-ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const QmMathVector3f *velocity, ApeAudioSourceGroup group );
+ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position );
 void            ape_audio_source_destroy( ApeAudioSource *self );
 bool            ape_audio_source_is_playing( const ApeAudioSource *self );
 void            ape_audio_source_set_position( ApeAudioSource *self, const QmMathVector3f *position );
@@ -139,6 +140,7 @@ void            ape_audio_source_set_velocity( ApeAudioSource *self, const QmMat
 void            ape_audio_source_set_pitch( ApeAudioSource *self, float pitch );
 void            ape_audio_source_set_volume( ApeAudioSource *self, float volume );
 void            ape_audio_source_set_loop( ApeAudioSource *self, bool loop );
+void            ape_audio_source_set_reverb( ApeAudioSource *self, ApeAudioReverbPreset reverb );
 void            ape_audio_source_emit( ApeAudioSource *self, ApeAudioSample *audioSample );
 
 PL_EXTERN_C_END

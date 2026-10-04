@@ -32,12 +32,12 @@ const ApeAudioEffectType APE_AUDIO_EFFECT_TYPES[] = {
         {"parkinglot",      APE_AUDIO_REVERB_PRESET_PARKINGLOT     },
         {"sewerpipe",       APE_AUDIO_REVERB_PRESET_SEWERPIPE      },
         {"underwater",      APE_AUDIO_REVERB_PRESET_UNDERWATER     },
-        {"smallroom",       APE_AUDIO_REVERB_PRESET_SMALLROOM      },
-        {"mediumroom",      APE_AUDIO_REVERB_PRESET_MEDIUMROOM     },
-        {"largeroom",       APE_AUDIO_REVERB_PRESET_LARGEROOM      },
-        {"mediumhall",      APE_AUDIO_REVERB_PRESET_MEDIUMHALL     },
-        {"largehall",       APE_AUDIO_REVERB_PRESET_LARGEHALL      },
-        {"plate",           APE_AUDIO_REVERB_PRESET_PLATE          },
+        //{"smallroom",       APE_AUDIO_REVERB_PRESET_SMALLROOM      },
+        //{"mediumroom",      APE_AUDIO_REVERB_PRESET_MEDIUMROOM     },
+        //{"largeroom",       APE_AUDIO_REVERB_PRESET_LARGEROOM      },
+        //{"mediumhall",      APE_AUDIO_REVERB_PRESET_MEDIUMHALL     },
+        //{"largehall",       APE_AUDIO_REVERB_PRESET_LARGEHALL      },
+        //{"plate",           APE_AUDIO_REVERB_PRESET_PLATE          },
 };
 const unsigned int APE_NUM_AUDIO_EFFECT_TYPES = QM_OS_ARRAY_ELEMENTS( APE_AUDIO_EFFECT_TYPES );
 
@@ -87,7 +87,7 @@ static void play_audio_command( unsigned int argc, const char *const *argv )
 		return;
 	}
 
-	ape_audio_sample_emit( sample, nullptr, 100, 1.0 );
+	ape_audio_sample_emit( sample, nullptr, 100, 1.0, APE_AUDIO_REVERB_PRESET_NONE );
 	ape_audio_sample_release_reference( sample );
 }
 
@@ -104,14 +104,14 @@ static void test_3d_command( unsigned int argc, const char *const *argv )
 		return;
 	}
 
-	unsigned int   seed     = qm_os_random_seed_initialize();
-	QmMathVector3f position = {
+	unsigned int         seed     = qm_os_random_seed_initialize();
+	const QmMathVector3f position = {
 	        .x = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
 	        .y = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
 	        .z = qm_os_random_float( &seed, 1024.0f ) - qm_os_random_float( &seed, 1024.0f ),
 	};
 
-	ape_audio_sample_emit( sample, &position, 100, qm_os_random_float( &seed, 2.0f ) );
+	ape_audio_sample_emit( sample, &position, 100, qm_os_random_float( &seed, 2.0f ), APE_AUDIO_REVERB_PRESET_DEFAULT );
 	ape_audio_sample_release_reference( sample );
 }
 
@@ -298,9 +298,9 @@ ApeAudioSample *ape_audio_sample_create_from_memory( const void *buffer, unsigne
 	return sample;
 }
 
-void ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch )
+void ape_audio_sample_emit( ApeAudioSample *audioSample, const QmMathVector3f *position, float volume, float pitch, ApeAudioReverbPreset reverb )
 {
-	DRIVER_CALLBACK( emitSample, audioSample, position, volume, pitch );
+	DRIVER_CALLBACK( emitSample, audioSample, position, volume, pitch, reverb );
 }
 
 void ape_audio_shutdown_( void )
@@ -347,18 +347,15 @@ void ape_audio_pause_( bool pause )
  * Sources
  ****************************************/
 
-ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position, const QmMathVector3f *velocity, ApeAudioSourceGroup group )
+ApeAudioSource *ape_audio_source_create( const QmMathVector3f *position )
 {
 	ApeAudioSource *source = QM_OS_MEMORY_NEW( ApeAudioSource );
+	if ( source == nullptr )
+	{
+		return nullptr;
+	}
 
-	if ( position != nullptr )
-	{
-		source->position = *position;
-	}
-	if ( velocity != nullptr )
-	{
-		source->velocity = *velocity;
-	}
+	source->position = *position;
 
 	DRIVER_CALLBACK( createSource, source );
 
@@ -411,6 +408,11 @@ void ape_audio_source_set_volume( ApeAudioSource *self, float volume )
 void ape_audio_source_set_loop( ApeAudioSource *self, bool loop )
 {
 	DRIVER_CALLBACK( setSourceLoop, self, loop );
+}
+
+void ape_audio_source_set_reverb( ApeAudioSource *self, ApeAudioReverbPreset reverb )
+{
+	DRIVER_CALLBACK( setSourceReverb, self, reverb );
 }
 
 void ape_audio_source_emit( ApeAudioSource *self, ApeAudioSample *audioSample )
