@@ -204,7 +204,7 @@ int main( int argc, char **argv )
 	}
 
 	const char *arg;
-	if ( ( arg = PlGetCommandLineArgumentValue( "-s" ) ) != NULL )
+	if ( ( arg = qm_os_cl_get_argument_value( "-s" ) ) != NULL )
 	{
 		matGen.shader = arg;
 	}
@@ -212,7 +212,7 @@ int main( int argc, char **argv )
 	{
 		matGen.shader = "default";
 	}
-	if ( ( arg = PlGetCommandLineArgumentValue( "-f" ) ) != NULL )
+	if ( ( arg = qm_os_cl_get_argument_value( "-f" ) ) != NULL )
 	{
 		matGen.filterMode = arg;
 	}

@@ -54,7 +54,7 @@ bool aux_log_initialize_()
 #if !defined( NDEBUG )
 	char       *path;
 	const char *c;
-	if ( ( c = PlGetCommandLineArgumentValue( "/log" ) ) != nullptr )
+	if ( ( c = qm_os_cl_get_argument_value( "/log" ) ) != nullptr )
 	{
 		path = qm_os_string_alloc( "%s", c );
 	}

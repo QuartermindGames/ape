@@ -304,11 +304,11 @@ static bool initialize_display( void )
 	}
 
 	const char *arg;
-	if ( ( arg = PlGetCommandLineArgumentValue( "/width" ) ) != nullptr )
+	if ( ( arg = qm_os_cl_get_argument_value( "/width" ) ) != nullptr )
 	{
 		width = ( int ) strtol( arg, nullptr, 10 );
 	}
-	if ( ( arg = PlGetCommandLineArgumentValue( "/height" ) ) != nullptr )
+	if ( ( arg = qm_os_cl_get_argument_value( "/height" ) ) != nullptr )
 	{
 		height = ( int ) strtol( arg, nullptr, 10 );
 	}
@@ -379,7 +379,7 @@ int qm_os_main( const int argc, char **argv )
 #endif
 
 	const char *projectName;
-	if ( ( projectName = PlGetCommandLineArgumentValue( "/project" ) ) == NULL )
+	if ( ( projectName = qm_os_cl_get_argument_value( "/project" ) ) == NULL )
 	{
 		projectName = acm_get_string( shellConfig, "defaultProject", "base" );
 	}

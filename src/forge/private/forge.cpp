@@ -395,7 +395,7 @@ int qm_os_main( const int argc, char **argv )
 	}
 
 	// allow us to override the project if desired
-	const char *projectName = PlGetCommandLineArgumentValue( "/project" );
+	const char *projectName = qm_os_cl_get_argument_value( "/project" );
 	if ( projectName != nullptr )
 	{
 		AcmBranch *branch;
