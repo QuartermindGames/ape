@@ -42,6 +42,8 @@ set(GAME_SHARED_FILES
         private/physics/physics_surface.c
 
         private/rpg/rpg_component.c
+
+        private/tool/tool_profiler.c
 )
 
 include_directories(public/)

@@ -7,6 +7,8 @@
 #include "menu/menu.h"
 #include "physics/physics.h"
 
+#include "tool/tool_profiler.h"
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Private
 
@@ -154,33 +156,6 @@ static void list_rooms_command( unsigned int argc, const char *const *argv )
 	PlScanDirectory( "rooms", "n", print_world_name, true, nullptr );
 }
 
-static void navigate_world_tree( const ApeWorldNode *node, const unsigned int depth )
-{
-	for ( unsigned int i = 0; i < depth; ++i )
-	{
-		game_print_( "\t" );
-	}
-	game_print_( "%s (%s)\n", node->classType->identifier, *node->name == '\0' ? "none" : node->name );
-
-	const ApeWorldNode *child;
-	COM_ITERATE_LINKED_LIST( child, node->children, i )
-	{
-		navigate_world_tree( child, depth + 1 );
-	}
-}
-
-static void print_world_tree_command( unsigned int argc, const char *const *argv )
-{
-	ApeWorld *world = game_get_current_world();
-	if ( world == nullptr )
-	{
-		game_print_( "No world loaded!\n" );
-		return;
-	}
-
-	navigate_world_tree( APE_WORLD_NODE( world ), 0 );
-}
-
 void game_server_initialize_();
 void game_client_initialize_();
 void game_language_initialize_();
@@ -196,7 +171,6 @@ bool game_initialize_()
 
 	ape_console_cmd_register( "game_load_room", "Load in and spawn the specified room.", 1, load_room_command );
 	ape_console_cmd_register( "game_list_rooms", "List all of the available worlds.", 0, list_rooms_command );
-	ape_console_cmd_register( "game_print_world_tree", "Prints out the current world tree structure.", 0, print_world_tree_command );
 
 	globalGameLog        = aux_log_register_source( "game", PL_COLOUR_WHITE, acm_get_bool( gameConfig, "log", true ) );
 	globalGameWarningLog = aux_log_register_source( "game.warning", PL_COLOUR_YELLOW, acm_get_bool( gameConfig, "logWarning", true ) );
@@ -215,6 +189,8 @@ bool game_initialize_()
 	game_client_initialize_();
 
 	game_physics_surface_initialize();
+
+	game_tool_profiler_initialize_();
 
 	register_standard_entity_components();
 

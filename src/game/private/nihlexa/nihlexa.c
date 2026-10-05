@@ -64,66 +64,6 @@ static void print_camera_pos_command( unsigned int argc, const char *const *argv
 	game_print_( "Camera Ang: %s\n", qm_math_vector3f_print( cameraAngles, tmp, sizeof( tmp ) ) );
 }
 
-static void camera_save_pos_command( unsigned int argc, const char *const *argv )
-{
-	GamePlayer *player = game_server_get_local_player_();
-	if ( player == nullptr || player->camera == nullptr )
-	{
-		game_print_( "No valid camera.\n" );
-		return;
-	}
-
-	QmMathVector3f pos = ape_camera_get_position( player->camera );
-	QmMathVector3f ang = ape_camera_get_angles( player->camera );
-
-	char *path = qm_os_string_alloc( "%s/camera.dat", com_get_app_data_directory() );
-	FILE *file = fopen( path, "w" );
-	if ( file != nullptr )
-	{
-		fprintf( file, "%f %f %f %f %f %f",
-		         pos.x, pos.y, pos.z,
-		         ang.x, ang.y, ang.z );
-		fclose( file );
-	}
-	else
-	{
-		game_warning_( "Failed to create camera file (%s)!\n", path );
-	}
-
-	qm_os_memory_free( path );
-}
-
-static void camera_restore_pos_command( unsigned int argc, const char *const *argv )
-{
-	GamePlayer *player = game_server_get_local_player_();
-	if ( player == nullptr || player->camera == nullptr )
-	{
-		game_print_( "No valid camera.\n" );
-		return;
-	}
-
-	char *path = qm_os_string_alloc( "%s/camera.dat", com_get_app_data_directory() );
-	FILE *file = fopen( path, "r" );
-	if ( file != nullptr )
-	{
-		QmMathVector3f pos = {};
-		QmMathVector3f ang = {};
-
-		fscanf( file, "%f %f %f %f %f %f",
-		        &pos.x, &pos.y, &pos.z,
-		        &ang.x, &ang.y, &ang.z );
-
-		ape_camera_set_position( player->camera, &pos );
-		ape_camera_set_angles( player->camera, &ang );
-	}
-	else
-	{
-		game_warning_( "Failed to open camera file (%s)!\n", path );
-	}
-
-	qm_os_memory_free( path );
-}
-
 extern ApeEntityClassDefinition ss1_pawnEntityClass;
 extern ApeEntityClassDefinition nih_playerEntityClass;
 
@@ -152,8 +92,6 @@ static bool nih_initialize()
 
 	ape_console_cmd_register( "nih_damage_player", "Damage the player by a specific amount.", -1, damage_player_command );
 	ape_console_cmd_register( "nih_print_camera_pos", "Print the camera position and angles.", 0, print_camera_pos_command );
-	ape_console_cmd_register( "nih_camera_save_pos", "Save the current camera position.", 0, camera_save_pos_command );
-	ape_console_cmd_register( "nih_camera_restore_pos", "Restore the camera position.", 0, camera_restore_pos_command );
 
 	nih_serverState_.config        = com_get_config( NIH_GAME_CONFIG );
 	nih_serverState_.isFirstLaunch = acm_get_bool( nih_serverState_.config, "isFirstLaunch", true );

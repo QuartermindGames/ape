@@ -12,6 +12,8 @@
 
 #include "integrations/integrations.h"
 
+#include "tool/tool_profiler.h"
+
 NihClientState nih_clientState_;
 
 void nih_client_connected_()
@@ -119,6 +121,12 @@ void nih_client_tick_( const double delta )
 
 void nih_client_draw_( const ApeViewport *viewport )
 {
+	if ( game_tool_profiler_is_active_() )
+	{
+		game_tool_profiler_draw_( viewport );
+		return;
+	}
+
 	GamePlayer *player = game_server_get_local_player_();
 	if ( player == nullptr || player->camera == nullptr )
 	{
