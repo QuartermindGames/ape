@@ -214,17 +214,6 @@ static void world_tick( const double delta )
 			}
 		}
 
-		ApeAudioReverbPreset reverb;
-		const ApeRoom       *room = ape_camera_get_room( player->camera );
-		if ( room != nullptr )
-		{
-			reverb = ape_room_get_reverb_preset( room );
-		}
-		else
-		{
-			reverb = APE_AUDIO_REVERB_PRESET_NONE;
-		}
-
 		ape_audio_update_listener( &cpos, &cang, &cvel );
 	}
 }
