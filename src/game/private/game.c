@@ -146,10 +146,7 @@ static void print_world_name( const char *path, void * )
 		return;
 	}
 
-	//TODO: just print the name of the world itself?
-
-	const char *name = ( name = strrchr( path, '/' ) ) != nullptr ? name + 1 : path;
-	game_print_( "%s\n", name );
+	game_print_( "%s\n", path );
 }
 
 static void list_rooms_command( unsigned int argc, const char *const *argv )
