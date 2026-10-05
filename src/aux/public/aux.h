@@ -75,8 +75,8 @@ typedef struct ComProfilingGroup ComProfilingGroup;
  */
 ComProfilingGroup *com_profiler_get_group( const char *key );
 
-bool com_profiler_start( const char *key );
-bool com_profiler_end( const char *key );
+bool   com_profiler_start( const char *key );
+double com_profiler_end( const char *key );
 
 /**
  * @brief Retrieves the name of a profiling group.

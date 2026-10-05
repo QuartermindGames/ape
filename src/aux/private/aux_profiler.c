@@ -78,21 +78,21 @@ bool com_profiler_start( const char *key )
 	return true;
 }
 
-bool com_profiler_end( const char *key )
+double com_profiler_end( const char *key )
 {
 	ComProfilingGroup *group = register_profiler_group( key );
 	if ( group == nullptr )
 	{
-		return false;
+		return 0.0;
 	}
 
 	assert( group->startTime != 0.0 );
 
 	group->lastTimeTaken = group->timeTaken;
-	group->timeTaken += ( qm_os_time_get_seconds() * 1000.0 ) - group->startTime;
+	group->timeTaken += qm_os_time_get_seconds() * 1000.0 - group->startTime;
 	group->startTime = 0.0;
 
-	return true;
+	return group->timeTaken;
 }
 
 const char *com_profiler_get_group_name( const ComProfilingGroup *group ) { return group->key; }
