@@ -957,7 +957,7 @@ static void draw_rt_sphere( ApeMaterial *material, QmGfxMesh *mesh )
 #endif
 }
 
-static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass *pass, QmGfxMesh *mesh, int uniformSlot, int variable, unsigned int *curUnit )
+static void set_built_in_variable( const ApeMaterialPass *pass, int uniformSlot, int variable, unsigned int *curUnit )
 {
 	if ( variable == -1 )
 	{
@@ -973,7 +973,6 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 			qm_gfx_shader_program_set_uniform( program, uniformSlot, &numTicks, false );
 			break;
 		}
-
 		case APE_MATERIAL_BUILTIN_FALLBACK:
 		{
 			QmGfxTexture *texture = ape_get_default_texture_( APE_TEXTURE_FALLBACK )->internal;
@@ -996,18 +995,11 @@ static void set_built_in_variable( ApeMaterial *material, const ApeMaterialPass 
 			( *curUnit )++;
 			break;
 		}
-
 		case APE_MATERIAL_BUILTIN_VIEWPORT_SIZE:
 		{
 			int w, h;
 			ape_get_2d_viewport_size_( &w, &h );
 			qm_gfx_shader_program_set_uniform( program, uniformSlot, &QM_MATH_VECTOR2F( ( float ) w, ( float ) h ), false );
-			break;
-		}
-
-		case APE_MATERIAL_BUILTIN_RT_SPHERE:
-		{
-			draw_rt_sphere( material, mesh );
 			break;
 		}
 
@@ -1225,14 +1217,14 @@ static QmGfxTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 	return texture;
 }
 
-void ape_material_draw( ApeMaterial *material, QmGfxMesh *mesh, const ApeRendererPassState *state )
+void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int numMeshes, const ApeRendererPassState *state )
 {
 	if ( state == nullptr )
 	{
 		state = &ape_rendererState_;
 	}
 
-	ApeCamera *camera = state->camera;
+	const ApeCamera *camera = state->camera;
 	if ( camera != nullptr )
 	{
 #if 0
@@ -1330,7 +1322,7 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh *mesh, const ApeRendere
 			{
 				if ( curPass->variables[ j ].type == APE_MATERIAL_VAR_BUILTIN )
 				{
-					set_built_in_variable( material, curPass, mesh, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.builtinVar, &curUnit );
+					set_built_in_variable( curPass, curPass->variables[ j ].programSlot, curPass->variables[ j ].data.builtinVar, &curUnit );
 					continue;
 				}
 
@@ -1386,17 +1378,20 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh *mesh, const ApeRendere
 			}
 		}
 
-		qm_gfx_mesh_upload( mesh, nullptr, nullptr );
-		qm_gfx_mesh_draw( mesh );
+		for ( unsigned int j = 0; j < numMeshes; ++j )
+		{
+			qm_gfx_mesh_upload( meshes[ j ], nullptr, nullptr );
+			qm_gfx_mesh_draw( meshes[ j ] );
 
-		ape_rendererPerformance_.numBatches++;
-		if ( mesh->primitive == QM_GFX_MESH_PRIMITIVE_TRIANGLES )
-		{
-			ape_rendererPerformance_.numTriangles += mesh->num_triangles;
-		}
-		else
-		{
-			ape_rendererPerformance_.numTriangles += mesh->num_verts / 2;
+			ape_rendererPerformance_.numBatches++;
+			if ( meshes[ j ]->primitive == QM_GFX_MESH_PRIMITIVE_TRIANGLES )
+			{
+				ape_rendererPerformance_.numTriangles += meshes[ j ]->num_triangles;
+			}
+			else
+			{
+				ape_rendererPerformance_.numTriangles += meshes[ j ]->num_verts / 2;
+			}
 		}
 	}
 

@@ -130,7 +130,7 @@ static void draw_debug_window( const char *title, const float x, const float y, 
 	ape_draw_rectangle_( mesh, x, y, w, h, &QM_MATH_COLOUR4UB( 0, 0, 0, 200 ) );
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX_ALPHA );
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, &mesh, 1, nullptr );
 
 	if ( title == nullptr )
 	{
@@ -247,7 +247,7 @@ static void draw_profiler( const ApeViewport *viewport )
 			PlgColour4bv( lineMesh, &colour );
 		}
 
-		ape_material_draw( ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX_ALPHA ), lineMesh, nullptr );
+		ape_material_draw( ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX_ALPHA ), &lineMesh, 1, nullptr );
 	}
 
 	ape_viewport_set_clip( viewport );

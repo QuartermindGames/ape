@@ -153,7 +153,7 @@ static void draw_rect( const float x, const float y, const float w, const float 
 	PlgImmTextureCoord( 1.0f, 1.0f );
 	PlgImmColour( colour->r, colour->g, colour->b, colour->a );
 
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, &mesh, 1, nullptr );
 }
 
 static void splash_draw_image( const ApeViewport *viewport, GameMenuSplashImage *image )

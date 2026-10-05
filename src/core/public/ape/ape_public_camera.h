@@ -41,7 +41,6 @@ typedef struct ApeRoom   ApeRoom;
 typedef struct ApeCamera ApeCamera;
 
 ApeCamera *ape_create_camera( ApeWorldNode *parent, const char *name, const QmMathVector3f *position, const QmMathVector3f *angles, ApeCameraViewMode cameraMode, ApeCameraDrawMode drawMode );
-void       ape_camera_destroy( ApeCamera *camera );
 void       ape_camera_set_position( ApeCamera *self, const QmMathVector3f *position );
 void       ape_camera_set_angles( ApeCamera *camera, const QmMathVector3f *angles );
 

@@ -323,7 +323,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		model->cache->start = model->meshes[ i ].startIndex;
 		model->cache->range = model->meshes[ i ].endIndex - model->meshes[ i ].startIndex;
 
-		ape_material_draw( model->meshes[ i ].material, model->cache, passState );
+		ape_material_draw( model->meshes[ i ].material, &model->cache, 1, passState );
 	}
 
 	PlPopMatrix();
@@ -416,7 +416,7 @@ void ape_model_draw_models( ApeRoom *room, const ApeCamera *camera, const ApeRen
 	ApeMemoryCacheHeader *header;
 	COM_ITERATE_LINKED_LIST( header, models, i )
 	{
-		ApeModel *model = header->userData;
+		const ApeModel *model = header->userData;
 
 		ApeModelNode *sceneNode;
 		QM_OS_LINKED_LIST_ITERATE( sceneNode, model->sceneNodes, j )

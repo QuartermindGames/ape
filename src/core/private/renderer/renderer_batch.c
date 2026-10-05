@@ -112,7 +112,7 @@ void ape_renderer_batch_display_()
 	ApeRendererDrawBatch *batch;
 	QM_OS_LINKED_LIST_ITERATE( batch, batches, i )
 	{
-		ape_material_draw( batch->material, batch->mesh, nullptr );
+		ape_material_draw( batch->material, &batch->mesh, 1, nullptr );
 	}
 
 	cleanup_batch_queue();

@@ -275,7 +275,7 @@ static void draw_dial( const int16_t value, const float radius, const float thic
 		PlgImmColour( colour->r / 2, colour->g / 2, colour->b / 2, colour->a );
 	}
 
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, &mesh, 1, nullptr );
 }
 
 static void draw_hud( const ApeViewport *viewport )

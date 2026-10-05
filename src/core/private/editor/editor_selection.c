@@ -154,7 +154,7 @@ static void render_brush_face_selection( const ApeBrush *brush )
 			PlgColour4bv( mesh, &brush->faces[ i ].selectColour );
 		}
 
-		ape_material_draw( material, mesh, nullptr );
+		ape_material_draw( material, &mesh, 1, nullptr );
 	}
 }
 
@@ -176,7 +176,7 @@ static void render_brush_selection( const ApeBrush *brush )
 			PlgColour4bv( mesh, &brush->base.selectColour );
 		}
 
-		ape_material_draw( material, mesh, nullptr );
+		ape_material_draw( material, &mesh, 1, nullptr );
 	}
 }
 
@@ -228,7 +228,7 @@ static void draw_selection_cube( const QmMathVector3f *position, const QmMathCol
 		}
 	}
 
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, &mesh, 1, nullptr );
 }
 
 /**
@@ -374,7 +374,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 		}
 	}
 
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, &mesh, 1, nullptr );
 }
 
 static void render_wireframe_brush( QmGfxMesh *lineMesh, const ApeBrush *brush, const QmMathColour4ub *colour )
@@ -459,7 +459,7 @@ static void render_selected_objects( ApeEditorInstance *self )
 		}
 	}
 
-	ape_material_draw( material, mesh, nullptr );
+	ape_material_draw( material, &mesh, 1, nullptr );
 }
 
 static void render_vertices( ApeEditorInstance *self )
@@ -755,7 +755,7 @@ static void render_transform_widget( ApeEditorInstance *instance )
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
 
-	ape_material_draw( material, transformWidgetWireframeMesh, nullptr );
+	ape_material_draw( material, &transformWidgetWireframeMesh, 1, nullptr );
 
 	PlPopMatrix();
 }

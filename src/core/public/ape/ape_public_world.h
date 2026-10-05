@@ -512,7 +512,7 @@ void ape_world_spawn_entities( ApeWorld *self );
 
 void ape_world_compute_light_grids( ApeWorld *self );
 
-ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path );
+ApeRoom *ape_world_get_room_by_path( const ApeWorld *self, const char *path );
 
 /**
  * Lookup a tagged surface based on the given path.
@@ -521,7 +521,7 @@ ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path );
  * @param path	Path to lookup the tagged surface ('rooms/myroom.rom.n:surfacename').
  * @return		Surface/face, otherwise null on fail.
  */
-ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path );
+ApeBrushFace *ape_world_get_tagged_surface( const ApeWorld *self, const char *path );
 
 /**
  * Fetch all the available tagged surfaces.

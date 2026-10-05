@@ -158,12 +158,12 @@ static void on_dettach_child( void *self, ApeWorldNode *child )
 	ape_console_verbose_( "Removed \"%s\" from world lookup\n", path );
 }
 
-ApeRoom *ape_world_get_room_by_path( ApeWorld *self, const char *path )
+ApeRoom *ape_world_get_room_by_path( const ApeWorld *self, const char *path )
 {
 	return PlLookupHashTableUserData( self->roomLookup, path, strlen( path ) );
 }
 
-ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path )
+ApeBrushFace *ape_world_get_tagged_surface( const ApeWorld *self, const char *path )
 {
 	const char *seperator = strrchr( path, ':' );
 	if ( seperator == nullptr )
@@ -176,7 +176,7 @@ ApeBrushFace *ape_world_get_tagged_surface( ApeWorld *self, const char *path )
 	PlSetupPath( roomPath, true, "%s", path );
 	roomPath[ seperator - path ] = '\0';
 
-	ApeRoom *room = ape_world_get_room_by_path( self, roomPath );
+	const ApeRoom *room = ape_world_get_room_by_path( self, roomPath );
 	if ( room == nullptr )
 	{
 		ape_console_warning_( "Failed to get room by path (%s)!\n", path );
