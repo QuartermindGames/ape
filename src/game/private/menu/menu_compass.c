@@ -95,7 +95,7 @@ void game_menu_compass_draw_( const ApeViewport *viewport )
 		PlgImmColour( 255, 0, 0, 255 );
 	}
 
-	ape_material_draw( material, &mesh, 1, nullptr );
+	ape_material_draw_simple( material, mesh, nullptr );
 
 	gui_font_display( compassFont );
 }

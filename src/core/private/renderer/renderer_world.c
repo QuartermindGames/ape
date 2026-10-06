@@ -169,7 +169,7 @@ void ape_room_draw_selected_( ApeRoom *room, ApeEditorInstance *instance )
 
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_EDITOR_SELECTION );
 	assert( material != nullptr );
-	ape_material_draw( material, &mesh, 1, &ape_rendererState_ );
+	ape_material_draw_simple( material, mesh, &ape_rendererState_ );
 
 	ape_rendererPerformance_.numFacesDrawn += mesh->numSubMeshes;
 
@@ -322,7 +322,7 @@ static void draw_brushes( ApeWorldNode *worldNode, const ApeCameraVisibleRoom *v
 			displayLists[ i ].material = ape_material_get_default( APE_MATERIAL_DEFAULT_DEBUG_NORMALS );
 		}
 
-		ape_material_draw( displayLists[ i ].material, &mesh, 1, &ape_rendererState_ );
+		ape_material_draw_simple( displayLists[ i ].material, mesh, &ape_rendererState_ );
 
 		ape_rendererPerformance_.numFacesDrawn += mesh->numSubMeshes;
 
@@ -611,7 +611,7 @@ void ape_world_draw_stencil_shadows_( ApeCamera *camera, const ApeLight *light )
 	{
 		ApeMaterial *shadowMaterial = ape_material_get_default( APE_MATERIAL_DEFAULT_SHADOW );
 		assert( shadowMaterial != NULL );
-		ape_material_draw( shadowMaterial, &mesh, 1, &ape_rendererState_ );
+		ape_material_draw_simple( shadowMaterial, mesh, &ape_rendererState_ );
 	}
 
 	PlPopMatrix();
@@ -787,12 +787,12 @@ static void draw_portal_face( const ApeBrushFace *portal, bool useMaterial )
 
 	if ( useMaterial )
 	{
-		ape_material_draw( portal->material, &mesh, 1, &ape_rendererState_ );
+		ape_material_draw_simple( portal->material, mesh, &ape_rendererState_ );
 	}
 	else
 	{
 		ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
-		ape_material_draw( material, &mesh, 1, &ape_rendererState_ );
+		ape_material_draw_simple( material, mesh, &ape_rendererState_ );
 	}
 
 	PlPopMatrix();

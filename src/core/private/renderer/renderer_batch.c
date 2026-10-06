@@ -5,6 +5,7 @@
 #include "plcore/pl_hashtable.h"
 
 #include "ape_private.h"
+
 #include "renderer.h"
 
 typedef struct ApeRendererDrawBatch
@@ -26,13 +27,6 @@ static void destroy_batch( ApeRendererDrawBatch *batch )
 	{
 		qm_gfx_mesh_destroy( batch->mesh );
 	}
-
-#if 0// nah, don't do this... the original caller should be responsible
-	if ( batch->material != nullptr )
-	{
-		ape_material_release_reference( batch->material );
-	}
-#endif
 
 	qm_os_memory_free( batch->hashNode );
 	qm_os_memory_free( batch );
@@ -107,12 +101,12 @@ void ape_renderer_batch_shutdown_()
 	PlDestroyHashTable( batchLookup );
 }
 
-void ape_renderer_batch_display_()
+void ape_renderer_batch_display()
 {
 	ApeRendererDrawBatch *batch;
 	QM_OS_LINKED_LIST_ITERATE( batch, batches, i )
 	{
-		ape_material_draw( batch->material, &batch->mesh, 1, nullptr );
+		ape_material_draw_simple( batch->material, batch->mesh, nullptr );
 	}
 
 	cleanup_batch_queue();
@@ -120,7 +114,7 @@ void ape_renderer_batch_display_()
 
 QmGfxMesh *ape_renderer_batch_get_mesh( ApeMaterial *material )
 {
-	ApeRendererDrawBatch *batch = get_batch( material );
+	const ApeRendererDrawBatch *batch = get_batch( material );
 	if ( batch == nullptr )
 	{
 		return nullptr;

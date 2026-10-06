@@ -166,10 +166,19 @@ ApeMaterial *ape_material_cache( const char *path, bool useFallback );
 int8_t ape_material_get_surface_type( const ApeMaterial *material );
 
 /**
- * Draws the given mesh with the given material. This also updates the peformance tracking,
- * so ideally you should always use this when drawing any mesh.
+ * Draws the given meshes with the given material. Each mesh will use the given
+ * transform as well.
+ *
+ * It's highly recommended to prefer the use of this method over the simple version,
+ * as it'll be a lot more efficient in rendering the same mesh multiple times.
  */
-void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int numMeshes, const ApeRendererPassState *state );
+void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int numMeshes, const PLMatrix4 **transforms, const ApeRendererPassState *state );
+
+/**
+ * A simplified version of the main material draw method, which works the same as it did in the past.
+ * This will use the transform per the current MODELVIEW_MATRIX stack.
+ */
+void ape_material_draw_simple( ApeMaterial *self, QmGfxMesh *mesh, const ApeRendererPassState *state );
 
 ApeMaterialPass *ape_material_get_pass( ApeMaterial *self, unsigned int pass );
 
@@ -326,6 +335,19 @@ void ape_draw_debug_polygon( const QmMathVector3f *vertices, unsigned int numVer
 void ape_draw_debug_string( float x, float y, float z, const QmMathColour4ub *colour, const char *string, ... );
 
 /////////////////////////////////////////////////////////////////////////////////////
+// Batch Manager
+
+/**
+ * Returns a mesh slot to draw into for batching.
+ * All batch meshes are setup for drawing triangles.
+ */
+QmGfxMesh *ape_renderer_batch_get_mesh( ApeMaterial *material );
+
+/**
+ * Draws all the batch lists that have been queued.
+ */
+void ape_renderer_batch_display();
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 PL_EXTERN_C_END

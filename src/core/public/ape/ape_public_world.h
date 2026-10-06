@@ -605,6 +605,8 @@ typedef enum ApeCollisionGroup
 	APE_COLLISION_GROUP_END,
 } ApeCollisionGroup;
 
+static constexpr unsigned int APE_COLLISION_GROUP_GEOMETRY = APE_COLLISION_GROUP_BRUSHES | APE_COLLISION_GROUP_MODELS;
+
 typedef struct ApeCollisionCollider
 {
 	ApeCollisionType type;

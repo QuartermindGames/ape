@@ -1072,12 +1072,6 @@ static void set_global_uniforms( const ApeShaderProgram *program, const ApeMater
 
 		PlMatrixMode( oldMode );
 	}
-	if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
-	{
-		qm_gfx_shader_program_set_uniform( program->internal,
-		                                   program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
-		                                   PlGetMatrix( PL_MODELVIEW_MATRIX ), false );
-	}
 }
 
 ApeMaterial *ape_material_cache( const char *path, bool useFallback )
@@ -1217,7 +1211,7 @@ static QmGfxTexture *ape_material_var_get_texture_( ApeMaterialVariable *var )
 	return texture;
 }
 
-void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int numMeshes, const ApeRendererPassState *state )
+void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int numMeshes, const PLMatrix4 **transforms, const ApeRendererPassState *state )
 {
 	if ( state == nullptr )
 	{
@@ -1380,6 +1374,14 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int 
 
 		for ( unsigned int j = 0; j < numMeshes; ++j )
 		{
+			const ApeShaderProgram *program = curPass->program;
+			if ( program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ] >= 0 )
+			{
+				qm_gfx_shader_program_set_uniform( program->internal,
+				                                   program->globalUniforms[ APE_SHADER_UNIFORM_MODEL_MATRIX ],
+				                                   transforms[ j ], false );
+			}
+
 			qm_gfx_mesh_upload( meshes[ j ], nullptr, nullptr );
 			qm_gfx_mesh_draw( meshes[ j ] );
 
@@ -1402,6 +1404,12 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int 
 	PlgDepthMask( true );
 
 	PlgSetCullMode( APE_RENDERER_DEFAULT_CULL_FUNCTION );
+}
+
+void ape_material_draw_simple( ApeMaterial *self, QmGfxMesh *mesh, const ApeRendererPassState *state )
+{
+	const PLMatrix4 *transform = PlGetMatrix( PL_MODELVIEW_MATRIX );
+	ape_material_draw( self, &mesh, 1, &transform, state );
 }
 
 static void ape_material_pass_tick_( ApeMaterialPass *self, const ApeMaterial *material, double delta )

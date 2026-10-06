@@ -515,7 +515,7 @@ void ape_decal_manager_draw_( const ApeDecalManager *self )
 			                    0.5f + qm_math_vector3f_dot_product( delta, decal->bitangent ) * textureScale );
 		}
 
-		ape_material_draw( decal->material, &mesh, 1, nullptr );
+		ape_material_draw_simple( decal->material, mesh, nullptr );
 	}
 
 	COM_PROFILE_FUNCTION_END();

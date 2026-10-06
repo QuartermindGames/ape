@@ -205,7 +205,7 @@ static void draw_pie_option( GamePieMenuOption *option, float x, float y, bool i
 		return;
 	}
 
-	ape_material_draw( option->icon, &mesh, 1, nullptr );
+	ape_material_draw_simple( option->icon, mesh, nullptr );
 }
 
 static GamePieMenuOption *get_selected_option( GamePieMenu *menu )

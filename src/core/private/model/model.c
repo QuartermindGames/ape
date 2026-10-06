@@ -323,7 +323,7 @@ void ape_model_draw( const ApeModel *model, const ApeModelAnimationState *state,
 		model->cache->start = model->meshes[ i ].startIndex;
 		model->cache->range = model->meshes[ i ].endIndex - model->meshes[ i ].startIndex;
 
-		ape_material_draw( model->meshes[ i ].material, &model->cache, 1, passState );
+		ape_material_draw_simple( model->meshes[ i ].material, model->cache, passState );
 	}
 
 	PlPopMatrix();

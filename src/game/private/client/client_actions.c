@@ -4,8 +4,8 @@
 
 #include "game_private.h"
 #include "game_server.h"
-#include "components/component_camera.h"
 
+#include "components/component_camera.h"
 #include "components/component_movement.h"
 
 #include "menu/menu.h"
