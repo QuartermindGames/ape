@@ -280,14 +280,27 @@ void game_menu_draw_( const ApeViewport *viewport )
 
 		size_t len = strlen( tmp );
 
-		const float optionScale = scale * 0.7f;
+		QmMathColour4ub optionColour;
+		const float     optionScale = scale * 0.7f;
 		if ( currentMenuOption == i )
 		{
+			static constexpr float CURSOR_BOUNCE_SCALE = 10.0f;
+
+			const uint64_t nt = ape_get_num_ticks();
+			const float    xs = CURSOR_BOUNCE_SCALE + sinf( ( ( float ) nt + i ) / 10.0f ) * CURSOR_BOUNCE_SCALE;
+
+			optionColour = PL_COLOUR_GOLD;
+
 			float w;
 			gui_font_get_string_pixel_size( menuFont, optionScale, tmp, len, &w, nullptr );
-			gui_font_draw_string( menuFont, x + w, y, nullptr, nullptr, optionScale, &PL_COLOUR_GOLD, "<", strlen( "<" ), true );
+			gui_font_draw_string( menuFont, x + xs + w, y, nullptr, nullptr, optionScale, &optionColour, "<", strlen( "<" ), true );
 		}
-		gui_font_draw_string( menuFont, x, y, nullptr, &y, optionScale, &PL_COLOUR_WHITE, tmp, len, true );
+		else
+		{
+			optionColour = PL_COLOUR_WHITE;
+		}
+
+		gui_font_draw_string( menuFont, x, y, nullptr, &y, optionScale, &optionColour, tmp, len, true );
 	}
 
 	if ( menu->flags & GAME_MENU_FLAG_BACKGROUND )
