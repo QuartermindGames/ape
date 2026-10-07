@@ -579,7 +579,16 @@ bool ape_camera_pvs_test_brush_face_( const ApeCamera *self, const ApeBrushFace 
 	// check that the bounds are in view
 	if ( !ape_camera_test_aabb( self, &bounds ) )
 	{
+		if ( ape_config_.renderer.showFaceBounds )
+		{
+			ape_draw_debug_aabb( &bounds, PL_COLOUR_RED );
+		}
 		return false;
+	}
+
+	if ( ape_config_.renderer.showFaceBounds )
+	{
+		ape_draw_debug_aabb( &bounds, PL_COLOUR_GREEN );
 	}
 
 	ApeMaterial *material = face->material;
