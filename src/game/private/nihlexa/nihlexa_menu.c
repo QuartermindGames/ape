@@ -18,34 +18,34 @@ static const char *menuTitleFontPath = "guis/fonts/cinzel_decorative_black_64.fn
 
 static GameMenu mainMenu;
 
-static void capture_screenshot_callback( const GameMenuOption * )
+static void hide_menu_callback( const GameMenuOption * )
 {
 	// hide the menu so it's not included in the capture
 	game_menu_set_active( nullptr );
 }
 
+#if !defined( NDEBUG )
 static GameMenuOption debugMenuOptions[] = {
-        {"Profiler\n",                     nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "gui.profiler" }                },
-        {"Cap Render Rate to Tick Rate\n", nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderTimeLock" }              },
+        {"Profiler\n",                     nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "gui.profiler" }                },
+        {"Cap Render Rate to Tick Rate\n", nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderTimeLock" }              },
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Test Model\n",                   nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_model" }                    },
-        {"Test Net\n",                     nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_net" }                      },
-        {"Test Audio\n",                   nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_play" }                    },
-        {"Test Audio 3D\n",                nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_test_3d" }                 },
+        {"Test Model\n",                   nullptr, nullptr,            GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_model" }                    },
+        {"Test Net\n",                     nullptr, nullptr,            GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "test_net" }                      },
+        {"Test Audio\n",                   nullptr, nullptr,            GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_play" }                    },
+        {"Test Audio 3D\n",                nullptr, nullptr,            GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "audio_test_3d" }                 },
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Show Lights\n",                  nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" }         },
-        {"Show Node Volumes\n",            nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" }       },
-        {"Show Portals\n",                 nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" }           },
-        {"Show Face Bounds\n",             nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceBounds" }     },
-        {"Show Face Normals\n",            nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" }    },
-        {"Wireframe\n",                    nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" }          },
-        {"Shadow Wireframe\n",             nullptr, nullptr,                     GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" }},
+        {"Show Lights\n",                  nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showLights" }         },
+        {"Show Node Volumes\n",            nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showNodeVolumes" }       },
+        {"Show Portals\n",                 nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "world.showPortals" }           },
+        {"Show Face Bounds\n",             nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceBounds" }     },
+        {"Show Face Normals\n",            nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showFaceNormals" }    },
+        {"Wireframe\n",                    nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.wireframe" }          },
+        {"Shadow Wireframe\n",             nullptr, nullptr,            GAME_MENU_OPTION_TYPE_CHECKBOX, .checkbox = { "renderer.showShadowWireframe" }},
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Capture\n",                      nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "capture" }                       },
-        {"Screenshot\n",                   nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "screenshot" }                    },
+        {"Capture\n",                      nullptr, hide_menu_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "capture" }                       },
+        {"Screenshot\n",                   nullptr, hide_menu_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "screenshot" }                    },
         GAME_MENU_OPTION_SEPERATOR(),
-        {"Save Camera\n",                  nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "qm1_camera_save_pos" }           },
-        {"Restore Camera\n",               nullptr, capture_screenshot_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "qm1_camera_restore_pos" }        },
+        {"Profile\n",                      nullptr, hide_menu_callback, GAME_MENU_OPTION_TYPE_BUTTON,   .button = { "game_tool_profiler_start" }      },
 };
 static GameMenu debugMenu = {
         "Debug Menu\n",
@@ -53,6 +53,7 @@ static GameMenu debugMenu = {
         QM_OS_ARRAY_ELEMENTS( debugMenuOptions ),
         &mainMenu,
 };
+#endif
 
 static GameMenuOption quitMenuOptions[] = {
         { "Yes\n", nullptr, nullptr, GAME_MENU_OPTION_TYPE_BUTTON, .button = { "quit" } },
