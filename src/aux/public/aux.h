@@ -213,6 +213,8 @@ typedef struct ComCollisionCylinder
 	QmMathVector3f origin;
 } ComCollisionCylinder;
 
+PLCollisionAABB *aux_collision_aabb_transform( PLCollisionAABB *self, const struct PLMatrix4 *transform );
+
 bool aux_collision_aabb_intersect_aabb( const PLCollisionAABB *self, const PLCollisionAABB *other, QmMathVector3f *result );
 bool com_collision_aabb_intersect_polygon( const PLCollisionAABB *aabb, const QmMathVector3f *normal, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
 

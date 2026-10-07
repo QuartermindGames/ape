@@ -572,9 +572,9 @@ bool ape_camera_pvs_test_brush_face_( const ApeCamera *self, const ApeBrushFace 
 	ApeBrush *brush = face->parent;
 
 	// sigh... transform the bounds to where they should be for the given face
-	PLMatrix4       transform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
+	const PLMatrix4 transform = ape_world_node_get_transform( APE_WORLD_NODE( brush ) );
 	PLCollisionAABB bounds    = face->bounds;
-	bounds.origin             = PlGetMatrix4Translation( &transform );
+	aux_collision_aabb_transform( &bounds, &transform );
 
 	// check that the bounds are in view
 	if ( !ape_camera_test_aabb( self, &bounds ) )

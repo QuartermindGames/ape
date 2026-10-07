@@ -556,14 +556,9 @@ void ape_world_node_set_name( ApeWorldNode *self, const char *name )
 PLCollisionAABB ape_world_node_get_transformed_local_bounds( const ApeWorldNode *self )
 {
 	PLCollisionAABB bounds    = self->localBounds;
-	PLMatrix4       transform = ape_world_node_get_transform( self );
-	bounds.origin             = PlGetMatrix4Translation( &transform );
+	const PLMatrix4 transform = ape_world_node_get_transform( self );
 
-	QmMathVector3f scale = qm_math_matrix4_get_scale( &transform );
-	bounds.mins          = qm_math_vector3f_scale( bounds.mins, scale );
-	bounds.maxs          = qm_math_vector3f_scale( bounds.maxs, scale );
-
-	return bounds;
+	return *aux_collision_aabb_transform( &bounds, &transform );
 }
 
 PLCollisionAABB ape_world_node_get_local_bounds( const ApeWorldNode *self )

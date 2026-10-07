@@ -38,6 +38,17 @@ static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *ver
 	return qm_math_vector2f( minY, maxY );
 }
 
+PLCollisionAABB *aux_collision_aabb_transform( PLCollisionAABB *self, const PLMatrix4 *transform )
+{
+	self->origin = PlGetMatrix4Translation( transform );
+
+	const QmMathVector3f scale = qm_math_matrix4_get_scale( transform );
+	self->mins                 = qm_math_vector3f_scale( self->mins, scale );
+	self->maxs                 = qm_math_vector3f_scale( self->maxs, scale );
+
+	return self;
+}
+
 bool aux_collision_aabb_intersect_aabb( const PLCollisionAABB *self, const PLCollisionAABB *other, QmMathVector3f *result )
 {
 	QmMathVector3f maxA = qm_math_vector3f_add( self->maxs, self->origin );
