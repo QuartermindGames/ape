@@ -333,38 +333,19 @@ void ape_camera_set_aperture( ApeCamera *self, const float aperture )
  */
 bool ape_camera_test_aabb( const ApeCamera *camera, const PLCollisionAABB *bounds )
 {
-	QmMathVector3f mins = qm_math_vector3f_add( bounds->mins, bounds->origin );
-	QmMathVector3f maxs = qm_math_vector3f_add( bounds->maxs, bounds->origin );
+	const QmMathVector3f mins = qm_math_vector3f_add( bounds->mins, bounds->origin );
+	const QmMathVector3f maxs = qm_math_vector3f_add( bounds->maxs, bounds->origin );
+
 	for ( unsigned int i = 0; i < APE_CAMERA_MAX_FRUSTUM_PLANES; ++i )
 	{
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, mins.y, mins.z ) ) >= 0.0f )
-		{
-			continue;
-		}
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( maxs.x, mins.y, mins.z ) ) >= 0.0f )
-		{
-			continue;
-		}
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, maxs.y, mins.z ) ) >= 0.0f )
-		{
-			continue;
-		}
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( maxs.x, maxs.y, mins.z ) ) >= 0.0f )
-		{
-			continue;
-		}
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, mins.y, maxs.z ) ) >= 0.0f )
-		{
-			continue;
-		}
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( mins.x, maxs.y, maxs.z ) ) >= 0.0f )
-		{
-			continue;
-		}
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &QM_MATH_VECTOR3F( maxs.x, maxs.y, maxs.z ) ) >= 0.0f )
-		{
-			continue;
-		}
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( mins.x, mins.y, mins.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( maxs.x, mins.y, mins.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( mins.x, maxs.y, mins.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( maxs.x, maxs.y, mins.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( mins.x, mins.y, maxs.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( maxs.x, mins.y, maxs.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( mins.x, maxs.y, maxs.z, 1.0f ) ) > 0.0f ) continue;
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR4F( maxs.x, maxs.y, maxs.z, 1.0f ) ) > 0.0f ) continue;
 
 		return false;
 	}
@@ -379,7 +360,7 @@ bool ape_camera_test_sphere( const ApeCamera *camera, const PLCollisionSphere *s
 {
 	for ( unsigned int i = 0; i < APE_CAMERA_MAX_FRUSTUM_PLANES; ++i )
 	{
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &sphere->origin ) < -sphere->radius )
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR3F_TO_4F( sphere->origin, 1.0f ) ) < -sphere->radius )
 		{
 			return false;
 		}
@@ -392,7 +373,7 @@ bool ape_camera_test_point( const ApeCamera *camera, const QmMathVector3f point 
 {
 	for ( unsigned int i = 0; i < APE_CAMERA_MAX_FRUSTUM_PLANES; ++i )
 	{
-		if ( PlGetPlaneDotProduct( &camera->frustum[ i ], &point ) < 0.0f )
+		if ( qm_math_vector4f_dot_product( camera->frustum[ i ], QM_MATH_VECTOR3F_TO_4F( point, 1.0f ) ) < 0.0f )
 		{
 			return false;
 		}
