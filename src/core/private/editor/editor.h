@@ -33,10 +33,17 @@ QmMathVector3f ape_grid_update_cursor_( ApeEditorGrid *self, int mx, int my, con
 
 ApeViewport *ape_editor_selection_get_viewport_( void );
 
+/**
+ * Attempts to trace a ray against all the visible objects for the current room, and
+ * then returns a result. This is very similar to our room ray method, only slower,
+ * unfortunately.
+ */
+bool ape_editor_selection_trace_( ApeEditorInstance *self, const PLCollisionRay *ray, ApeCollisionIntersection *result );
+
 void ape_editor_selection_initialize_();
 void ape_editor_selection_shutdown_();
 void ape_editor_selection_rebuild_( ApeEditorInstance *self );
-void ape_editor_selection_render_( ApeEditorInstance *self );
+void ape_editor_selection_render_( const ApeEditorInstance *self );
 void ape_editor_selection_render_post_( ApeEditorInstance *self );
 
 QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst );

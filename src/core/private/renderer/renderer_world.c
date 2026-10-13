@@ -188,7 +188,7 @@ static void build_brush_display_list( ApeWorldNode *node, const ApeLight *light,
 	const ApeBrush *brush = ( ApeBrush * ) node;
 	for ( unsigned int i = 0; i < brush->numFaces; *offset += brush->faces[ i ].numVertices, ++i )
 	{
-		ApeBrushFace *face = &brush->faces[ i ];
+		const ApeBrushFace *face = &brush->faces[ i ];
 
 		// horrible linear lookup to figure out which display list to shove this into
 		DisplayList *list = nullptr;

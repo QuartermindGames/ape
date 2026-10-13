@@ -553,8 +553,8 @@ QmMathVector2f ape_editor_get_default_material_scale()
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-void ape_grid_toggle_command_( unsigned int argc, const char * const *argv );
-void ape_light_command_( unsigned int argc, const char * const *argv );
+void ape_grid_toggle_command_( unsigned int argc, const char *const *argv );
+void ape_light_command_( unsigned int argc, const char *const *argv );
 
 void ape_editor_register_console_( void )
 {
@@ -920,7 +920,11 @@ void ape_editor_draw_gui_( const ApeViewport *viewport )
 
 void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewport, int x, int y )
 {
-	ape_grid_update_cursor_( &self->grid, x, y, self->camera, viewport );
+	const ApeCamera *camera = self->camera;
+
+	ape_grid_update_cursor_( &self->grid, x, y, camera, viewport );
+
+#if 1
 
 	QmMathColour4ub pixel;
 	if ( ape_editor_selection_get_pixel_under_cursor_( &pixel ) != nullptr )
@@ -931,6 +935,36 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 	{
 		self->hoverSelection = nullptr;
 	}
+
+#else
+
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_PLOT )
+	{
+		return;
+	}
+
+	const QmMathVector3f spos = ape_viewport_convert_screen_to_world( viewport, ( int[] ) { x, y }, &camera->view, &camera->proj );
+	const QmMathVector3f cpos = ape_camera_get_position( camera );
+
+	PLCollisionRay ray = {};
+	ray.origin         = qm_math_vector3f_add( spos, cpos );
+	ray.direction      = qm_math_vector3f_normalize( qm_math_vector3f_sub( ray.origin, cpos ) );
+
+	ApeCollisionIntersection result;
+	if ( !ape_editor_selection_trace_( self, &ray, &result ) )
+	{
+		return;
+	}
+
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE )
+	{
+		self->hoverSelection = result.face;
+		return;
+	}
+
+	self->hoverSelection = result.node;
+
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -939,8 +973,8 @@ void ape_editor_on_mouse_move( ApeEditorInstance *self, const ApeViewport *viewp
 
 static PLHashTable *editorMaterialPreviews;
 
-static constexpr const char PREVIEW_FALLBACK_PATH[] = "materials/editor/no_preview.png";
-static QmImage             *previewFallback;
+static constexpr char PREVIEW_FALLBACK_PATH[] = "materials/editor/no_preview.png";
+static QmImage       *previewFallback;
 
 static QmImage *get_material_preview_image( const char *path )
 {
@@ -960,7 +994,7 @@ static QmImage *get_material_preview_image( const char *path )
 	else
 	{
 		// the painful way...
-		AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
+		const AcmBranch *diffuseNode = acm_linear_lookup( root, "diffuseMap" );
 		if ( diffuseNode == nullptr )
 		{
 			ape_console_warning_( "Failed to find preview texture to use under material (%s)!\n", path );

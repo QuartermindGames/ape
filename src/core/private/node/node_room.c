@@ -8,11 +8,8 @@
 #include "world/world.h"
 
 #include "renderer/renderer.h"
-#include "renderer/renderer_texture.h"
 
 #include "ape/ape_public_game.h"
-#include "ape/ape_public_model.h"
-
 #include "yin/core_game.h"
 
 #include "node_room.h"
@@ -290,8 +287,14 @@ static ApeWorldNode *ape_room_deserialize_( ApeWorldNode *self, AcmBranch *root 
 
 static constexpr unsigned int RAY_HIT_INC = 256;
 
-static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionGroup groups, ApeCollisionIntersection *dstResult )
+static bool intersect_ray_children( ApeWorldNode *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionGroup groups, ApeCollisionIntersection *dstResult )
 {
+	// don't trace against ourselves
+	if ( self != nullptr && APE_WORLD_NODE( self ) == node )
+	{
+		goto SKIP;
+	}
+
 	QmMathVector3f intersection;
 	if ( !com_collision_ray_intersect_aabb( ray, &node->bounds, &intersection ) )
 	{
@@ -309,6 +312,7 @@ static bool intersect_ray_children( ApeRoom *self, ApeWorldNode *node, const PLC
 		}
 	}
 
+SKIP:
 	ApeWorldNode *child;
 	COM_ITERATE_LINKED_LIST( child, node->children, i )
 	{
@@ -322,7 +326,7 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 {
 	ApeCollisionIntersection intersection = {};
 	intersection.distance                 = FLT_MAX;
-	if ( !intersect_ray_children( self, &self->base, ray, groups, &intersection ) )
+	if ( !intersect_ray_children( APE_WORLD_NODE( self ), &self->base, ray, groups, &intersection ) )
 	{
 		return false;
 	}
@@ -331,6 +335,7 @@ bool ape_room_ray_intersect( ApeRoom *self, const PLCollisionRay *ray, ApeCollis
 	return true;
 }
 
+#if 0
 static ApeCollisionIntersection *intersect( const ApeCollisionCollider *a, const ApeCollisionCollider *b, ApeCollisionIntersection *result )
 {
 	switch ( a->type )
@@ -379,6 +384,7 @@ static ApeCollisionIntersection *intersect( const ApeCollisionCollider *a, const
 
 	return result;
 }
+#endif
 
 static bool collider_is_ignoring( const ApeWorldNode **ignores, const unsigned int numIgnores, const ApeWorldNode *node )
 {
@@ -592,12 +598,6 @@ static ApePropertyEnum reverbPresetsEnum[] = {
         {"Parking Lot",      22},
         {"Sewer Pipe",       23},
         {"Underwater",       24},
-        //{"Small Room",       25},
-        //{"Medium Room",      26},
-        //{"Large Room",       27},
-        //{"Medium Hall",      28},
-        //{"Large Hall",       29},
-        //{"Plate",            30},
 };
 
 static const ApeProperty properties[] = {

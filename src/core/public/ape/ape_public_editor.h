@@ -204,7 +204,7 @@ QmMathVector2f ape_editor_get_default_material_scale();
 void *ape_editor_get_object_under_cursor( ApeEditorInstance *self );
 void  ape_editor_clear_selection( ApeEditorInstance *self );
 void  ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object );
-void *ape_editor_get_first_selected( ApeEditorInstance *self );
+void *ape_editor_get_first_selected( const ApeEditorInstance *self );
 void  ape_editor_delete_selection( ApeEditorInstance *self );
 void  ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room );
 

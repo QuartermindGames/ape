@@ -64,14 +64,9 @@ AcmBranch *com_acm_load_file( const char *path, const char *object );
 typedef struct ComProfilingGroup ComProfilingGroup;
 
 /**
- * @brief Retrieves a profiling group based on the given key.
- *
  * This function searches for an existing profiling group associated with the specified key.
  * If the profiling group is found, it is returned. If no such group exists, the function returns NULL.
  * Profiling groups are part of a system for monitoring performance metrics.
- *
- * @param key	The key identifying the desired profiling group.
- * @return		A pointer to the ComProfilingGroup if found, or NULL if no group exists for the provided key.
  */
 ComProfilingGroup *com_profiler_get_group( const char *key );
 
@@ -79,38 +74,23 @@ bool   com_profiler_start( const char *key );
 double com_profiler_end( const char *key );
 
 /**
- * @brief Retrieves the name of a profiling group.
- *
  * This function returns the name of the profiling group by accessing the key associated
  * with the given ComProfilingGroup structure. The key is intended to serve as a unique
  * identifier for the group.
- *
- * @param group	A pointer to the ComProfilingGroup structure from which to retrieve the name.
- * @return		A pointer to a constant character string representing the name of the profiling group.
  */
 const char *com_profiler_get_group_name( const ComProfilingGroup *group );
 
 /**
- * @brief Retrieves the first profiling group in the sequence.
- *
  * This function returns a pointer to the first profiling group within the
  * profiling groups hash table. If the profiling group hash table is empty
  * or uninitialized, the function returns NULL.
- *
- * @return A pointer to the first ComProfilingGroup if available, or NULL if
- * the profiling groups list is empty or unavailable.
  */
 ComProfilingGroup *com_profiler_get_first_group( void );
 
 /**
- * @brief Retrieves the next profiling group in the sequence.
- *
  * This function returns the next profiling group following the provided group in the sequence of profiling groups.
  * If there are no more groups, the function returns NULL.
  * Profiling groups are used to collect and analyze performance metrics.
- *
- * @param group   A pointer to the current ComProfilingGroup from which the next group is retrieved.
- * @return        A pointer to the next ComProfilingGroup, or NULL if there are no more groups.
  */
 ComProfilingGroup *com_profiler_get_next_group( const ComProfilingGroup *group );
 
@@ -119,31 +99,21 @@ const double *com_profiler_get_samples( const ComProfilingGroup *group, unsigned
 
 /**
  * Returns the time taken from start to end.
- *
- * @param group Group to query.
- * @return		Time in ms.
  */
 double com_profiler_get_time( const ComProfilingGroup *group );
 
 /**
- * @brief Returns the number of existing profiling groups.
- *
  * This function calculates and returns the total number of profiling groups currently available.
  * It checks if the internal hash table for profiling groups has been initialized. If it has not
  * been initialized, the function returns 0, indicating no groups are present.
- *
- * @return The total number of profiling groups, or 0 if no groups exist.
  */
 unsigned int com_profiler_get_num_groups( void );
 
 /**
- * @brief Updates the profiling samples for each profiling group.
- *
  * This function iterates over all profiling groups and updates their sample data.
  * It shifts existing sample results within the group and assigns the latest time taken
  * to the last sample position. The operation helps in maintaining a rolling history
  * of time taken for profiling analyses.
- * The function performs no operation if no profiling groups are initialized.
  */
 void com_profiler_update_samples( unsigned int freq );
 
@@ -213,6 +183,12 @@ typedef struct ComCollisionCylinder
 	QmMathVector3f origin;
 } ComCollisionCylinder;
 
+/**
+ * Converts the given AABB to a sphere representation.
+ * Returns the destination (no fail scenario).
+ */
+PLCollisionSphere *aux_collision_aabb_to_sphere( const PLCollisionAABB *aabb, PLCollisionSphere *dstSphere );
+
 PLCollisionAABB *aux_collision_aabb_transform( PLCollisionAABB *self, const struct PLMatrix4 *transform );
 
 bool aux_collision_aabb_intersect_aabb( const PLCollisionAABB *self, const PLCollisionAABB *other, QmMathVector3f *result );
@@ -231,6 +207,7 @@ bool  aux_collision_cylinder_intersect_polygon( const ComCollisionCylinder *self
 bool com_collision_ray_intersect_aabb( const PLCollisionRay *ray, const PLCollisionAABB *aabb, QmMathVector3f *result );
 bool com_collision_ray_intersect_plane( const PLCollisionRay *ray, const PLCollisionPlane *plane, QmMathVector3f *result );
 bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMathVector3f *vertices, unsigned int numVertices, QmMathVector3f *result );
+bool aux_collision_ray_intersect_sphere( const PLCollisionRay *ray, const PLCollisionSphere *sphere, QmMathVector3f *result );
 
 bool com_collision_point_intersect_recti32( const QmMathVector2f *point, const AuxMathRectI32 *rect );
 

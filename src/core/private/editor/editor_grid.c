@@ -1,7 +1,7 @@
 // Copyright © 2020-2026 Quartermind Games, Mark E. Sowden <markelswo@gmail.com>
 
-#include "plcore/pl_hashtable.h"
 #include "ape_private.h"
+
 #include "camera/camera.h"
 #include "editor/editor.h"
 #include "renderer/material/material.h"

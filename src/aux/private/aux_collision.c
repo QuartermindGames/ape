@@ -38,6 +38,26 @@ static QmMathVector2f compute_polygon_vertical_bounds( const QmMathVector3f *ver
 	return qm_math_vector2f( minY, maxY );
 }
 
+PLCollisionSphere *aux_collision_aabb_to_sphere( const PLCollisionAABB *aabb, PLCollisionSphere *dstSphere )
+{
+	dstSphere->origin = aabb->origin;
+	for ( unsigned int i = 0; i < 3; ++i )
+	{
+		if ( aabb->maxs.v[ i ] > dstSphere->radius )
+		{
+			dstSphere->radius = aabb->maxs.v[ i ];
+		}
+
+		const float extent = aabb->mins.v[ i ] * -1;
+		if ( extent > dstSphere->radius )
+		{
+			dstSphere->radius = extent;
+		}
+	}
+
+	return dstSphere;
+}
+
 PLCollisionAABB *aux_collision_aabb_transform( PLCollisionAABB *self, const PLMatrix4 *transform )
 {
 	self->origin = PlGetMatrix4Translation( transform );
@@ -583,6 +603,30 @@ bool com_collision_ray_intersect_polygon( const PLCollisionRay *ray, const QmMat
 			*result = intersection;
 		}
 
+		return true;
+	}
+
+	return false;
+}
+
+bool aux_collision_ray_intersect_sphere( const PLCollisionRay *ray, const PLCollisionSphere *sphere, QmMathVector3f *result )
+{
+	/* https://github.com/erich666/GraphicsGems/blob/master/gemsii/intersect/intsph.c */
+
+	const QmMathVector3f d    = qm_math_vector3f_sub( ray->origin, sphere->origin );
+	const float          u    = qm_math_vector3f_dot_product( d, d ) - sphere->radius * sphere->radius;
+	const float          bsq  = qm_math_vector3f_dot_product( d, ray->direction );
+	const float          disc = bsq * bsq - u;
+
+	if ( disc >= 0.0f )
+	{
+		//TODO: this should return the point of intersection, but for now we don't need it...
+
+		*result = sphere->origin;
+
+		//float root = sqrtf( disc );
+		//*enterDistance = -bsq - root;
+		//*leaveDistance = -bsq + root;
 		return true;
 	}
 

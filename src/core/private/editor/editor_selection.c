@@ -154,7 +154,7 @@ static void render_brush_face_selection( const ApeBrush *brush )
 			PlgColour4bv( mesh, &brush->faces[ i ].selectColour );
 		}
 
-		ape_material_draw( material, &mesh, 1, nullptr );
+		ape_material_draw_simple( material, mesh, nullptr );
 	}
 }
 
@@ -176,7 +176,7 @@ static void render_brush_selection( const ApeBrush *brush )
 			PlgColour4bv( mesh, &brush->base.selectColour );
 		}
 
-		ape_material_draw( material, &mesh, 1, nullptr );
+		ape_material_draw_simple( material, mesh, nullptr );
 	}
 }
 
@@ -236,7 +236,7 @@ static void draw_selection_cube( const QmMathVector3f *position, const QmMathCol
  *
  * @param self Editor instance.
  */
-void ape_editor_selection_render_( ApeEditorInstance *self )
+void ape_editor_selection_render_( const ApeEditorInstance *self )
 {
 	ApeViewport *viewport = ape_viewport_get_active();
 	if ( viewport == nullptr )
@@ -247,12 +247,12 @@ void ape_editor_selection_render_( ApeEditorInstance *self )
 	ApeCamera *camera = self->camera;
 	assert( camera != nullptr );
 
-	ApeRoom *room = ape_camera_get_room( camera );
+	const ApeRoom *room = ape_camera_get_room( camera );
 	assert( room != nullptr );
 
 	if ( !ape_config_.renderer.showSelectionBuffer )
 	{
-		ApeViewport *selectionViewport = ape_editor_selection_get_viewport_();
+		//ApeViewport *selectionViewport = ape_editor_selection_get_viewport_();
 
 		unsigned int sw = viewport->width / 2;
 		unsigned int sh = viewport->height / 2;
@@ -332,9 +332,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	ApeBrushFace *face;
 	QM_OS_LINKED_LIST_ITERATE( face, self->selectedObjects, i )
 	{
-		ApeBrush *brush = face->parent;
-		assert( brush != nullptr );
-
+		const ApeBrush *brush = face->parent;
 		for ( unsigned int j = 0; j < face->numVertices; ++j )
 		{
 			const ApeBrushFaceVertex *v0 = &face->vertices[ face->edgeLoopOrder[ j ] ];
@@ -355,9 +353,7 @@ static void render_selected_faces( ApeEditorInstance *self )
 	{
 		face = self->hoverSelection;
 
-		ApeBrush *brush = face->parent;
-		assert( brush != nullptr );
-
+		const ApeBrush *brush = face->parent;
 		for ( unsigned int i = 0; i < face->numVertices; ++i )
 		{
 			const ApeBrushFaceVertex *v0 = &face->vertices[ face->edgeLoopOrder[ i ] ];
@@ -405,7 +401,7 @@ static void render_selected_wireframe( const ApeWorldNode *node, const QmMathCol
 	draw_selection_cube( &pos, colour, SELECTION_OBJECT_SIZE, true );
 }
 
-static void render_selected_objects( ApeEditorInstance *self )
+static void render_selected_objects( const ApeEditorInstance *self )
 {
 	ApeMaterial *material = ape_material_get_default( APE_MATERIAL_DEFAULT_VERTEX );
 	assert( material != nullptr );
@@ -462,9 +458,9 @@ static void render_selected_objects( ApeEditorInstance *self )
 	ape_material_draw_simple( material, mesh, nullptr );
 }
 
-static void render_vertices( ApeEditorInstance *self )
+static void render_vertices( const ApeEditorInstance *self )
 {
-	ApeCamera *camera = self->camera;
+	const ApeCamera *camera = self->camera;
 	for ( unsigned int i = 0; i < camera->pvs.rooms[ 0 ].numNodes; ++i )
 	{
 		const ApeWorldNode *node = camera->pvs.rooms[ 0 ].nodes[ i ];
@@ -473,7 +469,7 @@ static void render_vertices( ApeEditorInstance *self )
 			continue;
 		}
 
-		ApeBrush *brush = ( ApeBrush * ) node;
+		const ApeBrush *brush = ( ApeBrush * ) node;
 		for ( unsigned int j = 0; j < brush->numVertices; ++j )
 		{
 			QmMathColour4ub colour;
@@ -541,14 +537,13 @@ void ape_editor_selection_render_post_( ApeEditorInstance *self )
 
 QmMathColour4ub *ape_editor_selection_get_pixel_under_cursor_( QmMathColour4ub *dst )
 {
-	ApeViewport      *selectionViewport = ape_editor_selection_get_viewport_();
-	QmGfxFramebuffer *frameBuffer       = ape_render_target_get_frame_buffer_( selectionViewport->renderTarget );
+	QmGfxFramebuffer *frameBuffer = ape_render_target_get_frame_buffer_( selectionViewport->renderTarget );
 	if ( frameBuffer == nullptr )
 	{
 		return nullptr;
 	}
 
-	size_t           size = frameBuffer->width * frameBuffer->height * 4;
+	const size_t     size = frameBuffer->width * frameBuffer->height * 4;
 	QmMathColour4ub *buf  = QM_OS_MEMORY_NEW_( QmMathColour4ub, size );
 	if ( qm_gfx_framebuffer_read_region( frameBuffer, 0, 0, frameBuffer->width, frameBuffer->height, size, buf ) != nullptr )
 	{
@@ -604,9 +599,9 @@ void ape_editor_add_object_to_selection( ApeEditorInstance *self, void *object )
 	qm_os_linked_list_push_back( self->selectedObjects, object );
 }
 
-void *ape_editor_get_first_selected( ApeEditorInstance *self )
+void *ape_editor_get_first_selected( const ApeEditorInstance *self )
 {
-	QmOsLinkedListNode *node = qm_os_linked_list_get_front( self->selectedObjects );
+	const QmOsLinkedListNode *node = qm_os_linked_list_get_front( self->selectedObjects );
 	if ( node == nullptr )
 	{
 		return nullptr;
@@ -654,6 +649,101 @@ void ape_editor_move_selection_to_room( ApeEditorInstance *self, ApeRoom *room )
 ApeViewport *ape_editor_selection_get_viewport_( void )
 {
 	return selectionViewport;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Ray Selection
+// This sucks balls, but replaces the selection buffer impl. we had before. Had to
+// implement our own ray intersect here rather than using the *room* intersect method
+// we already had, otherwise I'd have to introduce a bunch of new collision group
+// types... bleh
+
+static void trace_geometry_node( const PLCollisionRay *ray, ApeWorldNode *node, const ApeCamera *camera, ApeCollisionIntersection *dstResult )
+{
+	ApeCollisionIntersection result;
+	const ApeWorldNodeClass *nodeClass = node->classType;
+	if ( nodeClass->onTrace != nullptr && nodeClass->onTrace( node, ray, &result ) != nullptr && result.distance < dstResult->distance )
+	{
+		*dstResult = result;
+	}
+}
+
+static void trace_ethereal_node( const PLCollisionRay *ray, ApeWorldNode *node, const ApeCamera *camera, ApeCollisionIntersection *dstResult )
+{
+	if ( node->type == APE_WORLD_NODE_TYPE_ROOM ||
+	     node->type == APE_WORLD_NODE_TYPE_ROOT ||
+	     node->type == APE_WORLD_NODE_TYPE_EMPTY )
+	{
+		return;
+	}
+
+	const PLCollisionSphere sphere = {
+	        .origin = ape_world_node_get_position( node ),
+	        .radius = 8.0f,
+	};
+
+	QmMathVector3f intersection;
+	if ( !aux_collision_ray_intersect_sphere( ray, &sphere, &intersection ) )
+	{
+		return;
+	}
+
+	const float distance = qm_math_vector3f_length( qm_math_vector3f_sub( intersection, ray->origin ) );
+	if ( distance >= dstResult->distance )
+	{
+		return;
+	}
+
+	dstResult->node         = node;
+	dstResult->intersection = intersection;
+	dstResult->distance     = distance;
+}
+
+static bool intersect_ray_children( ApeEditorInstance *self, ApeWorldNode *node, const PLCollisionRay *ray, ApeCollisionIntersection *dstResult )
+{
+	if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_FACE && node->type == APE_WORLD_NODE_TYPE_BRUSH )
+	{
+		trace_geometry_node( ray, node, self->camera, dstResult );
+	}
+	else if ( self->geometryMode == APE_EDITOR_GEOMETRY_MODE_TRANSFORM )
+	{
+		if ( node->type == APE_WORLD_NODE_TYPE_MODEL || node->type == APE_WORLD_NODE_TYPE_BRUSH )
+		{
+			trace_geometry_node( ray, node, self->camera, dstResult );
+		}
+		else
+		{
+			trace_ethereal_node( ray, node, self->camera, dstResult );
+		}
+	}
+
+SKIP:
+	ApeWorldNode *child;
+	COM_ITERATE_LINKED_LIST( child, node->children, i )
+	{
+		intersect_ray_children( self, child, ray, dstResult );
+	}
+
+	return dstResult->node != nullptr;
+}
+
+bool ape_editor_selection_trace_( ApeEditorInstance *self, const PLCollisionRay *ray, ApeCollisionIntersection *result )
+{
+	ApeRoom *room = ape_camera_get_room( self->camera );
+	if ( room == nullptr )
+	{
+		return false;
+	}
+
+	ApeCollisionIntersection intersection = {};
+	intersection.distance                 = FLT_MAX;
+	if ( !intersect_ray_children( self, APE_WORLD_NODE( room ), ray, &intersection ) )
+	{
+		return false;
+	}
+
+	*result = intersection;
+	return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
