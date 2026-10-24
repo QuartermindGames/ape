@@ -20,7 +20,6 @@ typedef struct ApeGuiFont
 {
 	QmGfxTexture *texture;
 
-	uint32_t      numGlyphs;
 	ComFontGlyph *glyphs;
 	PLHashTable  *glyphTable;
 
@@ -30,9 +29,7 @@ typedef struct ApeGuiFont
 	QmGfxMesh *mesh;
 } ApeGuiFont;
 
-static PLVectorArray *cachedFonts;
-static PLHashTable   *cachedFontsTable;
-static ApeGuiFont    *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
+static ApeGuiFont *defaultFonts[ GUI_MAX_FONT_DEFAULTS ];
 
 static float           fontSlant        = 0.0f;
 static QmMathVector2f  fontShadowOffset = QM_MATH_VECTOR2F( 1.0f, 1.0f );
@@ -103,6 +100,53 @@ void ape_gui_font_destroy( ApeGuiFont *font )
 	qm_os_memory_free( font );
 }
 
+static QmGfxTexture *ape_gui_font_deserialize_bitmap( QmFsFile *file )
+{
+	const unsigned short bitmapW = PL_READUINT16( file, false, NULL );
+	const unsigned short bitmapH = PL_READUINT16( file, false, NULL );
+	if ( bitmapW == 0 || bitmapH == 0 )
+	{
+		ape_console_warning_( "Invalid bitmap size for font!\n" );
+		return nullptr;
+	}
+
+	const size_t size  = bitmapW * bitmapH;
+	QmImage     *image = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
+	if ( image == nullptr )
+	{
+		ape_console_warning_( "Failed to create image for font: %s\n", PlGetError() );
+		return nullptr;
+	}
+
+	if ( qm_file_read( file, PlGetImageData( image, 0, 0 ), sizeof( unsigned char ), size ) != size )
+	{
+		ape_console_warning_( "Failed to load entirity of bitmap image from font!\n" );
+		PlDestroyImage( image );
+		return nullptr;
+	}
+
+	QmGfxTexture *texture = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
+	if ( texture != nullptr )
+	{
+		qm_gfx_texture_set_wrap_mode( texture, PLG_TEXTURE_WRAP_MODE_CLAMP_EDGE );
+
+		texture->filter = PLG_TEXTURE_FILTER_LINEAR;
+		if ( !qm_gfx_texture_upload( texture, image ) )
+		{
+			qm_os_memory_free( texture );
+			texture = nullptr;
+		}
+	}
+	else
+	{
+		ape_console_warning_( "Failed to create font texture: %s\n", PlGetError() );
+	}
+
+	PlDestroyImage( image );
+
+	return texture;
+}
+
 static ApeGuiFont *font_deserialize( QmFsFile *file )
 {
 	uint32_t magic = PL_READUINT32( file, false, NULL );
@@ -120,6 +164,7 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 		return nullptr;
 	}
 
+	//TODO: this can be a short...
 	uint32_t numGlyphs = PL_READUINT32( file, false, NULL );
 	if ( numGlyphs == 0 )
 	{
@@ -161,42 +206,11 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 		}
 	}
 
-	uint16_t bitmapW = PL_READUINT16( file, false, NULL );
-	uint16_t bitmapH = PL_READUINT16( file, false, NULL );
-	assert( bitmapW != 0 && bitmapH != 0 );
-	if ( bitmapW == 0 || bitmapH == 0 )
+	if ( ( font->texture = ape_gui_font_deserialize_bitmap( file ) ) == nullptr )
 	{
-		ape_gui_font_destroy( font );
-		ape_console_warning_( "Invalid bitmap size for font!\n" );
+		qm_os_memory_free( font );
 		return nullptr;
 	}
-
-	size_t   bitmapSize  = bitmapW * bitmapH;
-	QmImage *bitmapImage = PlCreateImage( NULL, bitmapW, bitmapH, 0, PL_COLOURFORMAT_RGB, PL_IMAGEFORMAT_R8 );
-	if ( qm_file_read( file, PlGetImageData( bitmapImage, 0, 0 ), sizeof( uint8_t ), bitmapSize ) != bitmapSize )
-	{
-		ape_gui_font_destroy( font );
-		ape_console_warning_( "Failed to load entirity of bitmap image from font!\n" );
-		return nullptr;
-	}
-
-	font->texture = qm_gfx_texture_create( QM_GFX_TEXTURE_TYPE_2D );
-	if ( font->texture == nullptr )
-	{
-		ape_gui_font_destroy( font );
-		ape_console_warning_( "Failed to create texture for font: %s!\n", PlGetError() );
-		return nullptr;
-	}
-
-	font->texture->filter = PLG_TEXTURE_FILTER_LINEAR;
-	if ( !qm_gfx_texture_upload( font->texture, bitmapImage ) )
-	{
-		ape_gui_font_destroy( font );
-		ape_console_warning_( "Failed to upload texture data for font!\n" );
-		return nullptr;
-	}
-
-	PlDestroyImage( bitmapImage );
 
 	font->mesh = qm_gfx_mesh_create( QM_GFX_MESH_PRIMITIVE_TRIANGLES, QM_GFX_MESH_DRAW_MODE_STREAM, 32, 32 );
 
@@ -221,16 +235,13 @@ ApeGuiFont *gui_font_load( const char *path, ApeGuiFont *fallback )
 
 bool ape_gui_initialize_fonts_( void )
 {
-	cachedFonts      = PlCreateVectorArray( GUI_MAX_FONT_DEFAULTS );
-	cachedFontsTable = PlCreateHashTable();
-
 	static const char *fontPaths[ GUI_MAX_FONT_DEFAULTS ] = {
 	        [GUI_FONT_DEFAULT_LARGE]  = "guis/fonts/noto_mono_24.fnt",
 	        [GUI_FONT_DEFAULT_MEDIUM] = "guis/fonts/noto_mono_12.fnt",
 	        [GUI_FONT_DEFAULT_SMALL]  = "guis/fonts/proggysmalltt_12.fnt",
 	        [GUI_FONT_DEFAULT_TINY]   = "guis/fonts/proggytinytt_12.fnt",
 	};
-	for ( uint32_t i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
+	for ( unsigned char i = 0; i < GUI_MAX_FONT_DEFAULTS; ++i )
 	{
 		defaultFonts[ i ] = gui_font_load( fontPaths[ i ], nullptr );
 		assert( defaultFonts[ i ] != NULL );
