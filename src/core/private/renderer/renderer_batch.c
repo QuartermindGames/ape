@@ -25,7 +25,7 @@ static void destroy_batch( ApeRendererDrawBatch *batch )
 {
 	if ( batch->mesh != nullptr )
 	{
-		qm_gfx_mesh_destroy( batch->mesh );
+		qm_os_memory_free( batch->mesh );
 	}
 
 	qm_os_memory_free( batch->hashNode );
@@ -77,7 +77,7 @@ void ape_renderer_batch_initialize_()
 		ape_console_error_( true, "Failed to create batches list: %s\n", PlGetError() );
 	}
 
-	batchLookup = PlCreateHashTable();
+	batchLookup = qm_os_hash_table();
 	if ( batchLookup == nullptr )
 	{
 		ape_console_error_( true, "Failed to create batch lookup table: %s\n", PlGetError() );
@@ -98,7 +98,7 @@ void ape_renderer_batch_shutdown_()
 		batches = nullptr;
 	}
 
-	PlDestroyHashTable( batchLookup );
+	qm_os_memory_free( batchLookup );
 }
 
 void ape_renderer_batch_display()

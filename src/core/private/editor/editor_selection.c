@@ -803,13 +803,13 @@ static void setup_transform_widget()
 	PlgPushVertex3f( transformWidgetWireframeMesh, 0.0f, -TRANSFORM_ARROW_SCALE, TRANSFORM_SCALE - TRANSFORM_ARROW_SCALE );
 	PlgColour4bv( transformWidgetWireframeMesh, &PL_COLOUR_BLUE );
 
-	qm_gfx_mesh_upload( transformWidgetWireframeMesh, nullptr, nullptr );
+	qm_gfx_mesh_upload( transformWidgetWireframeMesh, nullptr, 0, nullptr, 0 );
 }
 
 static void cleanup_transform_widget()
 {
-	qm_gfx_mesh_destroy( transformWidgetWireframeMesh );
-	qm_gfx_mesh_destroy( transformWidgetSelectionMesh );
+	qm_os_memory_free( transformWidgetWireframeMesh );
+	qm_os_memory_free( transformWidgetSelectionMesh );
 }
 
 static void render_transform_widget( ApeEditorInstance *instance )

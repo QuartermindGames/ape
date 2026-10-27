@@ -7,7 +7,6 @@
 #include <plcore/pl.h>
 
 #include <plgraphics/plg.h>
-#include <plgraphics/plg_driver_interface.h>
 
 #include <yin/core_base.h>
 

@@ -97,7 +97,6 @@ add_library(ape-core STATIC
 add_dependencies(ape-core
         plcore
         plgraphics
-        pl_gl_driver
 )
 
 if (SMACKER_LIBRARY)
@@ -130,6 +129,7 @@ target_link_libraries(ape-core
         plgraphics
 
         # ape libraries
+        io_model
         ape-aux
         acm
 

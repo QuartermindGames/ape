@@ -28,8 +28,7 @@ static void model_cleanup_callback_( void *userData )
 		ape_material_release_reference( model->meshes[ i ].material );
 	}
 
-	qm_gfx_mesh_destroy( model->cache );
-
+	qm_os_memory_free( model->cache );
 	qm_os_memory_free( model->sceneNodes );
 	qm_os_memory_free( model );
 }

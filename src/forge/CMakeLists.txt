@@ -38,7 +38,6 @@ set_target_properties(ape-editor PROPERTIES FOLDER "Engine")
 add_dependencies(ape-editor
         plcore
         plgraphics
-        pl_gl_driver
         ape-core
 )
 

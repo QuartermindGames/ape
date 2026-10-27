@@ -91,10 +91,8 @@ ApeGuiFont *gui_get_default_font( GuiFontDefaultType defaultType )
 
 void ape_gui_font_destroy( ApeGuiFont *font )
 {
-	PlDestroyHashTable( font->glyphTable );
-
-	qm_gfx_mesh_destroy( font->mesh );
-
+	qm_os_memory_free( font->glyphTable );
+	qm_os_memory_free( font->mesh );
 	qm_os_memory_free( font->texture );
 	qm_os_memory_free( font->glyphs );
 	qm_os_memory_free( font );
@@ -102,8 +100,8 @@ void ape_gui_font_destroy( ApeGuiFont *font )
 
 static QmGfxTexture *ape_gui_font_deserialize_bitmap( QmFsFile *file )
 {
-	const unsigned short bitmapW = PL_READUINT16( file, false, NULL );
-	const unsigned short bitmapH = PL_READUINT16( file, false, NULL );
+	const unsigned short bitmapW = QM_FS_FILE_READ_UINT16( file, false, NULL );
+	const unsigned short bitmapH = QM_FS_FILE_READ_UINT16( file, false, NULL );
 	if ( bitmapW == 0 || bitmapH == 0 )
 	{
 		ape_console_warning_( "Invalid bitmap size for font!\n" );
@@ -149,14 +147,14 @@ static QmGfxTexture *ape_gui_font_deserialize_bitmap( QmFsFile *file )
 
 static ApeGuiFont *font_deserialize( QmFsFile *file )
 {
-	uint32_t magic = PL_READUINT32( file, false, NULL );
+	uint32_t magic = QM_FS_FILE_READ_UINT32( file, false, NULL );
 	if ( magic != COM_FORMAT_FONT_MAGIC )
 	{
 		ape_console_warning_( "Invalid font file!\n" );
 		return nullptr;
 	}
 
-	uint16_t version = PL_READUINT16( file, false, NULL );
+	uint16_t version = QM_FS_FILE_READ_UINT16( file, false, NULL );
 	assert( version <= COM_FORMAT_FONT_VERSION );
 	if ( version > COM_FORMAT_FONT_VERSION )
 	{
@@ -165,7 +163,7 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 	}
 
 	//TODO: this can be a short...
-	uint32_t numGlyphs = PL_READUINT32( file, false, NULL );
+	uint32_t numGlyphs = QM_FS_FILE_READ_UINT32( file, false, NULL );
 	if ( numGlyphs == 0 )
 	{
 		ape_console_warning_( "Empty font file!\n" );
@@ -173,22 +171,22 @@ static ApeGuiFont *font_deserialize( QmFsFile *file )
 	}
 
 	ApeGuiFont *font = QM_OS_MEMORY_NEW( ApeGuiFont );
-	font->glyphTable = PlCreateHashTable();
+	font->glyphTable = qm_os_hash_table();
 	font->glyphs     = QM_OS_MEMORY_NEW_( ComFontGlyph, numGlyphs );
 	for ( uint32_t i = 0; i < numGlyphs; ++i )
 	{
-		font->glyphs[ i ].codepoint = PL_READUINT32( file, false, NULL );
-		font->glyphs[ i ].x         = PL_READUINT16( file, false, NULL );
-		font->glyphs[ i ].y         = PL_READUINT16( file, false, NULL );
-		font->glyphs[ i ].w         = PL_READUINT16( file, false, NULL );
-		font->glyphs[ i ].h         = PL_READUINT16( file, false, NULL );
+		font->glyphs[ i ].codepoint = QM_FS_FILE_READ_UINT32( file, false, NULL );
+		font->glyphs[ i ].x         = QM_FS_FILE_READ_UINT16( file, false, NULL );
+		font->glyphs[ i ].y         = QM_FS_FILE_READ_UINT16( file, false, NULL );
+		font->glyphs[ i ].w         = QM_FS_FILE_READ_UINT16( file, false, NULL );
+		font->glyphs[ i ].h         = QM_FS_FILE_READ_UINT16( file, false, NULL );
 
 		if ( version >= 2 )
 		{
 			font->glyphs[ i ].rect.x = qm_fs_file_read_int16( file, false, nullptr );
 			font->glyphs[ i ].rect.y = qm_fs_file_read_int16( file, false, nullptr );
-			font->glyphs[ i ].rect.z = PL_READUINT16( file, false, nullptr );
-			font->glyphs[ i ].rect.w = PL_READUINT16( file, false, nullptr );
+			font->glyphs[ i ].rect.z = QM_FS_FILE_READ_UINT16( file, false, nullptr );
+			font->glyphs[ i ].rect.w = QM_FS_FILE_READ_UINT16( file, false, nullptr );
 		}
 		else
 		{
@@ -466,8 +464,8 @@ void gui_font_display( ApeGuiFont *font )
 
 	qm_gfx_texture_set( font->texture, 0 );
 
-	qm_gfx_mesh_upload( font->mesh, nullptr, nullptr );
-	qm_gfx_mesh_draw( font->mesh );
+	qm_gfx_mesh_upload( font->mesh, nullptr, 0, nullptr, 0 );
+	qm_gfx_mesh_draw( font->mesh, 0, font->mesh->num_indices );
 
 	ape_rendererPerformance_.numTriangles += font->mesh->num_triangles;
 	ape_rendererPerformance_.numBatches++;

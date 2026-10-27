@@ -54,7 +54,7 @@ void ape_gui_draw_quad( QmGfxMesh *mesh, QmMathVector2i tl, QmMathVector2i tr, Q
  * Font
  ****************************************/
 
-typedef enum GuiFontDefaultType
+typedef enum GuiFontDefaultType : unsigned char
 {
 	GUI_FONT_DEFAULT_LARGE,
 	GUI_FONT_DEFAULT_MEDIUM,

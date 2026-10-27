@@ -23,7 +23,7 @@ static void *create_entity_path( ApeEntity *self )
 {
 	if ( cameraFollowTable == nullptr )
 	{
-		cameraFollowTable = PlCreateHashTable();
+		cameraFollowTable = qm_os_hash_table();
 	}
 
 	return QM_OS_MEMORY_NEW( PathEntity );
@@ -37,7 +37,7 @@ static void destroy_entity_path( ApeEntity *self )
 	PlDestroyHashTableNode( followEntity->followTableNode );
 	if ( PlGetNumHashTableNodes( cameraFollowTable ) == 0 )
 	{
-		PlDestroyHashTable( cameraFollowTable );
+		qm_os_memory_free( cameraFollowTable );
 		cameraFollowTable = nullptr;
 	}
 

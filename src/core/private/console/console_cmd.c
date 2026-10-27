@@ -89,7 +89,7 @@ void ape_console_cmd_initialize_()
 
 void ape_console_cmd_shutdown_()
 {
-	PlDestroyHashTable( commandHashes );
+	qm_os_memory_free( commandHashes );
 	commandHashes = nullptr;
 
 	if ( commands )
@@ -200,7 +200,7 @@ void ape_console_cmd_register( const char *name, const char *description, int ar
 
 	if ( commandHashes == nullptr )
 	{
-		commandHashes = PlCreateHashTable();
+		commandHashes = qm_os_hash_table();
 	}
 
 	if ( numCommands < maxCommands )

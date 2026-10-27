@@ -26,7 +26,7 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 		return nullptr;
 	}
 
-	header.numFiles = PL_READUINT32( file, false, NULL );
+	header.numFiles = QM_FS_FILE_READ_UINT32( file, false, NULL );
 	if ( header.numFiles == 0 )
 	{
 		com_warning_( "Empty package!\n" );
@@ -40,14 +40,14 @@ static QmFsPackage *parse_pkg_file( QmFsFile *file )
 		QmFsPackageFile *index = &package->files[ i ];
 
 		// read in the filename, it's a sized string...
-		uint8_t nameLength = PL_READUINT8( file, NULL );
+		uint8_t nameLength = QM_FS_FILE_READ_UINT8( file, NULL );
 		qm_file_read( file, index->name, sizeof( char ), nameLength );
 
 		index->name[ nameLength + 1 ] = '\0';
 
 		// file length/size
-		index->size = PL_READUINT32( file, false, NULL );
-		index->compressedSize = PL_READUINT32( file, false, NULL );
+		index->size = QM_FS_FILE_READ_UINT32( file, false, NULL );
+		index->compressedSize = QM_FS_FILE_READ_UINT32( file, false, NULL );
 
 		if ( index->size != index->compressedSize )
 			index->compressionType = PL_COMPRESSION_DEFLATE;

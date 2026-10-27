@@ -15,8 +15,7 @@ static void DestroyEmitterTemplateCallback( void *userData )
 
 	ape_material_release_reference( emitter->material );
 
-	qm_gfx_mesh_destroy( emitter->mesh );
-
+	qm_os_memory_free( emitter->mesh );
 	qm_os_memory_free( emitter );
 }
 

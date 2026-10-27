@@ -27,7 +27,7 @@ static void *create_room( ApeWorldNode *parent )
 
 	room->lightmapEdgeLength = ROOM_LIGHTMAP_DEFAULT_EDGE_LENGTH;
 
-	room->taggedSurfaceLookup = PlCreateHashTable();
+	room->taggedSurfaceLookup = qm_os_hash_table();
 
 	room->decalManager = ape_decal_manager_create_();
 
@@ -51,12 +51,11 @@ static void destroy_room( void *data, ApeWorldNode *parent )
 		ape_gameInterface->onDestroyRoom( self );
 	}
 
-	PlDestroyHashTable( self->taggedSurfaceLookup );
-
 	ape_decal_manager_destroy_( self->decalManager );
 
 	ape_room_destroy_lightmaps_( self );
 
+	qm_os_memory_free( self->taggedSurfaceLookup );
 	qm_os_memory_free( self );
 }
 

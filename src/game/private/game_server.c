@@ -15,7 +15,7 @@ static unsigned int numPlayers;
 
 void game_server_initialize_()
 {
-	serverClientsLookup = PlCreateHashTable();
+	serverClientsLookup = qm_os_hash_table();
 
 	QM_OS_ZERO_( serverClients );
 }

@@ -47,7 +47,7 @@ void nih_client_tick_( const double delta )
 
 	// try to tick the local camera
 	//TODO: this might need moving server-side anyway, but for now let's just get this crap working
-	GamePlayer *player = game_server_get_local_player_();
+	const GamePlayer *player = game_server_get_local_player_();
 	if ( player != nullptr && player->camera != nullptr )
 	{
 		ApeEntity *entity = game_server_get_local_entity_();

@@ -10,12 +10,9 @@
 
 #include "qmos/public/qm_os_memory.h"
 
-#include "plcore/pl_filesystem.h"
-
 #include "acm/acm.h"
 
 #include "aux/public/aux.h"
-#include "aux/public/aux_project.h"
 
 #include "yin/core.h"
 #include "yin/core_input.h"
@@ -177,79 +174,4 @@ int shell_translate_key_input( const int key )
 	}
 
 	return KEY_INVALID;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Window
-/////////////////////////////////////////////////////////////////////////////////////
-
-typedef struct ShellWindow
-{
-	ApeViewport *viewport;
-	SDL_Window  *handle;
-} ShellWindow;
-
-static void shell_window_destroy( void *ptr )
-{
-	ShellWindow *window = ptr;
-	if ( window->handle != nullptr )
-	{
-		SDL_DestroyWindow( window->handle );
-		window->handle = nullptr;
-	}
-}
-
-ShellWindow *shell_window_create( const char *title, unsigned int w, unsigned int h, bool fs )
-{
-	unsigned int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-
-	if ( fs )
-	{
-		flags |= SDL_WINDOW_FULLSCREEN;
-	}
-
-	if ( !PlHasCommandLineArgument( "/nodpi" ) )
-	{
-		flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
-	}
-
-	SDL_Window *handle = SDL_CreateWindow( title, w, h, flags );
-	if ( handle == nullptr )
-	{
-		fprintf( stderr, "Failed to create SDL window: %s\n", SDL_GetError() );
-		return nullptr;
-	}
-
-	ShellWindow *window = QM_OS_MEMORY_NEW_D( ShellWindow, shell_window_destroy );
-	if ( window == nullptr )
-	{
-		SDL_DestroyWindow( handle );
-
-		fprintf( stderr, "Failed to alloc shell window!\n" );
-		return nullptr;
-	}
-
-	if ( !SDL_StartTextInput( handle ) )
-	{
-		SDL_DestroyWindow( handle );
-
-		fprintf( stderr, "Failed to start text input: %s\n", SDL_GetError() );
-		return nullptr;
-	}
-
-	SDL_ShowWindow( handle );
-
-	window->handle = handle;
-
-	return window;
-}
-
-void shell_window_maximize( const ShellWindow *self )
-{
-	SDL_MaximizeWindow( self->handle );
-}
-
-void shell_window_get_size( const ShellWindow *self, unsigned int *dstW, unsigned int *dstH )
-{
-	SDL_GetWindowSize( self->handle, ( int * ) dstW, ( int * ) dstH );
 }

@@ -306,7 +306,7 @@ void ape_initialize_textures_()
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 	PlRegisterImageLoader( "gfx", Image_LoadPackedImage );
 
-	textureTable = PlCreateHashTable();
+	textureTable = qm_os_hash_table();
 	if ( textureTable == NULL )
 	{
 		ape_console_error_( true, "Failed to create texture table: %s\n", PlGetError() );

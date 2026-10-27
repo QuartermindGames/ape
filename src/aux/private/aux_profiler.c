@@ -51,7 +51,7 @@ static ComProfilingGroup *register_profiler_group( const char *key )
 
 	if ( profilingGroups == nullptr )
 	{
-		profilingGroups = PlCreateHashTable();
+		profilingGroups = qm_os_hash_table();
 		if ( profilingGroups == nullptr )
 		{
 			return nullptr;

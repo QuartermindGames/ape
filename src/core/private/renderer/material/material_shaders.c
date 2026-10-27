@@ -463,7 +463,7 @@ void ape_initialize_shaders_()
 	                          APE_CONSOLE_VAR_FLAG_ARCHIVE );
 	ape_console_cmd_register( "shaders_reload", "Reload shader programs.", -1, reload_shader_program_command );
 
-	shaderProgramTable = PlCreateHashTable();
+	shaderProgramTable = qm_os_hash_table();
 	if ( shaderProgramTable == NULL )
 	{
 		ape_console_error_( true, "Failed to create shader program list: %s\n", PlGetError() );

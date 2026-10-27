@@ -167,8 +167,6 @@ file(COPY src/kernel/docs/plcore/ DESTINATION ${CMAKE_HOME_DIRECTORY}/release/le
 
 add_subdirectory(src/kernel/plgraphics/)
 set_target_properties(plgraphics PROPERTIES FOLDER "Kernel")
-add_subdirectory(src/kernel/plugins/driver_opengl/)
-set_target_properties(pl_gl_driver PROPERTIES FOLDER "Kernel")
 
 set(HEI_LIBRARIES qm-os qm-math plcore plgraphics)
 

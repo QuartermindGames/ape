@@ -13,6 +13,8 @@
 
 #include "qmos/public/qm_os_string.h"
 
+#include "plgraphics/qm_gfx_driver.h"
+
 #include "aux/public/aux.h"
 #include "aux/public/aux_project.h"
 #include "aux/public/aux_log.h"
@@ -245,41 +247,6 @@ static bool initialize_display( void )
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
-	// attempt to fetch the driver directly from the executable location if possible
-	PLPath exePath;
-	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != NULL )
-	{
-		char *driverPath = qm_os_string_alloc( "local://%s", exePath );
-		PlgScanForDrivers( driverPath );
-		qm_os_memory_free( driverPath );
-	}
-	else
-	{
-		PrintWarn( "Failed to get executable location: %s\n", PlGetError() );
-		PlgScanForDrivers( "." );
-	}
-
-	unsigned int driverMode;
-	const char  *driverName = acm_get_string( shellConfig, "shell.driver", "opengl" );
-	if ( strcmp( driverName, "opengl" ) == 0 )
-	{
-		driverMode = SS_SHELL_GRAPHICS_MODE_OPENGL;
-	}
-	else if ( strcmp( driverName, "vulkan" ) == 0 )
-	{
-		driverMode = SS_SHELL_GRAPHICS_MODE_VULKAN;
-	}
-	else if ( strcmp( driverName, "software" ) == 0 )
-	{
-		driverMode = SS_SHELL_GRAPHICS_MODE_SOFTWARE;
-	}
-	else
-	{
-		driverMode = SS_SHELL_GRAPHICS_MODE_OTHER;
-	}
-
-	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
-
 #if !NDEBUG
 	bool fullscreen = true;
 #else
@@ -313,34 +280,22 @@ static bool initialize_display( void )
 		height = ( int ) strtol( arg, nullptr, 10 );
 	}
 
-	if ( ( sdlWindow = create_window( aux_project_get_name(), width, height, fullscreen, driverMode ) ) == NULL )
+	if ( ( sdlWindow = create_window( aux_project_get_name(), width, height, fullscreen, SS_SHELL_GRAPHICS_MODE_OPENGL ) ) == NULL )
 	{
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to create window!\n" );
 		return EXIT_FAILURE;
 	}
 
-	if ( PlgSetDriver( driverName ) != PL_RESULT_SUCCESS )
+	if ( qm_gfx_driver_set( QM_GFX_DRIVER_INTERFACE_OPENGL ) != PL_RESULT_SUCCESS )
 	{
-		if ( strcmp( driverName, "software" ) != 0 )
-		{
-			PrintWarn( "Driver init failed for \"%s\": %s\n", driverName, PlGetError() );
-			Print( "Attempting to use software fallback...\n" );
-			if ( PlgSetDriver( "software" ) != PL_RESULT_SUCCESS )
-			{
-				PrintWarn( "Failed to set fallback driver: %s\n", PlGetError() );
-				return false;
-			}
-		}
-		else
-		{
-			PrintWarn( "Driver init failed for \"%s\" and fallback failed: %s\n", driverName, PlGetError() );
-			return false;
-		}
+		PrintWarn( "Driver init failed: %s\n", PlGetError() );
+		return false;
 	}
 
 	if ( !SDL_StartTextInput( sdlWindow ) )
 	{
-		PrintError( "Failed to start text input: %s\n", SDL_GetError() );
+		PrintWarn( "Failed to start text input: %s\n", SDL_GetError() );
+		return false;
 	}
 
 	return true;
@@ -409,7 +364,7 @@ int qm_os_main( const int argc, char **argv )
 
 	Print( "Log output initialized!\n" );
 
-	PlgInitializeGraphics();
+	qm_gfx_initialize();
 
 	if ( !initialize_display() )
 	{

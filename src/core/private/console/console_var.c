@@ -20,7 +20,7 @@ void ape_console_var_initialize_()
 
 void ape_console_var_shutdown_()
 {
-	PlDestroyHashTable( variableHashes );
+	qm_os_memory_free( variableHashes );
 	variableHashes = nullptr;
 
 	if ( variables )
@@ -115,7 +115,7 @@ ApeConsoleVar *ape_console_var_register_( const char *name, const char *descript
 
 	if ( variableHashes == nullptr )
 	{
-		variableHashes = PlCreateHashTable();
+		variableHashes = qm_os_hash_table();
 	}
 
 	ApeConsoleVar *out = nullptr;

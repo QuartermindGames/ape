@@ -20,7 +20,7 @@ static void *create_world( ApeWorldNode *parent )
 		ape_console_error_( true, "Failed to create world entity list: %s\n", PlGetError() );
 	}
 
-	world->roomLookup = PlCreateHashTable();
+	world->roomLookup = qm_os_hash_table();
 	if ( world->roomLookup == nullptr )
 	{
 		ape_console_error_( true, "Failed to create world room lookup: %s\n", PlGetError() );
@@ -59,8 +59,8 @@ void ape_world_destroy_( void *data, ApeWorldNode *parent )
 	}
 
 	PlDestroyLinkedList( self->entities );
-	PlDestroyHashTable( self->roomLookup );
 
+	qm_os_memory_free( self->roomLookup );
 	qm_os_memory_free( self );
 }
 

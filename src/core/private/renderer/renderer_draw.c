@@ -499,7 +499,7 @@ void ape_draw_destroy_debug_mesh_()
 	assert( debugDrawMesh != nullptr );
 	assert( debugDrawMaterial != nullptr );
 
-	qm_gfx_mesh_destroy( debugDrawMesh );
+	qm_os_memory_free( debugDrawMesh );
 	debugDrawMesh = nullptr;
 
 	ape_material_release_reference( debugDrawMaterial );

@@ -77,7 +77,7 @@ void game_language_initialize_()
 	}
 
 	languages            = PlCreateVectorArray( 4 );
-	languageStringsTable = PlCreateHashTable();
+	languageStringsTable = qm_os_hash_table();
 
 	AcmBranch *child = acm_get_first_child( root );
 	while ( child != nullptr )

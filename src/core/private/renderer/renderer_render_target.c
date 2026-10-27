@@ -94,7 +94,7 @@ static void setup_texture_attachments( ApeRenderTarget *self )
 
 void ape_initialize_render_targets_( void )
 {
-	renderTargets = PlCreateHashTable();
+	renderTargets = qm_os_hash_table();
 	if ( renderTargets == NULL )
 	{
 		ape_console_error_( true, "Failed to create render target hash table: %s\n", PlGetError() );
@@ -119,7 +119,7 @@ void ape_shutdown_render_targets_( void )
 		node = PlGetNextHashTableNode( node );
 	}
 
-	PlDestroyHashTable( renderTargets );
+	qm_os_memory_free( renderTargets );
 }
 
 ApeRenderTarget *ape_render_target_get_by_key_( const char *key )

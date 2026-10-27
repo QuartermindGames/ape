@@ -98,13 +98,13 @@ ApeEditorInstance *ape_editor_instance_setup( ApeEditorInstance *self, ApeEditor
 
 	cache_node_icons();
 
-	self->selectionTable = PlCreateHashTable();
+	self->selectionTable = qm_os_hash_table();
 	if ( self->selectionTable == nullptr )
 	{
 		ape_console_error_( true, "Failed to create selection table for instance: %s\n", PlGetError() );
 	}
 
-	self->subSelectionTable = PlCreateHashTable();
+	self->subSelectionTable = qm_os_hash_table();
 	if ( self->subSelectionTable == nullptr )
 	{
 		ape_console_error_( true, "Failed to create sub-selection table for instance: %s\n", PlGetError() );
@@ -123,9 +123,9 @@ void ape_editor_instance_cleanup( ApeEditorInstance *self )
 {
 	self->numPolygonPoints = 0;
 
-	PlDestroyHashTable( self->selectionTable );
+	qm_os_memory_free( self->selectionTable );
 	self->selectionTable = nullptr;
-	PlDestroyHashTable( self->subSelectionTable );
+	qm_os_memory_free( self->subSelectionTable );
 	self->subSelectionTable = nullptr;
 
 	qm_os_memory_free( self->selectedObjects );
@@ -355,7 +355,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 		}
 		case APE_EDITOR_GEOMETRY_MODE_FACE:
 		{
-			PLHashTable *vertexTable = PlCreateHashTable();
+			PLHashTable *vertexTable = qm_os_hash_table();
 
 			// determine what vertices we're shifting
 			ApeBrushFace *face;
@@ -394,7 +394,7 @@ void ape_editor_shift_selection( ApeEditorInstance *self, const QmMathVector3f *
 				ape_brush_compute_bounds( brush );
 			}
 
-			PlDestroyHashTable( vertexTable );
+			qm_os_memory_free( vertexTable );
 			break;
 		}
 		case APE_EDITOR_GEOMETRY_MODE_TRANSFORM:
@@ -1043,7 +1043,7 @@ QmImage *ape_editor_get_material_preview( const char *path, uint16_t width, uint
 
 	if ( editorMaterialPreviews == nullptr )
 	{
-		editorMaterialPreviews = PlCreateHashTable();
+		editorMaterialPreviews = qm_os_hash_table();
 		if ( editorMaterialPreviews == nullptr )
 		{
 			ape_console_error_( true, "Failed to create material preview table: %s\n", PlGetError() );

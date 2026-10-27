@@ -68,7 +68,7 @@ void ape_register_entity_class( const ApeEntityClassDefinition *definition )
 {
 	if ( entityClassLookup == NULL )
 	{
-		entityClassLookup = PlCreateHashTable();
+		entityClassLookup = qm_os_hash_table();
 		entityClasses     = PlCreateVectorArray( 0 );
 	}
 
@@ -127,7 +127,7 @@ static bool setup_entity_class( ApeEntity *self, const char *className )
 
 	self->classDefinition = classDefinition;
 
-	self->componentTable = PlCreateHashTable();
+	self->componentTable = qm_os_hash_table();
 	if ( self->componentTable == nullptr )
 	{
 		ape_console_warning_( "Failed to create component table for entity!\n" );
@@ -195,10 +195,9 @@ void ape_entity_destroy_( void *data, ApeWorldNode *parent )
 		ape_material_release_reference( self->editorSprite );
 	}
 
-	PlDestroyHashTable( self->componentTable );
-
 	PlDestroyLinkedListNode( self->worldListNode );
 
+	qm_os_memory_free( self->componentTable );
 	qm_os_memory_free( self );
 }
 
@@ -275,7 +274,7 @@ void ape_register_entity_component( const ApeEntityComponentDefinition *definiti
 {
 	if ( entityComponentDefinitions == NULL )
 	{
-		entityComponentDefinitions = PlCreateHashTable();
+		entityComponentDefinitions = qm_os_hash_table();
 	}
 
 	if ( PlLookupHashTableUserData( entityComponentDefinitions, definition->name, strlen( definition->name ) ) != NULL )
