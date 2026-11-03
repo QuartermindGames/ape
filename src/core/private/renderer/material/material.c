@@ -1382,9 +1382,19 @@ void ape_material_draw( ApeMaterial *material, QmGfxMesh **meshes, unsigned int 
 				                                   transforms[ j ], false );
 			}
 
+			unsigned int range;
+			if ( meshes[ j ]->range != 0 )
+			{
+				range = meshes[ j ]->range;
+			}
+			else
+			{
+				range = meshes[ j ]->num_indices == 0 ? meshes[ j ]->num_verts : meshes[ j ]->num_indices;
+			}
+
 			//TODO: move upload out, caller does this whenever they need/want to
 			qm_gfx_mesh_upload( meshes[ j ], nullptr, 0, nullptr, 0 );
-			qm_gfx_mesh_draw( meshes[ j ], 0, meshes[ j ]->num_indices == 0 ? meshes[ j ]->num_verts : meshes[ j ]->num_indices );
+			qm_gfx_mesh_draw( meshes[ j ], meshes[ j ]->start, range );
 
 			ape_rendererPerformance_.numBatches++;
 			if ( meshes[ j ]->primitive == QM_GFX_MESH_PRIMITIVE_TRIANGLES )
