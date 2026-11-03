@@ -6,6 +6,34 @@
 
 #include "game_private.h"
 
+void game_test_ray_vs_sphere_( const QmMathVector3f *pos )
+{
+	const PLCollisionSphere sphere = {
+	        .origin = *pos,
+	        .radius = 32.0f,
+	};
+
+	static constexpr PLCollisionRay ray = {
+	        .origin    = QM_MATH_VECTOR3F( 16.0f, 16.0f, 32.0f ),
+	        .direction = QM_MATH_VECTOR3F( 0.0f, 16.0f, 0.0f ),
+	};
+
+	QmMathVector3f  result;
+	QmMathColour4ub colour;
+	if ( aux_collision_ray_intersect_sphere( &ray, &sphere, &result ) )
+	{
+		colour = QM_MATH_COLOUR4UB( 0, 255, 0, 255 );
+	}
+	else
+	{
+		colour = QM_MATH_COLOUR4UB( 255, 0, 0, 255 );
+	}
+
+	const QmMathVector3f end = qm_math_vector3f_add( ray.origin, qm_math_vector3f_scale_float( ray.direction, 4096.0f ) );
+	ape_draw_debug_arrow( ray.origin, end, colour, 2.0f );
+	ape_draw_debug_sphere( sphere.origin, colour, sphere.radius );
+}
+
 void game_test_cylinder_aabb_collision_( const QmMathVector3f *pos )
 {
 	ComCollisionCylinder cylinder = {};

@@ -101,6 +101,7 @@ const char *game_player_get_name_( const GamePlayer *self );
 /////////////////////////////////////////////////////////////////
 // Test Methods
 
+void game_test_ray_vs_sphere_( const QmMathVector3f *pos );
 void game_test_cylinder_aabb_collision_( const QmMathVector3f *pos );
 void game_test_cylinder_point_collision_( const QmMathVector3f *pos );
 void game_test_cylinder_cylinder_collision_( const QmMathVector3f *pos );
