@@ -3,7 +3,7 @@
 #include <plcore/pl_filesystem.h>
 
 #include <plgraphics/plg.h>
-#include <plgraphics/plg_driver_interface.h>
+#include "plgraphics/qm_gfx_driver.h"
 
 #include "qmos/public/qm_os_string.h"
 
@@ -331,7 +331,7 @@ int qm_os_main( const int argc, char **argv )
 
 	PlRegisterStandardImageLoaders( PL_IMAGE_FILEFORMAT_ALL );
 
-	if ( PlgInitializeGraphics() != PL_RESULT_SUCCESS )
+	if ( qm_gfx_initialize() != PL_RESULT_SUCCESS )
 	{
 		FXMessageBox::warning( FXApp::instance(), MBOX_OK, "Error", "Failed to initialize Hei graphics library (%s)!", PlGetError() );
 		return EXIT_FAILURE;
@@ -339,13 +339,7 @@ int qm_os_main( const int argc, char **argv )
 
 	// attempt to fetch the driver directly from the executable location if possible
 	PLPath exePath;
-	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) != nullptr )
-	{
-		char *driverPath = qm_os_string_alloc( "local://%s", exePath );
-		PlgScanForDrivers( driverPath );
-		qm_os_memory_free( driverPath );
-	}
-	else
+	if ( PlGetExecutableDirectory( exePath, sizeof( exePath ) ) == nullptr )
 	{
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to get executable location (%s)!", PlGetError() );
 		return EXIT_FAILURE;
@@ -388,7 +382,7 @@ int qm_os_main( const int argc, char **argv )
 
 	setup_paths( exePath );
 
-	if ( PlgSetDriver( "opengl" ) != PL_RESULT_SUCCESS )
+	if ( qm_gfx_driver_set( QM_GFX_DRIVER_INTERFACE_OPENGL ) != PL_RESULT_SUCCESS )
 	{
 		shell_display_message( SS_SHELL_MESSAGE_BOX_TYPE_ERROR, "Failed to set OpenGL driver: %s\n", PlGetError() );
 		return EXIT_FAILURE;
