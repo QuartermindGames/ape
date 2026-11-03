@@ -18,20 +18,14 @@ typedef struct IOModelLoaderInterface
 } IOModelLoaderInterface;
 
 IOModel *io_model_imf_load_( IOModel *model, QmFsFile *file, IOModelResult *result );
+IOModel *io_model_obj_load_( IOModel *model, QmFsFile *file, IOModelResult *result );
 IOModel *io_model_smd_load_( IOModel *model, QmFsFile *file, IOModelResult *result );
 
 // !!! KEEP THIS IN SYNC WITH IOModelFileFormat !!!
 static const IOModelLoaderInterface modelLoaders[ IO_MODEL_FILE_FORMAT_MAX ] = {
-        [IO_MODEL_FILE_FORMAT_IMF] = {
-                                      .format   = IO_MODEL_FILE_FORMAT_IMF,
-                                      .ext      = IO_MODEL_IMF_EXTENSION,
-                                      .callback = io_model_imf_load_,
-                                      },
-        [IO_MODEL_FILE_FORMAT_SMD] = {
-                                      .format   = IO_MODEL_FILE_FORMAT_SMD,
-                                      .ext      = "smd",
-                                      .callback = io_model_smd_load_,
-                                      },
+        [IO_MODEL_FILE_FORMAT_IMF] = {IO_MODEL_FILE_FORMAT_IMF, IO_MODEL_IMF_EXTENSION, io_model_imf_load_},
+        [IO_MODEL_FILE_FORMAT_OBJ] = {IO_MODEL_FILE_FORMAT_OBJ, "obj",                  io_model_obj_load_},
+        [IO_MODEL_FILE_FORMAT_SMD] = {IO_MODEL_FILE_FORMAT_SMD, "smd",                  io_model_smd_load_},
 };
 
 // ReSharper disable once CppParameterMayBeConstPtrOrRef

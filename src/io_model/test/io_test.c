@@ -13,17 +13,29 @@
 
 QM_TEST_FUNC( io_model_test_obj )
 {
-	// obj is a *little* special as it has its own API, for now
 	IOModelResult result = {};
-	IOModelObj   *model  = io_model_obj_load( "models/test_model.obj", &result );
-	QM_TEST_ASSERT( model != nullptr );
-	QM_TEST_ASSERT( result.code == IO_MODEL_RESULT_CODE_SUCCESS );
 
-	QM_TEST_ASSERT( model->numMaterials > 0 );
-	QM_TEST_ASSERT( model->numSubObjects > 0 );
-	QM_TEST_ASSERT( *model->subObjects[ 0 ].name != '\0' );
+	// obj is a *little* special as it has its own API, for now
+	{
+		IOModelObj *model = io_model_obj( "models/test_model.obj", &result );
+		QM_TEST_ASSERT( model != nullptr );
+		QM_TEST_ASSERT( result.code == IO_MODEL_RESULT_CODE_SUCCESS );
 
-	qm_os_memory_free( model );
+		QM_TEST_ASSERT( model->numMaterials > 0 );
+		QM_TEST_ASSERT( model->numSubObjects > 0 );
+		QM_TEST_ASSERT( *model->subObjects[ 0 ].name != '\0' );
+
+		qm_os_memory_free( model );
+	}
+
+	// now load it again through the abstraction
+	{
+		IOModel *model = io_model_load( "models/test_model.obj", IO_MODEL_FILE_FORMAT_OBJ, &result );
+		QM_TEST_ASSERT( model != nullptr );
+		QM_TEST_ASSERT( result.code == IO_MODEL_RESULT_CODE_SUCCESS );
+
+		qm_os_memory_free( model );
+	}
 }
 QM_TEST_FUNC_END()
 

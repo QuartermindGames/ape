@@ -82,7 +82,7 @@ static void determine_sub_object_bounds( const IOModelObj *obj, IOModelObjSubObj
 	{
 		for ( unsigned int j = 0; j < faces[ i ]->numEdges; ++j )
 		{
-			IOModelObjVertex *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ IO_MODEL_OBJ_INDEX_VERTEX ] );
+			const IOModelObjVertex *vertex = PlGetVectorArrayElementAt( obj->vertices, faces[ i ]->indices[ j ][ IO_MODEL_OBJ_INDEX_VERTEX ] );
 			if ( vertex == NULL )
 			{
 				IO_MODEL_RESULT( result, "attempted to retrieve an invalid vertex", IO_MODEL_RESULT_CODE_IO_ERROR );
@@ -114,27 +114,29 @@ void obj_destroy( void *ptr )
 	}
 }
 
-IOModelObj *io_model_obj_load( const char *path, IOModelResult *result )
+static IOModelObjSubObject *obj_push_sub_object( IOModelObj *self )
 {
-	QmFsFile *file = qm_fs_file_open( path, true );
-	if ( file == NULL )
+	if ( self->numSubObjects >= IO_MODEL_OBJ_MAX_SUB_OBJECTS )
 	{
-		IO_MODEL_RESULT( result, "failed to open file", IO_MODEL_RESULT_CODE_IO_ERROR );
 		return nullptr;
 	}
+
+	return &self->subObjects[ self->numSubObjects++ ];
+}
+
+static IOModelObj *obj_parse( QmFsFile *file, const char *path, IOModelResult *result )
+{
+
+	IOModelObj          *obj            = QM_OS_MEMORY_NEW_D( IOModelObj, obj_destroy );
+	IOModelObjSubObject *subObject      = nullptr;
+	unsigned int         materialIndex  = 0;
+	unsigned int         smoothingIndex = 0;
 
 	// Copy it into a buffer we can parse
 	const size_t fileBufSize = qm_fs_file_get_size( file );
 	const char  *fileBuf     = qm_fs_file_get_data( file );
 	char        *txtBuf      = QM_OS_MEMORY_NEW_( char, fileBufSize + 1 );
 	memcpy( txtBuf, fileBuf, fileBufSize );
-
-	PlCloseFile( file );
-
-	IOModelObj          *obj            = QM_OS_MEMORY_NEW_D( IOModelObj, obj_destroy );
-	IOModelObjSubObject *subObject      = nullptr;
-	unsigned int         materialIndex  = 0;
-	unsigned int         smoothingIndex = 0;
 
 	const char *c = txtBuf;
 	while ( *c != '\0' )
@@ -143,13 +145,15 @@ IOModelObj *io_model_obj_load( const char *path, IOModelResult *result )
 		if ( *c == 'o' && *( c + 1 ) == ' ' )
 		{
 			c += 2;
-			subObject = &obj->subObjects[ obj->numSubObjects++ ];
-			qm_parse_token( &c, subObject->name, sizeof( subObject->name ) );
 
-			if ( subObject->faces == NULL )
+			subObject = obj_push_sub_object( obj );
+			if ( subObject == nullptr )
 			{
-				subObject->faces = PlCreateVectorArray( 1 );
+				IO_MODEL_RESULT( result, "failed to add sub-object", IO_MODEL_RESULT_CODE_EOA_ERROR );
+				break;
 			}
+
+			qm_parse_token( &c, subObject->name, sizeof( subObject->name ) );
 		}
 		// Vertex position
 		else if ( *c == 'v' && *( c + 1 ) == ' ' )
@@ -224,7 +228,19 @@ IOModelObj *io_model_obj_load( const char *path, IOModelResult *result )
 
 			// f <pos>/<uv>/<norm>
 
-			assert( subObject->faces != NULL );
+			// it's, apparently, valid for an object not to be declared before so in
+			// such a case we'll just get the first
+			if ( subObject == nullptr && ( subObject = obj_push_sub_object( obj ) ) == nullptr )
+			{
+				IO_MODEL_RESULT( result, "failed to add sub-object", IO_MODEL_RESULT_CODE_EOA_ERROR );
+				break;
+			}
+
+			if ( subObject->faces == nullptr && ( subObject->faces = PlCreateVectorArray( 1 ) ) == nullptr )
+			{
+				IO_MODEL_RESULT( result, "failed to allocate sub-object faces", IO_MODEL_RESULT_CODE_ALLOC_ERROR );
+				break;
+			}
 
 			IOModelObjFace *face = QM_OS_MEMORY_NEW( IOModelObjFace );
 			PlPushBackVectorArrayElement( subObject->faces, face );
@@ -355,12 +371,46 @@ IOModelObj *io_model_obj_load( const char *path, IOModelResult *result )
 		qm_parse_skip_line( &c );
 	}
 
-	qm_os_memory_free( txtBuf );
-
 	for ( unsigned int i = 0; i < obj->numSubObjects; ++i )
 	{
 		determine_sub_object_bounds( obj, &obj->subObjects[ i ], result );
 	}
 
+	qm_os_memory_free( txtBuf );
+
 	return obj;
+}
+
+IOModelObj *io_model_obj( const char *path, IOModelResult *result )
+{
+	QmFsFile *file = qm_fs_file_open( path, true );
+	if ( file == NULL )
+	{
+		IO_MODEL_RESULT( result, "failed to open file", IO_MODEL_RESULT_CODE_IO_ERROR );
+		return nullptr;
+	}
+
+	IOModelObj *obj = obj_parse( file, path, result );
+
+	PlCloseFile( file );
+
+	return obj;
+}
+
+IOModel *io_model_obj_load_( IOModel *model, QmFsFile *file, IOModelResult *result )
+{
+	const char *path = qm_fs_file_get_path( file );
+	IOModelObj *obj  = obj_parse( file, path, result );
+	if ( obj == nullptr )
+	{
+		return nullptr;
+	}
+
+	// okay, now to convert to the IOModel layout :)
+
+	model->numMeshes = obj->numSubObjects;
+
+	qm_os_memory_free( obj );
+
+	return model;
 }

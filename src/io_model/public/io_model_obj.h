@@ -70,6 +70,6 @@ typedef struct IOModelObj
 	unsigned int        numSubObjects;
 } IOModelObj;
 
-IOModelObj *io_model_obj_load( const char *path, IOModelResult *result );
+IOModelObj *io_model_obj( const char *path, IOModelResult *result );
 
 QM_OS_EXTERN_C_END
