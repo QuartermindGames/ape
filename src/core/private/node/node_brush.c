@@ -400,9 +400,6 @@ void ape_brush_face_apply_material( ApeBrushFace *self, ApeMaterial *material )
 	self->material = material;
 	//TODO: reference should be added here - for now it's done by caller :(
 
-	// recompute face texture coordinates, as this is relative to the material size
-	compute_brush_face_texture_coordinates( self, false );
-
 	// need to notify the parent to update
 	ApeWorldNode *parent = ape_world_node_get_parent( APE_WORLD_NODE( self->parent ) );
 	if ( parent != nullptr )
